@@ -1,0 +1,439 @@
+/* ═══════════════════════════════════════════════════════════
+   HERO SEQUENCE COMPONENT — SCSS
+   ═══════════════════════════════════════════════════════════ */
+
+$deep-navy: #0A0A1A;
+$accent-teal: #2DD4BF;
+$heading-color: rgba(255, 255, 255, 0.95);
+$body-color: rgba(255, 255, 255, 0.70);
+
+:host {
+  display: block;
+  background: $deep-navy;
+}
+
+/* ─── Loading Overlay ─────────────────────────────────────── */
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: $deep-navy;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeOutOverlay 0.6s ease forwards;
+  animation-play-state: paused;
+
+  &.ng-leave {
+    animation-play-state: running;
+  }
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 280px;
+}
+
+.loading-logo {
+  margin-bottom: 8px;
+  animation: logoPulse 2s ease-in-out infinite;
+}
+
+.logo-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba($accent-teal, 0.3));
+}
+
+.loading-bar-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $accent-teal, lighten($accent-teal, 15%));
+  border-radius: 4px;
+  transition: width 0.15s ease;
+  box-shadow: 0 0 12px rgba($accent-teal, 0.4);
+}
+
+.loading-percentage {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: $accent-teal;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.loading-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: $body-color;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ─── Scroll Wrapper ──────────────────────────────────────── */
+
+.scroll-wrapper {
+  position: relative;
+  height: 2400vh;
+  width: 100%;
+  background: $deep-navy;
+}
+
+.sticky-container {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: $deep-navy;
+}
+
+/* ─── Canvas ──────────────────────────────────────────────── */
+
+.sequence-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ─── Vignette overlay for text readability ────────────────── */
+
+.canvas-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 40%, rgba($deep-navy, 0.5) 100%);
+}
+
+/* ─── Text Beat Overlays ──────────────────────────────────── */
+
+.text-beat {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+  padding: 0 clamp(24px, 6vw, 120px);
+
+  /* Directional gradient scrim (pseudo-element) */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+.beat-content {
+  max-width: 620px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Alignment variants + directional scrims */
+.beat-center {
+  justify-content: center;
+  text-align: center;
+
+  .beat-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &::before {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.35) 40%,
+      transparent 75%
+    );
+  }
+}
+
+.beat-left {
+  justify-content: flex-start;
+  text-align: left;
+
+  &::before {
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.60) 0%,
+      rgba(0, 0, 0, 0.40) 30%,
+      rgba(0, 0, 0, 0.10) 55%,
+      transparent 75%
+    );
+  }
+}
+
+.beat-right {
+  justify-content: flex-end;
+  text-align: right;
+
+  .beat-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  &::before {
+    background: linear-gradient(
+      270deg,
+      rgba(0, 0, 0, 0.60) 0%,
+      rgba(0, 0, 0, 0.40) 30%,
+      rgba(0, 0, 0, 0.10) 55%,
+      transparent 75%
+    );
+  }
+}
+
+/* ─── Typography ──────────────────────────────────────────── */
+
+.beat-title {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(32px, 5vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  margin: 0 0 16px;
+
+  /* White text with a luminous shimmer sweep */
+  color: transparent;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.95) 25%,
+    rgba(255, 255, 255, 0.50) 45%,
+    rgba(255, 255, 255, 0.95) 55%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Shimmer animation */
+  background-size: 200% 100%;
+  animation: shimmerText 4s ease-in-out infinite;
+
+  /* Glow for depth against dark scrims */
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.15));
+}
+
+.beat-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(14px, 1.8vw, 20px);
+  font-weight: 500;
+  color: $body-color;
+  letter-spacing: -0.01em;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 480px;
+}
+
+/* ─── Intro Logo (Nom.png in Beat A) ─────────────────────── */
+
+.intro-logo {
+  width: clamp(200px, 30vw, 400px);
+  height: auto;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* ─── CTA Button ──────────────────────────────────────────── */
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-top: 32px;
+  padding: 16px 40px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: $deep-navy;
+  background: $accent-teal;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  pointer-events: all;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow:
+      0 4px 30px rgba($accent-teal, 0.35),
+      0 0 60px rgba($accent-teal, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+.cta-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba($accent-teal, 0.6), transparent, rgba($accent-teal, 0.3));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+
+  .cta-button:hover & {
+    opacity: 1;
+  }
+}
+
+/* ─── Scroll Indicator ────────────────────────────────────── */
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 20;
+  animation: fadeInIndicator 1s ease 0.8s both;
+}
+
+.scroll-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.50);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.scroll-arrow {
+  color: $accent-teal;
+  animation: bounceArrow 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba($accent-teal, 0.4));
+}
+
+/* ─── Keyframes ───────────────────────────────────────────── */
+
+@keyframes logoPulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fadeOutOverlay {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes fadeInIndicator {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes bounceArrow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes shimmerText {
+  0% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ─── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .text-beat {
+    padding: 0 24px;
+    align-items: flex-end;
+    padding-bottom: 100px;
+  }
+
+  .beat-left,
+  .beat-right {
+    justify-content: center;
+    text-align: center;
+
+    .beat-content {
+      align-items: center;
+    }
+  }
+
+  .beat-title {
+    font-size: 28px;
+  }
+
+  .beat-subtitle {
+    font-size: 14px;
+  }
+
+  .cta-button {
+    padding: 14px 32px;
+    font-size: 14px;
+  }
+
+  .scroll-indicator {
+    bottom: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .beat-title {
+    font-size: 24px;
+  }
+
+  .beat-subtitle {
+    font-size: 13px;
+    max-width: 300px;
+  }
+}

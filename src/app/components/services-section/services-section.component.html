@@ -1,0 +1,42 @@
+<!-- ═══════════════════════════════════════════════════════════
+     OUR SERVICES SECTION
+     Faithful port of test.html structure, adapted to Cluverse colors
+     ═══════════════════════════════════════════════════════════ -->
+<section class="c-section" id="services-section">
+
+  <!-- ─── Section Title (matches test.html .c-section__title > span) ─── -->
+  <h2 class="c-section__title">
+    <span>Our Services</span>
+  </h2>
+
+  <!-- ─── Service Cards Grid ──────────────────────────────── -->
+  <ul class="c-services">
+    <li
+      *ngFor="let service of services; let i = index"
+      #serviceCard
+      class="c-services__item"
+      [style.--card-index]="i"
+    >
+      <!-- Icon -->
+      <div class="c-services__icon">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path [attr.d]="service.icon" />
+        </svg>
+      </div>
+
+      <!-- Content -->
+      <h3>{{ service.title }}</h3>
+      <p>{{ service.description }}</p>
+    </li>
+  </ul>
+
+</section>

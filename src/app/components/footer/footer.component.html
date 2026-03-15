@@ -1,0 +1,53 @@
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════════ -->
+<footer class="footer">
+
+  <!-- ─── Top Divider Glow ────────────────────────────────── -->
+  <div class="footer__divider"></div>
+
+  <div class="footer__inner">
+
+    <!-- ─── Brand Column ──────────────────────────────────── -->
+    <div class="footer__brand">
+      <a href="#" class="footer__logo-link">
+        <img src="assets/logos/Logo+Nom+Slogan.png" alt="Cluverse" class="footer__logo" />
+      </a>
+      <p class="footer__tagline">
+        The all-in-one platform for university clubs and associations.
+      </p>
+    </div>
+
+    <!-- ─── Nav Links ─────────────────────────────────────── -->
+    <nav class="footer__nav">
+      <h4 class="footer__nav-title">Quick Links</h4>
+      <ul class="footer__nav-list">
+        <li *ngFor="let link of navLinks">
+          <a [href]="link.href" class="footer__nav-link">{{ link.label }}</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- ─── Social + Contact ──────────────────────────────── -->
+    <div class="footer__social">
+      <h4 class="footer__nav-title">Connect</h4>
+      <div class="footer__social-icons">
+        <a *ngFor="let social of socialLinks" [href]="social.href" [attr.aria-label]="social.label"
+          class="footer__social-link" target="_blank" rel="noopener noreferrer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path [attr.d]="social.icon" />
+          </svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Bottom Bar ──────────────────────────────────────── -->
+  <div class="footer__bottom">
+    <p>&copy; {{ currentYear }} Cluverse. All rights reserved.</p>
+    <p class="footer__credit">Designed & Developed by <span>Hexateam</span></p>
+  </div>
+
+</footer>

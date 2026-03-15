@@ -1,0 +1,476 @@
+/* ═══════════════════════════════════════════════════════════
+   PRICING SECTION — Cluverse Dark Theme
+   Faithful port of test.html CSS + animations,
+   adapted to dark navy + teal accent palette.
+   ═══════════════════════════════════════════════════════════ */
+
+$deep-navy: #0A0A1A;
+$card-bg: #111128;
+$accent-teal: #2DD4BF;
+$heading-color: rgba(255, 255, 255, 0.95);
+$body-color: rgba(255, 255, 255, 0.60);
+$border-color: rgba(255, 255, 255, 0.08);
+
+:host {
+  display: block;
+  background: $deep-navy;
+  font-family: 'Inter', sans-serif;
+  padding-top: 60px;
+}
+
+/* ─── Section Layout ──────────────────────────────────────── */
+
+.pricing-section {
+  width: 90%;
+  max-width: 1170px;
+  margin: 0 auto;
+  padding: 160px 0;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.section-title {
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 700;
+  color: $heading-color;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0 0 12px;
+}
+
+.section-subtitle {
+  font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 400;
+  color: $body-color;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRICING SWITCHER — Radio + Sliding Switch
+   (Faithful port from test.html)
+   ═══════════════════════════════════════════════════════════ */
+
+.pricing-switcher {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.pricing-switcher .fieldset {
+  display: inline-block;
+  position: relative;
+  padding: 2px;
+  border-radius: 50em;
+  border: 2px solid rgba($accent-teal, 0.3);
+  margin: 0;
+}
+
+.pricing-switcher input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+}
+
+.pricing-switcher label {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  float: left;
+  width: 100px;
+  height: 44px;
+  line-height: 44px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: $body-color;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.pricing-switcher input[type="radio"]:checked + label {
+  color: $deep-navy;
+}
+
+.pricing-switcher .switch {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  height: 44px;
+  width: 100px;
+  background-color: $accent-teal;
+  border-radius: 50em;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 12px rgba($accent-teal, 0.3);
+}
+
+/* Slide switch to the right when yearly is checked */
+.pricing-switcher input[type="radio"]:checked + label + .switch,
+.pricing-switcher input[type="radio"]:checked + label:nth-of-type(n) + .switch {
+  transform: translateX(100px);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRICING LIST — Cards Grid
+   ═══════════════════════════════════════════════════════════ */
+
+.pricing-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pricing-list > li {
+  position: relative;
+  margin-bottom: 1.5em;
+}
+
+@media only screen and (min-width: 768px) {
+  .pricing-list {
+    display: flex;
+    gap: 0;
+  }
+  .pricing-list::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  .pricing-list > li {
+    width: 33.333%;
+    float: left;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-bottom: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRICING WRAPPER — Card Flip Container
+   ═══════════════════════════════════════════════════════════ */
+
+.pricing-wrapper {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  perspective: 2000px;
+}
+
+/* Card base styles */
+.pricing-wrapper > li {
+  background-color: $card-bg;
+  border: 1px solid $border-color;
+  border-radius: 16px;
+  backface-visibility: hidden;
+  outline: 1px solid transparent;
+  overflow: hidden;
+}
+
+.pricing-wrapper > li::after {
+  display: none;
+}
+
+/* Visible / Hidden states */
+.pricing-wrapper .is-visible {
+  position: relative;
+  z-index: 5;
+}
+
+.pricing-wrapper .is-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  transform: rotateY(180deg);
+}
+
+.pricing-wrapper .is-selected {
+  z-index: 3 !important;
+}
+
+/* ─── Flip Animation: Forward ─────────────────────────────── */
+
+.pricing-wrapper.is-switched .is-visible {
+  transform: rotateY(180deg);
+  animation: cd-rotate 0.5s;
+}
+
+.pricing-wrapper.is-switched .is-hidden {
+  transform: rotateY(0);
+  animation: cd-rotate-inverse 0.5s;
+  opacity: 0;
+}
+
+.pricing-wrapper.is-switched .is-selected {
+  opacity: 1;
+}
+
+/* ─── Flip Animation: Reverse ─────────────────────────────── */
+
+.pricing-wrapper.is-switched.reverse-animation .is-visible {
+  transform: rotateY(-180deg);
+  animation: cd-rotate-back 0.5s;
+}
+
+.pricing-wrapper.is-switched.reverse-animation .is-hidden {
+  transform: rotateY(0);
+  animation: cd-rotate-inverse-back 0.5s;
+  opacity: 0;
+}
+
+.pricing-wrapper.is-switched.reverse-animation .is-selected {
+  opacity: 1;
+}
+
+/* ─── Exclusive card border ───────────────────────────────── */
+
+@media only screen and (min-width: 768px) {
+  .exclusive .pricing-wrapper > li {
+    border-color: rgba($accent-teal, 0.3);
+    box-shadow: 0 0 30px rgba($accent-teal, 0.08);
+  }
+  .pricing-wrapper > li::before {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRICING HEADER
+   ═══════════════════════════════════════════════════════════ */
+
+.pricing-header {
+  padding: 2em 0 1.6em;
+  text-align: center;
+  color: $heading-color;
+}
+
+.pricing-header h2 {
+  padding: 0.5em 0.9em 0.6em;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 16px;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.12em;
+  color: $body-color;
+}
+
+.exclusive .pricing-header h2 {
+  color: $accent-teal;
+}
+
+/* ─── Price Display ───────────────────────────────────────── */
+
+.price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.currency {
+  font-size: 24px;
+  font-weight: 600;
+  color: $heading-color;
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+.value {
+  font-size: 56px;
+  font-weight: 700;
+  color: $heading-color;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.duration {
+  font-size: 14px;
+  font-weight: 500;
+  color: $accent-teal;
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+.duration::before {
+  content: '/';
+  margin-right: 2px;
+}
+
+.exclusive .currency,
+.exclusive .duration {
+  color: $accent-teal;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRICING BODY — Features
+   ═══════════════════════════════════════════════════════════ */
+
+.pricing-body {
+  overflow: visible;
+}
+
+.pricing-features {
+  width: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pricing-features li {
+  float: none;
+  width: auto;
+  padding: 0.85em 1.5em;
+  font-size: 14px;
+  text-align: center;
+  color: $body-color;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pricing-features li:last-child {
+  border-bottom: none;
+}
+
+.pricing-features em {
+  font-style: normal;
+  font-weight: 600;
+  color: $heading-color;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRICING FOOTER — CTA Button
+   ═══════════════════════════════════════════════════════════ */
+
+.pricing-footer {
+  position: relative;
+  padding: 1.8em 1.5em;
+  text-align: center;
+}
+
+.select {
+  display: inline-block;
+  width: 70%;
+  padding: 14px 2em;
+  color: $accent-teal;
+  border-radius: 10px;
+  border: 1px solid rgba($accent-teal, 0.3);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: all 0.4s ease;
+  background: transparent;
+
+  &:hover {
+    background: rgba($accent-teal, 0.08);
+    border-color: $accent-teal;
+    box-shadow: 0 0 20px rgba($accent-teal, 0.12);
+  }
+}
+
+.exclusive .select {
+  background-color: $accent-teal;
+  color: $deep-navy;
+  border-color: $accent-teal;
+
+  &:hover {
+    background-color: lighten($accent-teal, 8%);
+    box-shadow: 0 4px 24px rgba($accent-teal, 0.35);
+    transform: translateY(-1px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FLIP KEYFRAMES — Exact port from test.html
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes cd-rotate {
+  0% {
+    transform: perspective(2000px) rotateY(0);
+  }
+  70% {
+    transform: perspective(2000px) rotateY(200deg);
+  }
+  100% {
+    transform: perspective(2000px) rotateY(180deg);
+  }
+}
+
+@keyframes cd-rotate-inverse {
+  0% {
+    transform: perspective(2000px) rotateY(-180deg);
+  }
+  70% {
+    transform: perspective(2000px) rotateY(20deg);
+  }
+  100% {
+    transform: perspective(2000px) rotateY(0);
+  }
+}
+
+@keyframes cd-rotate-back {
+  0% {
+    transform: perspective(2000px) rotateY(0);
+  }
+  70% {
+    transform: perspective(2000px) rotateY(-200deg);
+  }
+  100% {
+    transform: perspective(2000px) rotateY(-180deg);
+  }
+}
+
+@keyframes cd-rotate-inverse-back {
+  0% {
+    transform: perspective(2000px) rotateY(180deg);
+  }
+  70% {
+    transform: perspective(2000px) rotateY(-20deg);
+  }
+  100% {
+    transform: perspective(2000px) rotateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .pricing-section {
+    padding: 80px 0;
+  }
+
+  .pricing-list > li {
+    padding: 0 16px;
+  }
+
+  .exclusive .pricing-wrapper > li {
+    border-color: rgba($accent-teal, 0.3);
+  }
+}
+
+@media (max-width: 480px) {
+  .value {
+    font-size: 44px;
+  }
+
+  .pricing-switcher label {
+    width: 80px;
+    font-size: 13px;
+  }
+
+  .pricing-switcher .switch {
+    width: 80px;
+  }
+
+  .pricing-switcher input[type="radio"]:checked + label + .switch,
+  .pricing-switcher input[type="radio"]:checked + label:nth-of-type(n) + .switch {
+    transform: translateX(80px);
+  }
+}

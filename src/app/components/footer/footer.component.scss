@@ -1,0 +1,176 @@
+/* ═══════════════════════════════════════════════════════════
+   FOOTER — SCSS
+   Matches Cluverse dark navy / teal design system
+   ═══════════════════════════════════════════════════════════ */
+
+$deep-navy: #0A0A1A;
+$accent-teal: #2DD4BF;
+$heading: rgba(255, 255, 255, 0.90);
+$body-text: rgba(255, 255, 255, 0.50);
+$muted: rgba(255, 255, 255, 0.30);
+$surface: rgba(255, 255, 255, 0.03);
+
+:host {
+  display: block;
+  background: $deep-navy;
+  margin-top: 120px;
+}
+
+/* ─── Top Divider ─────────────────────────────────────────── */
+.footer__divider {
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba($accent-teal, 0.25) 50%,
+      transparent 100%);
+}
+
+/* ─── Inner Layout ────────────────────────────────────────── */
+.footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 32px 40px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 48px;
+  }
+}
+
+/* ─── Brand Column ────────────────────────────────────────── */
+.footer__brand {
+  max-width: 320px;
+}
+
+.footer__logo-link {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.footer__logo {
+  height: 200px;
+  width: auto;
+  filter: brightness(1.1);
+  transition: filter 0.3s ease;
+
+  &:hover {
+    filter: brightness(1.3) drop-shadow(0 0 8px rgba($accent-teal, 0.3));
+  }
+}
+
+.footer__tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: $body-text;
+  line-height: 1.7;
+  margin: 16px 0 0;
+}
+
+/* ─── Nav Links ───────────────────────────────────────────── */
+.footer__nav-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: $heading;
+  margin: 0 0 20px;
+}
+
+.footer__nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer__nav-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: $body-text;
+  text-decoration: none;
+  transition: color 0.25s ease;
+  position: relative;
+
+  &:hover {
+    color: $accent-teal;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: $accent-teal;
+    transition: width 0.3s ease;
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
+}
+
+/* ─── Social Icons ────────────────────────────────────────── */
+.footer__social-icons {
+  display: flex;
+  gap: 12px;
+}
+
+.footer__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: $surface;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: $body-text;
+  text-decoration: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba($accent-teal, 0.12);
+    border-color: rgba($accent-teal, 0.25);
+    color: $accent-teal;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba($accent-teal, 0.15);
+  }
+}
+
+/* ─── Bottom Bar ──────────────────────────────────────────── */
+.footer__bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+
+  p {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: $muted;
+    margin: 0;
+  }
+}
+
+.footer__credit {
+  span {
+    color: $accent-teal;
+    font-weight: 500;
+  }
+}

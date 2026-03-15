@@ -1,0 +1,346 @@
+/* ═══════════════════════════════════════════════════════════
+   SERVICES SECTION — SCSS
+   Faithful port of test.html — only colors adapted to Cluverse
+   deep-navy (#0A0A1A), accent-teal (#2DD4BF)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Breakpoint Mixins (same as test.html) ───────────────── */
+@mixin bp-sm { @media (min-width: 40.625em) { @content; } }
+@mixin bp-md { @media (min-width: 48em)    { @content; } }
+@mixin bp-lg { @media (min-width: 62em)    { @content; } }
+
+@mixin pseudo-starter {
+  content: '';
+  display: block;
+}
+
+/* ─── Color Variables ─────────────────────────────────────── */
+$deep-navy:       #0A0A1A;
+$accent-teal:     #2DD4BF;
+$accent-teal-rgb: 45, 212, 191;
+// Backgrounds
+$header-band-bg:  #0d1b2a;          // dark navy-blue for the skewed header band
+$cards-band-bg:   rgba($accent-teal, 0.04); // very subtle teal tint behind cards
+// Card
+$card-bg:         rgba(255, 255, 255, 0.05);
+$card-shadow:     0 7px 20px rgba(0, 0, 0, 0.25);
+$card-title:      $accent-teal;
+$card-body:       rgba(255, 255, 255, 0.55);
+
+/* ─── Modular Scale (same logic as test.html) ─────────────── */
+:host {
+  display: block;
+  background: $deep-navy;
+  padding-top: 100px;
+  --ratio: 1.4;
+  --s0: calc(1.05rem + 0.333vw);
+  @include bp-sm { --s0: calc(1.25rem + 0.333vw); }
+  @include bp-md { --s0: calc(1.4rem + 0.333vw); }
+  @include bp-lg { --s0: calc(1.6rem + 0.333vw); }
+  --s-1: calc(var(--s0) / var(--ratio));
+  --s1: calc(var(--s0) * var(--ratio));
+  --s2: calc(var(--s1) * var(--ratio));
+  --s3: calc(var(--s2) * var(--ratio));
+  --s4: calc(var(--s3) * var(--ratio));
+  --s5: calc(var(--s4) * var(--ratio));
+  --s6: calc(var(--s5) * var(--ratio));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION (.c-section)
+   Same structure as test.html
+   ═══════════════════════════════════════════════════════════ */
+.c-section {
+  padding: 0 var(--s3);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION TITLE (.c-section__title)
+   ═══════════════════════════════════════════════════════════ */
+.c-section__title {
+  padding: var(--s2) var(--s3) calc(var(--s6) * 1.8);
+  @include bp-sm {
+    padding: var(--s2) var(--s3) var(--s4);
+  }
+  margin: 0 calc(var(--s3) * -1);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: var(--s4);
+  font-weight: 900;
+  text-align: center;
+
+  @include bp-sm {
+    display: flex;
+    align-items: self-start;
+    justify-content: flex-end;
+    position: relative;
+    text-align: unset;
+  }
+
+  /* ── SVG illustration after title (same as test.html ::after) ── */
+  &:after {
+    @include pseudo-starter;
+    background-size: calc(var(--s5) * 3) calc(var(--s5) * 3);
+    width: calc(var(--s5) * 3);
+    height: calc(var(--s5) * 3);
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-left: auto;
+    margin-right: auto;
+    transform: translateY(11rem);
+    @include bp-sm {
+      margin-left: auto;
+      margin-right: 0;
+      transform: translateY(2rem);
+    }
+    z-index: 1;
+    /* same SVG illustration, but with teal-coloured fills instead of orange */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='704' height='745.19433' viewBox='0 0 704 745.19433'%3E%3Cellipse cx='352' cy='727.19433' rx='352' ry='18' fill='%23233040'/%3E%3Cpath d='M344.694,661.251l-8.387-33.073A429.461,429.461,0,0,0,290.742,611.834l-1.058,15.371L285.39,610.271c-19.202-5.482-32.265-7.896-32.265-7.896s17.649,67.097,54.661,118.393l43.124,7.572-33.501,4.832A173.751,173.751,0,0,0,332.395,749.052c53.84,49.97,113.807,72.894,133.938,51.203s-7.195-79.784-61.035-129.754c-16.691-15.491-37.658-27.922-58.646-37.705Z' transform='translate(-248 -77.403)' fill='%232DD4BF'/%3E%3Cpath d='M424.443,625.33l9.916-32.647a429.465,429.465,0,0,0-30.557-37.544L394.951,567.75l5.077-16.715c-13.604-14.618-23.539-23.438-23.539-23.438s-19.575,66.561-14.405,129.604l33.002,28.773L363.91,672.793a173.751,173.751,0,0,0,4.621,21.341c20.26,70.607,59.745,121.228,88.19,113.065s35.081-72.017,14.821-142.624c-6.281-21.889-17.804-43.368-30.714-62.592Z' transform='translate(-248 -77.403)' fill='%232DD4BF'/%3E%3Cpath d='M805.654,250.35h-3.999V140.805a63.402,63.402,0,0,0-63.402-63.402H506.166a63.402,63.402,0,0,0-63.402,63.402V741.779a63.402,63.402,0,0,0,63.402,63.402H738.253a63.402,63.402,0,0,0,63.402-63.402V328.326h3.999Z' transform='translate(-248 -77.403)' fill='%23233040'/%3E%3Cpath d='M788.16,141.247v600.09a47.351,47.351,0,0,1-47.35,47.35H507.61a47.351,47.351,0,0,1-47.35-47.35v-600.09a47.351,47.351,0,0,1,47.35-47.35H535.9a22.507,22.507,0,0,0,20.83,30.99H689.69a22.507,22.507,0,0,0,20.83-30.99h30.29A47.351,47.351,0,0,1,788.16,141.247Z' transform='translate(-248 -77.403)' fill='%230A0A1A'/%3E%3Cpath d='M788.16,612.407v128.93a47.351,47.351,0,0,1-47.35,47.35H507.61a47.351,47.351,0,0,1-47.35-47.35V624.977a222.971,222.971,0,0,1,327.9-12.57Z' transform='translate(-248 -77.403)' fill='%23162030'/%3E%3C/svg%3E");
+  }
+
+  /* ── The span holds the skewed header band (::before) and subtitle (::after) ── */
+  span {
+    /* Skewed colored band behind the title — same as test.html span::before */
+    &:before {
+      @include pseudo-starter;
+      position: absolute;
+      top: -100%;
+      left: 0;
+      width: 100%;
+      height: 200%;
+      transform: skew(0deg, 10deg);
+      z-index: -1;
+      background: $header-band-bg;
+      background-attachment: fixed;
+      /* Decorative doodles SVG — same pattern, teal-tinted fills */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='487' height='243.5' viewBox='0 0 1600 800' style='opacity:.25'%3E%3Cpath fill='%232DD4BF' d='M1102.5 734.8c2.5-1.2 24.8-8.6 25.6-7.5.5.7-3.9 23.8-4.6 24.5-.2.3-16-12.3-21-17zm123.8-505.7c0-.1-4.9-9.4-7-14.2-.1-.3-.3-1.1-.4-1.6-.1-.4-.3-.7-.6-.9-.3-.2-.6-.1-.8.1l-13.1 12.3c-.2.2-.3.5-.4.8 0 .3 0 .7.2 1 .1.1 1.4 2.5 2.1 3.6 2.4 3.7 6.5 12.1 6.5 12.2.2.3.4.5.7.6.3 0 .5-.1.7-.3 0 0 1.8-2.5 2.7-3.6 1.5-1.6 3-3.2 4.6-4.7 1.2-1.2 1.6-1.4 2.1-1.6.5-.3 1.1-.5 2.5-1.9.4-.5.5-1.3.2-1.8zM33 770.3c0-.7-.5-1.2-1.2-1.2-.1 0-.3 0-.4.1-1.6.2-14.3.1-22.2 0-.3 0-.6.1-.9.4-.2.2-.4.5-.4.9 0 .2 0 4.9.1 5.9l.4 13.6c0 .3.2.6.4.9.2.2.5.3.8.3h.1c7.3-.7 14.7-.9 22-.6.3 0 .7-.1.9-.3.2-.2.4-.6.4-.9-.1-6.1-.1-13.2 0-19.1z'/%3E%3Cpath fill='%231a9e8d' d='M171.1 383.4c1.3-2.5 14.3-22 15.6-21.6.8.3 11.5 21.2 11.5 22.1-.1.3-20.3.1-27.1-.5zm425.3 328.4c-.1-.1-6.7-8.2-9.7-12.5-.2-.3-.5-1-.7-1.5-.2-.4-.4-.7-.7-.8-.3-.1-.6 0-.8.3L574 712c-.2.2-.2.5-.2.9 0 .3.2.7.4.9.1.1 1.8 2.2 2.8 3.1 3.1 3.1 8.8 10.5 8.9 10.6.2.3.5.4.8.4.3 0 .5-.2.6-.5 0 0 1.2-2.8 2-4.1 1.1-1.9 2.3-3.7 3.5-5.5.9-1.4 1.3-1.7 1.7-2 .5-.4 1-.7 2.1-2.4.3-.3.2-1.1-.2-1.6zm131.1-531.9c.6.2 1.3-.2 1.4-.8v-.4c.2-1.4 2.8-12.6 4.5-19.5.1-.3 0-.6-.2-.8-.2-.3-.5-.4-.8-.5-.2 0-4.7-1.1-5.7-1.3l-13.4-2.7c-.3-.1-.7 0-.9.2-.2.2-.4.4-.5.6v.1c-.8 6.5-2.2 13.1-3.9 19.4-.1.3 0 .6.2.9.2.3.5.4.8.5 5.8 1.3 12.7 2.9 18.5 4.3zm1-1.8c-.1-.1-.2-.2-.4-.2.2 0 .3.1.4.2z'/%3E%3Cg fill='%23164a45'%3E%3Cpath d='M699.6 472.7c-1.5 0-2.8-.8-3.5-2.3-.8-1.9 0-4.2 1.9-5 3.7-1.6 6.8-4.7 8.4-8.5 1.6-3.8 1.7-8.1.2-11.9-.3-.9-.8-1.8-1.2-2.8-.8-1.7-1.8-3.7-2.3-5.9-.9-4.1-.2-8.6 2-12.8 1.7-3.1 4.1-6.1 7.6-9.1 1.6-1.4 4-1.2 5.3.4 1.4 1.6 1.2 4-.4 5.3-2.8 2.5-4.7 4.7-5.9 7-1.4 2.6-1.9 5.3-1.3 7.6.3 1.4 1 2.8 1.7 4.3l1.5 3.3c2.1 5.6 2 12-.3 17.6-2.3 5.5-6.8 10.1-12.3 12.5-.4.2-.9.3-1.4.3z'/%3E%3Ccircle cx='1013.7' cy='153.9' r='7.1'/%3E%3Ccircle cx='1024.3' cy='132.1' r='7.1'/%3E%3Ccircle cx='1037.3' cy='148.9' r='7.1'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Subtitle text — same as test.html span::after */
+    &:after {
+      content: "Everything your club needs to operate efficiently — from recruitment to treasury, all under one roof.";
+      display: block;
+      font-size: 1.4rem;
+      @include bp-sm { font-size: 23%; }
+      position: absolute;
+      font-weight: 350;
+      padding: 0 var(--s3);
+      color: hsla(0, 0%, 100%, .65);
+      left: 9px;
+      @include bp-sm { width: 47ch; }
+      @include bp-md { width: 57ch; }
+      @include bp-lg { width: 67ch; }
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SERVICES GRID (.c-services)
+   Same structure as test.html
+   ═══════════════════════════════════════════════════════════ */
+.c-services {
+  @include bp-sm {
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: minmax(100px, 1fr);
+  }
+
+  display: grid;
+  grid-gap: var(--s2);
+  margin: 0 calc(var(--s3) * -1);
+  padding: var(--s6) var(--s3);
+  @include bp-sm {
+    padding: 0 var(--s3);
+  }
+  position: relative;
+  z-index: 1;
+  list-style: none;
+
+  /* ── Skewed background band with SVG doodles (same as test.html .c-services::before) ── */
+  &:before {
+    @include pseudo-starter;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: $cards-band-bg;
+    width: 100%;
+    height: 100%;
+    transform: skew(0deg, 10deg);
+    /* Same decorative SVG doodle pattern, teal-tinted */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='487' height='243.5' viewBox='0 0 1600 800'%3E%3Cpath fill='%232DD4BF' opacity='.12' d='M1102.5 734.8c2.5-1.2 24.8-8.6 25.6-7.5.5.7-3.9 23.8-4.6 24.5-.2.3-16-12.3-21-17zm123.8-505.7c0-.1-4.9-9.4-7-14.2-.1-.3-.3-1.1-.4-1.6-.1-.4-.3-.7-.6-.9-.3-.2-.6-.1-.8.1l-13.1 12.3c-.2.2-.3.5-.4.8 0 .3 0 .7.2 1 .1.1 1.4 2.5 2.1 3.6 2.4 3.7 6.5 12.1 6.5 12.2.2.3.4.5.7.6.3 0 .5-.1.7-.3 0 0 1.8-2.5 2.7-3.6 1.5-1.6 3-3.2 4.6-4.7 1.2-1.2 1.6-1.4 2.1-1.6.5-.3 1.1-.5 2.5-1.9.4-.5.5-1.3.2-1.8zM33 770.3c0-.7-.5-1.2-1.2-1.2-.1 0-.3 0-.4.1-1.6.2-14.3.1-22.2 0-.3 0-.6.1-.9.4-.2.2-.4.5-.4.9 0 .2 0 4.9.1 5.9l.4 13.6c0 .3.2.6.4.9.2.2.5.3.8.3h.1c7.3-.7 14.7-.9 22-.6.3 0 .7-.1.9-.3.2-.2.4-.6.4-.9-.1-6.1-.1-13.2 0-19.1z'/%3E%3Cpath fill='%232DD4BF' opacity='.08' d='M171.1 383.4c1.3-2.5 14.3-22 15.6-21.6.8.3 11.5 21.2 11.5 22.1-.1.3-20.3.1-27.1-.5zm425.3 328.4c-.1-.1-6.7-8.2-9.7-12.5-.2-.3-.5-1-.7-1.5-.2-.4-.4-.7-.7-.8-.3-.1-.6 0-.8.3L574 712c-.2.2-.2.5-.2.9 0 .3.2.7.4.9.1.1 1.8 2.2 2.8 3.1 3.1 3.1 8.8 10.5 8.9 10.6.2.3.5.4.8.4.3 0 .5-.2.6-.5 0 0 1.2-2.8 2-4.1 1.1-1.9 2.3-3.7 3.5-5.5.9-1.4 1.3-1.7 1.7-2 .5-.4 1-.7 2.1-2.4.3-.3.2-1.1-.2-1.6z'/%3E%3Cg fill='%232DD4BF' opacity='.06'%3E%3Ccircle cx='1013.7' cy='153.9' r='7.1'/%3E%3Ccircle cx='1024.3' cy='132.1' r='7.1'/%3E%3Ccircle cx='1037.3' cy='148.9' r='7.1'/%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SERVICE CARD (.c-services__item)
+   Faithfully ported from test.html
+   ═══════════════════════════════════════════════════════════ */
+.c-services__item {
+  background: $card-bg;
+  padding: 16px 18px;
+  border-radius: 20px;
+  box-shadow: $card-shadow;
+  @include bp-sm { transform: translateY(-85px); }
+  @include bp-md { transform: translateY(-130px); }
+  transition: all 300ms ease, transform 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  z-index: 1;
+
+  /* ── Staggered entrance ── */
+  opacity: 0;
+  &.is-visible {
+    animation: cardEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--card-index, 0) * 80ms);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     GRID PLACEMENT (7 items across a 7-column grid)
+     Same logic as test.html but adapted for 7 cards
+     ═══════════════════════════════════════════════════════ */
+  &:nth-of-type(1) {
+    @include bp-sm { grid-column: 1 / span 4; grid-row: 1; }
+    @include bp-lg { grid-column: 1 / span 3; grid-row: 1; }
+  }
+  &:nth-of-type(2) {
+    @include bp-sm { grid-column: 5 / -1; grid-row: 1; }
+    @include bp-lg { grid-column: 4 / -1; grid-row: 1; }
+  }
+  &:nth-of-type(3) {
+    @include bp-sm { grid-column: 1 / span 3; grid-row: 2; }
+    @include bp-lg { grid-column: 1 / span 2; grid-row: 2; }
+  }
+  &:nth-of-type(4) {
+    @include bp-sm { grid-column: 4 / -1; grid-row: 2; }
+    @include bp-lg { grid-column: 3 / span 3; grid-row: 2; }
+  }
+  &:nth-of-type(5) {
+    @include bp-sm { grid-column: 1 / span 4; grid-row: 3; }
+    @include bp-lg { grid-column: 6 / -1; grid-row: 2; }
+  }
+  &:nth-of-type(6) {
+    @include bp-sm { grid-column: 5 / -1; grid-row: 3; }
+    @include bp-lg { grid-column: 1 / span 4; grid-row: 3; }
+  }
+  &:nth-of-type(7) {
+    @include bp-sm { grid-column: 1 / -1; grid-row: 4; }
+    @include bp-lg { grid-column: 5 / -1; grid-row: 3; }
+  }
+
+  /* ── Card Title ── */
+  h3 {
+    color: $card-title;
+    font-family: 'Inter', sans-serif;
+    font-size: var(--s1);
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  /* ── Card Description ── */
+  p {
+    margin-top: var(--s-1);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    color: $card-body;
+    line-height: 1.6;
+  }
+
+  /* ── Corner Link Badge (same as test.html ::after) ── */
+  &:after {
+    @include pseudo-starter;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 25px 0;
+    cursor: pointer;
+    transition: inherit;
+    background-color: $accent-teal;
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* Arrow icon — white on teal */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7'/%3E%3Cpath d='M7 7h10v10'/%3E%3C/svg%3E");
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     HOVER STATE — exact same inversion as test.html
+     Card bg → accent color, text → white, badge inverts
+     ═══════════════════════════════════════════════════════ */
+  &:hover {
+    @include bp-sm { transform: translateY(-93px); }
+    @include bp-md { transform: translateY(-138px); }
+    background-color: $accent-teal;
+
+    h3 { color: #fff; }
+    p  { color: hsla(0, 0%, 100%, .8); }
+
+    .c-services__icon {
+      background: rgba(255, 255, 255, 0.20);
+      color: #fff;
+    }
+
+    /* Corner badge inverts: white bg, teal icon */
+    &:after {
+      background-color: #fff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232DD4BF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7'/%3E%3Cpath d='M7 7h10v10'/%3E%3C/svg%3E");
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ICON CONTAINER
+   ═══════════════════════════════════════════════════════════ */
+.c-services__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba($accent-teal, 0.12);
+  color: $accent-teal;
+  margin-bottom: 16px;
+  transition: all 300ms ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ENTRANCE ANIMATION
+   ═══════════════════════════════════════════════════════════ */
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Override entrance destination for breakpoints with negative translateY */
+@include bp-sm {
+  @keyframes cardEntrance {
+    from {
+      opacity: 0;
+      transform: translateY(-45px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(-85px);
+    }
+  }
+}
+
+@include bp-md {
+  @keyframes cardEntrance {
+    from {
+      opacity: 0;
+      transform: translateY(-90px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(-130px);
+    }
+  }
+}
