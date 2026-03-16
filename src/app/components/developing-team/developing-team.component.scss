@@ -1,0 +1,193 @@
+/* ═══════════════════════════════════════════════════════════
+   DEVELOPING TEAM SECTION — Dark Theme infinite slider
+   ═══════════════════════════════════════════════════════════ */
+
+$deep-navy: #0A0A1A;
+$accent-teal: #2DD4BF;
+$heading-color: rgba(255, 255, 255, 0.95);
+$body-color: rgba(255, 255, 255, 0.60);
+
+:host {
+  display: block;
+  background: $deep-navy;
+}
+
+.team-section {
+  padding: 100px 0;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+.team-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ─── Header ─────────────────────────────────────────────── */
+
+.team-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.team-header h2 {
+  position: relative;
+  display: inline-block;
+  font-size: 36px;
+  font-weight: 700;
+  color: $heading-color;
+  margin-bottom: 30px;
+}
+
+.team-header h2::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 60px;
+  height: 2px;
+  background: $accent-teal;
+  bottom: -15px;
+  transform: translateX(-50%);
+}
+
+.team-header p {
+  color: $body-color;
+  font-size: 16px;
+}
+
+/* ─── Infinite Slider ────────────────────────────────────── */
+
+.slider {
+  /* Variables moved here to avoid Angular stripping them from inline styles */
+  --width: 250px;
+  --height: 350px;
+  --imageQuantity: 4;
+  --gap: calc(var(--width) / 4);
+
+  padding-block: 20px;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent 5%, #000 20%, #000 80%, transparent 95%);
+  -webkit-mask-image: linear-gradient(to right, transparent 5%, #000 20%, #000 80%, transparent 95%);
+}
+
+.list {
+  display: flex;
+  width: max-content;
+  gap: var(--gap);
+  animation: autoScroll 15s linear infinite;
+}
+
+.list:hover {
+  animation-play-state: paused !important;
+}
+
+.item {
+  width: var(--width);
+  height: var(--height);
+  flex-shrink: 0;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.5s ease-in-out;
+  display: block;
+}
+
+.slider:hover .item img {
+  filter: grayscale(1);
+}
+.slider .item:hover img {
+  filter: grayscale(0);
+}
+
+@keyframes autoScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    /* Translate exactly identical to width + gap * unique members */
+    transform: translateX(calc(-1 * (var(--width) + var(--gap)) * var(--imageQuantity)));
+  }
+}
+
+/* ─── Hover Mail Overlay ─────────────────────────────────── */
+
+.hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba($deep-navy, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.item:hover .hover-overlay {
+  opacity: 1;
+}
+
+.email-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $accent-teal;
+  color: $deep-navy;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.email-btn:hover {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+/* ─── Info Area ──────────────────────────────────────────── */
+
+.member-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 15px 10px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  z-index: 1;
+  pointer-events: none;
+  /* changed to flex to stack nicely */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: $heading-color;
+  letter-spacing: 0.5px;
+}
+
+.member-role {
+  font-size: 13px;
+  color: $accent-teal;
+  font-weight: 500;
+}

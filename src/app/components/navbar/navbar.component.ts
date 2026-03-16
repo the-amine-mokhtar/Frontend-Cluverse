@@ -18,6 +18,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Pricing', target: 'pricing' },
     { label: 'Services', target: 'services-section' },
     { label: 'FAQ', target: 'faq' },
+    { label: 'Team', target: 'team' },
     { label: 'About Us', target: 'footer' }
   ];
 

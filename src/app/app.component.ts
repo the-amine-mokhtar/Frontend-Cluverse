@@ -8,6 +8,7 @@ import { Component } from '@angular/core';
     <app-pricing-section></app-pricing-section>
     <app-services-section></app-services-section>
     <app-faq-section></app-faq-section>
+    <app-developing-team></app-developing-team>
     <app-footer></app-footer>
   `,
   styles: [`:host { display: block; }`]

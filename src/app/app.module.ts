@@ -8,6 +8,7 @@ import { ServicesSectionModule } from './components/services-section/services-se
 import { FooterModule } from './components/footer/footer.module';
 import { NavbarModule } from './components/navbar/navbar.module';
 import { FaqSectionModule } from './components/faq-section/faq-section.module';
+import { DevelopingTeamModule } from './components/developing-team/developing-team.module';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { FaqSectionModule } from './components/faq-section/faq-section.module';
     ServicesSectionModule,
     FooterModule,
     NavbarModule,
-    FaqSectionModule
+    FaqSectionModule,
+    DevelopingTeamModule
   ],
   providers: [],
   bootstrap: [AppComponent]
