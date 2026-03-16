@@ -1,0 +1,191 @@
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR — Cluverse Dark Theme
+   Faithful port of the CodePen navbar animation
+   Adapted to deep-navy (#0A0A1A) + accent-teal (#2DD4BF)
+   ═══════════════════════════════════════════════════════════ */
+
+$deep-navy: #0A0A1A;
+$accent-teal: #2DD4BF;
+$heading-color: rgba(255, 255, 255, 0.95);
+$body-color: rgba(255, 255, 255, 0.60);
+
+/* ─── Nav Base ───────────────────────────────────────────── */
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9000;
+  padding: 20px 0;
+  transition: all 0.4s ease;
+  background: transparent;
+
+  &.affix {
+    padding: 10px 0;
+    background: rgba($deep-navy, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ─── Container ──────────────────────────────────────────── */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  width: 90%;
+  margin: 0 auto;
+}
+
+/* ─── Logo ───────────────────────────────────────────────── */
+
+.logo a {
+  font-family: 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: $heading-color;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: $accent-teal;
+  }
+}
+
+/* ─── Nav Links ──────────────────────────────────────────── */
+
+.navlinks {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 8px;
+
+  li a {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: $body-color;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+      color: $heading-color;
+      background: rgba(255, 255, 255, 0.06);
+    }
+  }
+}
+
+/* ─── Hamburger Trigger ──────────────────────────────────── */
+
+.navTrigger {
+  display: none;
+  cursor: pointer;
+  width: 30px;
+  height: 25px;
+  position: relative;
+
+  i {
+    background-color: $heading-color;
+    border-radius: 2px;
+    content: '';
+    display: block;
+    width: 100%;
+    height: 2px;
+    position: absolute;
+    left: 0;
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.28, 1.54);
+  }
+
+  i:nth-child(1) {
+    top: 0;
+  }
+
+  i:nth-child(2) {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  i:nth-child(3) {
+    bottom: 0;
+  }
+
+  /* Active state — X animation */
+  &.active {
+    i:nth-child(1) {
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    i:nth-child(2) {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+
+    i:nth-child(3) {
+      bottom: 50%;
+      transform: translateY(50%) rotate(-45deg);
+    }
+  }
+}
+
+/* ─── Mobile Main List ───────────────────────────────────── */
+
+.main_list {
+  display: flex;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .navTrigger {
+    display: block;
+  }
+
+  .main_list {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba($deep-navy, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    z-index: -1;
+
+    &.show_list {
+      opacity: 1;
+      pointer-events: all;
+    }
+  }
+
+  .navlinks {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+
+    li a {
+      font-size: 24px;
+      font-weight: 600;
+      padding: 12px 32px;
+    }
+  }
+}

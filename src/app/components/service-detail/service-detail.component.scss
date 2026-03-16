@@ -1,0 +1,272 @@
+/* ═══════════════════════════════════════════════════════════
+   SERVICE DETAIL MODAL — Cluverse Dark Theme
+   ═══════════════════════════════════════════════════════════ */
+
+$deep-navy: #0A0A1A;
+$card-bg: #111128;
+$accent-teal: #2DD4BF;
+$heading-color: rgba(255, 255, 255, 0.95);
+$body-color: rgba(255, 255, 255, 0.60);
+$border-color: rgba(255, 255, 255, 0.08);
+
+/* ─── Backdrop ───────────────────────────────────────────── */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  transition: background 0.35s ease, backdrop-filter 0.35s ease;
+  pointer-events: none;
+
+  &.is-visible {
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(12px);
+    pointer-events: all;
+  }
+}
+
+/* ─── Modal Card ─────────────────────────────────────────── */
+
+.modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: $card-bg;
+  border: 1px solid $border-color;
+  border-radius: 20px;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba($accent-teal, 0.06);
+  opacity: 0;
+  transform: translateY(40px) scale(0.96);
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+}
+
+/* ─── Close Button ───────────────────────────────────────── */
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid $border-color;
+  background: rgba(255, 255, 255, 0.04);
+  color: $body-color;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: $heading-color;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* ─── Header ─────────────────────────────────────────────── */
+
+.modal-header {
+  padding: 40px 32px 24px;
+  text-align: center;
+  border-bottom: 1px solid $border-color;
+}
+
+.modal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: rgba($accent-teal, 0.12);
+  color: $accent-teal;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: $heading-color;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.modal-description {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: $body-color;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ─── Body — Features List ───────────────────────────────── */
+
+.modal-body {
+  padding: 28px 32px;
+}
+
+.features-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+
+  &.is-visible {
+    animation: featureEntrance 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.feature-marker {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $accent-teal;
+  margin-top: 7px;
+  box-shadow: 0 0 10px rgba($accent-teal, 0.3);
+}
+
+.feature-content {
+  h4 {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: $heading-color;
+    margin: 0 0 4px;
+  }
+
+  p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: $body-color;
+    line-height: 1.55;
+    margin: 0;
+  }
+}
+
+/* ─── Footer ─────────────────────────────────────────────── */
+
+.modal-footer {
+  padding: 0 32px 32px;
+  text-align: center;
+}
+
+.modal-cta {
+  display: inline-block;
+  padding: 14px 48px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $deep-navy;
+  background: $accent-teal;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: lighten($accent-teal, 8%);
+    box-shadow: 0 4px 24px rgba($accent-teal, 0.35);
+    transform: translateY(-1px);
+  }
+}
+
+/* ─── Feature Entrance Keyframes ─────────────────────────── */
+
+@keyframes featureEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .modal-backdrop {
+    padding: 16px;
+    align-items: flex-end;
+  }
+
+  .modal-card {
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .modal-header {
+    padding: 32px 20px 20px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-footer {
+    padding: 0 20px 24px;
+  }
+
+  .modal-title {
+    font-size: 20px;
+  }
+
+  .modal-cta {
+    width: 100%;
+  }
+}

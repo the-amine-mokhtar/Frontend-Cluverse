@@ -12,23 +12,11 @@
   <!-- ═══ Pricing Switcher (Radio + Sliding Switch) ═══ -->
   <div class="pricing-switcher">
     <p class="fieldset">
-      <input
-        type="radio"
-        name="duration-1"
-        value="monthly"
-        id="monthly-1"
-        [checked]="selectedDuration === 'monthly'"
-        (change)="onDurationChange('monthly')"
-      />
+      <input type="radio" name="duration-1" value="monthly" id="monthly-1" [checked]="selectedDuration === 'monthly'"
+        (change)="onDurationChange('monthly')" />
       <label for="monthly-1">Monthly</label>
-      <input
-        type="radio"
-        name="duration-1"
-        value="yearly"
-        id="yearly-1"
-        [checked]="selectedDuration === 'yearly'"
-        (change)="onDurationChange('yearly')"
-      />
+      <input type="radio" name="duration-1" value="yearly" id="yearly-1" [checked]="selectedDuration === 'yearly'"
+        (change)="onDurationChange('yearly')" />
       <label for="yearly-1">Yearly</label>
       <span class="switch"></span>
     </p>
@@ -37,157 +25,139 @@
   <!-- ═══ Pricing Cards ═══ -->
   <ul class="pricing-list bounce-invert">
 
-    <!-- ─── Basic ────────────────────────────────────── -->
+    <!-- ─── Starter (Gratuit) ────────────────────────────────────── -->
     <li>
       <ul class="pricing-wrapper" #pricingWrapper>
         <li data-type="monthly" class="is-visible">
           <header class="pricing-header">
-            <h2>Basic</h2>
+            <h2>Starter</h2>
             <div class="price">
-              <span class="currency">$</span>
-              <span class="value">30</span>
+              <span class="value">0</span>
+              <span class="currency">DT</span>
               <span class="duration">mo</span>
             </div>
           </header>
           <div class="pricing-body">
             <ul class="pricing-features">
-              <li><em>5</em> Email Accounts</li>
-              <li><em>1</em> Template Style</li>
-              <li><em>25</em> Products Loaded</li>
-              <li><em>1</em> Image per Product</li>
-              <li><em>Unlimited</em> Bandwidth</li>
-              <li><em>24/7</em> Support</li>
+              <li><em>20</em> Membres</li>
+              <li>Élections simples</li>
+              <li>Recrutement simples</li>
             </ul>
           </div>
           <footer class="pricing-footer">
-            <a class="select" href="#">Sign Up</a>
+            <a class="select" href="#">Commencer</a>
           </footer>
         </li>
         <li data-type="yearly" class="is-hidden">
           <header class="pricing-header">
-            <h2>Basic</h2>
+            <h2>Starter</h2>
             <div class="price">
-              <span class="currency">$</span>
-              <span class="value">320</span>
+              <span class="value">0</span>
+              <span class="currency">DT</span>
               <span class="duration">yr</span>
             </div>
           </header>
           <div class="pricing-body">
             <ul class="pricing-features">
-              <li><em>5</em> Email Accounts</li>
-              <li><em>1</em> Template Style</li>
-              <li><em>25</em> Products Loaded</li>
-              <li><em>1</em> Image per Product</li>
-              <li><em>Unlimited</em> Bandwidth</li>
-              <li><em>24/7</em> Support</li>
+              <li><em>20</em> Membres</li>
+              <li>Élections</li>
+              <li>Recrutement</li>
             </ul>
           </div>
           <footer class="pricing-footer">
-            <a class="select" href="#">Sign Up</a>
+            <a class="select" href="#">Commencer</a>
           </footer>
         </li>
       </ul>
     </li>
 
-    <!-- ─── Exclusive (Popular) ──────────────────────── -->
+    <!-- ─── Pro (Popular) ──────────────────────── -->
     <li class="exclusive">
       <ul class="pricing-wrapper" #pricingWrapper>
         <li data-type="monthly" class="is-visible">
           <header class="pricing-header">
-            <h2>Exclusive</h2>
+            <h2>Pro</h2>
             <div class="price">
-              <span class="currency">$</span>
-              <span class="value">60</span>
+              <span class="value">19</span>
+              <span class="currency">DT</span>
               <span class="duration">mo</span>
             </div>
           </header>
           <div class="pricing-body">
             <ul class="pricing-features">
-              <li><em>15</em> Email Accounts</li>
-              <li><em>3</em> Template Styles</li>
-              <li><em>40</em> Products Loaded</li>
-              <li><em>7</em> Images per Product</li>
-              <li><em>Unlimited</em> Bandwidth</li>
-              <li><em>24/7</em> Support</li>
+              <li><em>150</em> Membres</li>
+              <li><em>1 poste</em> / tour unique</li>
+              <li><em>Formulaire</em> + statuts</li>
             </ul>
           </div>
           <footer class="pricing-footer">
-            <a class="select" href="#">Sign Up</a>
+            <a class="select" href="#">Choisir Pro</a>
           </footer>
         </li>
         <li data-type="yearly" class="is-hidden">
           <header class="pricing-header">
-            <h2>Exclusive</h2>
+            <h2>Pro</h2>
             <div class="price">
-              <span class="currency">$</span>
-              <span class="value">630</span>
+              <span class="value">165</span>
+              <span class="currency">DT</span>
               <span class="duration">yr</span>
             </div>
           </header>
           <div class="pricing-body">
             <ul class="pricing-features">
-              <li><em>15</em> Email Accounts</li>
-              <li><em>3</em> Template Styles</li>
-              <li><em>40</em> Products Loaded</li>
-              <li><em>7</em> Images per Product</li>
-              <li><em>Unlimited</em> Bandwidth</li>
-              <li><em>24/7</em> Support</li>
+              <li><em>150</em> Membres</li>
+              <li><em>1 poste</em> / tour unique</li>
+              <li><em>Formulaire</em> + statuts</li>
             </ul>
           </div>
           <footer class="pricing-footer">
-            <a class="select" href="#">Sign Up</a>
+            <a class="select" href="#">Choisir Pro</a>
           </footer>
         </li>
       </ul>
     </li>
 
-    <!-- ─── Pro ──────────────────────────────────────── -->
+    <!-- ─── Elite ──────────────────────────────────────── -->
     <li>
       <ul class="pricing-wrapper" #pricingWrapper>
         <li data-type="monthly" class="is-visible">
           <header class="pricing-header">
-            <h2>Pro</h2>
+            <h2>Elite</h2>
             <div class="price">
-              <span class="currency">$</span>
-              <span class="value">90</span>
+              <span class="value">39</span>
+              <span class="currency">DT</span>
               <span class="duration">mo</span>
             </div>
           </header>
           <div class="pricing-body">
             <ul class="pricing-features">
-              <li><em>20</em> Email Accounts</li>
-              <li><em>5</em> Template Styles</li>
-              <li><em>50</em> Products Loaded</li>
-              <li><em>10</em> Images per Product</li>
-              <li><em>Unlimited</em> Bandwidth</li>
-              <li><em>24/7</em> Support</li>
+              <li><em>Illimité</em> Membres</li>
+              <li><em>Multi-postes</em>, tours multiples</li>
+              <li><em>Pipeline</em> + scoring + onboarding</li>
             </ul>
           </div>
           <footer class="pricing-footer">
-            <a class="select" href="#">Sign Up</a>
+            <a class="select" href="#">Choisir Elite</a>
           </footer>
         </li>
         <li data-type="yearly" class="is-hidden">
           <header class="pricing-header">
-            <h2>Pro</h2>
+            <h2>Elite</h2>
             <div class="price">
-              <span class="currency">$</span>
-              <span class="value">950</span>
+              <span class="value">335</span>
+              <span class="currency">DT</span>
               <span class="duration">yr</span>
             </div>
           </header>
           <div class="pricing-body">
             <ul class="pricing-features">
-              <li><em>20</em> Email Accounts</li>
-              <li><em>5</em> Template Styles</li>
-              <li><em>50</em> Products Loaded</li>
-              <li><em>10</em> Images per Product</li>
-              <li><em>Unlimited</em> Bandwidth</li>
-              <li><em>24/7</em> Support</li>
+              <li><em>Illimité</em> Membres</li>
+              <li><em>Multi-postes</em>, tours multiples</li>
+              <li><em>Pipeline</em> + scoring + onboarding</li>
             </ul>
           </div>
           <footer class="pricing-footer">
-            <a class="select" href="#">Sign Up</a>
+            <a class="select" href="#">Choisir Elite</a>
           </footer>
         </li>
       </ul>

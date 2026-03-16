@@ -1,0 +1,38 @@
+<!-- ═══════════════════════════════════════════════════════════
+     FAQ SECTION — Exact layout from test.html adapted for Cluverse colors
+     ═══════════════════════════════════════════════════════════ -->
+<section class="faq-section" id="faq">
+  <div class="container">
+    <div class="row">
+      <!-- ***** FAQ Start ***** -->
+      <div class="col-md-6 offset-md-3 faq-title-column">
+        <div class="faq-title text-center pb-3">
+          <h2>Frequently Asked Questions</h2>
+        </div>
+      </div>
+      <div class="col-md-6 offset-md-3 faq-content-column">
+        <div class="faq" id="accordion">
+
+          <div class="card" *ngFor="let item of faqItems; let i = index">
+            <div class="card-header" id="faqHeading-{{ i }}">
+              <div class="mb-0">
+                <h5 class="faq-title" (click)="toggle(i)" [attr.aria-expanded]="activeIndex === i"
+                  attr.aria-controls="faqCollapse-{{ i }}">
+                  <span class="badge">{{ i + 1 }}</span>
+                  {{ item.question }}
+                </h5>
+              </div>
+            </div>
+            <div id="faqCollapse-{{ i }}" class="collapse" [class.show]="activeIndex === i"
+              attr.aria-labelledby="faqHeading-{{ i }}" data-parent="#accordion">
+              <div class="card-body">
+                <p>{{ item.answer }}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

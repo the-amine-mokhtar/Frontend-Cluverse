@@ -1,0 +1,58 @@
+<!-- ═══════════════════════════════════════════════════════════
+     SERVICE DETAIL MODAL
+     ═══════════════════════════════════════════════════════════ -->
+<div
+  class="modal-backdrop"
+  [class.is-visible]="isVisible"
+  (click)="onBackdropClick($event)"
+>
+  <div class="modal-card" [class.is-visible]="isVisible">
+
+    <!-- Close Button -->
+    <button class="modal-close" (click)="close()" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
+    </button>
+
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path [attr.d]="service.icon" />
+        </svg>
+      </div>
+      <h2 class="modal-title">{{ service.title }}</h2>
+      <p class="modal-description">{{ service.description }}</p>
+    </div>
+
+    <!-- Features List -->
+    <div class="modal-body">
+      <ul class="features-list">
+        <li
+          *ngFor="let detail of service.details; let i = index"
+          class="feature-item"
+          [style.animation-delay]="(i * 60 + 200) + 'ms'"
+          [class.is-visible]="isVisible"
+        >
+          <div class="feature-marker"></div>
+          <div class="feature-content">
+            <h4>{{ detail.title }}</h4>
+            <p>{{ detail.description }}</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="modal-cta" (click)="close()">Compris</button>
+    </div>
+
+  </div>
+</div>

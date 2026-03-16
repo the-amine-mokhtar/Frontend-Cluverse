@@ -54,7 +54,7 @@ export class HeroSequenceComponent implements OnInit, AfterViewInit, OnDestroy {
     {
       id: 'beat-a',
       title: 'Meet Cluverse',
-      subtitle: 'The all-in-one platform for university clubs and associations.',
+      subtitle: 'The all-in-one platform for clubs and associations.',
       alignment: 'center',
       scrollStart: -1,
       scrollEnd: 0.20,

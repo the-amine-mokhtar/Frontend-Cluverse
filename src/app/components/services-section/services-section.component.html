@@ -16,6 +16,8 @@
       #serviceCard
       class="c-services__item"
       [style.--card-index]="i"
+      (click)="onServiceClick(service)"
+      style="cursor: pointer;"
     >
       <!-- Icon -->
       <div class="c-services__icon">
@@ -40,3 +42,10 @@
   </ul>
 
 </section>
+
+<!-- ═══ Service Detail Modal ═══ -->
+<app-service-detail
+  *ngIf="selectedService"
+  [service]="selectedService"
+  (closed)="onCloseDetail()"
+></app-service-detail>

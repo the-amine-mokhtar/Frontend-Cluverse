@@ -1,0 +1,34 @@
+<!-- ═══════════════════════════════════════════════════════════
+     NAVBAR — Fixed, animated on scroll
+     Port from test.html, adapted for Cluverse
+     ═══════════════════════════════════════════════════════════ -->
+<nav class="nav" [class.affix]="isAffix">
+  <div class="container">
+
+    <!-- Logo -->
+    <div class="logo">
+      <a (click)="scrollTo('hero')" href="javascript:void(0)">Cluverse</a>
+    </div>
+
+    <!-- Nav Links -->
+    <div class="main_list" [class.show_list]="isMenuOpen">
+      <ul class="navlinks">
+        <li *ngFor="let link of navLinks">
+          <a (click)="scrollTo(link.target)" href="javascript:void(0)">{{ link.label }}</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Hamburger Trigger -->
+    <span
+      class="navTrigger"
+      [class.active]="isMenuOpen"
+      (click)="toggleMenu()"
+    >
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+
+  </div>
+</nav>
