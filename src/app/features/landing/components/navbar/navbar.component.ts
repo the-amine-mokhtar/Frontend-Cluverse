@@ -23,7 +23,7 @@ export class NavbarComponent implements OnInit {
     { label: 'About Us', target: 'footer' }
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
     this.checkScroll();
@@ -44,7 +44,7 @@ export class NavbarComponent implements OnInit {
 
   scrollTo(target: string): void {
     this.isMenuOpen = false;
-    
+
     // Check if we are already on the home page (ignoring fragments)
     const isHome = this.router.url === '/' || this.router.url.startsWith('/#');
 
