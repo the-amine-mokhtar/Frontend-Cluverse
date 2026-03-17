@@ -33,6 +33,12 @@ export class DevelopingTeamComponent {
       email: 'ibtissem.benamara@example.com'
     },
     {
+      name: 'Louay Tlili',
+      role: 'Frontend developper',
+      image: 'assets/DeveloppingTeam/Louay_Tlili.jpg',
+      email: 'louay.tlili@example.com'
+    },
+    {
       name: 'Louay Zorai',
       role: 'Frontend developper',
       image: 'assets/DeveloppingTeam/Louay_Zorai.png',
