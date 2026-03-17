@@ -31,18 +31,13 @@
     <!-- ═══════════════════════════════════════════════════
          TEXT OVERLAYS — Scrollytelling Beats
          ═══════════════════════════════════════════════════ -->
-    <div
-      *ngFor="let beat of textBeats"
-      [id]="beat.id"
-      class="text-beat"
-      [ngClass]="getAlignmentClass(beat.alignment)"
-      style="display: none;"
-    >
+    <div *ngFor="let beat of textBeats" [id]="beat.id" class="text-beat" [ngClass]="getAlignmentClass(beat.alignment)"
+      style="display: none;">
       <div class="beat-content">
         <h2 class="beat-title">{{ beat.title }}</h2>
         <img *ngIf="beat.hasLogo" [src]="beat.logoSrc" alt="Cluverse" class="intro-logo" />
         <p class="beat-subtitle">{{ beat.subtitle }}</p>
-        <a *ngIf="beat.hasCta" class="cta-button" routerLink="/login">
+        <a *ngIf="beat.hasCta" class="cta-button" routerLink="/auth/login">
           {{ beat.ctaText }}
           <span class="cta-glow"></span>
         </a>
@@ -56,7 +51,8 @@
       <span class="scroll-label">Scroll to explore</span>
       <div class="scroll-arrow">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
       </div>
     </div>
