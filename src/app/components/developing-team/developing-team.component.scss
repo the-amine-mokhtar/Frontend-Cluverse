@@ -59,10 +59,9 @@ $body-color: rgba(255, 255, 255, 0.60);
 /* ─── Infinite Slider ────────────────────────────────────── */
 
 .slider {
-  /* Variables moved here to avoid Angular stripping them from inline styles */
+  /* Variables mixed between angular binding and css */
   --width: 250px;
   --height: 350px;
-  --imageQuantity: 4;
   --gap: calc(var(--width) / 4);
 
   padding-block: 20px;
@@ -79,7 +78,8 @@ $body-color: rgba(255, 255, 255, 0.60);
   display: flex;
   width: max-content;
   gap: var(--gap);
-  animation: autoScroll 15s linear infinite;
+  /* Use a longer animation for more items, e.g. 30s */
+  animation: autoScroll 30s linear infinite;
 }
 
 .list:hover {

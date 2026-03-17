@@ -10,8 +10,8 @@
     </div>
 
     <!-- Infinite Slider adapted from test.html -->
-    <!-- Variables moved to SCSS to avoid Angular sanitization stripping them -->
-    <div class="slider">
+    <!-- Variables moved to SCSS and dynamic binding for quantity -->
+    <div class="slider" [style.--imageQuantity]="teamMembers.length">
       <div class="list">
         
         <!-- Original 4 Items -->

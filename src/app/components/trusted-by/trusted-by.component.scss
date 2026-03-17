@@ -1,0 +1,104 @@
+/* ═══════════════════════════════════════════════════════════
+   TRUSTED BY SECTION — Logo Slider
+   ═══════════════════════════════════════════════════════════ */
+
+$deep-navy: #0A0A1A;
+$body-color: rgba(0, 0, 0, 0.40); /* Darker text for white background */
+
+:host {
+  display: block;
+  /* White background requested by user */
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); 
+}
+
+.trusted-section {
+  /* This padding dictates the top/bottom spacing around the slider.
+     Reduce these numbers to make the white bar thinner. */
+  padding: 10px 0 15px 0;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+.trusted-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ─── Header ─────────────────────────────────────────────── */
+
+.trusted-header {
+  text-align: center;
+  /* Reduced margin to keep the section thin */
+  margin-bottom: 10px;
+}
+
+.trusted-header p {
+  color: $body-color;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ─── Infinite Slider ────────────────────────────────────── */
+
+.slider {
+  /* Smaller dimensions for logos compared to team cards */
+  --width: 150px;
+  --height: 80px;
+  --gap: 80px;
+
+  padding-block: 5px;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  position: relative;
+  /* Smooth fade at edges */
+  mask-image: linear-gradient(to right, transparent 2%, #000 15%, #000 85%, transparent 98%);
+  -webkit-mask-image: linear-gradient(to right, transparent 2%, #000 15%, #000 85%, transparent 98%);
+}
+
+.list {
+  display: flex;
+  width: max-content;
+  gap: var(--gap);
+  /* Slower scroll for a subtle background effect */
+  animation: autoScroll 35s linear infinite;
+}
+
+.list:hover {
+  animation-play-state: paused !important;
+}
+
+.item {
+  width: var(--width);
+  height: var(--height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.item:hover img {
+  transform: scale(1.05);
+}
+
+@keyframes autoScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-1 * (var(--width) + var(--gap)) * var(--imageQuantity)));
+  }
+}

@@ -1,76 +1,23 @@
-<div class="main_wrapper">
-    <div class="main">
-        <div class="antenna">
-            <div class="antenna_shadow"></div>
-            <div class="a1"></div>
-            <div class="a1d"></div>
-            <div class="a2"></div>
-            <div class="a2d"></div>
-            <div class="a_base"></div>
-        </div>
-        <div class="tv">
-            <div class="cruve">
-                <svg class="curve_svg" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 189.929 189.929" xml:space="preserve">
-                    <path d="M70.343,70.343c-30.554,30.553-44.806,72.7-39.102,115.635l-29.738,3.951C-5.442,137.659,11.917,86.34,49.129,49.13
-        C86.34,11.918,137.664-5.445,189.928,1.502l-3.95,29.738C143.041,25.54,100.895,39.789,70.343,70.343z"></path>
-                </svg>
-            </div>
-            <div class="display_div">
-                <div class="screen_out">
-                    <div class="screen_out1">
-                        <div class="screen">
-                            <span class="notfound_text"> NOT FOUND</span>
-                        </div>
-                        <div class="screenM">
-                            <span class="notfound_text"> NOT FOUND</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="lines">
-                <div class="line1"></div>
-                <div class="line2"></div>
-                <div class="line3"></div>
-            </div>
-            <div class="buttons_div">
-                <div class="b1">
-                    <div></div>
-                </div>
-                <div class="b2"></div>
-                <div class="speakers">
-                    <div class="g1">
-                        <div class="g11"></div>
-                        <div class="g12"></div>
-                        <div class="g13"></div>
-                    </div>
-                    <div class="g"></div>
-                    <div class="g"></div>
-                </div>
-            </div>
-        </div>
-        <div class="bottom">
-            <div class="base1"></div>
-            <div class="base2"></div>
-            <div class="base3"></div>
-        </div>
-    </div>
-    <div class="text_404">
-        <div class="text_4041">4</div>
-        <div class="text_4042">0</div>
-        <div class="text_4043">4</div>
-    </div>
-</div>
-
-
 /* Design Inspired by one of Stefan Devai's Design on Dribble */
+$deep-navy: #0A0A1A;
+
+:host {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 200px); /* Fill most of screen between navbar/footer */
+    background: $deep-navy;
+    padding: 2em;
+}
 
 .main_wrapper {
 display: flex;
+flex-direction: column;
 align-items: center;
 justify-content: center;
 width: 30em;
 height: 30em;
+position: relative;
 }
 
 .main {
@@ -101,9 +48,6 @@ border-radius: 45%;
 transform: rotate(140deg);
 border: 4px solid transparent;
 box-shadow:
-inset 0px 16px #a85103,
-inset 0px 16px 1px 1px #a85103;
--moz-box-shadow:
 inset 0px 16px #a85103,
 inset 0px 16px 1px 1px #a85103;
 }
@@ -376,51 +320,6 @@ background-position:
 }
 }
 
-/* Another Error Screen to Use
-
-.screen {
-width: 13em;
-height: 7.85em;
-position: relative;
-background: linear-gradient(to right, #002fc6 0%, #002bb2 14.2857142857%, #3a3a3a 14.2857142857%, #303030
-28.5714285714%, #ff0afe 28.5714285714%, #f500f4 42.8571428571%, #6c6c6c 42.8571428571%, #626262 57.1428571429%, #0affd9
-57.1428571429%, #00f5ce 71.4285714286%, #3a3a3a 71.4285714286%, #303030 85.7142857143%, white 85.7142857143%, #fafafa
-100%);
-border-radius: 10px;
-border: 2px solid black;
-z-index: 99;
-display: flex;
-align-items: center;
-justify-content: center;
-font-weight: bold;
-color: #252525;
-letter-spacing: 0.15em;
-text-align: center;
-overflow: hidden;
-}
-.screen:before, .screen:after {
-content: "";
-position: absolute;
-left: 0;
-z-index: 1;
-width: 100%;
-}
-.screen:before {
-top: 0;
-height: 68.4782608696%;
-background: linear-gradient(to right, white 0%, #fafafa 14.2857142857%, #ffe60a 14.2857142857%, #f5dc00 28.5714285714%,
-#0affd9 28.5714285714%, #00f5ce 42.8571428571%, #10ea00 42.8571428571%, #0ed600 57.1428571429%, #ff0afe 57.1428571429%,
-#f500f4 71.4285714286%, #ed0014 71.4285714286%, #d90012 85.7142857143%, #002fc6 85.7142857143%, #002bb2 100%);
-}
-.screen:after {
-bottom: 0;
-height: 21.7391304348%;
-background: linear-gradient(to right, #006c6b 0%, #005857 16.6666666667%, white 16.6666666667%, #fafafa 33.3333333333%,
-#001b75 33.3333333333%, #001761 50%, #6c6c6c 50%, #626262 66.6666666667%, #929292 66.6666666667%, #888888
-83.3333333333%, #3a3a3a 83.3333333333%, #303030 100%);
-}
-
-*/
 
 .lines {
 display: flex;
@@ -601,6 +500,7 @@ align-items: center;
 justify-content: center;
 opacity: 0.5;
 font-family: Montserrat;
+color: white; /* modified to contrast with dark theme */
 }
 .text_4041 {
 transform: scaleY(24.5) scaleX(9);
@@ -610,6 +510,22 @@ transform: scaleY(24.5) scaleX(9);
 }
 .text_4043 {
 transform: scaleY(24.5) scaleX(9);
+}
+
+.error_message {
+  position: absolute;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.error_message p {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+  font-weight: 500;
+  margin: 0;
 }
 
 @media only screen and (max-width: 495px) {

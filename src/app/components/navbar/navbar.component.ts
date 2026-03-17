@@ -3,6 +3,7 @@ import {
   HostListener,
   OnInit
 } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -21,6 +22,8 @@ export class NavbarComponent implements OnInit {
     { label: 'Team', target: 'team' },
     { label: 'About Us', target: 'footer' }
   ];
+
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
     this.checkScroll();
@@ -41,13 +44,28 @@ export class NavbarComponent implements OnInit {
 
   scrollTo(target: string): void {
     this.isMenuOpen = false;
-    if (target === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    const el = document.getElementById(target);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Check if we are already on the home page (ignoring fragments)
+    const isHome = this.router.url === '/' || this.router.url.startsWith('/#');
+
+    if (isHome) {
+      // Simply scroll without changing the URL
+      if (target === 'top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const el = document.getElementById(target);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    } else {
+      // Navigate to the home page with a fragment
+      if (target === 'top') {
+        this.router.navigate(['/']);
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+      } else {
+        this.router.navigate(['/'], { fragment: target });
+      }
     }
   }
 }

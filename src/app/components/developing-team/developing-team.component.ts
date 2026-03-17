@@ -18,19 +18,19 @@ export class DevelopingTeamComponent {
       name: 'Amine Mokhtar',
       role: 'Backend developper',
       image: 'assets/DeveloppingTeam/Amine_Mokhtar.png',
-      email: 'amine.mokhtar@example.com'
+      email: 'amine.mokhtar@esprit.tn'
     },
     {
       name: 'Feriel Khamlia',
       role: 'Team Leader',
       image: 'assets/DeveloppingTeam/Feriel_Khamlia.png',
-      email: 'feriel.khamlia@example.com'
+      email: 'feriel.khamlia@esprit.tn'
     },
     {
       name: 'Ibtissem Ben Amara',
       role: 'Infrastructure manager',
       image: 'assets/DeveloppingTeam/Ibtissem_Ben_Amara.png',
-      email: 'ibtissem.benamara@example.com'
+      email: 'ibtissem.benamara@esprit.tn'
     },
     {
       name: 'Louay Tlili',
@@ -42,7 +42,25 @@ export class DevelopingTeamComponent {
       name: 'Louay Zorai',
       role: 'Frontend developper',
       image: 'assets/DeveloppingTeam/Louay_Zorai.png',
-      email: 'louay.zorai@example.com'
+      email: 'louay.zorai@esprit.tn'
+    },
+    {
+      name: 'Koussay Akchi',
+      role: 'DevOps Engineer',
+      image: 'assets/DeveloppingTeam/Koussay_Akchi.png',
+      email: 'koussay.akchi@esprit.tn'
+    },
+    {
+      name: 'Louay Tlili',
+      role: 'Database Architect',
+      image: 'assets/DeveloppingTeam/Louay_Tlili.png',
+      email: 'louay.tlili@esprit.tn'
+    },
+    {
+      name: 'Jihen Ghabi',
+      role: 'UI/UX Designer',
+      image: 'assets/DeveloppingTeam/Jihen_Ghabi.png',
+      email: 'jihen.ghabi@esprit.tn'
     }
   ];
 }

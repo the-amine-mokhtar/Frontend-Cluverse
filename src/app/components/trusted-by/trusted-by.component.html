@@ -1,0 +1,29 @@
+<!-- ═══════════════════════════════════════════════════════════
+     TRUSTED BY SECTION — Infinite Logo Slider
+     ═══════════════════════════════════════════════════════════ -->
+<section class="trusted-section">
+  <div class="trusted-container">
+
+    <div class="trusted-header text-center">
+      <p>Trusted by</p>
+    </div>
+
+    <!-- Infinite Slider -->
+    <div class="slider" [style.--imageQuantity]="logos.length">
+      <div class="list">
+
+        <!-- Original Items -->
+        <div class="item" *ngFor="let logo of logos">
+          <img [src]="logo.image" [alt]="logo.name" />
+        </div>
+
+        <!-- Duplicated Items for Seamless Loop -->
+        <div class="item" *ngFor="let logo of logos">
+          <img [src]="logo.image" [alt]="logo.name" />
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
