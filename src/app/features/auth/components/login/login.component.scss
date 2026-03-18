@@ -35,11 +35,11 @@ $transition: 1.25s;
 /**/
 .main {
     position: relative;
-    width: 1000px;
-	min-width: 1000px;
-	min-height: 600px;
-    height: 600px;
-    padding: 25px;
+    width: 1150px;
+	min-width: 1150px;
+	min-height: 650px;
+    height: 80vh;
+    padding: 20px;
 	background-color: $neu-1;
 	box-shadow:
 		10px 10px 10px $neu-2,
@@ -59,7 +59,7 @@ $transition: 1.25s;
     align-items: center;
     position: absolute;
     top: 0;
-    width: 600px;
+    width: 700px;
     height: 100%;
     padding: 25px;
 	background-color: $neu-1;
@@ -68,7 +68,7 @@ $transition: 1.25s;
 
 .form {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-direction: column;
     width: 100%;
@@ -76,6 +76,10 @@ $transition: 1.25s;
     overflow-y: auto;
     padding: 20px 0;
     
+    & > * {
+        flex-shrink: 0;
+    }
+
     &::-webkit-scrollbar {
         display: none;
     }
@@ -96,10 +100,42 @@ $transition: 1.25s;
         }
     }
 
+    &__group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 350px;
+        margin: 4px 0;
+
+        .form__label {
+            color: $black;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            margin-left: 5px;
+        }
+
+        .form__input {
+            margin: 0;
+            width: 100%;
+
+            &.file-upload {
+                margin: 0;
+                width: 100%;
+            }
+        }
+        
+        .image-preview {
+            width: 100%;
+            margin: 0;
+        }
+    }
+
     &__input {
         width: 350px;
-        height: 40px;
-        margin: 4px 0;
+        height: 38px;
+        margin: 2px 0;
         padding-left: 25px;
         font-size: 13px;
         letter-spacing: .15px;
@@ -276,9 +312,9 @@ $transition: 1.25s;
 }
 
 .title {
-    font-size: 34px;
+    font-size: 30px;
     font-weight: 700;
-    line-height: 3;
+    line-height: 2.5;
     color: $black;
 }
 
@@ -298,9 +334,9 @@ select.form__input {
 
 .button {
     width: 180px;
-    height: 50px;
+    height: 45px;
     border-radius: 25px;
-    margin-top: 25px;
+    margin-top: 15px;
     font-weight: 700;
     font-size: 14px;
     letter-spacing: 1.15px;
@@ -330,11 +366,11 @@ select.form__input {
 /**/
 .a-container {
     z-index: 100;
-    left: calc(100% - 600px);
+    left: calc(100% - 700px);
 }
 
 .b-container {
-    left: calc(100% - 600px);
+    left: calc(100% - 700px);
     z-index: 0;
 }
 
@@ -346,7 +382,7 @@ select.form__input {
     top: 0;
     left: 0;
     height: 100%;
-    width: 400px;
+    width: 450px;
     padding: 50px;
     z-index: 200;
     transition: $transition;
@@ -358,8 +394,8 @@ select.form__input {
 
     &__circle {
         position: absolute;
-        width: 500px;
-        height: 500px;
+        width: 550px;
+        height: 550px;
         border-radius: 50%;
 		background-color: $neu-1;
 		box-shadow:
@@ -372,8 +408,8 @@ select.form__input {
         &--t {
             top: -30%;
             left: 60%;
-            width: 300px;
-            height: 300px;
+            width: 350px;
+            height: 350px;
         }
     }
 
@@ -383,7 +419,7 @@ select.form__input {
         align-items: center;
         flex-direction: column;
         position: absolute;
-        width: 400px;
+        width: 450px;
         padding: 50px 55px;
         transition: $transition;
     }
@@ -410,7 +446,7 @@ select.form__input {
 
 /**/
 .is-txr {
-    left: calc(100% - 400px);
+    left: calc(100% - 450px);
     transition: $transition;
     transform-origin: left;
 }
@@ -438,6 +474,6 @@ select.form__input {
 }
 
 @keyframes is-gx {
-    0%, 10%, 100%{ width: 400px; }
+    0%, 10%, 100%{ width: 450px; }
     30%, 50%{ width: 500px;}
 }

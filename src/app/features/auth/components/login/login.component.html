@@ -4,43 +4,65 @@
     <div class="container a-container" id="a-container" [class.is-txl]="isSignUpActive">
         <form id="a-form" class="form" method="" action="">
             <h2 class="form_title title">Apply to add a new club</h2>
-            <input class="form__input mt-first" type="text" placeholder="Enter your club's name" />
-            <input class="form__input" type="text" placeholder="Describe your club a little..." />
+            <div class="form__group mt-first">
+                <label class="form__label">Club Name</label>
+                <input class="form__input" type="text" placeholder="Enter your club's name" />
+            </div>
             
-            <select class="form__input select-box" title="Secteur d'activité">
-                <option value="" disabled selected>Select an activity sector</option>
-                <option value="Technologies">Technologies & IT</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Arts">Arts & Culture</option>
-                <option value="Sports">Sports</option>
-                <option value="Science">Science</option>
-                <option value="Social">Social & Humanitarian</option>
-                <option value="Other">Other</option>
-            </select>
+            <div class="form__group">
+                <label class="form__label">Description</label>
+                <input class="form__input" type="text" placeholder="Describe your club a little..." />
+            </div>
             
-            <input class="form__input" type="date" placeholder="Date the club was founded" title="Creation Date" />
-            <input class="form__input" type="email" placeholder="Enter contact email address" />
+            <div class="form__group">
+                <label class="form__label">Activity Sector</label>
+                <select class="form__input select-box" title="Secteur d'activité">
+                    <option value="" disabled selected>Select an activity sector</option>
+                    <option value="Technologies">Technologies & IT</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Arts">Arts & Culture</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Science">Science</option>
+                    <option value="Social">Social & Humanitarian</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
             
-            <select class="form__input select-box">
-                <option value="" disabled selected>Select current status</option>
-                <option value="Active">Active</option>
-                <option value="Pending">Pending Validation</option>
-                <option value="Inactive">Inactive</option>
-            </select>
-
-            <!-- Image Upload & Crop Area -->
-            <div class="form__input file-upload" *ngIf="!imageChangedEvent">
-                <span class="file-label">Upload Club Logo</span>
-                <input type="file" accept="image/*" class="file-input" (change)="fileChangeEvent($event)" />
+            <div class="form__group">
+                <label class="form__label">Creation Date</label>
+                <input class="form__input" type="date" placeholder="Date the club was founded" title="Creation Date" />
             </div>
 
-            <div class="image-preview form__input" *ngIf="croppedImage && !showCropper">
-                <img [src]="croppedImage" alt="Cropped Logo" class="cropped-img" />
-                <span class="preview-text">Logo selected!</span>
-                <button class="delete-btn" (click)="removeImage($event)" title="Delete image">
-                    <!-- SVG Trash Icon -->
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
+            <div class="form__group">
+                <label class="form__label">Email Address</label>
+                <input class="form__input" type="email" placeholder="Enter contact email address" />
+            </div>
+            
+            <div class="form__group">
+                <label class="form__label">Status</label>
+                <select class="form__input select-box">
+                    <option value="" disabled selected>Select current status</option>
+                    <option value="Active">Active</option>
+                    <option value="Pending">Pending Validation</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+            </div>
+
+            <div class="form__group">
+                <label class="form__label">Club Logo</label>
+                <!-- Image Upload & Crop Area -->
+                <div class="form__input file-upload" *ngIf="!imageChangedEvent">
+                    <span class="file-label">Upload Club Logo</span>
+                    <input type="file" accept="image/*" class="file-input" (change)="fileChangeEvent($event)" />
+                </div>
+                <div class="image-preview form__input" *ngIf="croppedImage && !showCropper">
+                    <img [src]="croppedImage" alt="Cropped Logo" class="cropped-img" />
+                    <span class="preview-text">Logo selected!</span>
+                    <button class="delete-btn" (click)="removeImage($event)" title="Delete image">
+                        <!-- SVG Trash Icon -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
             </div>
 
             <button class="form__button button submit" (click)="$event.preventDefault()">APPLY</button>
@@ -52,13 +74,23 @@
         <form id="b-form" class="form" method="" action="">
             <h2 class="form_title title">Login in to your club portail</h2>
             
-            <select class="form__input" (change)="onClubSelect($event)" [value]="selectedClub">
-                <option value="" disabled selected>Select your club</option>
-                <option *ngFor="let club of clubs" [value]="club">{{ club }}</option>
-            </select>
+            <div class="form__group">
+                <label class="form__label">Club Selection</label>
+                <select class="form__input" (change)="onClubSelect($event)" [value]="selectedClub">
+                    <option value="" disabled selected>Select your club</option>
+                    <option *ngFor="let club of clubs" [value]="club">{{ club }}</option>
+                </select>
+            </div>
             
-            <input class="form__input" type="text" placeholder="Enter your Identifier" [disabled]="!selectedClub" />
-            <input class="form__input" type="password" placeholder="Enter your Password" [disabled]="!selectedClub" />
+            <div class="form__group">
+                <label class="form__label">Identifier</label>
+                <input class="form__input" type="text" placeholder="Enter your Identifier" [disabled]="!selectedClub" />
+            </div>
+
+            <div class="form__group">
+                <label class="form__label">Password</label>
+                <input class="form__input" type="password" placeholder="Enter your Password" [disabled]="!selectedClub" />
+            </div>
             <a class="form__link">Forgot your password?</a>
             <button class="form__button button submit" (click)="$event.preventDefault()" [disabled]="!selectedClub">SIGN IN</button>
         </form>
