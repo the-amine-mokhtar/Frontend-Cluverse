@@ -1,0 +1,309 @@
+// Variables
+$primary: #4F46E5;
+$primary-hover: #4338ca;
+$text: #1f2937;
+$text-light: #6b7280;
+$bg: #f3f4f6;
+$glass-bg: rgba(255, 255, 255, 0.85);
+$glass-border: rgba(255, 255, 255, 0.4);
+$error: #ef4444;
+
+.login-wrapper {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+// Background blurred blobs
+.background-elements {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  z-index: 0;
+
+  .blob {
+    position: absolute;
+    filter: blur(80px);
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: float 10s infinite ease-in-out alternate;
+  }
+  .blob-1 {
+    width: 400px;
+    height: 400px;
+    background: #a5b4fc;
+    top: -100px;
+    left: -100px;
+  }
+  .blob-2 {
+    width: 300px;
+    height: 300px;
+    background: #fbcfe8;
+    bottom: -50px;
+    right: -50px;
+    animation-delay: -5s;
+  }
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, 50px) scale(1.1); }
+}
+
+// Glass Panel
+.glass-panel {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  background: $glass-bg;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid $glass-border;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 40px;
+}
+
+.step {
+  display: none;
+  opacity: 0;
+  transform: translateX(20px);
+  animation: slideIn 0.4s forwards cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.active {
+    display: block;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 32px;
+
+  .title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: $text;
+    margin: 0 0 8px 0;
+  }
+  
+  .subtitle {
+    font-size: 0.875rem;
+    color: $text-light;
+    margin: 0;
+  }
+}
+
+.error-msg {
+  background: rgba($error, 0.1);
+  color: $error;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.form {
+  .input-ctrl {
+    margin-bottom: 20px;
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: $text;
+      margin-bottom: 8px;
+    }
+
+    .input-container {
+      position: relative;
+      
+      .icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        color: #9ca3af;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px 16px 12px 42px;
+        border-radius: 12px;
+        border: 1px solid #d1d5db;
+        background: rgba(255, 255, 255, 0.5);
+        font-size: 1rem;
+        color: $text;
+        transition: all 0.2s;
+        box-sizing: border-box;
+
+        &:focus {
+          outline: none;
+          border-color: $primary;
+          background: #fff;
+          box-shadow: 0 0 0 4px rgba($primary, 0.1);
+        }
+      }
+    }
+  }
+}
+
+// Buttons
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: $primary;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+
+  &:hover:not(:disabled) {
+    background: $primary-hover;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba($primary, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.btn-text {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: $text-light;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 16px;
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: $text;
+  }
+}
+
+// Spinner CSS
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+
+  &.large {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba($primary, 0.2);
+    border-top-color: $primary;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Step 2 Clubs List
+.club-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  /* Invisible Scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  .club-card {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: $primary;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      
+      .chevron {
+        transform: translateX(4px);
+        color: $primary;
+      }
+    }
+
+    .club-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 16px;
+      border: 1px solid #f3f4f6;
+    }
+
+    .club-name {
+      flex: 1;
+      font-weight: 600;
+      color: $text;
+      font-size: 0.95rem;
+    }
+
+    .chevron {
+      width: 20px;
+      height: 20px;
+      color: #cbd5e1;
+      transition: all 0.2s ease;
+    }
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  border-radius: 24px;
+}

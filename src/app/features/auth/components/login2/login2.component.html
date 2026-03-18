@@ -1,0 +1,90 @@
+<div class="login-wrapper">
+  <div class="background-elements">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="login-card glass-panel" [ngClass]="{'show-step-2': step === 2}">
+    <!-- Step 1 -->
+    <div class="step step-1" [class.active]="step === 1">
+      <div class="card-header">
+        <h2 class="title">Welcome</h2>
+        <p class="subtitle">Please enter your credentials to continue</p>
+      </div>
+
+      <div class="error-msg" *ngIf="error && step === 1">{{ error }}</div>
+
+      <form (submit)="onLogin($event)" class="form">
+        <div class="input-ctrl">
+          <label>Email</label>
+          <div class="input-container">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+            </svg>
+            <input 
+              type="email" 
+              placeholder="name@example.com"
+              [value]="email" 
+              (input)="email = $any($event.target).value"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="input-ctrl">
+          <label>Password</label>
+          <div class="input-container">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <input 
+              type="password" 
+              placeholder="••••••••"
+              [value]="password" 
+              (input)="password = $any($event.target).value"
+              required
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="isLoading">
+          <span *ngIf="!isLoading">Secure Login</span>
+          <span *ngIf="isLoading" class="spinner"></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step step-2" [class.active]="step === 2">
+      <div class="card-header">
+        <h2 class="title">Select Club</h2>
+        <p class="subtitle">Choose the club you wish to access</p>
+      </div>
+
+      <div class="error-msg" *ngIf="error && step === 2">{{ error }}</div>
+
+      <div class="club-list">
+        <div 
+          class="club-card" 
+          *ngFor="let club of clubs" 
+          (click)="onSelectClub(club)"
+        >
+          <img class="club-avatar" [src]="club.logoUrl || 'https://ui-avatars.com/api/?name=' + (club.name || 'C') + '&background=random'" alt="Logo" (error)="onImageError($event)">
+          <span class="club-name">{{ club.name || 'Unknown Club' }}</span>
+          <svg class="chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+      
+      <button class="btn-text" (click)="step = 1; error = ''" [disabled]="isLoading">
+        ← Back to Login
+      </button>
+
+      <!-- Overlay loading for club login -->
+      <div class="loading-overlay" *ngIf="isLoading && step === 2">
+         <span class="spinner large"></span>
+      </div>
+    </div>
+  </div>
+</div>
