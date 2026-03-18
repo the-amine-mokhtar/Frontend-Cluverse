@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap');
+
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #0A0A1A; /* Using the exact color from test.html */
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.thank-you-svg {
+  width: 800px;
+  max-width: 90vw;
+  margin: 0 auto;
+  position: relative;
+  display: block;
+  z-index: 0;
+  
+  text {
+    fill: #fff;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+   
+    tspan {
+      padding: 0;
+      margin: 0;
+      opacity: 0;
+    }
+  }
+  
+  line, polyline, ellipse, path {
+    stroke: #fff;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 6;
+    opacity: 0;
+    stroke-miterlimit: 10;
+  }
+  
+  .dec {
+    stroke-width: 3;
+  }
+  
+  .underline {
+    stroke-width: 6;
+    stroke-linecap: butt;
+    opacity: 1;
+  }
+  
+  .dot {
+    opacity: 1;
+  }
+  
+  .purple {
+    stroke: #B191FF;
+  }
+  
+  .lime {
+    stroke: #DCE2AA;
+  }
+  
+  .plum {
+    stroke: #843B62;
+  }
+  
+  .blue {
+    stroke: #241E4E;
+  }
+}
+
+.confirmation-message {
+  font-family: 'Montserrat', sans-serif;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  max-width: 650px;
+  margin: 10px auto 0;
+  padding: 10px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+
+  &.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
