@@ -21,6 +21,11 @@ export class LoginComponent implements OnInit {
   ];
   selectedClub: string = '';
 
+  // Image Cropper State
+  imageChangedEvent: any = '';
+  croppedImage: any = '';
+  showCropper: boolean = false;
+
   constructor() { }
 
   ngOnInit(): void {
@@ -28,6 +33,36 @@ export class LoginComponent implements OnInit {
 
   onClubSelect(event: any): void {
     this.selectedClub = event.target.value;
+  }
+
+  // Image Cropper Methods
+  fileChangeEvent(event: any): void {
+    this.imageChangedEvent = event;
+    this.showCropper = true;
+    this.croppedImage = ''; // reset previous crop
+  }
+
+  imageCropped(event: any) {
+    // ngx-image-cropper returns base64 or objectUrl
+    this.croppedImage = event.objectUrl || event.base64;
+  }
+
+  acceptCrop(event: Event) {
+    event.preventDefault(); // Prevent form submit
+    this.showCropper = false;
+  }
+
+  removeImage(event: Event) {
+    event.preventDefault(); // Prevent form submit
+    this.imageChangedEvent = '';
+    this.croppedImage = '';
+    this.showCropper = false;
+  }
+
+  imageLoaded() { }
+  cropperReady() { }
+  loadImageFailed() {
+    console.error('Image load failed');
   }
 
   // Translates the vanilla JS changeForm logic into Angular state
