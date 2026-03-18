@@ -11,9 +11,23 @@ export class LoginComponent implements OnInit {
   isSignUpActive = false;
   isAnimating = false;
 
+  // Club selection state
+  clubs: string[] = [
+    'Esprit Robotics',
+    'Google Developer Student Club',
+    'Microsoft Learn Student Ambassador',
+    'Enactus',
+    'IEEE'
+  ];
+  selectedClub: string = '';
+
   constructor() { }
 
   ngOnInit(): void {
+  }
+
+  onClubSelect(event: any): void {
+    this.selectedClub = event.target.value;
   }
 
   // Translates the vanilla JS changeForm logic into Angular state
