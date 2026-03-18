@@ -21,6 +21,20 @@ export class LoginComponent implements OnInit {
   croppedImage: any = '';
   showCropper: boolean = false;
 
+  // Club application form data
+  clubForm: any = {
+    name: '',
+    description: '',
+    activitySector: '',
+    creationDate: '',
+    email: '',
+    status: '',
+    logo: '',
+    isClubVerified: false,
+    
+  };
+
+
   constructor(private apiService: ApiService) { }
 
   ngOnInit(): void {
@@ -53,6 +67,7 @@ export class LoginComponent implements OnInit {
   acceptCrop(event: Event) {
     event.preventDefault(); // Prevent form submit
     this.showCropper = false;
+    this.clubForm.logo = this.croppedImage;
   }
 
   removeImage(event: Event) {
@@ -60,6 +75,7 @@ export class LoginComponent implements OnInit {
     this.imageChangedEvent = '';
     this.croppedImage = '';
     this.showCropper = false;
+    this.clubForm.logo = '';
   }
 
   imageLoaded() { }
@@ -81,4 +97,22 @@ export class LoginComponent implements OnInit {
     // Equivalent to toggle("is-txr") and toggle("is-txl")
     this.isSignUpActive = !this.isSignUpActive;
   }
+
+  submitApplication(event: Event): void {
+    if (event) event.preventDefault();
+    
+    // Update logo in form just in case
+    this.clubForm.logo = this.croppedImage;
+
+    console.log('Submitting club application:', this.clubForm);
+    this.apiService.applyForClubCreation(this.clubForm).subscribe({
+      next: (response) => {
+        console.log('Application submitted successfully:', response);
+      },
+      error: (error) => {
+        console.error('Error submitting application:', error);
+      }
+    });
+  }
+      
 }

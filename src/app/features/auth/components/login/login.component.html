@@ -6,17 +6,17 @@
             <h2 class="form_title title">Apply to add a new club</h2>
             <div class="form__group mt-first">
                 <label class="form__label">Club Name</label>
-                <input class="form__input" type="text" placeholder="Enter your club's name" />
+                <input class="form__input" type="text" name="name" [(ngModel)]="clubForm.name" placeholder="Enter your club's name" />
             </div>
             
             <div class="form__group">
                 <label class="form__label">Description</label>
-                <input class="form__input" type="text" placeholder="Describe your club a little..." />
+                <input class="form__input" type="text" name="description" [(ngModel)]="clubForm.description" placeholder="Describe your club a little..." />
             </div>
             
             <div class="form__group">
                 <label class="form__label">Activity Sector</label>
-                <select class="form__input select-box" title="Secteur d'activité">
+                <select class="form__input select-box" name="activitySector" [(ngModel)]="clubForm.activitySector" title="Secteur d'activité">
                     <option value="" disabled selected>Select an activity sector</option>
                     <option value="Technologies">Technologies & IT</option>
                     <option value="Engineering">Engineering</option>
@@ -30,17 +30,17 @@
             
             <div class="form__group">
                 <label class="form__label">Creation Date</label>
-                <input class="form__input" type="date" placeholder="Date the club was founded" title="Creation Date" />
+                <input class="form__input" type="date" name="creationDate" [(ngModel)]="clubForm.creationDate" placeholder="Date the club was founded" title="Creation Date" />
             </div>
 
             <div class="form__group">
                 <label class="form__label">Email Address</label>
-                <input class="form__input" type="email" placeholder="Enter contact email address" />
+                <input class="form__input" type="email" name="email" [(ngModel)]="clubForm.email" placeholder="Enter contact email address" />
             </div>
             
             <div class="form__group">
                 <label class="form__label">Status</label>
-                <select class="form__input select-box">
+                <select class="form__input select-box" name="status" [(ngModel)]="clubForm.status">
                     <option value="" disabled selected>Select current status</option>
                     <option value="Active">Active</option>
                     <option value="Pending">Pending Validation</option>
@@ -65,7 +65,7 @@
                 </div>
             </div>
 
-            <button class="form__button button submit" (click)="$event.preventDefault()">APPLY</button>
+            <button class="form__button button submit" (click)="submitApplication($event)">APPLY</button>
         </form>
     </div>
     
@@ -139,24 +139,4 @@
     </div>
 </div>
 
-<!-- Fullscreen Cropper Modal -->
-<div class="cropper-modal" *ngIf="imageChangedEvent && showCropper">
-    <div class="cropper-modal-content">
-        <h3 class="cropper-modal-title">Adjust Club Logo</h3>
-        <image-cropper 
-            [imageChangedEvent]="imageChangedEvent"
-            [maintainAspectRatio]="true"
-            [aspectRatio]="1 / 1"
-            format="png"
-            (imageCropped)="imageCropped($event)"
-            (imageLoaded)="imageLoaded()"
-            (cropperReady)="cropperReady()"
-            (loadImageFailed)="loadImageFailed()"
-            class="my-cropper">
-        </image-cropper>
-        <div class="cropper-modal-actions">
-            <button class="button cancel-btn" (click)="removeImage($event)">Cancel</button>
-            <button class="button" (click)="acceptCrop($event)">Crop & Use</button>
-        </div>
-    </div>
-</div>
+

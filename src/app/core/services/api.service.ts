@@ -22,6 +22,11 @@ export class ApiService {
     return this.http.get<string[]>(`${this.baseUrl}/api/clubs/names`);
   }
 
+  //la fct pour ajouter un nouveau club
+  applyForClubCreation(club: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/api/clubs`, club);
+  }
+
   /**
    * Generic POST method
    */
