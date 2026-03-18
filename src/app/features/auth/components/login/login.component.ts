@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ApiService } from '../../../../core/services/api.service';
 
 @Component({
@@ -35,7 +36,7 @@ export class LoginComponent implements OnInit {
   };
 
 
-  constructor(private apiService: ApiService) { }
+  constructor(private apiService: ApiService, private router: Router) { }
 
   ngOnInit(): void {
     this.apiService.getClubsNames().subscribe({
@@ -108,6 +109,7 @@ export class LoginComponent implements OnInit {
     this.apiService.applyForClubCreation(this.clubForm).subscribe({
       next: (response) => {
         console.log('Application submitted successfully:', response);
+        this.router.navigate(['/auth/thank-you']);
       },
       error: (error) => {
         console.error('Error submitting application:', error);
