@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ApiService } from '../../../../core/services/api.service';
 
 @Component({
   selector: 'app-login',
@@ -12,13 +13,7 @@ export class LoginComponent implements OnInit {
   isAnimating = false;
 
   // Club selection state
-  clubs: string[] = [
-    'Esprit Robotics',
-    'Google Developer Student Club',
-    'Microsoft Learn Student Ambassador',
-    'Enactus',
-    'IEEE'
-  ];
+  clubs: string[] = [];
   selectedClub: string = '';
 
   // Image Cropper State
@@ -26,9 +21,17 @@ export class LoginComponent implements OnInit {
   croppedImage: any = '';
   showCropper: boolean = false;
 
-  constructor() { }
+  constructor(private apiService: ApiService) { }
 
   ngOnInit(): void {
+    this.apiService.getClubsNames().subscribe({
+      next: (response) => {
+        this.clubs = response;
+      },
+      error: (error) => {
+        console.error('Error fetching clubs:', error);
+      }
+    });
   }
 
   onClubSelect(event: any): void {
