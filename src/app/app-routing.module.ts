@@ -56,12 +56,17 @@ const routes: Routes = [
       import('./features/events/events.module').then(m => m.EventsModule)
   },
   {
+    path: 'verify',
+    loadChildren: () =>
+      import('./features/verify/verify.module').then(m => m.VerifyModule),
+  },
+  {
     path: 'not-found',
     component: NotFoundComponent
   },
   {
     path: '**',
-    redirectTo: 'not-found'
+    component: NotFoundComponent
   }
 ];
 

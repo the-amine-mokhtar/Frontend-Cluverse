@@ -1,0 +1,26 @@
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; background:#f4f4f5;">
+  <div style="background:#fff; border-radius:16px; padding:60px 48px; text-align:center; max-width:420px; width:100%;">
+
+    <div *ngIf="loading">
+      <p style="font-size:16px; color:#6b7280;">Vérification en cours...</p>
+    </div>
+
+    <div *ngIf="!loading">
+      <div style="width:64px; height:64px; background:#ecfdf5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+
+      <h1 style="font-size:22px; font-weight:600; color:#111827; margin:0 0 12px;">Compte activé</h1>
+      <p style="font-size:14px; color:#6b7280; line-height:1.6; margin:0 0 32px;">
+        Votre club a été vérifié avec succès. Vous pouvez maintenant vous connecter avec vos identifiants.
+      </p>
+
+      <button (click)="goToLogin()" style="background:#4f46e5; color:#fff; border:none; border-radius:8px; padding:14px 32px; font-size:14px; font-weight:600; cursor:pointer; width:100%;">
+        Se connecter
+      </button>
+    </div>
+
+  </div>
+</div>
