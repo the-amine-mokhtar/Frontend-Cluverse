@@ -1,5 +1,6 @@
 import { Component, AfterViewInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { gsap } from 'gsap';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-thank-you',
@@ -9,8 +10,9 @@ import { gsap } from 'gsap';
 export class ThankYouComponent implements AfterViewInit, OnDestroy {
   public showMessage = false;
   private mainTimeline: gsap.core.Timeline | undefined;
+  
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef, private router: Router) {}
 
   ngAfterViewInit(): void {
     this.initAnimation();
@@ -27,6 +29,10 @@ export class ThankYouComponent implements AfterViewInit, OnDestroy {
       this.mainTimeline.restart();
     }
   }
+
+  goToHome(): void {
+  this.router.navigate(['/']);
+}
 
   private initAnimation(): void {
     // SELECTING...
