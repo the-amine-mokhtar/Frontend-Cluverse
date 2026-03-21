@@ -7,13 +7,15 @@ import { DashboardLayoutComponent } from './components/layout/dashboard-layout/d
 import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
 import { HeaderComponent } from './components/layout/header/header.component';
 import { HomeComponent } from './components/home/home.component';
+import { ThemeToggleComponent } from './components/layout/header/theme-toggle/theme-toggle.component';
 
 @NgModule({
   declarations: [
     DashboardLayoutComponent,
     SidebarComponent,
     HeaderComponent,
-    HomeComponent
+    HomeComponent,
+    ThemeToggleComponent
   ],
   imports: [
     SharedModule,

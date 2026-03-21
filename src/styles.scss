@@ -84,3 +84,180 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT MODE — applied via body.light-mode class by ThemeService
+   ═══════════════════════════════════════════════════════════ */
+
+body.light-mode {
+  background: #f0f4f8;
+  color: #374151;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ─── Layout shells ─────────────────────────────────────── */
+body.light-mode .layout {
+  background-color: #f0f4f8;
+}
+
+body.light-mode .layout__content {
+  background-color: #f0f4f8;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────── */
+body.light-mode .sidebar {
+  background-color: #ffffff;
+  color: #64748b;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .sidebar__top {
+  border-bottom-color: #e2e8f0;
+}
+
+body.light-mode .sidebar__logo-text {
+  color: #0f172a;
+}
+
+body.light-mode .sidebar__close-btn {
+  color: #64748b;
+}
+
+body.light-mode .sidebar__club-card {
+  background-color: #f1f5f9;
+}
+
+body.light-mode .sidebar__club-icon {
+  background-color: #e2e8f0;
+}
+
+body.light-mode .sidebar__club-name {
+  color: #0f172a;
+}
+
+body.light-mode .sidebar__club-sub {
+  color: #94a3b8;
+}
+
+body.light-mode .sidebar__item {
+  color: #64748b;
+}
+
+body.light-mode .sidebar__item:hover {
+  color: #334155;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+body.light-mode .sidebar__item--active {
+  color: #0f172a;
+  border-right-color: #0f172a;
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .sidebar__badge {
+  background-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+body.light-mode .sidebar__bottom {
+  border-top-color: #e2e8f0;
+}
+
+body.light-mode .sidebar__user-avatar {
+  background-color: #e2e8f0;
+  color: #64748b;
+}
+
+body.light-mode .sidebar__user-name {
+  color: #0f172a;
+}
+
+body.light-mode .sidebar__user-role {
+  color: #94a3b8;
+}
+
+/* ─── Header ────────────────────────────────────────────── */
+body.light-mode .header {
+  background-color: #ffffff;
+  border-bottom-color: #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .header__title {
+  color: #0f172a;
+}
+
+body.light-mode .header__date {
+  color: #64748b;
+}
+
+body.light-mode .header__menu-btn {
+  color: #64748b;
+}
+
+body.light-mode .header__menu-btn:hover {
+  color: #0f172a;
+}
+
+body.light-mode .header__search-input {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+body.light-mode .header__search-input::placeholder {
+  color: #94a3b8;
+}
+
+body.light-mode .header__icon-btn {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+body.light-mode .header__icon-btn:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+body.light-mode .header__user-avatar {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+/* ─── Home page ─────────────────────────────────────────── */
+body.light-mode .home__welcome-card {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .home__welcome-title {
+  color: #0f172a;
+}
+
+body.light-mode .home__welcome-sub {
+  color: #64748b;
+}
+
+body.light-mode .home__stat-card {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+body.light-mode .home__stat-label {
+  color: #94a3b8;
+}
+
+body.light-mode .home__stat-value {
+  color: #0f172a;
+}
+
+/* ─── Scrollbar in light mode ───────────────────────────── */
+body.light-mode ::-webkit-scrollbar-track {
+  background: #f0f4f8;
+}
+
+body.light-mode ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+

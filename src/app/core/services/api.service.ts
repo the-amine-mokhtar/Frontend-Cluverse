@@ -81,6 +81,10 @@ uploadClubLogo(clubId: number, formData: FormData): Observable<string> {
   return this.http.post(`${this.baseUrl}/api/clubs/${clubId}/logo`, formData, { responseType: 'text' });
 }
 
+getClubById(id: number): Observable<any> {
+  return this.http.get(`${this.baseUrl}/api/clubs/${id}`);
+}
+
 checkEmailExists(email: string): Observable<boolean> {
   return this.http.get<boolean>(`${this.baseUrl}/api/clubs/check-email?email=${email}`);
 }

@@ -24,12 +24,17 @@
     <!-- Club card -->
     <div class="sidebar__club-card">
       <div class="sidebar__club-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <img *ngIf="dashState.clubLogoUrl$ | async as logoUrl"
+             [src]="logoUrl"
+             alt="Club logo"
+             class="sidebar__club-logo" />
+        <svg *ngIf="!(dashState.clubLogoUrl$ | async)"
+             width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93V18c0-.55.45-1 1-1s1 .45 1 1v1.93c-2.61-.47-4.74-2.18-5.66-4.45.6.34 1.31.52 2.03.52.93 0 1.78-.27 2.5-.73-.14-.01-.28-.04-.42-.04-.97 0-1.84-.42-2.45-1.08zM12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
         </svg>
       </div>
       <div class="sidebar__club-info">
-        <div class="sidebar__club-name">My Club</div>
+        <div class="sidebar__club-name">{{ (dashState.clubName$ | async) || 'Loading...' }}</div>
         <div class="sidebar__club-sub">Management Portal</div>
       </div>
     </div>
@@ -142,8 +147,8 @@
         </svg>
       </div>
       <div class="sidebar__user-info">
-        <div class="sidebar__user-name">Club Admin</div>
-        <div class="sidebar__user-role">Manager</div>
+        <div class="sidebar__user-name">{{ (dashState.userFullName$ | async) || 'Loading...' }}</div>
+        <div class="sidebar__user-role">{{ (dashState.userRole$ | async) || '' }}</div>
       </div>
     </div>
   </div>
