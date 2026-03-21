@@ -209,10 +209,17 @@ $success:    #3ecf8e;
 
   &__row {
     border-bottom: 1px solid $border;
-    transition: background 0.15s;
+    transition: background 0.15s, opacity 0.3s;
 
     &:last-child { border-bottom: none; }
     &:hover { background: rgba(255,255,255,0.025); }
+
+    // ── Inactive row ─
+    &--inactive {
+      opacity: 0.55;
+      background: rgba(0, 0, 0, 0.15);
+      &:hover { background: rgba(0,0,0,0.2); }
+    }
   }
 
   &__td {
@@ -293,47 +300,123 @@ $success:    #3ecf8e;
   .badge--green  { background: rgba($success, 0.12);       color: $success;  border: 1px solid rgba($success,0.3); }
   .badge--coral  { background: rgba($danger, 0.12);        color: #f87171;   border: 1px solid rgba($danger,0.3); }
 
-  // ─── Status indicator ─────────────────────────────────────────────────────────
-  &__status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.78rem;
-    color: $text-muted;
-
-    &::before {
-      content: '';
-      display: inline-block;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: $text-muted;
-    }
+  // ─── Status badge (pill) ──────────────────────────────────────────────────
+  &__status-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
 
     &--active {
+      background: rgba($success, 0.14);
       color: $success;
-      &::before { background: $success; }
+      border: 1px solid rgba($success, 0.35);
+    }
+
+    &--inactive {
+      background: rgba($danger, 0.12);
+      color: $danger;
+      border: 1px solid rgba($danger, 0.35);
     }
   }
 
-  // ─── Remove button ────────────────────────────────────────────────────────────
-  &__remove-btn {
+  // ─── Action buttons group ─────────────────────────────────────────────────
+  &__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__action-btn {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    background: rgba($danger, 0.08);
-    border: 1px solid rgba($danger, 0.25);
-    color: $danger;
     font-size: 0.78rem;
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+    white-space: nowrap;
 
-    &:hover {
-      background: rgba($danger, 0.18);
-      border-color: rgba($danger, 0.5);
+    &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    &--deactivate {
+      background: rgba($accent, 0.08);
+      border-color: rgba($accent, 0.25);
+      color: $accent;
+      &:hover:not(:disabled) { background: rgba($accent, 0.18); border-color: rgba($accent, 0.5); }
     }
+
+    &--activate {
+      background: rgba($success, 0.10);
+      border-color: rgba($success, 0.3);
+      color: $success;
+      &:hover:not(:disabled) { background: rgba($success, 0.2); border-color: rgba($success, 0.55); }
+    }
+
+    &--remove {
+      background: rgba($danger, 0.08);
+      border-color: rgba($danger, 0.25);
+      color: $danger;
+      &:hover:not(:disabled) { background: rgba($danger, 0.18); border-color: rgba($danger, 0.5); }
+    }
+  }
+
+  // spinner variant for amber/light bg buttons
+  &__btn-spinner--dark {
+    width: 12px; height: 12px;
+    border: 2px solid rgba($accent, 0.3);
+    border-top-color: $accent;
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+    flex-shrink: 0;
+  }
+
+  // ─── President card ───────────────────────────────────────────────────────
+  &__president-card {
+    background: $bg-card;
+    border: 1px solid rgba(147, 51, 234, 0.35);
+    border-radius: 16px;
+    overflow: hidden;
+    padding: 1.1rem 1.4rem;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(147, 51, 234, 0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+  }
+
+  &__president-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #c084fc;
+    margin-bottom: 0.8rem;
+  }
+
+  &__president-body {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  &__avatar--president {
+    border-color: rgba(147, 51, 234, 0.5);
+    color: #c084fc;
+    background: rgba(147, 51, 234, 0.12);
   }
 
   // ─── Invite form ──────────────────────────────────────────────────────────────
@@ -513,23 +596,24 @@ $success:    #3ecf8e;
 // ─── Light-mode overrides ─────────────────────────────────────────────────────
 body.light-mode {
   .members {
-    &__card  { background: #f5f5f5; border-color: #d8d8d8; }
-    &__title { color: #111; }
-    &__subtitle { color: #888; }
+    &__card        { background: #f5f5f5; border-color: #d8d8d8; }
+    &__title       { color: #111; }
+    &__subtitle    { color: #888; }
+    &__th          { color: #888; border-bottom-color: #d8d8d8; }
+    &__row         { border-bottom-color: #d8d8d8; &:hover { background: rgba(0,0,0,0.025); } }
+    &__name        { color: #111; }
+    &__email       { color: #888; }
+    &__invite-title { color: #111; }
+    &__empty-title { color: #333; }
 
-    &__th   { color: #888; border-bottom-color: #d8d8d8; }
-    &__row  { border-bottom-color: #d8d8d8; &:hover { background: rgba(0,0,0,0.025); } }
+    &__row--inactive { background: rgba(0,0,0,0.04); }
 
-    &__name  { color: #111; }
-    &__email { color: #888; }
+    &__avatar      { background: #e8e8e8; border-color: #d0d0d0; }
+    &__avatar--president { background: rgba(147,51,234,0.06); border-color: rgba(147,51,234,0.3); }
 
-    &__avatar {
-      background: #e8e8e8;
-      border-color: #d0d0d0;
-    }
+    &__president-card { background: #f0e9ff; border-color: rgba(147,51,234,0.3); }
 
-    &__input,
-    &__select {
+    &__input, &__select {
       background: #ebebeb;
       border-color: #d0d0d0;
       color: #111;
@@ -543,33 +627,16 @@ body.light-mode {
       background-size: 200% 100%;
     }
 
-    &__empty-icon {
-      background: #e8e8e8;
-      border-color: #d0d0d0;
-      color: #999;
-    }
+    &__empty-icon { background: #e8e8e8; border-color: #d0d0d0; color: #999; }
 
-    &__empty-title { color: #333; }
-
-    &__dialog {
-      background: #fff;
-      border-color: #d8d8d8;
-    }
-
+    &__dialog { background: #fff; border-color: #d8d8d8; }
     &__dialog-title { color: #111; }
     &__dialog-body  { color: #555; strong { color: #111; } }
-
-    &__dialog-btn--cancel {
-      background: #eee;
-      border-color: #d8d8d8;
-      color: #555;
-    }
-
-    &__invite-title { color: #111; }
+    &__dialog-btn--cancel { background: #eee; border-color: #d8d8d8; color: #555; }
 
     .badge--blue  { background: rgba(59,130,246,0.08); }
     .badge--amber { background: rgba(247,185,28,0.08); }
     .badge--green { background: rgba(62,207,142,0.08); }
-    .badge--coral { background: rgba(224,92,92,0.08);  }
+    .badge--coral { background: rgba(224,92,92,0.08); }
   }
 }

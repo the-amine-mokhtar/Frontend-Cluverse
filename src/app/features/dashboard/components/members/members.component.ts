@@ -21,31 +21,35 @@ interface Member {
 })
 export class MembersComponent implements OnInit {
 
-  // ─── State ───────────────────────────────────────────────────────────────────
-  members: Member[] = [];
-  isLoading       = false;
-  loadError       = '';
+  // ─── State ────────────────────────────────────────────────────────────────
+  president: Member | null = null;
+  members: Member[]        = [];   // non-PRESIDENT members only
+  isLoading  = false;
+  loadError  = '';
 
-  // ─── Current user (to hide Remove button on own row) ─────────────────────────
+  // ─── Current user ─────────────────────────────────────────────────────────
   currentUserId: number = 0;
-  isPresident      = false;
-  clubId: number   = 0;
+  isPresident           = false;
+  clubId: number        = 0;
 
-  // ─── Invite form ─────────────────────────────────────────────────────────────
-  inviteEmail = '';
-  inviteRole  = '';
-  isInviting  = false;
+  // ─── Invite form ──────────────────────────────────────────────────────────
+  inviteEmail   = '';
+  inviteRole    = '';
+  isInviting    = false;
   inviteSuccess = '';
   inviteError   = '';
 
   readonly ROLES = ['MEMBER', 'TREASURER', 'HR_MANAGER', 'EVENT_MANAGER'];
 
-  // ─── Confirm dialog ───────────────────────────────────────────────────────────
+  // ─── Confirm remove dialog ────────────────────────────────────────────────
   confirmTarget: Member | null = null;
-  isRemoving = false;
+  isRemoving  = false;
   removeError = '';
 
-  // ─── Fade-in animation trigger ────────────────────────────────────────────────
+  // ─── Deactivate/activate ──────────────────────────────────────────────────
+  isTogglingActive: { [userId: number]: boolean } = {};
+
+  // ─── Fade-in trigger ──────────────────────────────────────────────────────
   membersLoaded = false;
 
   constructor(
@@ -55,23 +59,25 @@ export class MembersComponent implements OnInit {
 
   ngOnInit(): void {
     this.clubId       = this.authHelper.getClubId();
-    this.currentUserId = this.authHelper.getUserId();
+    // Use decoded token .sub (standard JWT subject) cast to number
+    const payload     = this.authHelper.getDecodedToken();
+    this.currentUserId = payload?.sub ? Number(payload.sub) : 0;
     this.isPresident  = this.authHelper.isPresident();
     this.loadMembers();
   }
 
-  // ─── Load members ──────────────────────────────────────────────────────────────
+  // ─── Load & split members ─────────────────────────────────────────────────
 
   loadMembers(): void {
-    this.isLoading    = true;
-    this.loadError    = '';
+    this.isLoading     = true;
+    this.loadError     = '';
     this.membersLoaded = false;
 
     this.api.getClubMembers(this.clubId).subscribe({
       next: (data: Member[]) => {
-        this.members      = data;
-        this.isLoading    = false;
-        // Tiny delay lets Angular render then apply the class for CSS animation
+        this.president = data.find(m => m.role === 'PRESIDENT') ?? null;
+        this.members   = data.filter(m => m.role !== 'PRESIDENT');
+        this.isLoading = false;
         setTimeout(() => { this.membersLoaded = true; }, 50);
       },
       error: () => {
@@ -81,12 +87,12 @@ export class MembersComponent implements OnInit {
     });
   }
 
-  // ─── Invite member ──────────────────────────────────────────────────────────────
+  // ─── Invite member ────────────────────────────────────────────────────────
 
   onInvite(): void {
     if (!this.inviteEmail || !this.inviteRole) return;
 
-    this.isInviting   = true;
+    this.isInviting    = true;
     this.inviteSuccess = '';
     this.inviteError   = '';
 
@@ -120,7 +126,7 @@ export class MembersComponent implements OnInit {
       && this.inviteRole.length > 0;
   }
 
-  // ─── Confirm dialog ────────────────────────────────────────────────────────────
+  // ─── Confirm remove dialog ────────────────────────────────────────────────
 
   openConfirm(member: Member): void {
     this.confirmTarget = member;
@@ -135,37 +141,66 @@ export class MembersComponent implements OnInit {
   onConfirmRemove(): void {
     if (!this.confirmTarget) return;
 
-    this.isRemoving = true;
+    this.isRemoving  = true;
     this.removeError = '';
-    const targetId = this.confirmTarget.userId;
+    const targetId   = this.confirmTarget.userId;
 
     this.api.removeMember(this.clubId, targetId).subscribe({
       next: () => {
-        // Remove from list immediately — no full reload needed
-        this.members = this.members.filter(m => m.userId !== targetId);
+        this.members    = this.members.filter(m => m.userId !== targetId);
         this.isRemoving = false;
         this.closeConfirm();
       },
       error: (err: unknown) => {
         this.isRemoving = false;
         const msg = err instanceof HttpErrorResponse
-          ? (err.error?.message ?? err.message ?? '')
+          ? (typeof err.error === 'string' ? err.error : (err.error?.message ?? err.message ?? ''))
           : '';
         this.removeError = msg || 'Failed to remove member. Please try again.';
       }
     });
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────────
+  // ─── Deactivate / Activate ────────────────────────────────────────────────
+
+  onDeactivate(member: Member): void {
+    this.isTogglingActive[member.userId] = true;
+
+    this.api.deactivateMember(this.clubId, member.userId).subscribe({
+      next: () => {
+        member.active                             = false;
+        this.isTogglingActive[member.userId]      = false;
+      },
+      error: () => {
+        this.isTogglingActive[member.userId] = false;
+      }
+    });
+  }
+
+  onActivate(member: Member): void {
+    this.isTogglingActive[member.userId] = true;
+
+    this.api.activateMember(this.clubId, member.userId).subscribe({
+      next: () => {
+        member.active                        = true;
+        this.isTogglingActive[member.userId] = false;
+      },
+      error: () => {
+        this.isTogglingActive[member.userId] = false;
+      }
+    });
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
 
   getRoleBadgeClass(role: string): string {
     switch (role) {
-      case 'PRESIDENT':    return 'badge--purple';
-      case 'MEMBER':       return 'badge--blue';
-      case 'TREASURER':    return 'badge--amber';
-      case 'HR_MANAGER':   return 'badge--green';
+      case 'PRESIDENT':     return 'badge--purple';
+      case 'MEMBER':        return 'badge--blue';
+      case 'TREASURER':     return 'badge--amber';
+      case 'HR_MANAGER':    return 'badge--green';
       case 'EVENT_MANAGER': return 'badge--coral';
-      default:             return 'badge--blue';
+      default:              return 'badge--blue';
     }
   }
 
@@ -174,6 +209,6 @@ export class MembersComponent implements OnInit {
   }
 
   isCurrentUser(member: Member): boolean {
-    return member.id === this.currentUserId;
+    return member.userId === this.currentUserId;
   }
 }

@@ -149,7 +149,29 @@ removeMember(clubId: number, userId: number): Observable<any> {
   const headers = new HttpHeaders({
     'Authorization': `Bearer ${localStorage.getItem('token')}`
   });
-  return this.http.delete(`${this.baseUrl}/api/clubs/${clubId}/members/${userId}`, 
+  return this.http.delete(`${this.baseUrl}/api/clubs/${clubId}/members/${userId}`,
+    { headers, responseType: 'text' }
+  );
+}
+
+deactivateMember(clubId: number, userId: number): Observable<any> {
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  });
+  return this.http.put(
+    `${this.baseUrl}/api/clubs/${clubId}/members/${userId}/deactivate`,
+    {},
+    { headers, responseType: 'text' }
+  );
+}
+
+activateMember(clubId: number, userId: number): Observable<any> {
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  });
+  return this.http.put(
+    `${this.baseUrl}/api/clubs/${clubId}/members/${userId}/activate`,
+    {},
     { headers, responseType: 'text' }
   );
 }
