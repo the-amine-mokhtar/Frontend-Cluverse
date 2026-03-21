@@ -477,3 +477,21 @@ select.form__input {
     0%, 10%, 100%{ width: 450px; }
     30%, 50%{ width: 500px;}
 }
+
+.form__error {
+  display: block;
+  color: #e74c3c;
+  font-size: 11px;
+  margin-top: 4px;
+  margin-left: 2px;
+  opacity: 0;
+  transform: translateY(-4px);
+  animation: slideError 0.3s ease forwards;
+}
+
+@keyframes slideError {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

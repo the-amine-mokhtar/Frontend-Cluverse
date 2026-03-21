@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../../core/services/api.service';
 
@@ -42,6 +42,8 @@ export class LoginComponent implements OnInit {
     
   };
 
+  @ViewChild('aForm') aForm: any;
+
 
   constructor(private apiService: ApiService, private router: Router) { }
 
@@ -66,6 +68,7 @@ export class LoginComponent implements OnInit {
     this.imageChangedEvent = event;
     this.showCropper = true;
     this.croppedImage = ''; // reset previous crop
+    this.signupErrors.logo = '';
   }
 
   imageCropped(event: any) {
@@ -86,6 +89,8 @@ export class LoginComponent implements OnInit {
     this.showCropper = false;
     this.clubForm.logo = '';
   }
+
+  
 
   imageLoaded() { }
   cropperReady() { }
@@ -110,26 +115,39 @@ export class LoginComponent implements OnInit {
   submitApplication(event: Event): void {
   if (event) event.preventDefault();
 
-  this.apiService.applyForClubCreation(this.clubForm).subscribe({
-    next: (response) => {
-      const clubId = response.id;
+  if (!this.validateSignupForm()) return;
 
-      if (this.croppedImage && clubId) {
-        fetch(this.croppedImage)
-          .then(r => r.blob())
-          .then(blob => {
-            const formData = new FormData();
-            formData.append('file', blob, 'logo.png');
-            return this.apiService.uploadClubLogo(clubId, formData).toPromise();
-          })
-          .then(() => this.router.navigate(['/auth/thank-you']))
-          .catch(() => this.router.navigate(['/auth/thank-you']));
-      } else {
-        this.router.navigate(['/auth/thank-you']);
+  this.apiService.checkEmailExists(this.clubForm.email).subscribe({
+    next: (exists) => {
+      if (exists) {
+        this.signupErrors.email = 'This email is already used by another club.';
+        return;
       }
+
+      this.apiService.applyForClubCreation(this.clubForm).subscribe({
+        next: (response) => {
+          const clubId = response.id;
+          if (this.croppedImage && clubId) {
+            fetch(this.croppedImage)
+              .then(r => r.blob())
+              .then(blob => {
+                const formData = new FormData();
+                formData.append('file', blob, 'logo.png');
+                return this.apiService.uploadClubLogo(clubId, formData).toPromise();
+              })
+              .then(() => this.router.navigate(['/auth/thank-you']))
+              .catch(() => this.router.navigate(['/auth/thank-you']));
+          } else {
+            this.router.navigate(['/auth/thank-you']);
+          }
+        },
+        error: (error) => {
+          console.error('Error submitting application:', error);
+        }
+      });
     },
     error: (error) => {
-      console.error('Error submitting application:', error);
+      console.error('Error checking email:', error);
     }
   });
 }
@@ -150,6 +168,33 @@ export class LoginComponent implements OnInit {
       console.error('Login failed:', error);
     }
   });
+}
+
+signupErrors: any = {
+  name: '',
+  description: '',
+  activitySector: '',
+  creationDate: '',
+  email: '',
+  status: '',
+  logo: ''
+};
+
+validateSignupForm(): boolean {
+  Object.values(this.aForm.controls).forEach((control: any) => {
+    control.markAsTouched();
+  });
+
+  if (!this.croppedImage) {
+    this.signupErrors.logo = 'Please upload a club logo.';
+    return false;
+  }
+
+  if (this.aForm.invalid) {
+    return false;
+  }
+
+  return true;
 }
       
 }

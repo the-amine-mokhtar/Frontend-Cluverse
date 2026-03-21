@@ -80,6 +80,10 @@ export class ApiService {
 uploadClubLogo(clubId: number, formData: FormData): Observable<string> {
   return this.http.post(`${this.baseUrl}/api/clubs/${clubId}/logo`, formData, { responseType: 'text' });
 }
+
+checkEmailExists(email: string): Observable<boolean> {
+  return this.http.get<boolean>(`${this.baseUrl}/api/clubs/check-email?email=${email}`);
+}
 }
 
 
