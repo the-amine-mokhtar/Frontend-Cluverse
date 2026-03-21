@@ -1,0 +1,72 @@
+<!-- Sign Up Form (Left Side Original) -->
+        <form id="a-form" class="form" #aForm="ngForm" (ngSubmit)="submitApplication($event)">
+            <h2 class="form_title title">Apply to add a new club</h2>
+            <div class="form__group mt-first">
+                <label class="form__label">Club Name</label>
+                        <input class="form__input" type="text" name="name" [(ngModel)]="clubForm.name" placeholder="Enter your club's name" #nameRef="ngModel" required minlength="3" />
+                        <span class="form__error" *ngIf="nameRef.touched && nameRef.invalid">Club name must be at least 3 characters.</span>            </div>
+            
+            <div class="form__group">
+                <label class="form__label">Description</label>
+                <input class="form__input" type="text" name="description" [(ngModel)]="clubForm.description" placeholder="Describe your club a little..." #descRef="ngModel" required minlength="10" />
+<span class="form__error" *ngIf="descRef.touched && descRef.invalid">Description must be at least 10 characters.</span>
+            </div>
+            
+            <div class="form__group">
+                <label class="form__label">Activity Sector</label>
+                <select class="form__input select-box" name="activitySector" [(ngModel)]="clubForm.activitySector" #sectorRef="ngModel" required>
+    <option value="" disabled selected>Select an activity sector</option>
+    <option value="Technologies">Technologies & IT</option>
+    <option value="Engineering">Engineering</option>
+    <option value="Arts">Arts & Culture</option>
+    <option value="Sports">Sports</option>
+    <option value="Science">Science</option>
+    <option value="Social">Social & Humanitarian</option>
+    <option value="Other">Other</option>
+</select>
+<span class="form__error" *ngIf="sectorRef.touched && sectorRef.invalid">Please select an activity sector.</span>
+            </div>
+            
+            <div class="form__group">
+                <label class="form__label">Creation Date</label>
+                <input class="form__input" type="date" name="creationDate" [(ngModel)]="clubForm.creationDate" placeholder="Date the club was founded" #dateRef="ngModel" required />
+<span class="form__error" *ngIf="dateRef.touched && dateRef.invalid">Please select a creation date.</span>
+            </div>
+
+            <div class="form__group">
+    <label class="form__label">Email Address</label>
+    <input class="form__input" type="email" name="email" [(ngModel)]="clubForm.email" placeholder="Enter contact email address" #emailRef="ngModel" required email />
+    <span class="form__error" *ngIf="emailRef.touched && emailRef.invalid">Please enter a valid email address.</span>
+    <span class="form__error" *ngIf="signupErrors.email">{{ signupErrors.email }}</span>
+</div>
+            <div class="form__group">
+                <label class="form__label">Status</label>
+                <select class="form__input select-box" name="status" [(ngModel)]="clubForm.status" #statusRef="ngModel" required>
+    <option value="" disabled selected>Select current status</option>
+    <option value="Active">Active</option>
+    <option value="Pending">Pending Validation</option>
+    <option value="Inactive">Inactive</option>
+</select>
+<span class="form__error" *ngIf="statusRef.touched && statusRef.invalid">Please select a status.</span>
+            </div>
+
+            <div class="form__group">
+                <label class="form__label">Club Logo</label>
+                <!-- Image Upload & Crop Area -->
+                <div class="form__input file-upload" *ngIf="!imageChangedEvent && !croppedImageFromParent">
+                    <span class="file-label">Upload Club Logo</span>
+                    <input type="file" accept="image/*" class="file-input" (change)="fileChangeEvent($event)" />
+                </div>
+                <div class="image-preview form__input" *ngIf="croppedImageFromParent && !imageChangedEvent">
+                    <img [src]="croppedImageFromParent" alt="Cropped Logo" class="cropped-img" />
+                    <span class="preview-text">Logo selected!</span>
+                    <button class="delete-btn" (click)="removeImage($event)" title="Delete image">
+                        <!-- SVG Trash Icon -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
+            </div>
+<span class="form__error" *ngIf="signupErrors.logo">{{ signupErrors.logo }}</span>
+
+            <button class="form__button button submit" (click)="submitApplication($event)">APPLY</button>
+        </form>

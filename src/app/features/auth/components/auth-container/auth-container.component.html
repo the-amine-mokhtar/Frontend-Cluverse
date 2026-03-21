@@ -1,0 +1,52 @@
+<div class="main">
+    
+    <div class="container a-container" id="a-container" [class.is-txl]="isSignUpActive">
+<app-club-application 
+    (showCropperModal)="onShowCropper($event)"
+    (cancelCrop)="onCancelCrop()"
+    [croppedImageFromParent]="croppedImage"
+    [cropAccepted]="cropAccepted">
+</app-club-application>    </div>
+
+    <div class="container b-container" id="b-container" [class.is-txl]="isSignUpActive" [class.is-z200]="isSignUpActive">
+        <app-member-login></app-member-login>
+    </div>
+
+    <div class="switch" id="switch-cnt" [class.is-txr]="isSignUpActive" [class.is-gx]="isAnimating">
+        <div class="switch__circle" [class.is-txr]="isSignUpActive"></div>
+        <div class="switch__circle switch__circle--t" [class.is-txr]="isSignUpActive"></div>
+        
+        <div class="switch__container" id="switch-c1" [class.is-hidden]="isSignUpActive">
+            <h2 class="switch__title title">Welcome Back !</h2>
+            <p class="switch__description description">To keep connected with us please login with your personal info</p>
+            <button class="switch__button button switch-btn" (click)="toggleForm($event)">SIGN IN</button>
+        </div>
+        
+        <div class="switch__container" id="switch-c2" [class.is-hidden]="!isSignUpActive">
+            <h2 class="switch__title title">Hello Friend !</h2>
+            <p class="switch__description description">Enter your personal details and start journey with us</p>
+            <button class="switch__button button switch-btn" (click)="toggleForm($event)">SIGN UP</button>
+        </div>
+    </div>
+</div>
+
+<div class="cropper-modal" *ngIf="showCropper">
+    <div class="cropper-modal-content">
+        <h3 class="cropper-modal-title">Adjust Club Logo</h3>
+        <image-cropper 
+            [imageChangedEvent]="imageChangedEvent"
+            [maintainAspectRatio]="true"
+            [aspectRatio]="1 / 1"
+            format="png"
+            (imageCropped)="imageCropped($event)"
+            (imageLoaded)="imageLoaded()"
+            (cropperReady)="cropperReady()"
+            (loadImageFailed)="loadImageFailed()"
+            class="my-cropper">
+        </image-cropper>
+        <div class="cropper-modal-actions">
+            <button class="button cancel-btn" (click)="onCancelCrop()">Cancel</button>
+            <button class="button" (click)="onAcceptCrop()">Crop & Use</button>
+        </div>
+    </div>
+</div>
