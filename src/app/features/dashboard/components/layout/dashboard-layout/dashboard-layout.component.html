@@ -1,0 +1,13 @@
+<div class="layout">
+  <app-sidebar
+    [showSidebar]="showSidebar"
+    (closeSidebar)="onCloseSidebar()">
+  </app-sidebar>
+
+  <div class="layout__right">
+    <app-header (menuToggle)="onMenuToggle()"></app-header>
+    <main class="layout__content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

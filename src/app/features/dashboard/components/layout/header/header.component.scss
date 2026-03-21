@@ -1,0 +1,158 @@
+$header-bg:   #171717;
+$header-sep:  #2e2e2e;
+$text-muted:  #676767;
+$text-light:  #ffffff;
+$icon-bg:     #2d2d2d;
+$input-bg:    #1e1e1e;
+$header-h:    64px;
+
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: $header-h;
+  padding: 0 1.25rem;
+  background-color: $header-bg;
+  border-bottom: 1px solid $header-sep;
+  gap: 1rem;
+
+  // ─── Left ──────────────────────────────────────────────────────────────────
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: $text-muted;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $text-light;
+    }
+
+    @media (max-width: 768px) {
+      display: flex;
+    }
+  }
+
+  &__title-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $text-light;
+    margin: 0;
+  }
+
+  &__date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: $text-muted;
+  }
+
+  &__date-icon {
+    flex-shrink: 0;
+    color: $text-muted;
+  }
+
+  // ─── Right ─────────────────────────────────────────────────────────────────
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  &__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: 10px;
+    color: $text-muted;
+    pointer-events: none;
+  }
+
+  &__search-input {
+    background: $input-bg;
+    border: 1px solid $header-sep;
+    border-radius: 8px;
+    color: $text-light;
+    font-size: 0.85rem;
+    padding: 0.45rem 0.75rem 0.45rem 2.25rem;
+    width: 200px;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &:focus {
+      border-color: lighten($header-sep, 15%);
+    }
+  }
+
+  &__icon-btn {
+    width: 34px;
+    height: 34px;
+    background: $icon-bg;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-muted;
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+    flex-shrink: 0;
+
+    &:hover {
+      color: $text-light;
+      background-color: lighten($icon-bg, 8%);
+    }
+  }
+
+  &__user-avatar {
+    width: 34px;
+    height: 34px;
+    background: $icon-bg;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-muted;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $text-light;
+    }
+  }
+}

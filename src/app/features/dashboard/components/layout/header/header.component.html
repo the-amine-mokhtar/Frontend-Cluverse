@@ -1,0 +1,49 @@
+<header class="header">
+  <!-- Left: Hamburger + Title + Date -->
+  <div class="header__left">
+    <button class="header__menu-btn" (click)="onMenuToggle()" title="Toggle menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <div class="header__title-area">
+      <h1 class="header__title">Dashboard</h1>
+      <div class="header__date">
+        <svg class="header__date-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 22H5C3.895 22 3 21.105 3 20V6C3 4.895 3.895 4 5 4H7V2H9V4H15V2H17V4H19C20.105 4 21 4.895 21 6V20C21 21.105 20.105 22 19 22ZM5 10V20H19V10H5ZM5 6V8H19V6H5ZM17 14H7V12H17V14Z"/>
+        </svg>
+        <span>{{ today }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Search + Notifications + User -->
+  <div class="header__right">
+    <div class="header__search">
+      <svg class="header__search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="header__search-input"
+        type="text"
+        placeholder="Search..."
+        [(ngModel)]="searchQuery"
+        name="search" />
+    </div>
+
+    <button class="header__icon-btn" title="Notifications">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+
+    <div class="header__user-avatar" title="Profile">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+      </svg>
+    </div>
+  </div>
+</header>

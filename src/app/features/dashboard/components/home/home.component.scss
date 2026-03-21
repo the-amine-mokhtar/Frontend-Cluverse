@@ -1,0 +1,74 @@
+:host {
+  display: block;
+}
+
+.home {
+  min-height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+
+  &__welcome-card {
+    background: #171717;
+    border: 1px solid #2e2e2e;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    max-width: 640px;
+    width: 100%;
+    text-align: center;
+  }
+
+  &__welcome-icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+    color: #f7b91c;
+  }
+
+  &__welcome-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.5rem;
+  }
+
+  &__welcome-sub {
+    font-size: 0.9rem;
+    color: #676767;
+    margin: 0 0 2rem;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+
+    @media (min-width: 480px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  &__stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #1e1e1e;
+    border: 1px solid #2e2e2e;
+    border-radius: 12px;
+    padding: 1rem 0.75rem;
+  }
+
+  &__stat-label {
+    font-size: 0.75rem;
+    color: #676767;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+}

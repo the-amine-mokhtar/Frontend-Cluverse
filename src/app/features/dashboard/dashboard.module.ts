@@ -1,11 +1,23 @@
 import { NgModule } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 
+import { DashboardLayoutComponent } from './components/layout/dashboard-layout/dashboard-layout.component';
+import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
+import { HeaderComponent } from './components/layout/header/header.component';
+import { HomeComponent } from './components/home/home.component';
+
 @NgModule({
-  declarations: [],
+  declarations: [
+    DashboardLayoutComponent,
+    SidebarComponent,
+    HeaderComponent,
+    HomeComponent
+  ],
   imports: [
     SharedModule,
+    RouterModule,
     DashboardRoutingModule
   ]
 })
