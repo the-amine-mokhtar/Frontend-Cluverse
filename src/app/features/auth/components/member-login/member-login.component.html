@@ -1,24 +1,64 @@
-<form id="b-form" class="form">
+<!-- Member Login Form (Right Side) -->
+<form id="b-form" class="form" #bForm="ngForm" (ngSubmit)="submitLogin($event)">
     <h2 class="form_title title">Login to your club portal</h2>
-    
+
+    <!-- Club Selection -->
     <div class="form__group">
         <label class="form__label">Club Selection</label>
-        <select class="form__input" (change)="onClubSelect($event)" [(ngModel)]="loginForm.clubName" name="clubName">
-            <option value="" disabled selected>Select your club</option>
+        <select
+            class="form__input"
+            name="clubName"
+            [(ngModel)]="loginForm.clubName"
+            (change)="onClubSelect($event)"
+            #clubRef="ngModel"
+            required>
+            <option value="" disabled>Select your club</option>
             <option *ngFor="let club of clubs" [value]="club">{{ club }}</option>
         </select>
+        <span class="form__error" *ngIf="clubRef.touched && clubRef.invalid">
+            Please select a club.
+        </span>
     </div>
 
+    <!-- Identifier -->
     <div class="form__group">
         <label class="form__label">Identifier</label>
-        <input class="form__input" type="text" name="connectionIdentifier" placeholder="Enter your Identifier" [(ngModel)]="loginForm.connectionIdentifier" [disabled]="!loginForm.clubName" />
+        <input
+            class="form__input"
+            type="text"
+            name="connectionIdentifier"
+            placeholder="Enter your Identifier"
+            [(ngModel)]="loginForm.connectionIdentifier"
+            #identifierRef="ngModel"
+            [disabled]="!loginForm.clubName"
+            required />
+        <span class="form__error" *ngIf="identifierRef.touched && identifierRef.invalid">
+            Please enter your identifier.
+        </span>
     </div>
 
+    <!-- Password -->
     <div class="form__group">
         <label class="form__label">Password</label>
-        <input class="form__input" type="password" name="password" placeholder="Enter your Password" [(ngModel)]="loginForm.password" [disabled]="!loginForm.clubName" />
+        <input
+            class="form__input"
+            type="password"
+            name="password"
+            placeholder="Enter your Password"
+            [(ngModel)]="loginForm.password"
+            #passwordRef="ngModel"
+            [disabled]="!loginForm.clubName"
+            required
+            minlength="4" />
+        <span class="form__error" *ngIf="passwordRef.touched && passwordRef.invalid">
+            Please enter your password.
+        </span>
+        <!-- Backend error (401 or club not verified) -->
+        <span class="form__error" *ngIf="loginErrors.backend">
+            {{ loginErrors.backend }}
+        </span>
     </div>
 
     <a class="form__link">Forgot your password?</a>
-    <button class="form__button button submit" (click)="submitLogin($event)" [disabled]="!loginForm.clubName">SIGN IN</button>
+    <button class="form__button button submit" (click)="submitLogin($event)">SIGN IN</button>
 </form>

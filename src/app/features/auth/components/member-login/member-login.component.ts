@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ApiService } from '../../../../core/services/api.service';
 import { Router } from '@angular/router';
 
@@ -9,13 +9,21 @@ import { Router } from '@angular/router';
 })
 export class MemberLoginComponent implements OnInit {
 
+  @ViewChild('bForm') bForm: any;
+
   clubs: string[] = [];
-  selectedClub: string = '';
 
   loginForm: any = {
     connectionIdentifier: '',
     password: '',
     clubName: ''
+  };
+
+  loginErrors: any = {
+    club: '',
+    identifier: '',
+    password: '',
+    backend: ''
   };
 
   constructor(private apiService: ApiService, private router: Router) {}
@@ -28,13 +36,19 @@ export class MemberLoginComponent implements OnInit {
   }
 
   onClubSelect(event: any): void {
-    this.selectedClub = event.target.value;
     this.loginForm.clubName = event.target.value;
+    this.loginErrors.backend = '';
   }
 
   submitLogin(event: Event): void {
     event.preventDefault();
-    console.log('loginForm:', this.loginForm);
+    this.loginErrors.backend = '';
+
+    // Mark every field as touched so errors show
+    Object.values(this.bForm.controls).forEach((c: any) => c.markAsTouched());
+
+    if (this.bForm.invalid) return;
+
     this.apiService.login(
       this.loginForm.connectionIdentifier,
       this.loginForm.password,
@@ -45,7 +59,14 @@ export class MemberLoginComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {
-        console.error('Login failed:', error);
+        if (error.status === 401) {
+          this.loginErrors.backend = 'Invalid identifier or password.';
+        } else if (error.error?.message?.toLowerCase().includes('not yet verified') ||
+                   error.error?.message?.toLowerCase().includes('not verified')) {
+          this.loginErrors.backend = 'Your club is not yet verified. Please check your email.';
+        } else {
+          this.loginErrors.backend = 'An error occurred. Please try again.';
+        }
       }
     });
   }
