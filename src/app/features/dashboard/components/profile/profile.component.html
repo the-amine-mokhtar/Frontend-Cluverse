@@ -1,0 +1,221 @@
+<div class="profile">
+  <div class="profile__card">
+
+    <!-- Card Header -->
+    <div class="profile__card-header">
+      <h2 class="profile__card-title">Edit Profile</h2>
+      <p class="profile__card-subtitle">Update your personal information</p>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div class="profile__loading" *ngIf="isLoading">
+      <div class="profile__skeleton profile__skeleton--circle"></div>
+      <div class="profile__skeleton-fields">
+        <div class="profile__skeleton profile__skeleton--line"></div>
+        <div class="profile__skeleton profile__skeleton--line"></div>
+        <div class="profile__skeleton profile__skeleton--line profile__skeleton--short"></div>
+      </div>
+    </div>
+
+    <!-- Main form — hidden while initial load -->
+    <ng-container *ngIf="!isLoading">
+
+      <!-- Success toast -->
+      <div class="profile__success" *ngIf="saveSuccess">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Profile saved successfully!
+      </div>
+
+      <!-- Error toast -->
+      <div class="profile__error-toast" *ngIf="saveError">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ saveError }}
+      </div>
+
+      <form #profileForm="ngForm" (ngSubmit)="onSave(profileForm)" novalidate>
+
+        <!-- Photo upload -->
+        <div class="profile__photo-section">
+          <div class="profile__photo-circle" [class.profile__photo-circle--uploading]="isUploading">
+            <img *ngIf="photoPreview" [src]="photoPreview" alt="Profile photo" class="profile__photo-img" />
+            <svg *ngIf="!photoPreview && !isUploading" width="36" height="36" viewBox="0 0 24 24" fill="currentColor" class="profile__photo-placeholder">
+              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+            </svg>
+            <div class="profile__photo-spinner" *ngIf="isUploading"></div>
+          </div>
+
+          <div class="profile__photo-right">
+            <label class="profile__photo-btn" for="photoInput" [class.profile__photo-btn--disabled]="isUploading">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              {{ isUploading ? 'Uploading…' : 'Upload Photo' }}
+            </label>
+            <span class="profile__photo-error" *ngIf="photoError">{{ photoError }}</span>
+          </div>
+
+          <input
+            id="photoInput"
+            type="file"
+            accept="image/*"
+            class="profile__photo-input"
+            [disabled]="isUploading"
+            (change)="onPhotoChange($event)" />
+        </div>
+
+        <!-- Role badge -->
+        <div class="profile__role-row">
+          <span class="profile__role-label">Role</span>
+          <span class="profile__role-badge">{{ role || 'N/A' }}</span>
+        </div>
+
+        <!-- Fields grid -->
+        <div class="profile__fields">
+
+          <!-- First name -->
+          <div class="profile__field">
+            <label class="profile__label" for="firstName">First Name</label>
+            <input
+              id="firstName"
+              class="profile__input"
+              [class.profile__input--error]="firstNameCtrl.invalid && firstNameCtrl.touched"
+              type="text"
+              name="firstName"
+              #firstNameCtrl="ngModel"
+              [(ngModel)]="firstName"
+              required
+              minlength="2"
+              placeholder="First name" />
+            <span class="profile__error" *ngIf="firstNameCtrl.invalid && firstNameCtrl.touched">
+              <ng-container *ngIf="firstNameCtrl.errors?.['required']">First name is required.</ng-container>
+              <ng-container *ngIf="firstNameCtrl.errors?.['minlength']">Minimum 2 characters.</ng-container>
+            </span>
+          </div>
+
+          <!-- Last name -->
+          <div class="profile__field">
+            <label class="profile__label" for="lastName">Last Name</label>
+            <input
+              id="lastName"
+              class="profile__input"
+              [class.profile__input--error]="lastNameCtrl.invalid && lastNameCtrl.touched"
+              type="text"
+              name="lastName"
+              #lastNameCtrl="ngModel"
+              [(ngModel)]="lastName"
+              required
+              minlength="2"
+              placeholder="Last name" />
+            <span class="profile__error" *ngIf="lastNameCtrl.invalid && lastNameCtrl.touched">
+              <ng-container *ngIf="lastNameCtrl.errors?.['required']">Last name is required.</ng-container>
+              <ng-container *ngIf="lastNameCtrl.errors?.['minlength']">Minimum 2 characters.</ng-container>
+            </span>
+          </div>
+
+          <!-- Email -->
+          <div class="profile__field profile__field--full">
+            <label class="profile__label" for="email">Email</label>
+            <input
+              id="email"
+              class="profile__input"
+              [class.profile__input--error]="emailCtrl.invalid && emailCtrl.touched"
+              type="email"
+              name="email"
+              #emailCtrl="ngModel"
+              [(ngModel)]="email"
+              required
+              email
+              placeholder="email@example.com" />
+            <span class="profile__error" *ngIf="emailCtrl.invalid && emailCtrl.touched">
+              <ng-container *ngIf="emailCtrl.errors?.['required']">Email is required.</ng-container>
+              <ng-container *ngIf="emailCtrl.errors?.['email']">Enter a valid email address.</ng-container>
+            </span>
+          </div>
+
+          <!-- Phone -->
+          <div class="profile__field profile__field--full">
+            <label class="profile__label" for="phone">Phone <span class="profile__optional">(optional)</span></label>
+            <input
+              id="phone"
+              class="profile__input"
+              [class.profile__input--error]="phoneCtrl.invalid && phoneCtrl.touched"
+              type="text"
+              name="phone"
+              #phoneCtrl="ngModel"
+              [(ngModel)]="phone"
+              pattern="^[0-9]*$"
+              placeholder="Numbers only" />
+            <span class="profile__error" *ngIf="phoneCtrl.invalid && phoneCtrl.touched">
+              <ng-container *ngIf="phoneCtrl.errors?.['pattern']">Phone must contain numbers only.</ng-container>
+            </span>
+          </div>
+
+          <!-- Password -->
+          <div class="profile__field">
+            <label class="profile__label" for="password">New Password <span class="profile__optional">(optional)</span></label>
+            <input
+              id="password"
+              class="profile__input"
+              [class.profile__input--error]="passwordCtrl.invalid && passwordCtrl.touched"
+              type="password"
+              name="password"
+              #passwordCtrl="ngModel"
+              [(ngModel)]="password"
+              minlength="8"
+              placeholder="Min 8 characters" />
+            <span class="profile__error" *ngIf="passwordCtrl.invalid && passwordCtrl.touched">
+              <ng-container *ngIf="passwordCtrl.errors?.['minlength']">Password must be at least 8 characters.</ng-container>
+            </span>
+          </div>
+
+          <!-- Confirm password -->
+          <div class="profile__field">
+            <label class="profile__label" for="confirmPassword">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              class="profile__input"
+              [class.profile__input--error]="confirmCtrl.touched && isPasswordMismatch(profileForm)"
+              type="password"
+              name="confirmPassword"
+              #confirmCtrl="ngModel"
+              [(ngModel)]="confirmPassword"
+              placeholder="Repeat new password" />
+            <span class="profile__error" *ngIf="confirmCtrl.touched && isPasswordMismatch(profileForm)">
+              Passwords do not match.
+            </span>
+          </div>
+
+        </div>
+
+        <!-- Save button -->
+        <div class="profile__actions">
+          <button
+            type="submit"
+            class="profile__save-btn"
+            [disabled]="!isFormSubmittable(profileForm) || isSaving">
+            <span class="profile__btn-spinner" *ngIf="isSaving"></span>
+            <ng-container *ngIf="!isSaving">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              Save Changes
+            </ng-container>
+            <ng-container *ngIf="isSaving">Saving…</ng-container>
+          </button>
+        </div>
+
+      </form>
+    </ng-container>
+
+  </div>
+</div>

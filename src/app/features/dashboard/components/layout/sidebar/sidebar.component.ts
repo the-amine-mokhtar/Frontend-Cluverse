@@ -15,4 +15,14 @@ export class SidebarComponent {
   onClose(): void {
     this.closeSidebar.emit();
   }
+
+  get userInitials(): string {
+    const name = this.dashState.userFullName$.value;
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    const first = parts[0]?.charAt(0) ?? '';
+    const last  = parts[1]?.charAt(0) ?? '';
+    return (first + last).toUpperCase() || 'U';
+  }
 }
+

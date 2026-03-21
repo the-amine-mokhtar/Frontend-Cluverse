@@ -88,6 +88,32 @@ getClubById(id: number): Observable<any> {
 checkEmailExists(email: string): Observable<boolean> {
   return this.http.get<boolean>(`${this.baseUrl}/api/clubs/check-email?email=${email}`);
 }
+
+// ─── Profile endpoints ─────────────────────────────────────────────────────
+
+private authHeaders(): HttpHeaders {
+  const token = localStorage.getItem('token') ?? '';
+  return new HttpHeaders({ Authorization: `Bearer ${token}` });
+}
+
+getMyProfile(): Observable<any> {
+  return this.http.get(`${this.baseUrl}/api/users/me`, {
+    headers: this.authHeaders()
+  }).pipe(catchError(this.handleError));
+}
+
+updateMyProfile(data: any): Observable<any> {
+  return this.http.put(`${this.baseUrl}/api/users/me`, data, {
+    headers: this.authHeaders()
+  }).pipe(catchError(this.handleError));
+}
+
+updateMyPhoto(formData: FormData): Observable<string> {
+  return this.http.post(`${this.baseUrl}/api/users/me/photo`, formData, {
+    headers: this.authHeaders(),
+    responseType: 'text'
+  }).pipe(catchError(this.handleError));
+}
 }
 
 

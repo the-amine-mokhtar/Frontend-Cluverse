@@ -12,11 +12,22 @@ export class DashboardStateService {
   clubLogoUrl$  = new BehaviorSubject<string>('');
   userFullName$ = new BehaviorSubject<string>('');
   userRole$     = new BehaviorSubject<string>('');
+  userPhotoUrl$ = new BehaviorSubject<string>('');
 
   constructor(
     private authHelper: AuthHelperService,
     private apiService: ApiService
   ) {}
+
+  /**
+   * Called by ProfileComponent after a successful save or photo upload.
+   * Pushes new values to all sidebar / header subscribers immediately.
+   */
+  setUserProfile(firstName: string, lastName: string, photoUrl: string): void {
+    const fullName = `${firstName} ${lastName}`.trim();
+    this.userFullName$.next(fullName);
+    this.userPhotoUrl$.next(photoUrl);
+  }
 
   loadDashboardData(): void {
     // ── Debug: decoded token ─────────────────────────────────────────────────
@@ -47,6 +58,23 @@ export class DashboardStateService {
       },
       error: (err) => {
         console.error('[DashboardState] getClubById failed:', err);
+      }
+    });
+
+    // ── User photo (from profile API) ────────────────────────────────────────
+    this.apiService.getMyProfile().subscribe({
+      next: (profile: any) => {
+        if (profile?.photoUrl) {
+          this.userPhotoUrl$.next(profile.photoUrl);
+        }
+        // Also correct name in case token is stale
+        if (profile?.firstName || profile?.lastName) {
+          const name = `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim();
+          if (name) this.userFullName$.next(name);
+        }
+      },
+      error: () => {
+        // Silently ignore — photo just won't show
       }
     });
   }

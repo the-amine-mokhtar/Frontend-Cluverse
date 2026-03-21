@@ -8,6 +8,7 @@ import { SidebarComponent } from './components/layout/sidebar/sidebar.component'
 import { HeaderComponent } from './components/layout/header/header.component';
 import { HomeComponent } from './components/home/home.component';
 import { ThemeToggleComponent } from './components/layout/header/theme-toggle/theme-toggle.component';
+import { ProfileComponent } from './components/profile/profile.component';
 
 @NgModule({
   declarations: [
@@ -15,7 +16,8 @@ import { ThemeToggleComponent } from './components/layout/header/theme-toggle/th
     SidebarComponent,
     HeaderComponent,
     HomeComponent,
-    ThemeToggleComponent
+    ThemeToggleComponent,
+    ProfileComponent
   ],
   imports: [
     SharedModule,

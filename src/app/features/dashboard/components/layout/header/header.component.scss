@@ -5,6 +5,19 @@ $text-light:  #ffffff;
 $icon-bg:     #2d2d2d;
 $input-bg:    #1e1e1e;
 $header-h:    64px;
+$accent:      #f7b91c;
+$danger:      #e05c5c;
+
+@keyframes fadeInDropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 :host {
   display: block;
@@ -138,6 +151,12 @@ $header-h:    64px;
     }
   }
 
+  // ─── Avatar wrapper ─────────────────────────────────────────────────────────
+  &__avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+
   &__user-avatar {
     width: 34px;
     height: 34px;
@@ -146,13 +165,120 @@ $header-h:    64px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: $text-muted;
     cursor: pointer;
     flex-shrink: 0;
-    transition: color 0.2s;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, background-color 0.2s;
+    user-select: none;
+
+    &--open,
+    &:hover {
+      border-color: $accent;
+      background-color: lighten($icon-bg, 5%);
+    }
+  }
+
+  &__user-initials {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: $accent;
+    letter-spacing: 0.02em;
+  }
+
+  // ─── Dropdown ───────────────────────────────────────────────────────────────
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 168px;
+    background: #1e1e1e;
+    border: 1px solid $header-sep;
+    border-radius: 10px;
+    padding: 6px;
+    z-index: 1000;
+    animation: fadeInDropdown 0.18s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  &__dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    background: none;
+    border: none;
+    border-radius: 7px;
+    color: $text-muted;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+    text-align: left;
 
     &:hover {
+      background-color: $icon-bg;
       color: $text-light;
     }
+
+    &--danger {
+      &:hover {
+        background-color: rgba($danger, 0.12);
+        color: $danger;
+      }
+    }
+  }
+
+  &__dropdown-divider {
+    height: 1px;
+    background: $header-sep;
+    margin: 4px 0;
+  }
+}
+
+// ─── Light-mode overrides ────────────────────────────────────────────────────
+body.light-mode {
+  .header {
+    background-color: #f5f5f5;
+    border-bottom-color: #d8d8d8;
+
+    &__title { color: #111; }
+    &__date  { color: #888; }
+    &__date-icon { color: #888; }
+
+    &__menu-btn { color: #888; }
+    &__menu-btn:hover { color: #111; }
+
+    &__search-input {
+      background: #ebebeb;
+      border-color: #d0d0d0;
+      color: #111;
+      &::placeholder { color: #aaa; }
+    }
+
+    &__search-icon { color: #aaa; }
+
+    &__icon-btn {
+      background: #e8e8e8;
+      color: #888;
+      &:hover { background: #ddd; color: #111; }
+    }
+
+    &__user-avatar {
+      background: #e8e8e8;
+    }
+
+    &__dropdown {
+      background: #f0f0f0;
+      border-color: #d8d8d8;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    &__dropdown-item {
+      color: #555;
+      &:hover { background: #e0e0e0; color: #111; }
+      &--danger:hover { background: rgba(#e05c5c, 0.08); color: #c0392b; }
+    }
+
+    &__dropdown-divider { background: #d8d8d8; }
   }
 }
