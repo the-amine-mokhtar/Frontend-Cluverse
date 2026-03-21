@@ -75,25 +75,24 @@
             <h2 class="form_title title">Login in to your club portail</h2>
             
             <div class="form__group">
-                <label class="form__label">Club Selection</label>
-                <select class="form__input" (change)="onClubSelect($event)" [value]="selectedClub">
-                    <option value="" disabled selected>Select your club</option>
-                    <option *ngFor="let club of clubs" [value]="club">{{ club }}</option>
-                </select>
-            </div>
-            
-            <div class="form__group">
-                <label class="form__label">Identifier</label>
-                <input class="form__input" type="text" placeholder="Enter your Identifier" [disabled]="!selectedClub" />
-            </div>
+    <label class="form__label">Club Selection</label>
+    <select class="form__input" (change)="onClubSelect($event)" [(ngModel)]="loginForm.clubName">
+        <option value="" disabled selected>Select your club</option>
+        <option *ngFor="let club of clubs" [value]="club">{{ club }}</option>
+    </select>
+</div>
 
-            <div class="form__group">
-                <label class="form__label">Password</label>
-                <input class="form__input" type="password" placeholder="Enter your Password" [disabled]="!selectedClub" />
-            </div>
+<div class="form__group">
+    <label class="form__label">Identifier</label>
+<input class="form__input" type="text" name="connectionIdentifier" placeholder="Enter your Identifier" [(ngModel)]="loginForm.connectionIdentifier" [disabled]="!loginForm.clubName" />
+</div>
+
+<div class="form__group">
+    <label class="form__label">Password</label>
+<input class="form__input" type="password" name="password" placeholder="Enter your Password" [(ngModel)]="loginForm.password" [disabled]="!loginForm.clubName" />
+</div>
             <a class="form__link">Forgot your password?</a>
-            <button class="form__button button submit" (click)="$event.preventDefault()" [disabled]="!selectedClub">SIGN IN</button>
-        </form>
+<button class="form__button button submit" (click)="submitLogin($event)" [disabled]="!loginForm.clubName">SIGN IN</button>        </form>
     </div>
     
     <!-- Sliding Overlay Module -->

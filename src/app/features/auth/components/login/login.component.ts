@@ -17,6 +17,13 @@ export class LoginComponent implements OnInit {
   clubs: string[] = [];
   selectedClub: string = '';
 
+  // Login form data
+  loginForm: any = {
+  connectionIdentifier: '',
+  password: '',
+  clubName: ''
+};
+
   // Image Cropper State
   imageChangedEvent: any = '';
   croppedImage: any = '';
@@ -50,8 +57,9 @@ export class LoginComponent implements OnInit {
   }
 
   onClubSelect(event: any): void {
-    this.selectedClub = event.target.value;
-  }
+  this.selectedClub = event.target.value;
+  this.loginForm.clubName = event.target.value;
+}
 
   // Image Cropper Methods
   fileChangeEvent(event: any): void {
@@ -116,5 +124,23 @@ export class LoginComponent implements OnInit {
       }
     });
   }
+
+  submitLogin(event: Event): void {
+  event.preventDefault();
+  console.log('loginForm:', this.loginForm);
+  this.apiService.login(
+    this.loginForm.connectionIdentifier,
+    this.loginForm.password,
+    this.loginForm.clubName
+  ).subscribe({
+    next: (response) => {
+      localStorage.setItem('token', response.token);
+      this.router.navigate(['/dashboard']);
+    },
+    error: (error) => {
+      console.error('Login failed:', error);
+    }
+  });
+}
       
 }

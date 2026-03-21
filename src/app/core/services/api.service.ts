@@ -69,4 +69,12 @@ export class ApiService {
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
+
+  login(connectionIdentifier: string, password: string, clubName: string): Observable<any> {
+  return this.http.post(`${this.baseUrl}/api/auth/login-member`, {
+    connectionIdentifier,
+    password,
+    clubName
+  });
+}
 }
