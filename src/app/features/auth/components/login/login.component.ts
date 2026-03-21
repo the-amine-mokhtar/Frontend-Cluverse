@@ -108,22 +108,31 @@ export class LoginComponent implements OnInit {
   }
 
   submitApplication(event: Event): void {
-    if (event) event.preventDefault();
-    
-    // Update logo in form just in case
-    this.clubForm.logo = this.croppedImage;
+  if (event) event.preventDefault();
 
-    console.log('Submitting club application:', this.clubForm);
-    this.apiService.applyForClubCreation(this.clubForm).subscribe({
-      next: (response) => {
-        console.log('Application submitted successfully:', response);
+  this.apiService.applyForClubCreation(this.clubForm).subscribe({
+    next: (response) => {
+      const clubId = response.id;
+
+      if (this.croppedImage && clubId) {
+        fetch(this.croppedImage)
+          .then(r => r.blob())
+          .then(blob => {
+            const formData = new FormData();
+            formData.append('file', blob, 'logo.png');
+            return this.apiService.uploadClubLogo(clubId, formData).toPromise();
+          })
+          .then(() => this.router.navigate(['/auth/thank-you']))
+          .catch(() => this.router.navigate(['/auth/thank-you']));
+      } else {
         this.router.navigate(['/auth/thank-you']);
-      },
-      error: (error) => {
-        console.error('Error submitting application:', error);
       }
-    });
-  }
+    },
+    error: (error) => {
+      console.error('Error submitting application:', error);
+    }
+  });
+}
 
   submitLogin(event: Event): void {
   event.preventDefault();

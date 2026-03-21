@@ -77,4 +77,9 @@ export class ApiService {
     clubName
   });
 }
+uploadClubLogo(clubId: number, formData: FormData): Observable<string> {
+  return this.http.post(`${this.baseUrl}/api/clubs/${clubId}/logo`, formData, { responseType: 'text' });
 }
+}
+
+
