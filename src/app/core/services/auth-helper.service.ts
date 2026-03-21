@@ -48,6 +48,11 @@ export class AuthHelperService {
     return this.getPayload()?.role ?? '';
   }
 
+  getUserId(): number {
+    const p = this.getPayload();
+    return p?.sub ?? p?.id ?? 0;
+  }
+
   isPresident(): boolean {
     return this.getRole() === 'PRESIDENT';
   }

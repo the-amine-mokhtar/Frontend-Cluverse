@@ -10,6 +10,7 @@ import { HeaderComponent } from './components/layout/header/header.component';
 import { HomeComponent } from './components/home/home.component';
 import { ThemeToggleComponent } from './components/layout/header/theme-toggle/theme-toggle.component';
 import { ProfileComponent } from './components/profile/profile.component';
+import { MembersComponent } from './components/members/members.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { ProfileComponent } from './components/profile/profile.component';
     HeaderComponent,
     HomeComponent,
     ThemeToggleComponent,
-    ProfileComponent
+    ProfileComponent,
+    MembersComponent
   ],
   imports: [
     SharedModule,

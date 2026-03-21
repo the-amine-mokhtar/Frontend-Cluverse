@@ -125,6 +125,34 @@ refreshToken(): Observable<string> {
     catchError(this.handleError)
   );
 }
+
+// ─── Members ─────────────────────────────────────────────────────────────────
+
+getClubMembers(clubId: number): Observable<any[]> {
+  return this.http.get<any[]>(`${this.baseUrl}/api/clubs/${clubId}/members`, {
+    headers: this.authHeaders()
+  }).pipe(catchError(this.handleError));
+}
+
+inviteMember(clubId: number, email: string, role: string): Observable<any> {
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+    'Content-Type': 'application/json'
+  });
+  return this.http.post(`${this.baseUrl}/api/clubs/${clubId}/members/send-invite`, 
+    { email, role }, 
+    { headers, responseType: 'text' }
+  );
+}
+
+removeMember(clubId: number, userId: number): Observable<any> {
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  });
+  return this.http.delete(`${this.baseUrl}/api/clubs/${clubId}/members/${userId}`, 
+    { headers, responseType: 'text' }
+  );
+}
 }
 
 

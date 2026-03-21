@@ -1,0 +1,575 @@
+// ─── Design Tokens ─────────────────────────────────────────────────────────────
+$bg-page:    #111111;
+$bg-card:    #171717;
+$bg-inner:   #1e1e1e;
+$border:     #2e2e2e;
+$text-main:  #ffffff;
+$text-muted: #676767;
+$accent:     #f7b91c;
+$danger:     #e05c5c;
+$success:    #3ecf8e;
+
+// ─── Animations ────────────────────────────────────────────────────────────────
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ─── Host ──────────────────────────────────────────────────────────────────────
+:host { display: block; }
+
+.members {
+  padding: 2rem;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  // ─── Header ──────────────────────────────────────────────────────────────────
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: $text-main;
+    margin: 0 0 0.2rem;
+  }
+
+  &__subtitle {
+    font-size: 0.85rem;
+    color: $text-muted;
+    margin: 0;
+  }
+
+  &__count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $accent;
+    background: rgba($accent, 0.1);
+    border: 1px solid rgba($accent, 0.25);
+    border-radius: 20px;
+    padding: 4px 12px;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+
+  // ─── Card ────────────────────────────────────────────────────────────────────
+  &__card {
+    background: $bg-card;
+    border: 1px solid $border;
+    border-radius: 16px;
+    overflow: hidden;
+
+    &--invite {
+      padding: 1.5rem;
+    }
+  }
+
+  // ─── Error / Success toasts ──────────────────────────────────────────────────
+  &__error-toast {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba($danger, 0.10);
+    border: 1px solid rgba($danger, 0.3);
+    color: $danger;
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+    animation: fadeInUp 0.25s ease;
+  }
+
+  &__success {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba($success, 0.10);
+    border: 1px solid rgba($success, 0.3);
+    color: $success;
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    animation: fadeInUp 0.25s ease;
+  }
+
+  // ─── Skeleton ────────────────────────────────────────────────────────────────
+  &__skeleton-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  &__skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid $border;
+
+    &:last-child { border-bottom: none; }
+  }
+
+  &__skeleton-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__skeleton {
+    background: linear-gradient(90deg, #222 25%, #2e2e2e 50%, #222 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.4s infinite;
+    border-radius: 6px;
+
+    &--circle {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    &--line   { height: 12px; width: 100%; }
+    &--short  { width: 55%; }
+    &--badge  { height: 22px; width: 80px; border-radius: 20px; }
+  }
+
+  // ─── Empty state ─────────────────────────────────────────────────────────────
+  &__empty {
+    text-align: center;
+    padding: 3.5rem 1rem;
+  }
+
+  &__empty-icon {
+    width: 72px; height: 72px;
+    background: $bg-inner;
+    border: 1px solid $border;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: $text-muted;
+  }
+
+  &__empty-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $text-main;
+    margin: 0 0 0.4rem;
+  }
+
+  &__empty-sub {
+    font-size: 0.85rem;
+    color: $text-muted;
+    margin: 0;
+  }
+
+  // ─── Table ───────────────────────────────────────────────────────────────────
+  &__table-wrap {
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    overflow-x: auto;
+
+    &--loaded { opacity: 1; }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  &__th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $text-muted;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid $border;
+    white-space: nowrap;
+
+    &--center { text-align: center; }
+  }
+
+  &__row {
+    border-bottom: 1px solid $border;
+    transition: background 0.15s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: rgba(255,255,255,0.025); }
+  }
+
+  &__td {
+    padding: 0.85rem 1.25rem;
+    vertical-align: middle;
+    font-size: 0.875rem;
+
+    &--center { text-align: center; }
+  }
+
+  // ─── Member cell ─────────────────────────────────────────────────────────────
+  &__member-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__avatar {
+    width: 38px; height: 38px;
+    background: $bg-inner;
+    border: 1px solid $border;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $accent;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  &__member-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $text-main;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__email {
+    font-size: 0.78rem;
+    color: $text-muted;
+  }
+
+  &__you-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    background: rgba($accent, 0.15);
+    color: $accent;
+    border-radius: 4px;
+    padding: 1px 5px;
+    letter-spacing: 0.04em;
+  }
+
+  // ─── Role Badges ─────────────────────────────────────────────────────────────
+  &__badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .badge--purple { background: rgba(147, 51, 234, 0.15); color: #c084fc; border: 1px solid rgba(147,51,234,0.3); }
+  .badge--blue   { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .badge--amber  { background: rgba($accent, 0.12);        color: $accent;   border: 1px solid rgba($accent,0.3); }
+  .badge--green  { background: rgba($success, 0.12);       color: $success;  border: 1px solid rgba($success,0.3); }
+  .badge--coral  { background: rgba($danger, 0.12);        color: #f87171;   border: 1px solid rgba($danger,0.3); }
+
+  // ─── Status indicator ─────────────────────────────────────────────────────────
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    color: $text-muted;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: $text-muted;
+    }
+
+    &--active {
+      color: $success;
+      &::before { background: $success; }
+    }
+  }
+
+  // ─── Remove button ────────────────────────────────────────────────────────────
+  &__remove-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba($danger, 0.08);
+    border: 1px solid rgba($danger, 0.25);
+    color: $danger;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover {
+      background: rgba($danger, 0.18);
+      border-color: rgba($danger, 0.5);
+    }
+  }
+
+  // ─── Invite form ──────────────────────────────────────────────────────────────
+  &__invite-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text-main;
+    margin: 0 0 1.25rem;
+  }
+
+  &__form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__label {
+    font-size: 0.8rem;
+    color: $text-muted;
+    font-weight: 500;
+  }
+
+  &__input,
+  &__select {
+    background: $bg-inner;
+    border: 1px solid $border;
+    border-radius: 8px;
+    color: $text-main;
+    font-size: 0.88rem;
+    padding: 0.55rem 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+
+    &::placeholder { color: $text-muted; opacity: 0.6; }
+    &:focus { border-color: lighten($border, 18%); }
+    option { background: $bg-inner; }
+  }
+
+  &__form-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__invite-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: $accent;
+    border: none;
+    border-radius: 8px;
+    color: #111;
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 0.6rem 1.4rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+
+    &:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+    &:disabled { opacity: 0.35; cursor: not-allowed; }
+  }
+
+  &__btn-spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(#111, 0.3);
+    border-top-color: #111;
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+    flex-shrink: 0;
+  }
+
+  // ─── Confirm Dialog ──────────────────────────────────────────────────────────
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeInUp 0.2s ease;
+  }
+
+  &__dialog {
+    background: $bg-card;
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 2rem 1.75rem;
+    width: min(420px, 90vw);
+    text-align: center;
+  }
+
+  &__dialog-icon {
+    width: 56px; height: 56px;
+    background: rgba($danger, 0.12);
+    border: 1px solid rgba($danger, 0.3);
+    color: $danger;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+  }
+
+  &__dialog-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $text-main;
+    margin: 0 0 0.6rem;
+  }
+
+  &__dialog-body {
+    font-size: 0.875rem;
+    color: $text-muted;
+    margin: 0 0 1rem;
+    line-height: 1.55;
+
+    strong { color: $text-main; }
+  }
+
+  &__dialog-error {
+    font-size: 0.8rem;
+    color: $danger;
+    margin-bottom: 0.75rem;
+    animation: fadeInUp 0.2s ease;
+  }
+
+  &__dialog-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  &__dialog-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+
+    &--cancel {
+      background: $bg-inner;
+      color: $text-muted;
+      border: 1px solid $border;
+      &:hover:not(:disabled) { color: $text-main; }
+    }
+
+    &--confirm {
+      background: $danger;
+      color: #fff;
+      &:hover:not(:disabled) { opacity: 0.85; }
+      &:disabled { opacity: 0.4; cursor: not-allowed; }
+    }
+  }
+}
+
+// ─── Light-mode overrides ─────────────────────────────────────────────────────
+body.light-mode {
+  .members {
+    &__card  { background: #f5f5f5; border-color: #d8d8d8; }
+    &__title { color: #111; }
+    &__subtitle { color: #888; }
+
+    &__th   { color: #888; border-bottom-color: #d8d8d8; }
+    &__row  { border-bottom-color: #d8d8d8; &:hover { background: rgba(0,0,0,0.025); } }
+
+    &__name  { color: #111; }
+    &__email { color: #888; }
+
+    &__avatar {
+      background: #e8e8e8;
+      border-color: #d0d0d0;
+    }
+
+    &__input,
+    &__select {
+      background: #ebebeb;
+      border-color: #d0d0d0;
+      color: #111;
+      &::placeholder { color: #aaa; }
+    }
+
+    &__label { color: #555; }
+
+    &__skeleton {
+      background: linear-gradient(90deg, #ddd 25%, #eee 50%, #ddd 75%);
+      background-size: 200% 100%;
+    }
+
+    &__empty-icon {
+      background: #e8e8e8;
+      border-color: #d0d0d0;
+      color: #999;
+    }
+
+    &__empty-title { color: #333; }
+
+    &__dialog {
+      background: #fff;
+      border-color: #d8d8d8;
+    }
+
+    &__dialog-title { color: #111; }
+    &__dialog-body  { color: #555; strong { color: #111; } }
+
+    &__dialog-btn--cancel {
+      background: #eee;
+      border-color: #d8d8d8;
+      color: #555;
+    }
+
+    &__invite-title { color: #111; }
+
+    .badge--blue  { background: rgba(59,130,246,0.08); }
+    .badge--amber { background: rgba(247,185,28,0.08); }
+    .badge--green { background: rgba(62,207,142,0.08); }
+    .badge--coral { background: rgba(224,92,92,0.08);  }
+  }
+}
