@@ -175,6 +175,17 @@ activateMember(clubId: number, userId: number): Observable<any> {
     { headers, responseType: 'text' }
   );
 }
+
+updateMemberRole(clubId: number, userId: number, role: string): Observable<any> {
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  });
+  return this.http.put(
+    `${this.baseUrl}/api/clubs/${clubId}/members/${userId}/role?role=${encodeURIComponent(role)}`,
+    {},
+    { headers, responseType: 'text' }
+  );
+}
 }
 
 

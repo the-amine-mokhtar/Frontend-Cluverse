@@ -137,9 +137,27 @@
 
               <!-- Role -->
               <td class="members__td">
-                <span class="members__badge" [ngClass]="getRoleBadgeClass(member.role)">
-                  {{ formatRoleLabel(member.role) }}
-                </span>
+                <!-- Dropdown for PRESIDENT (unless it's their own row) -->
+                <ng-container *ngIf="isPresident && !isCurrentUser(member)">
+                  <div class="members__role-wrapper">
+                    <select
+                      class="members__role-select"
+                      [value]="member.role"
+                      (change)="onRoleChange(member, $event)">
+                      <option *ngFor="let r of ROLES" [value]="r">{{ formatRoleLabel(r) }}</option>
+                    </select>
+                    <div class="members__role-error" *ngIf="roleError[member.userId]">
+                      {{ roleError[member.userId] }}
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- Static badge for non-presidents or own row -->
+                <ng-container *ngIf="!isPresident || isCurrentUser(member)">
+                  <span class="members__badge" [ngClass]="getRoleBadgeClass(member.role)">
+                    {{ formatRoleLabel(member.role) }}
+                  </span>
+                </ng-container>
               </td>
 
               <!-- Status -->

@@ -49,6 +49,9 @@ export class MembersComponent implements OnInit {
   // ─── Deactivate/activate ──────────────────────────────────────────────────
   isTogglingActive: { [userId: number]: boolean } = {};
 
+  // per-row role update error message
+  roleError: { [userId: number]: string } = {};
+
   // ─── Fade-in trigger ──────────────────────────────────────────────────────
   membersLoaded = false;
 
@@ -187,6 +190,32 @@ export class MembersComponent implements OnInit {
       },
       error: () => {
         this.isTogglingActive[member.userId] = false;
+      }
+    });
+  }
+
+  onRoleChange(member: Member, event: Event): void {
+    const selectParams = event.target as HTMLSelectElement;
+    const newRole = selectParams.value;
+    const previousRole = member.role;
+
+    if (newRole === previousRole) return;
+
+    this.roleError[member.userId] = '';
+    // Optimistic update
+    member.role = newRole;
+
+    this.api.updateMemberRole(this.clubId, member.userId, newRole).subscribe({
+      next: () => {
+        // success, already updated optimistically
+      },
+      error: (err: unknown) => {
+        // Revert on error
+        member.role = previousRole;
+        const msg = err instanceof HttpErrorResponse
+          ? (typeof err.error === 'string' ? err.error : (err.error?.message ?? err.message ?? ''))
+          : '';
+        this.roleError[member.userId] = msg || 'Failed to update role.';
       }
     });
   }

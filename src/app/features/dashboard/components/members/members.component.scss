@@ -282,7 +282,43 @@ $success:    #3ecf8e;
     letter-spacing: 0.04em;
   }
 
-  // ─── Role Badges ─────────────────────────────────────────────────────────────
+  // ─── Role Inline Dropdown ───────────────────────────────────────────────────
+  &__role-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  &__role-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid $border;
+    border-radius: 6px;
+    color: $text-main;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:focus, &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: lighten($border, 15%);
+    }
+
+    option { background: $bg-inner; color: $text-main; }
+  }
+
+  &__role-error {
+    font-size: 0.7rem;
+    color: $danger;
+    max-width: 140px;
+    white-space: normal;
+    animation: fadeInUp 0.2s ease;
+  }
+
+  // ─── Role Badges ────────────────────────────────────────────────────────────
   &__badge {
     display: inline-block;
     font-size: 0.7rem;
