@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment.development';
 
 export interface HttpOptions {
@@ -113,6 +113,17 @@ updateMyPhoto(formData: FormData): Observable<string> {
     headers: this.authHeaders(),
     responseType: 'text'
   }).pipe(catchError(this.handleError));
+}
+
+refreshToken(): Observable<string> {
+  return this.http.post<{ token: string; email: string }>(
+    `${this.baseUrl}/api/auth/refresh-token`,
+    {},
+    { headers: this.authHeaders() }
+  ).pipe(
+    map((res: { token: string; email: string }) => res.token),
+    catchError(this.handleError)
+  );
 }
 }
 

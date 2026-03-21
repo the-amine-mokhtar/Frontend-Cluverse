@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
 import { DashboardRoutingModule } from './dashboard-routing.module';
+import { ImageCropperComponent } from 'ngx-image-cropper';
 
 import { DashboardLayoutComponent } from './components/layout/dashboard-layout/dashboard-layout.component';
 import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
@@ -22,7 +23,8 @@ import { ProfileComponent } from './components/profile/profile.component';
   imports: [
     SharedModule,
     RouterModule,
-    DashboardRoutingModule
+    DashboardRoutingModule,
+    ImageCropperComponent
   ]
 })
 export class DashboardModule { }

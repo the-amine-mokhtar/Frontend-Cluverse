@@ -1,4 +1,36 @@
 <div class="profile">
+
+  <!-- ── Cropper Modal ──────────────────────────────────────────────────────── -->
+  <div class="profile__cropper-overlay" *ngIf="showCropper">
+    <div class="profile__cropper-modal">
+      <div class="profile__cropper-header">
+        <h3 class="profile__cropper-title">Crop Photo</h3>
+      </div>
+      <div class="profile__cropper-body">
+        <image-cropper
+          [imageFile]="imageFile"
+          [maintainAspectRatio]="true"
+          [aspectRatio]="1"
+          [roundCropper]="true"
+          output="blob"
+          format="jpeg"
+          (imageCropped)="onImageCropped($event)">
+        </image-cropper>
+      </div>
+      <div class="profile__cropper-actions">
+        <button type="button" class="profile__cropper-btn profile__cropper-btn--cancel" (click)="onCropCancelled()">
+          Cancel
+        </button>
+        <button type="button" class="profile__cropper-btn profile__cropper-btn--confirm" (click)="onCropConfirmed()" [disabled]="!croppedBlob">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Crop &amp; Use
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="profile__card">
 
     <!-- Card Header -->
@@ -17,7 +49,6 @@
       </div>
     </div>
 
-    <!-- Main form — hidden while initial load -->
     <ng-container *ngIf="!isLoading">
 
       <!-- Success toast -->
@@ -31,9 +62,7 @@
       <!-- Error toast -->
       <div class="profile__error-toast" *ngIf="saveError">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         {{ saveError }}
       </div>
@@ -59,6 +88,7 @@
               </svg>
               {{ isUploading ? 'Uploading…' : 'Upload Photo' }}
             </label>
+            <span class="profile__photo-hint">JPEG/PNG, max 2MB — will be cropped to circle</span>
             <span class="profile__photo-error" *ngIf="photoError">{{ photoError }}</span>
           </div>
 
@@ -71,10 +101,12 @@
             (change)="onPhotoChange($event)" />
         </div>
 
-        <!-- Role badge -->
-        <div class="profile__role-row">
-          <span class="profile__role-label">Role</span>
-          <span class="profile__role-badge">{{ role || 'N/A' }}</span>
+        <!-- Role badge + Connection Identifier -->
+        <div class="profile__meta-row">
+          <div class="profile__role-row">
+            <span class="profile__role-label">Role</span>
+            <span class="profile__role-badge">{{ role || 'N/A' }}</span>
+          </div>
         </div>
 
         <!-- Fields grid -->
@@ -140,6 +172,21 @@
             </span>
           </div>
 
+          <!-- Connection Identifier — read-only -->
+          <div class="profile__field profile__field--full">
+            <label class="profile__label" for="connectionId">
+              Connection Identifier
+              <span class="profile__badge-readonly">Read only</span>
+            </label>
+            <input
+              id="connectionId"
+              class="profile__input profile__input--readonly"
+              type="text"
+              name="connectionIdentifier"
+              [ngModel]="connectionIdentifier"
+              disabled />
+          </div>
+
           <!-- Phone -->
           <div class="profile__field profile__field--full">
             <label class="profile__label" for="phone">Phone <span class="profile__optional">(optional)</span></label>
@@ -158,37 +205,65 @@
             </span>
           </div>
 
-          <!-- Password -->
-          <div class="profile__field">
-            <label class="profile__label" for="password">New Password <span class="profile__optional">(optional)</span></label>
+          <!-- Password section separator -->
+          <div class="profile__field profile__field--full">
+            <div class="profile__section-sep">
+              <span>Change Password <span class="profile__optional">(optional — leave blank to keep current)</span></span>
+            </div>
+          </div>
+
+          <!-- Current Password — required only when new password filled -->
+          <div class="profile__field profile__field--full">
+            <label class="profile__label" for="currentPassword">
+              Current Password
+              <span *ngIf="isCurrentPasswordRequired()" class="profile__required-badge">Required</span>
+            </label>
             <input
-              id="password"
+              id="currentPassword"
               class="profile__input"
-              [class.profile__input--error]="passwordCtrl.invalid && passwordCtrl.touched"
+              [class.profile__input--error]="currentPwCtrl.invalid && currentPwCtrl.touched"
               type="password"
-              name="password"
-              #passwordCtrl="ngModel"
-              [(ngModel)]="password"
-              minlength="8"
-              placeholder="Min 8 characters" />
-            <span class="profile__error" *ngIf="passwordCtrl.invalid && passwordCtrl.touched">
-              <ng-container *ngIf="passwordCtrl.errors?.['minlength']">Password must be at least 8 characters.</ng-container>
+              name="currentPassword"
+              #currentPwCtrl="ngModel"
+              [(ngModel)]="currentPassword"
+              [required]="isCurrentPasswordRequired()"
+              placeholder="Your current password" />
+            <span class="profile__error" *ngIf="currentPwCtrl.invalid && currentPwCtrl.touched">
+              <ng-container *ngIf="currentPwCtrl.errors?.['required']">Current password is required to set a new one.</ng-container>
             </span>
           </div>
 
-          <!-- Confirm password -->
+          <!-- New Password -->
           <div class="profile__field">
-            <label class="profile__label" for="confirmPassword">Confirm Password</label>
+            <label class="profile__label" for="password">New Password</label>
+            <input
+              id="newPassword"
+              class="profile__input"
+              [class.profile__input--error]="newPasswordCtrl.invalid && newPasswordCtrl.touched"
+              type="password"
+              name="newPassword"
+              #newPasswordCtrl="ngModel"
+              [(ngModel)]="newPassword"
+              minlength="8"
+              placeholder="Min 8 characters" />
+            <span class="profile__error" *ngIf="newPasswordCtrl.invalid && newPasswordCtrl.touched">
+              <ng-container *ngIf="newPasswordCtrl.errors?.['minlength']">Minimum 8 characters.</ng-container>
+            </span>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="profile__field">
+            <label class="profile__label" for="confirmPassword">Confirm New Password</label>
             <input
               id="confirmPassword"
               class="profile__input"
-              [class.profile__input--error]="confirmCtrl.touched && isPasswordMismatch(profileForm)"
+              [class.profile__input--error]="confirmCtrl.touched && isPasswordMismatch()"
               type="password"
               name="confirmPassword"
               #confirmCtrl="ngModel"
               [(ngModel)]="confirmPassword"
               placeholder="Repeat new password" />
-            <span class="profile__error" *ngIf="confirmCtrl.touched && isPasswordMismatch(profileForm)">
+            <span class="profile__error" *ngIf="confirmCtrl.touched && isPasswordMismatch()">
               Passwords do not match.
             </span>
           </div>
@@ -216,6 +291,5 @@
 
       </form>
     </ng-container>
-
   </div>
 </div>
