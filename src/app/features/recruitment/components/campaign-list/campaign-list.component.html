@@ -1,0 +1,144 @@
+<div class="campaigns">
+  <!-- ── Delete Confirmation Overlay ── -->
+  <div class="campaigns__overlay" *ngIf="confirmTarget" (click)="closeConfirm()">
+    <div class="campaigns__dialog" (click)="$event.stopPropagation()">
+      <div class="campaigns__dialog-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+      </div>
+      <h3>Delete Campaign</h3>
+      <p>Are you sure you want to delete <strong>{{ confirmTarget.title }}</strong>? This will permanently remove all associated applications.</p>
+      <div class="campaigns__error" *ngIf="deleteError">{{ deleteError }}</div>
+      <div class="campaigns__dialog-actions">
+        <button class="btn btn--outline" (click)="closeConfirm()" [disabled]="isDeleting">Cancel</button>
+        <button class="btn btn--danger" (click)="onConfirmDelete()" [disabled]="isDeleting">
+          {{ isDeleting ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Header ── -->
+  <div class="campaigns__header">
+    <div>
+      <h2 class="campaigns__title">Recruitment Campaigns</h2>
+      <p class="campaigns__subtitle">Manage and track your member recruitment waves</p>
+    </div>
+    <button *ngIf="isPresident && !showForm" class="btn btn--primary" (click)="openNewForm()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      New Campaign
+    </button>
+  </div>
+
+  <!-- ── Inline Form ── -->
+  <div class="campaigns__form-card" *ngIf="showForm">
+    <h3>{{ isEditMode ? 'Edit Campaign' : 'Create Campaign' }}</h3>
+    <form class="campaigns__form" (ngSubmit)="onSave()" novalidate>
+      <div class="campaigns__form-row">
+        <div class="campaigns__form-col">
+          <label>Campaign Title</label>
+          <input type="text" [(ngModel)]="formData.title" name="title" required placeholder="Ex: Fall 2026 Recruitment">
+        </div>
+        <div class="campaigns__form-col">
+          <label>Max Candidates</label>
+          <input type="number" [(ngModel)]="formData.maxCandidates" name="maxCandidates" required min="1">
+        </div>
+      </div>
+      <div class="campaigns__form-row">
+        <div class="campaigns__form-col">
+          <label>Start Date</label>
+          <input type="date" [(ngModel)]="formData.startDate" name="startDate" required>
+        </div>
+        <div class="campaigns__form-col">
+          <label>End Date</label>
+          <input type="date" [(ngModel)]="formData.endDate" name="endDate" required>
+        </div>
+      </div>
+      <div class="campaigns__form-row">
+        <div class="campaigns__form-col campaigns__form-col--full">
+          <label>Description</label>
+          <textarea [(ngModel)]="formData.description" name="description" required rows="3" placeholder="Overview of what you're looking for..."></textarea>
+        </div>
+      </div>
+      <div class="campaigns__error" *ngIf="formError">{{ formError }}</div>
+      <div class="campaigns__form-actions">
+        <button type="button" class="btn btn--outline" (click)="closeForm()" [disabled]="isSaving">Cancel</button>
+        <button type="submit" class="btn btn--primary" [disabled]="!isFormValid() || isSaving">
+          {{ isSaving ? 'Saving...' : 'Save Campaign' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Loading / Empty / List ── -->
+  <div class="campaigns__states">
+    <div class="campaigns__loading" *ngIf="isLoading">
+      <div class="spinner"></div> Loading campaigns...
+    </div>
+
+    <div class="campaigns__error" *ngIf="loadError">{{ loadError }}</div>
+
+    <div class="campaigns__empty" *ngIf="!isLoading && campaigns.length === 0">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <h4>No campaigns yet</h4>
+      <p>Start a new recruitment wave to accept applications.</p>
+    </div>
+
+    <div class="campaigns__grid" *ngIf="!isLoading && campaigns.length > 0">
+      <div class="campaigns__card" *ngFor="let camp of campaigns">
+        <div class="campaigns__card-header">
+          <div class="campaigns__card-title">
+            <h3>{{ camp.title }}</h3>
+            <span class="campaigns__badge" [class.campaigns__badge--active]="camp.active">
+              {{ camp.active ? 'Active' : 'Closed' }}
+            </span>
+          </div>
+          <div class="campaigns__dates">
+            {{ camp.startDate | date:'MMM d, y' }} — {{ camp.endDate | date:'MMM d, y' }}
+          </div>
+        </div>
+        
+        <div class="campaigns__card-body">
+          <p class="campaigns__desc">{{ camp.description }}</p>
+          <div class="campaigns__meta">
+            <div class="campaigns__meta-item">
+              <strong>Max Slots:</strong> {{ camp.maxCandidates }}
+            </div>
+            <div class="campaigns__meta-item">
+              <strong>Public Link:</strong> 
+              <span class="campaigns__link-text">/apply/{{ camp.publicLink }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="campaigns__card-actions">
+          <div class="campaigns__card-actions-row">
+            <button class="btn btn--secondary" (click)="copyLink(camp)">
+              <svg *ngIf="copiedId !== camp.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <svg *ngIf="copiedId === camp.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3ecf8e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span [class.text-success]="copiedId === camp.id">{{ copiedId === camp.id ? 'Copied!' : 'Copy Link' }}</span>
+            </button>
+            <button class="btn btn--secondary" [routerLink]="['/dashboard/recruitment', camp.id, 'builder']">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              Form Builder
+            </button>
+          </div>
+          <div class="campaigns__card-actions-row">
+            <button class="btn btn--primary btn--full" [routerLink]="['/dashboard/recruitment', camp.id, 'applications']">
+              View Applications
+            </button>
+          </div>
+          <div class="campaigns__card-actions-row campaigns__card-actions-row--admin" *ngIf="isPresident">
+            <button class="btn btn--text" (click)="openEditForm(camp)">Edit Info</button>
+            <button class="btn btn--text btn--text-danger" (click)="openConfirm(camp)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -23,6 +23,11 @@ const routes: Routes = [
       import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
   },
   {
+    path: 'apply',
+    loadChildren: () =>
+      import('./features/apply/apply.module').then(m => m.ApplyModule)
+  },
+  {
     path: 'verify',
     loadChildren: () =>
       import('./features/verify/verify.module').then(m => m.VerifyModule),

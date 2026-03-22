@@ -1,0 +1,130 @@
+<div class="apply-page">
+
+  <div class="apply__loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading application...</p>
+  </div>
+
+  <div class="apply__error-state" *ngIf="loadError">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+      <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>
+    <h2>Oops!</h2>
+    <p>{{ loadError }}</p>
+  </div>
+
+  <div class="apply__success-state" *ngIf="submitSuccess">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <h2>Your application has been submitted successfully!</h2>
+    <p>Thank you for applying. The club administration will contact you regarding next steps.</p>
+  </div>
+
+  <div class="apply__container" *ngIf="campaign && !submitSuccess && !loadError">
+    <div class="apply__header">
+      <div class="apply__club-info">
+        <div class="apply__club-logo">
+          {{ campaign.club?.name ? campaign.club.name.charAt(0) : 'C' }}
+        </div>
+        <div class="apply__club-name">{{ campaign.club?.name || 'Club Recruitment' }}</div>
+      </div>
+      <h1 class="apply__title">{{ campaign.title }}</h1>
+      <p class="apply__desc">{{ campaign.description }}</p>
+      
+      <div class="apply__meta">
+        <span class="apply__deadline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Deadline: <strong>{{ campaign.endDate | date:'mediumDate' }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <form class="apply__form" (ngSubmit)="onSubmit()" novalidate>
+
+      <div class="apply__section-title">Personal Information</div>
+      
+      <div class="apply__form-row">
+        <div class="apply__form-col apply__form-col--full">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" [(ngModel)]="candidateName" name="candidateName" required placeholder="John Doe">
+        </div>
+      </div>
+
+      <div class="apply__form-row">
+        <div class="apply__form-col">
+          <label>Email Address <span class="req">*</span></label>
+          <input type="email" [(ngModel)]="candidateEmail" name="candidateEmail" required placeholder="john@example.com">
+        </div>
+        <div class="apply__form-col">
+          <label>Phone Number</label>
+          <input type="tel" [(ngModel)]="candidatePhone" name="candidatePhone" placeholder="+123456789">
+        </div>
+      </div>
+
+      <div class="apply__section-title">Application Questions</div>
+
+      <ng-container *ngFor="let q of questions; let i = index">
+        <div class="apply__form-row">
+          <div class="apply__form-col apply__form-col--full apply__question">
+            
+            <label class="apply__q-label">
+              <span class="apply__q-idx">{{ i + 1 }}.</span> {{ q.label }}
+              <span class="req" *ngIf="q.required">*</span>
+            </label>
+
+            <!-- TEXT -->
+            <input *ngIf="q.type === 'TEXT'" type="text" [(ngModel)]="answers[q.id]" [name]="'q_'+q.id" [required]="q.required">
+            
+            <!-- TEXTAREA -->
+            <textarea *ngIf="q.type === 'TEXTAREA'" [(ngModel)]="answers[q.id]" [name]="'q_'+q.id" [required]="q.required" rows="3"></textarea>
+            
+            <!-- MULTIPLE_CHOICE -->
+            <select *ngIf="q.type === 'MULTIPLE_CHOICE'" [(ngModel)]="answers[q.id]" [name]="'q_'+q.id" [required]="q.required">
+              <option value="" disabled selected>Select an option...</option>
+              <option *ngFor="let opt of q.parsedOptions" [value]="opt">{{ opt }}</option>
+            </select>
+
+            <!-- DATE -->
+            <input *ngIf="q.type === 'DATE'" type="date" [(ngModel)]="answers[q.id]" [name]="'q_'+q.id" [required]="q.required">
+
+            <!-- FILE -->
+            <input *ngIf="q.type === 'FILE'" type="file" (change)="onFileChange($event, q.id)" [required]="q.required">
+
+            <!-- YES_NO -->
+            <div class="apply__radio-group" *ngIf="q.type === 'YES_NO'">
+              <label class="apply__radio">
+                <input type="radio" [(ngModel)]="answers[q.id]" [name]="'q_'+q.id" value="Yes" [required]="q.required">
+                <span>Yes</span>
+              </label>
+              <label class="apply__radio">
+                <input type="radio" [(ngModel)]="answers[q.id]" [name]="'q_'+q.id" value="No" [required]="q.required">
+                <span>No</span>
+              </label>
+            </div>
+
+            <!-- RATING -->
+            <div class="apply__stars" *ngIf="q.type === 'RATING'">
+              <span *ngFor="let star of [1,2,3,4,5]" 
+                    (click)="setRating(q.id, star)"
+                    [class.active]="+answers[q.id] >= star">★</span>
+              <input type="hidden" [(ngModel)]="answers[q.id]" [name]="'q_'+q.id" [required]="q.required">
+            </div>
+
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="apply__error" *ngIf="submitError">{{ submitError }}</div>
+
+      <div class="apply__actions">
+        <button type="submit" class="btn btn--primary" [disabled]="!isFormValid() || isSubmitting">
+          {{ isSubmitting ? 'Submitting...' : 'Submit Application' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

@@ -1,0 +1,181 @@
+// ─── Design Tokens ─────────────────────────────────────────────────────────────
+$bg-page:    #111111;
+$bg-card:    #171717;
+$bg-inner:   #1e1e1e;
+$gray:       #2e2e2e;
+$text-main:  #ffffff;
+$text-muted: #676767;
+$accent:     #f7b91c;
+
+$col-new:    #3b82f6; // Blue
+$col-rev:    #f59e0b; // Amber
+$col-int:    #8b5cf6; // Purple
+$col-acc:    #10b981; // Green
+$col-rej:    #ef4444; // Red
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+:host { display: block; overflow-x: auto; min-height: 100vh; }
+
+.kbn-page {
+  padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; 
+  color: $text-main; height: 100%; min-height: calc(100vh - 80px);
+}
+
+.kbn-header {
+  display: flex; justify-content: space-between; align-items: center;
+  &__left { display: flex; align-items: center; gap: 1rem; }
+}
+
+.kbn-title { font-size: 1.4rem; font-weight: 700; margin: 0 0 0.2rem; line-height: 1.2; }
+.kbn-subtitle { font-size: 0.85rem; color: $text-muted; margin: 0; }
+
+.builder__back-btn {
+  padding: 0.5rem !important; background: rgba(255,255,255,0.05) !important;
+  border: 1px solid $gray !important; border-radius: 8px; cursor: pointer; color: $text-muted;
+  display: flex; align-items: center; justify-content: center; transition: 0.2s;
+  &:hover { background: rgba(255,255,255,0.1) !important; color: $text-main; }
+}
+
+.kbn-loading {
+  display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: $text-muted; padding: 2rem;
+  .spinner { width: 20px; height: 20px; border: 2px solid $gray; border-top-color: $accent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+}
+
+// ─── Kanban Board ───
+.kanban {
+  display: flex; gap: 1.25rem; flex: 1; overflow-x: auto; padding-bottom: 2rem;
+  
+  // Custom Scrollbar
+  &::-webkit-scrollbar { height: 8px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  &::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+
+  &__col {
+    flex: 0 0 320px; background: rgba($bg-card, 0.5); border: 1px dashed $gray;
+    border-radius: 12px; display: flex; flex-direction: column; overflow: hidden;
+    max-height: calc(100vh - 150px);
+  }
+
+  &__col-header {
+    padding: 1rem; border-bottom: 2px solid transparent; display: flex;
+    justify-content: space-between; align-items: center;
+    background: rgba(0,0,0,0.2);
+  }
+
+  &__col-title { font-size: 0.95rem; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+  &__col-count { background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+
+  // Status Colors
+  &__col--new       .kanban__col-header { border-color: $col-new; .kanban__col-title { color: $col-new; } }
+  &__col--reviewing .kanban__col-header { border-color: $col-rev; .kanban__col-title { color: $col-rev; } }
+  &__col--interview .kanban__col-header { border-color: $col-int; .kanban__col-title { color: $col-int; } }
+  &__col--accepted  .kanban__col-header { border-color: $col-acc; .kanban__col-title { color: $col-acc; } }
+  &__col--rejected  .kanban__col-header { border-color: $col-rej; .kanban__col-title { color: $col-rej; } }
+
+  &__list {
+    flex: 1; padding: 1rem 0.75rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; min-height: 100px;
+  }
+
+  &__card {
+    background: $bg-inner; border: 1px solid $gray; border-left: 3px solid transparent;
+    border-radius: 8px; padding: 1rem; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+    user-select: none; position: relative;
+
+    &:hover { border-color: rgba(#fff, 0.2); }
+    &.cdk-drag-preview {
+      background: $bg-card; box-sizing: border-box; box-shadow: 0 10px 20px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); z-index: 100;
+    }
+  }
+
+  .cdk-drag-placeholder { opacity: 0.2; border: 1px dashed $text-muted; background: transparent; }
+  .cdk-drop-list-dragging .kanban__card:not(.cdk-drag-placeholder) { transition: transform 250ms cubic-bezier(0,0,0.2,1); }
+
+  &__card-name { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.25rem; color: $text-main; }
+  &__card-email { font-size: 0.8rem; color: $text-muted; margin: 0 0 1rem; word-break: break-all; }
+  
+  &__card-drag {
+    position: absolute; right: 0.75rem; top: 1rem; color: $text-muted; cursor: grab; opacity: 0.5;
+    &:hover { opacity: 1; color: $text-main; }
+  }
+
+  &__card-footer {
+    display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(#fff, 0.05); padding-top: 0.6rem;
+  }
+  &__card-date { font-size: 0.72rem; color: darken($text-muted, 10%); font-weight: 500; }
+  
+  // Status Colors Left Borders
+  &__col--new       .kanban__card { border-left-color: rgba($col-new, 0.5); }
+  &__col--reviewing .kanban__card { border-left-color: rgba($col-rev, 0.5); }
+  &__col--interview .kanban__card { border-left-color: rgba($col-int, 0.5); }
+  &__col--accepted  .kanban__card { border-left-color: rgba($col-acc, 0.5); }
+  &__col--rejected  .kanban__card { border-left-color: rgba($col-rej, 0.5); }
+}
+
+// ─── Validation / Modals ───
+.kbn-modal__overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s; padding: 1rem;
+}
+.kbn-modal__dialog {
+  background: $bg-card; border: 1px solid $gray; border-radius: 12px; width: 100%; max-width: 550px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;
+}
+.kbn-modal__header {
+  padding: 1.5rem; border-bottom: 1px solid $gray; display: flex; align-items: center; position: relative; gap: 1rem;
+}
+.kbn-modal__title { margin: 0; font-size: 1.25rem; }
+.kbn-modal__status-badge {
+  font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; text-transform: uppercase;
+  &.badge--new { color: $col-new; background: rgba($col-new, 0.1); border: 1px solid rgba($col-new, 0.3); }
+  &.badge--reviewing { color: $col-rev; background: rgba($col-rev, 0.1); border: 1px solid rgba($col-rev, 0.3); }
+  &.badge--interview { color: $col-int; background: rgba($col-int, 0.1); border: 1px solid rgba($col-int, 0.3); }
+  &.badge--accepted { color: $col-acc; background: rgba($col-acc, 0.1); border: 1px solid rgba($col-acc, 0.3); }
+  &.badge--rejected { color: $col-rej; background: rgba($col-rej, 0.1); border: 1px solid rgba($col-rej, 0.3); }
+}
+.kbn-modal__close {
+  position: absolute; right: 1rem; top: 1.25rem; font-size: 1.5rem; line-height: 1; background: transparent; border: none; color: $text-muted; cursor: pointer; transition: 0.2s; padding: 0.2rem;
+  &:hover { color: $text-main; }
+}
+
+.kbn-modal__body {
+  padding: 1.5rem; overflow-y: auto; flex: 1; color: darken($text-main, 10%); font-size: 0.95rem;
+}
+
+.kbn-detail-group {
+  display: flex; gap: 0.5rem; margin-bottom: 0.75rem;
+  strong { width: 80px; color: $text-muted; }
+  a { color: $accent; text-decoration: none; &:hover { text-decoration: underline; } }
+}
+
+.kbn-modal__divider { border: 0; height: 1px; background: $gray; margin: 1.5rem 0; }
+
+.kbn-modal__subtitle { margin: 0 0 1rem; font-size: 1.05rem; font-weight: 600; color: $text-main; }
+
+.kbn-answer {
+  background: $bg-inner; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid $gray;
+  &__q { font-weight: 600; color: $text-muted; font-size: 0.85rem; margin-bottom: 0.5rem; }
+  &__a { color: $text-main; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; }
+}
+
+// ─── Light Mode ───
+body.light-mode .kbn-page {
+  color: #111;
+  .builder__back-btn { background: #eee !important; border-color: #ccc !important; &:hover { background: #e0e0e0 !important; color: #111!important;} }
+  .kbn-subtitle { color: #555; }
+  
+  .kanban__col { background: #f9f9f9; border-color: #dcdcdc; }
+  .kanban__col-header { background: #eee; border-bottom: 2px solid transparent; }
+  .kanban__col-count { background: #fff; color: #111; }
+  .kanban__card { background: #fff; border-color: #dcdcdc; }
+  .kanban__card-name { color: #111; }
+  .kanban__card-footer { border-top-color: #eee; }
+  .kanban__card-drag { color: #ccc; &:hover { color: #555; } }
+  
+  .kbn-modal__dialog { background: #fff; border-color: #dcdcdc; }
+  .kbn-modal__header { border-bottom-color: #eee; }
+  .kbn-modal__body { color: #333; }
+  .kbn-modal__divider { background: #eee; }
+  .kbn-answer { background: #f9f9f9; border-color: #eee; }
+  .kbn-answer__q { color: #666; }
+  .kbn-answer__a { color: #111; }
+}

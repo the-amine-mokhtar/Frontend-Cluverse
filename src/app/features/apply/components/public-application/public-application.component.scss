@@ -1,0 +1,171 @@
+// ─── Design Tokens ─────────────────────────────────────────────────────────────
+$bg-page:    #0f1115;
+$bg-card:    #181a1f;
+$bg-inner:   #23262d;
+$border:     #2e323b;
+$text-main:  #ffffff;
+$text-muted: #8b92a5;
+$accent:     #3ecf8e;
+$danger:     #e05c5c;
+
+:host { display: block; min-height: 100vh; background: $bg-page; color: $text-main; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+.apply-page {
+  display: flex; justify-content: center; padding: 3rem 1rem;
+}
+
+.apply__loading {
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  color: $text-muted; padding: 4rem 0; font-size: 1.1rem;
+  .spinner {
+    width: 32px; height: 32px; border: 3px solid $border;
+    border-top-color: $accent; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+.apply__error-state, .apply__success-state {
+  text-align: center; max-width: 400px; padding: 4rem 1rem;
+  animation: fadeInUp 0.4s ease;
+  svg { margin-bottom: 1.5rem; }
+  h2 { font-size: 1.5rem; margin: 0 0 1rem; }
+  p { color: $text-muted; line-height: 1.5; margin: 0; }
+}
+
+.apply__error-state {
+  svg { color: $danger; opacity: 0.8; }
+}
+
+.apply__success-state {
+  svg { color: $accent; }
+}
+
+.apply__container {
+  width: 100%; max-width: 700px; background: $bg-card;
+  border: 1px solid $border; border-radius: 12px;
+  overflow: hidden; animation: fadeInUp 0.3s ease;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.apply__header {
+  padding: 2.5rem 2.5rem 2rem; border-bottom: 1px solid $border;
+  background: linear-gradient(180deg, rgba(62, 207, 142, 0.05) 0%, rgba(24, 26, 31, 0) 100%);
+}
+
+.apply__club-info {
+  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;
+}
+
+.apply__club-logo {
+  width: 36px; height: 36px; background: $accent; color: #000;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.1rem; text-transform: uppercase;
+}
+.apply__club-name { font-weight: 600; color: $text-muted; font-size: 0.95rem; }
+
+.apply__title { font-size: 1.75rem; margin: 0 0 0.75rem; font-weight: 700; }
+.apply__desc { font-size: 0.95rem; line-height: 1.6; color: rgba($text-main, 0.8); margin: 0 0 1.5rem; }
+
+.apply__meta {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.5rem 0.8rem; background: rgba($danger, 0.1); color: #f87171;
+  border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba($danger, 0.2);
+  strong { font-weight: 600; }
+}
+
+.apply__form { padding: 2rem 2.5rem 2.5rem; }
+
+.apply__section-title {
+  font-size: 1.1rem; font-weight: 600; margin: 2rem 0 1rem;
+  padding-bottom: 0.5rem; border-bottom: 1px dashed $border;
+  &:first-child { margin-top: 0; }
+}
+
+.apply__form-row {
+  display: flex; gap: 1.5rem; margin-bottom: 1.25rem;
+  @media (max-width: 600px) { flex-direction: column; gap: 1rem; }
+}
+
+.apply__form-col {
+  flex: 1; display: flex; flex-direction: column; gap: 8px;
+  &--full { flex: 1 1 100%; }
+
+  label {
+    font-size: 0.85rem; font-weight: 500; color: $text-muted;
+    .req { color: $danger; margin-left: 2px; }
+  }
+
+  input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select, textarea {
+    background: $bg-inner; border: 1px solid $border; color: $text-main;
+    border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.95rem;
+    outline: none; transition: 0.2s;
+    &:focus { border-color: $accent; box-shadow: 0 0 0 2px rgba($accent, 0.1); }
+    &::placeholder { color: $text-muted; opacity: 0.5; }
+  }
+  textarea { resize: vertical; }
+  select { appearance: none; cursor: pointer; }
+}
+
+.apply__question {
+  background: $bg-inner; padding: 1.25rem; border-radius: 8px; border: 1px solid $border;
+  
+  .apply__q-label {
+    font-size: 1rem; color: $text-main; font-weight: 600; margin-bottom: 0.5rem;
+  }
+  .apply__q-idx { color: $text-muted; font-weight: 400; margin-right: 4px; }
+  
+  input[type="text"], textarea, select, input[type="date"] {
+    background: $bg-card; border-color: $border;
+  }
+  input[type="file"] {
+    padding: 0.5rem 0; font-size: 0.9rem; color: $text-muted;
+    &::file-selector-button {
+      padding: 0.4rem 0.8rem; background: rgba(255,255,255,0.05); color: $text-main;
+      border: 1px solid $border; border-radius: 6px; cursor: pointer; transition: 0.2s;
+      margin-right: 1rem;
+    }
+  }
+}
+
+.apply__radio-group {
+  display: flex; gap: 1.5rem; margin-top: 0.5rem;
+}
+
+.apply__radio {
+  display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
+  input[type="radio"] {
+    position: relative; top: 1px; width: 18px; height: 18px; accent-color: $accent;
+  }
+  span { font-size: 0.95rem; color: $text-main; }
+}
+
+.apply__stars {
+  display: flex; gap: 0.5rem; margin-top: 0.5rem;
+  span {
+    font-size: 2rem; color: $border; cursor: pointer; transition: 0.2s;
+    &:hover, &.active { color: #facc15; }
+  }
+}
+
+.apply__error {
+  color: $danger; background: rgba($danger, 0.1); border: 1px solid rgba($danger, 0.3);
+  padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.5rem;
+}
+
+.apply__actions {
+  margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed $border;
+  display: flex; justify-content: flex-end;
+}
+
+.btn {
+  &--primary {
+    background: $accent; color: #000; font-weight: 600; font-size: 0.95rem;
+    padding: 0.85rem 2rem; border-radius: 8px; cursor: pointer; transition: 0.2s;
+    border: none;
+    &:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+}

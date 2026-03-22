@@ -1,0 +1,299 @@
+// ─── Design Tokens ─────────────────────────────────────────────────────────────
+$bg-page:    #111111;
+$bg-card:    #171717;
+$bg-inner:   #1e1e1e;
+$border:     #2e2e2e;
+$text-main:  #ffffff;
+$text-muted: #676767;
+$accent:     #f7b91c;
+$danger:     #e05c5c;
+$success:    #3ecf8e;
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+:host { display: block; }
+
+.builder {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: $text-main;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    &-left {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    &-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+  }
+
+  &__back-btn {
+    padding: 0.5rem !important;
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid $border !important;
+    border-radius: 8px;
+    &:hover { background: rgba(255,255,255,0.1) !important; }
+  }
+
+  &__title {
+    font-size: 1.35rem; font-weight: 700; margin: 0 0 0.2rem;
+  }
+  &__subtitle {
+    font-size: 0.85rem; color: $accent; margin: 0; font-weight: 600;
+  }
+
+  // ─── Inline Form ───
+  &__form-card {
+    background: $bg-card; border: 1px solid $border;
+    border-radius: 12px; padding: 1.5rem;
+    animation: fadeInUp 0.3s ease;
+    margin-bottom: 1rem;
+
+    h3 { margin: 0 0 1rem; font-size: 1.1rem; }
+  }
+
+  &__form-row {
+    display: flex; gap: 1rem; margin-bottom: 1rem;
+    @media (max-width: 600px) { flex-direction: column; }
+  }
+
+  &__form-col {
+    flex: 1; display: flex; flex-direction: column; gap: 6px;
+    &--full { flex: 1 1 100%; }
+
+    label { font-size: 0.8rem; font-weight: 500; color: $text-muted; }
+    
+    input[type="text"], select, textarea {
+      background: $bg-inner; border: 1px solid $border;
+      border-radius: 8px; color: $text-main;
+      padding: 0.6rem 0.85rem; font-size: 0.88rem;
+      transition: border-color 0.2s; outline: none;
+      &::placeholder { color: $text-muted; opacity: 0.7; }
+      &:focus { border-color: $accent; }
+    }
+    textarea { resize: vertical; }
+
+    select { appearance: none; cursor: pointer; }
+  }
+
+  &__checkbox-wrap {
+    display: flex; align-items: center; gap: 0.5rem; height: 100%;
+    padding: 0.6rem 0.85rem;
+    background: $bg-inner; border: 1px solid $border; border-radius: 8px;
+    input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: $accent; cursor: pointer;
+    }
+    label { font-size: 0.85rem; color: $text-main; cursor: pointer; }
+  }
+
+  &__form-actions {
+    display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;
+  }
+
+  &__error {
+    color: $danger; background: rgba($danger, 0.1);
+    border: 1px solid rgba($danger, 0.3); padding: 0.5rem 1rem;
+    border-radius: 6px; font-size: 0.8rem; margin-bottom: 1rem;
+  }
+
+  &__loading {
+    display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
+    color: $text-muted; padding: 2rem;
+  }
+
+  .spinner {
+    width: 20px; height: 20px; border: 2px solid $border;
+    border-top-color: $accent; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  &__empty {
+    text-align: center; padding: 3rem 1rem; color: $text-muted;
+    border: 1px dashed $border; border-radius: 12px;
+    h4 { color: $text-main; font-size: 1.1rem; margin: 0 0 0.5rem; }
+    p { font-size: 0.85rem; margin: 0; }
+  }
+
+  // ─── Drop List ───
+  &__list-area {
+    margin-top: 0.5rem;
+  }
+
+  &__drop-list {
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__question-card {
+    background: $bg-card;
+    border: 1px solid $border;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    gap: 1rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+    
+    // Ghost overlay when holding placeholder item
+    &.cdk-drag-preview {
+      box-sizing: border-box;
+      border: 1px solid $accent;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      background: $bg-inner;
+      border-radius: 10px;
+      padding: 1rem;
+      color: $text-main;
+      font-weight: 600;
+      cursor: grabbing;
+    }
+
+    &.cdk-drag-animating {
+      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+
+  // Required by CDK to shift siblings smoothly
+  .cdk-drop-list-dragging &__question-card:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  }
+
+  .cdk-drag-placeholder {
+    opacity: 0.3; border: 1px dashed $text-muted; background: transparent;
+  }
+
+  &__drag-handle {
+    cursor: grab;
+    color: $text-muted;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0.2rem;
+    &:active { cursor: grabbing; color: $accent; }
+    &:hover { color: $text-main; }
+  }
+
+  &__question-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__question-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+
+  &__question-title {
+    font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 8px;
+  }
+  &__question-idx { color: $text-muted; font-size: 0.95rem; }
+
+  &__required-badge {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    background: rgba($danger, 0.15); color: #f87171;
+    padding: 3px 6px; border-radius: 4px;
+  }
+
+  &__question-body {
+    display: flex; align-items: center; gap: 1rem; font-size: 0.85rem;
+  }
+
+  &__type-badge {
+    color: #60a5fa; background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;
+  }
+
+  &__options {
+    color: $text-muted;
+    strong { color: rgba($text-main, 0.85); font-weight: 500; }
+  }
+
+  &__question-actions {
+    display: flex; gap: 4px;
+  }
+
+  // ─── Shared Buttons ───
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px; font-size: 0.85rem; font-weight: 600;
+    padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid transparent;
+    cursor: pointer; transition: 0.2s ease; text-decoration: none;
+    
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &--primary { background: $accent; color: #000; &:hover:not(:disabled) { transform: translateY(-1px); } }
+    &--secondary { background: $bg-inner; border-color: $border; color: $text-main; &:hover:not(:disabled) { background: rgba(255,255,255,0.05); } }
+    &--outline { background: transparent; border-color: $border; color: $text-main; &:hover:not(:disabled) { background: rgba($text-main, 0.05); } }
+    &--danger { background: $danger; color: #fff; &:hover:not(:disabled) { opacity: 0.9; } }
+    
+    &--icon { padding: 0.4rem; border-radius: 6px; }
+    &--text {
+      background: transparent; color: $text-muted;
+      &:hover:not(:disabled) { color: $text-main; background: rgba(255,255,255,0.05); }
+      &-danger {
+        background: transparent; color: $text-muted; border-color: transparent;
+        &:hover:not(:disabled) { color: $danger; background: rgba($danger, 0.1); }
+      }
+    }
+  }
+
+  // ─── Dialog ───
+  &__overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    z-index: 2000; display: flex; align-items: center; justify-content: center;
+    animation: fadeInUp 0.2s ease;
+  }
+
+  &__dialog {
+    background: $bg-card; border: 1px solid $border;
+    border-radius: 12px; padding: 2rem;
+    width: min(400px, 90vw); text-align: center;
+    h3 { margin: 0 0 0.5rem; font-size: 1.2rem; }
+    p { color: $text-muted; font-size: 0.85rem; margin: 0 0 1.5rem; }
+  }
+
+  &__dialog-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba($danger, 0.1); color: $danger;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+  }
+
+  &__dialog-actions { display: flex; gap: 0.75rem; justify-content: center; }
+}
+
+// ─── Light Mode ───
+body.light-mode .builder {
+  color: #111;
+  &__form-card, &__question-card { background: #fdfdfd; border-color: #dcdcdc; }
+  &__subtitle, &__empty, &__options, .btn--text { color: #555; }
+  &__drag-handle { color: #aaa; &:hover { color: #555; } &:active { color: #f7b91c; } }
+  
+  &__form-col label { color: #555; }
+  &__form-col input[type="text"], &__form-col select, &__form-col textarea, &__checkbox-wrap {
+    background: #fff; border-color: #ccc; color: #111;
+    &:focus { border-color: #f7b91c; }
+  }
+  
+  &__checkbox-wrap label { color: #111; }
+
+  .btn--secondary, .btn--outline { background: #fff; border-color: #dcdcdc; color: #111; &:hover:not(:disabled) { background: #f0f0f0; } }
+  
+  &__dialog { background: #fff; border-color: #dcdcdc; h3 { color: #111; } p { color: #444; } }
+  &__back-btn { background: #eee !important; border-color: #ccc !important; &:hover { background: #e0e0e0 !important; color: #111!important;} }
+
+  &__question-card.cdk-drag-preview { background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+}

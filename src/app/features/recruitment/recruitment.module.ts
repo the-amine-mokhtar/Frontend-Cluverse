@@ -1,15 +1,21 @@
 import { NgModule } from '@angular/core';
 import { SharedModule } from '../../shared/shared.module';
 import { RecruitmentRoutingModule } from './recruitment-routing.module';
-import { RecruitmentHomeComponent } from './components/recruitment-home/recruitment-home.component';
+import { CampaignListComponent } from './components/campaign-list/campaign-list.component';
+import { FormBuilderComponent } from './components/form-builder/form-builder.component';
+import { ApplicationsKanbanComponent } from './components/applications-kanban/applications-kanban.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   declarations: [
-    RecruitmentHomeComponent
+    CampaignListComponent,
+    FormBuilderComponent,
+    ApplicationsKanbanComponent
   ],
   imports: [
     SharedModule,
-    RecruitmentRoutingModule
+    RecruitmentRoutingModule,
+    DragDropModule
   ]
 })
 export class RecruitmentModule { }

@@ -1,0 +1,159 @@
+<div class="builder">
+  
+  <!-- Delete Dialog -->
+  <div class="builder__overlay" *ngIf="confirmTarget" (click)="closeConfirm()">
+    <div class="builder__dialog" (click)="$event.stopPropagation()">
+      <div class="builder__dialog-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+      </div>
+      <h3>Delete Question</h3>
+      <p>Are you sure you want to delete this question?</p>
+      <div class="builder__error" *ngIf="deleteError">{{ deleteError }}</div>
+      <div class="builder__dialog-actions">
+        <button class="btn btn--outline" (click)="closeConfirm()" [disabled]="isDeleting">Cancel</button>
+        <button class="btn btn--danger" (click)="onConfirmDelete()" [disabled]="isDeleting">
+          {{ isDeleting ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="builder__header">
+    <div class="builder__header-left">
+      <button class="btn btn--text builder__back-btn" routerLink="/dashboard/recruitment">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back
+      </button>
+      <div>
+        <h2 class="builder__title">Form Builder</h2>
+        <p class="builder__subtitle" *ngIf="campaign">Configuring: {{ campaign.title }}</p>
+      </div>
+    </div>
+    
+    <div class="builder__header-actions" *ngIf="campaign">
+      <a class="btn btn--secondary" target="_blank" [href]="'/apply/' + campaign.publicLink">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        Preview Form
+      </a>
+      <button class="btn btn--primary" (click)="openNewForm()" *ngIf="!showForm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Add Question
+      </button>
+    </div>
+  </div>
+
+  <div class="builder__error" *ngIf="loadError">{{ loadError }}</div>
+  
+  <div class="builder__loading" *ngIf="isLoading">
+    <div class="spinner"></div> Loading application structure...
+  </div>
+  
+  <ng-container *ngIf="!isLoading && !loadError">
+
+    <!-- Form Inline Wrapper -->
+    <div class="builder__form-card" *ngIf="showForm">
+      <h3>{{ isEditMode ? 'Edit Question' : 'New Question' }}</h3>
+      
+      <form class="builder__form" (ngSubmit)="onSave()" novalidate>
+        <div class="builder__form-row">
+          <div class="builder__form-col builder__form-col--full">
+            <label>Question Label</label>
+            <input type="text" [(ngModel)]="formData.label" name="label" required placeholder="What is your field of study?">
+          </div>
+        </div>
+        
+        <div class="builder__form-row">
+          <div class="builder__form-col">
+            <label>Input Type</label>
+            <select [(ngModel)]="formData.type" name="type" required>
+              <option *ngFor="let t of QUESTION_TYPES" [value]="t">{{ formatTypeLabel(t) }}</option>
+            </select>
+          </div>
+          <div class="builder__form-col">
+            <label>Required</label>
+            <div class="builder__checkbox-wrap">
+              <input type="checkbox" [(ngModel)]="formData.required" name="required" id="req-check">
+              <label for="req-check">Applicant must answer this question</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder__form-row" *ngIf="formData.type === 'MULTIPLE_CHOICE'">
+          <div class="builder__form-col builder__form-col--full">
+            <label>Choice Options (comma-separated)</label>
+            <textarea [(ngModel)]="formData.options" name="options" required rows="2" placeholder="Option 1, Option 2, Option 3..."></textarea>
+          </div>
+        </div>
+
+        <div class="builder__error" *ngIf="formError">{{ formError }}</div>
+        
+        <div class="builder__form-actions">
+          <button type="button" class="btn btn--outline" (click)="closeForm()" [disabled]="isSaving">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="!isFormValid() || isSaving">
+            {{ isSaving ? 'Saving...' : 'Save Question' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Questions Layout Area -->
+    <div class="builder__list-area">
+      <div class="builder__empty" *ngIf="questions.length === 0 && !showForm">
+        <h4>No custom questions yet</h4>
+        <p>Name, Email, and Phone are always collected. Add custom questions above.</p>
+      </div>
+
+      <!-- CDK Drop List -->
+      <div class="builder__drop-list" cdkDropList (cdkDropListDropped)="drop($event)">
+        <div class="builder__question-card" *ngFor="let q of questions; let i = index" cdkDrag>
+          <div class="builder__drag-handle" cdkDragHandle title="Drag to reorder">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </div>
+          
+          <div class="builder__question-content">
+            <div class="builder__question-header">
+              <div class="builder__question-title">
+                <span class="builder__question-idx">{{ i + 1 }}.</span> {{ q.label }}
+                <span class="builder__required-badge" *ngIf="q.required">* Required</span>
+              </div>
+            </div>
+            <div class="builder__question-body">
+              <div class="builder__type-badge">{{ formatTypeLabel(q.type) }}</div>
+              <div class="builder__options" *ngIf="q.type === 'MULTIPLE_CHOICE' && q.options">
+                <strong>Options:</strong> {{ q.options }}
+              </div>
+            </div>
+          </div>
+
+          <div class="builder__question-actions">
+            <button class="btn btn--icon btn--text" (click)="openEditForm(q)" title="Edit">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </button>
+            <button class="btn btn--icon btn--text-danger" (click)="openConfirm(q)" title="Delete">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- CDK Drag Drop Preview Element -->
+          <div *cdkDragPreview class="builder__question-card builder__question-card--preview">
+            <span class="builder__question-idx">{{ i + 1 }}.</span> {{ q.label }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

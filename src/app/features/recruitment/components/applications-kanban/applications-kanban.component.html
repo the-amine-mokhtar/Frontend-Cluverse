@@ -1,0 +1,98 @@
+<div class="kbn-page">
+
+  <!-- ── Detail Modal ── -->
+  <div class="kbn-modal__overlay" *ngIf="selectedApp" (click)="closeModal()">
+    <div class="kbn-modal__dialog" (click)="$event.stopPropagation()">
+      <div class="kbn-modal__header">
+        <h3 class="kbn-modal__title">{{ selectedApp.candidateName }}</h3>
+        <span class="kbn-modal__status-badge" [ngClass]="'badge--' + selectedApp.status.toLowerCase()">
+          {{ selectedApp.status }}
+        </span>
+        <button class="kbn-modal__close" (click)="closeModal()">&times;</button>
+      </div>
+
+      <div class="kbn-modal__body">
+        <div class="kbn-detail-group">
+          <strong>Email:</strong>
+          <a [href]="'mailto:' + selectedApp.candidateEmail">{{ selectedApp.candidateEmail }}</a>
+        </div>
+        <div class="kbn-detail-group" *ngIf="selectedApp.candidatePhone">
+          <strong>Phone:</strong>
+          <a [href]="'tel:' + selectedApp.candidatePhone">{{ selectedApp.candidatePhone }}</a>
+        </div>
+        <div class="kbn-detail-group">
+          <strong>Applied:</strong>
+          <span>{{ selectedApp.submissionDate | date:'medium' }}</span>
+        </div>
+
+        <hr class="kbn-modal__divider" *ngIf="selectedApp.answers && selectedApp.answers.length > 0">
+
+        <h4 class="kbn-modal__subtitle" *ngIf="selectedApp.answers && selectedApp.answers.length > 0">Application Answers</h4>
+        
+        <div class="kbn-answer" *ngFor="let ans of selectedApp.answers">
+          <div class="kbn-answer__q">{{ ans.question?.label || 'Question ID: ' + ans.questionId }}</div>
+          <div class="kbn-answer__a">{{ ans.answer || '—' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Header ── -->
+  <div class="kbn-header">
+    <div class="kbn-header__left">
+      <button class="btn btn--text builder__back-btn" routerLink="/dashboard/recruitment">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back
+      </button>
+      <div>
+        <h2 class="kbn-title">Application Processing</h2>
+        <p class="kbn-subtitle">Drag and drop candidates across stages</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="kbn-error" *ngIf="loadError">{{ loadError }}</div>
+  
+  <div class="kbn-loading" *ngIf="isLoading">
+    <div class="spinner"></div> Loading applications...
+  </div>
+  
+  <!-- ── Kanban Board ── -->
+  <div class="kanban" *ngIf="!isLoading && !loadError" cdkDropListGroup>
+
+    <div class="kanban__col" *ngFor="let col of columns" [ngClass]="col.colorClass">
+      <div class="kanban__col-header">
+        <h3 class="kanban__col-title">{{ col.title }}</h3>
+        <span class="kanban__col-count">{{ col.items.length }}</span>
+      </div>
+
+      <div class="kanban__list" 
+           cdkDropList 
+           [cdkDropListData]="col.items" 
+           [id]="col.id"
+           (cdkDropListDropped)="drop($event)">
+           
+        <div class="kanban__card" *ngFor="let app of col.items" cdkDrag (click)="openModal(app)">
+          <div class="kanban__card-inner">
+            <h4 class="kanban__card-name">{{ app.candidateName }}</h4>
+            <p class="kanban__card-email">{{ app.candidateEmail }}</p>
+            <div class="kanban__card-footer">
+              <span class="kanban__card-date">{{ app.submissionDate | date:'MMM d • h:mm a' }}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kanban__card-drag">
+                <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
+              </svg>
+            </div>
+          </div>
+          <div *cdkDragPreview class="kanban__card kanban__card--preview">
+            <h4 class="kanban__card-name">{{ app.candidateName }}</h4>
+            <p class="kanban__card-email">{{ app.candidateEmail }}</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+  </div>
+</div>

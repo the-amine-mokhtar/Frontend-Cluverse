@@ -186,6 +186,77 @@ updateMemberRole(clubId: number, userId: number, role: string): Observable<any> 
     { headers, responseType: 'text' }
   );
 }
+
+// ─── Recruitment API Methods ─────────────────────────────────────────────── //
+
+getClubCampaigns(clubId: number): Observable<any[]> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.get<any[]>(`${this.baseUrl}/api/recruitment/campaigns/club/${clubId}`, { headers });
+}
+
+createCampaign(clubId: number, campaign: any): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.post<any>(`${this.baseUrl}/api/recruitment/campaigns?clubId=${clubId}`, campaign, { headers });
+}
+
+updateCampaign(id: number, campaign: any): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.put<any>(`${this.baseUrl}/api/recruitment/campaigns/${id}`, campaign, { headers });
+}
+
+getCampaign(id: number): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.get<any>(`${this.baseUrl}/api/recruitment/campaigns/${id}`, { headers });
+}
+
+deleteCampaign(id: number): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.delete(`${this.baseUrl}/api/recruitment/campaigns/${id}`, { headers, responseType: 'text' });
+}
+
+// ─── Questions ───
+
+addQuestion(campaignId: number, question: any): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.post<any>(`${this.baseUrl}/api/recruitment/campaigns/${campaignId}/questions`, question, { headers });
+}
+
+updateQuestion(id: number, question: any): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.put<any>(`${this.baseUrl}/api/recruitment/questions/${id}`, question, { headers });
+}
+
+deleteQuestion(id: number): Observable<any> {
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  });
+  return this.http.delete(`${this.baseUrl}/api/recruitment/questions/${id}`, 
+    { headers, responseType: 'text' }
+  );
+}
+
+// ─── Applications ───
+
+getCampaignApplications(campaignId: number): Observable<any[]> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.get<any[]>(`${this.baseUrl}/api/recruitment/campaigns/${campaignId}/applications`, { headers });
+}
+
+updateApplicationStatus(id: number, status: string): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.put(`${this.baseUrl}/api/recruitment/applications/${id}/status?status=${encodeURIComponent(status)}`, {}, { headers, responseType: 'text' });
+}
+
+// ─── Public Unauthenticated API Methods ───
+
+getCampaignByPublicLink(publicLink: string): Observable<any> {
+  // Graceful handling of possible missing endpoint or 404
+  return this.http.get<any>(`${this.baseUrl}/api/recruitment/campaigns/public/${encodeURIComponent(publicLink)}`);
+}
+
+applyToCampaign(campaignId: number, submission: any): Observable<any> {
+  return this.http.post(`${this.baseUrl}/api/recruitment/campaigns/${campaignId}/apply`, submission, { responseType: 'text' });
+}
 }
 
 
