@@ -257,6 +257,23 @@ exportApplicationsCSV(campaignId: number): Observable<Blob> {
   return this.http.get(`${this.baseUrl}/api/recruitment/campaigns/${campaignId}/export/csv`, { headers, responseType: 'blob' });
 }
 
+// ─── Notifications ───
+
+getNotifications(clubId: number): Observable<any[]> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.get<any[]>(`${this.baseUrl}/api/notifications?clubId=${clubId}`, { headers });
+}
+
+markNotificationRead(id: number): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.put(`${this.baseUrl}/api/notifications/${id}/read`, {}, { headers, responseType: 'text' });
+}
+
+markAllNotificationsRead(clubId: number): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.put(`${this.baseUrl}/api/notifications/read-all?clubId=${clubId}`, {}, { headers, responseType: 'text' });
+}
+
 // ─── Public Unauthenticated API Methods ───
 
 getCampaignByPublicLink(publicLink: string): Observable<any> {

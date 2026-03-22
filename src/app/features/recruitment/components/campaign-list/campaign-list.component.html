@@ -94,8 +94,8 @@
         <div class="campaigns__card-header">
           <div class="campaigns__card-title">
             <h3>{{ camp.title }}</h3>
-            <span class="campaigns__badge" [class.campaigns__badge--active]="camp.active">
-              {{ camp.active ? 'Active' : 'Closed' }}
+            <span class="campaigns__badge" [ngClass]="getCampaignStatus(camp).cssClass">
+              {{ getCampaignStatus(camp).label }}
             </span>
           </div>
           <div class="campaigns__dates">

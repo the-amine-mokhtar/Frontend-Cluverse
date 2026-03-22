@@ -33,12 +33,59 @@
         name="search" />
     </div>
 
-    <button class="header__icon-btn" title="Notifications">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
-    </button>
+    <!-- Notifications -->
+    <div class="header__avatar-wrapper dropdown-container" (click)="toggleNotifDropdown($event)">
+      <button class="header__icon-btn notifications dd-trigger" title="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="count animated" 
+              [ngClass]="{'fadeIn': unreadCount > 0 && !notifDropdownVisible, 'fadeOut': unreadCount === 0 || (unreadCount > 0 && notifDropdownVisible)}"
+              [style.display]="unreadCount > 0 ? 'flex' : 'none'">{{ unreadCount }}</span>
+      </button>
+
+      <div class="dropdown-menu animated" 
+           [ngClass]="{'fadeInDown': isNotifOpen, 'fadeOutUp': isNotifClosing}"
+           [style.display]="notifDropdownVisible ? 'block' : 'none'"
+           (animationend)="onNotifAnimationEnd()"
+           (click)="$event.stopPropagation()">
+           
+        <div class="dropdown-header">
+          <span class="triangle"></span>
+          <span class="heading">Notifications</span>
+          <span class="count" *ngIf="unreadNotifications.length > 0">{{ unreadNotifications.length }}</span>
+        </div>
+        
+        <div class="dropdown-body">
+          <!-- Unread Notifications -->
+          <div class="notification new" *ngFor="let notif of unreadNotifications">
+            <div class="notification-image-wrapper">
+              <div class="notification-image" style="background: #9FB6C3; color: white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px;">
+                {{ notif.candidateName ? notif.candidateName.charAt(0).toUpperCase() : 'N' }}
+              </div>
+            </div>
+            <div class="notification-text">
+               <span class="highlight">{{ notif.candidateName }}</span> a soumis une candidature pour "{{ notif.campaignTitle }}"
+               <br><small>{{ notif.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+            </div>
+          </div>
+
+          <!-- Read Notifications -->
+          <div class="notification" *ngFor="let notif of readNotifications">
+            <div class="notification-image-wrapper">
+              <div class="notification-image" style="background: #9FB6C3; color: white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px;">
+                {{ notif.candidateName ? notif.candidateName.charAt(0).toUpperCase() : 'N' }}
+              </div>
+            </div>
+            <div class="notification-text">
+               <span class="highlight">{{ notif.candidateName }}</span> a soumis une candidature pour "{{ notif.campaignTitle }}"
+               <br><small>{{ notif.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <app-theme-toggle></app-theme-toggle>
 

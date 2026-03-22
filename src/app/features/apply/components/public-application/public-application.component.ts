@@ -128,10 +128,11 @@ export class PublicApplicationComponent implements OnInit {
         this.isSubmitting = false;
         this.submitSuccess = true;
       },
-      error: () => {
-        this.isSubmitting = false;
-        this.submitError = 'Failed to submit your application. Please try again later.';
-      }
+      error: (err) => {
+  this.isSubmitting = false;
+  this.submitError = err.error || 'Failed to submit';
+  console.error('FULL ERROR:', err);
+}
     });
   }
 }

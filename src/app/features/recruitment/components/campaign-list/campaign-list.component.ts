@@ -186,4 +186,14 @@ export class CampaignListComponent implements OnInit {
       }, 2000);
     });
   }
+
+  getCampaignStatus(camp: any): { label: string, cssClass: string } {
+    if (camp.endDate && new Date() > new Date(camp.endDate)) {
+      return { label: 'Fermée', cssClass: 'campaigns__badge--closed' };
+    }
+    if (camp.active) {
+      return { label: 'Active', cssClass: 'campaigns__badge--active' };
+    }
+    return { label: 'Inactive', cssClass: 'campaigns__badge--inactive' };
+  }
 }

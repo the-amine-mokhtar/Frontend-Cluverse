@@ -282,3 +282,159 @@ body.light-mode {
     &__dropdown-divider { background: #d8d8d8; }
   }
 }
+
+/* --- New Notification Redesign from test.html --- */
+.dropdown-container {
+  display: inline-block;
+  position: relative;
+  overflow: visible;
+  
+  .notifications {
+    position: relative;
+    cursor: pointer;
+    z-index: 2;
+  }
+  
+  .count {
+    position: absolute;
+    top: -6px;
+    right: -1px;
+    width: 21px; 
+    height: 21px;
+    background: #21B7B7;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    left: -130px;
+    top: 60px;
+    width: 280px;
+    max-width: 280px;
+    display: none;
+    z-index: 1000;
+    
+    .dropdown-header {
+      background: #FFFFFF;
+      padding: 15px;
+      position: relative;
+      text-align: center;
+      border-radius: 10px 10px 0 0;
+      
+      .triangle {
+        position: absolute;
+        top: -8px;
+        left: 134px;
+        height: 15px;
+        width: 15px;
+        border-radius: 6px 0 0 0;
+        transform: rotate(45deg);
+        background: #FFFFFF;
+      }
+      
+      .heading {
+        color: #747F8B;
+        font-weight: bold;
+      }
+      
+      .count {
+        position: static;
+        height: 25px;
+        width: 25px;
+        display: inline-block;
+        line-height: 24px;
+        margin-left: 8px;
+        font-size: 12px;
+      }
+    }
+    
+    .dropdown-body {
+      max-height: 292px;
+      overflow-y: auto;
+      background: #E3EBEF;
+      border-radius: 0 0 10px 10px;
+      
+      &::-webkit-scrollbar { width: 3px; }
+      &::-webkit-scrollbar-track { background: #E3EBEF; border-radius: 10px; }
+      &::-webkit-scrollbar-thumb { background: #9FB6C3; border-radius: 10px; }
+      
+      .notification {
+        background: #FFFFFF;
+        padding: 12px 15px;
+        display: table;
+        width: 100%;
+        box-sizing: border-box;
+        border: 0px;
+        border-style: solid;
+        border-bottom-width: 1px;
+        border-image: linear-gradient(to right, #eaf0f3 0%, #c8d8e0 40%, #c8d8e0 60%, #eaf0f3 100%) 1 20%;
+        
+        &.new {
+          background: lighten(#E3EBEF, 2%);
+          transition: all 500ms ease;
+          margin-top: 0;
+        }
+        
+        .notification-image-wrapper {
+          display: table-cell;
+          vertical-align: middle;
+          width: 45px;
+        }
+        
+        .notification-image {
+          display: inline-block;
+          height: 32px;
+          width: 32px;
+          border-radius: 50%;
+          overflow: hidden;
+        }
+        
+        .notification-text {
+          display: table-cell;
+          vertical-align: middle;
+          padding-left: 15px;
+          color: #747F8B;
+          font-size: 12px;
+          line-height: 17px;
+          word-spacing: 1px;
+          
+          .highlight { 
+            font-weight: bold; 
+            font-size: 12px;
+          }
+          
+          small {
+            font-size: 10px;
+            color: #9FB6C3;
+          }
+        }
+      }
+    }
+  }
+}
+
+.animated { animation-duration: 500ms; animation-fill-mode: both; }
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translate3d(0, -10%, 0); margin-top:-20%; }
+  to { opacity: 1; transform: none; margin-top:0;}
+}
+.fadeInDown { animation-name: fadeInDown; }
+
+@keyframes fadeOutUp {
+  from { opacity: 1; transform: none; margin-top:0;}
+  to { opacity: 0; transform: translate3d(0, -10%, 0); margin-top:-20%;}
+}
+.fadeOutUp { animation-name: fadeOutUp; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.fadeIn { animation-name: fadeIn; }
+
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+.fadeOut { animation-name: fadeOut; }

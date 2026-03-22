@@ -22,7 +22,7 @@
         </div>
         <div class="kbn-detail-group">
           <strong>Applied:</strong>
-          <span>{{ selectedApp.submissionDate | date:'medium' }}</span>
+          <span>{{ selectedApp.submissionDate | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
 
         <hr class="kbn-modal__divider" *ngIf="selectedApp.answers && selectedApp.answers.length > 0">
@@ -99,7 +99,7 @@
             <h4 class="kanban__card-name">{{ app.candidateName }}</h4>
             <p class="kanban__card-email">{{ app.candidateEmail }}</p>
             <div class="kanban__card-footer">
-              <span class="kanban__card-date">{{ app.submissionDate | date:'MMM d • h:mm a' }}</span>
+              <span class="kanban__card-date">{{ app.submissionDate | date:'dd/MM/yyyy HH:mm' }}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kanban__card-drag">
                 <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
               </svg>
