@@ -179,3 +179,35 @@ body.light-mode .kbn-page {
   .kbn-answer__q { color: #666; }
   .kbn-answer__a { color: #111; }
 }
+
+/* ─── Stats Block & Enhancements ─── */
+.kbn-stats {
+  display: flex; gap: 1rem; margin-top: 1rem; overflow-x: auto;
+  .kbn-stat-card {
+    background: rgba($bg-card, 0.4); border: 1px solid $gray; border-radius: 8px; padding: 1rem 1.5rem; flex: 1; min-width: 150px;
+  }
+  .kbn-stat-val { font-size: 1.5rem; font-weight: 700; color: $text-main; margin-bottom: 0.2rem; }
+  .kbn-stat-val.text-success { color: $col-acc; }
+  .kbn-stat-val.text-pending { color: $col-int; }
+  .kbn-stat-label { font-size: 0.8rem; color: $text-muted; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+}
+.kbn-toast {
+  background: rgba($col-acc, 0.1); color: $col-acc; border: 1px solid rgba($col-acc, 0.3);
+  padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+  display: flex; align-items: center; gap: 6px; animation: fadeIn 0.3s;
+}
+.btn--outline {
+  padding: 0.5rem 1rem; background: transparent; color: $text-main;
+  border: 1px solid $gray; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600;
+  display: flex; align-items: center;
+  &:hover { background: rgba(255,255,255,0.05); }
+}
+body.light-mode {
+  .kbn-stats .kbn-stat-card { background: #f9f9f9; border-color: #dcdcdc; }
+  .kbn-stats .kbn-stat-val { color: #111; }
+  .kbn-stats .kbn-stat-val.text-success { color: darken($col-acc, 10%); }
+  .kbn-stats .kbn-stat-val.text-pending { color: darken($col-int, 10%); }
+  .kbn-stats .kbn-stat-label { color: #555; }
+  .kbn-toast { background: rgba($col-acc, 0.1); color: darken($col-acc, 10%); border-color: rgba($col-acc, 0.3); }
+  .btn--outline { color: #111; border-color: #ccc; &:hover { background: #eee; } }
+}

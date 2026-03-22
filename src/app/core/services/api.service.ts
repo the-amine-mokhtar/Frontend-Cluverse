@@ -247,6 +247,16 @@ updateApplicationStatus(id: number, status: string): Observable<any> {
   return this.http.put(`${this.baseUrl}/api/recruitment/applications/${id}/status?status=${encodeURIComponent(status)}`, {}, { headers, responseType: 'text' });
 }
 
+getCampaignStats(campaignId: number): Observable<any> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.get<any>(`${this.baseUrl}/api/recruitment/campaigns/${campaignId}/stats`, { headers });
+}
+
+exportApplicationsCSV(campaignId: number): Observable<Blob> {
+  const headers = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+  return this.http.get(`${this.baseUrl}/api/recruitment/campaigns/${campaignId}/export/csv`, { headers, responseType: 'blob' });
+}
+
 // ─── Public Unauthenticated API Methods ───
 
 getCampaignByPublicLink(publicLink: string): Observable<any> {

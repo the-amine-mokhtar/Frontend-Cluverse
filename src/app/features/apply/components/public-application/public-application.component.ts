@@ -13,6 +13,7 @@ export class PublicApplicationComponent implements OnInit {
   
   isLoading = true;
   loadError = '';
+  isExpired = false;
 
   // Submit State
   isSubmitting = false;
@@ -46,6 +47,12 @@ export class PublicApplicationComponent implements OnInit {
     this.api.getCampaignByPublicLink(publicLink).subscribe({
       next: (camp) => {
         this.campaign = camp;
+        
+        if (camp.endDate && new Date() > new Date(camp.endDate)) {
+          this.isExpired = true;
+          this.isLoading = false;
+          return;
+        }
         
         // Ensure questions array is sorted
         this.questions = (camp.questions || []).sort((a: any, b: any) => a.orderIndex - b.orderIndex);

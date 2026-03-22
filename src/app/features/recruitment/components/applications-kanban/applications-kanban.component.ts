@@ -23,6 +23,10 @@ export class ApplicationsKanbanComponent implements OnInit {
   ];
 
   selectedApp: any = null;
+  stats: any = null;
+  campaignTitle = '';
+  toastMessage = '';
+  csvError = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -34,7 +38,42 @@ export class ApplicationsKanbanComponent implements OnInit {
     if (id) {
       this.campaignId = +id;
       this.loadApplications();
+      this.loadStats();
     }
+  }
+
+  loadStats(): void {
+    this.api.getCampaignStats(this.campaignId).subscribe({
+      next: (data) => {
+        this.stats = data;
+      },
+      error: () => { this.stats = null; }
+    });
+  }
+
+  exportCSV(): void {
+    if (!this.campaignId) return;
+    this.csvError = '';
+    this.api.exportApplicationsCSV(this.campaignId).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const rootName = this.campaignTitle ? this.campaignTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'campagne';
+        a.download = `candidatures-${rootName}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.csvError = 'Export endpoint unavailable';
+        setTimeout(() => this.csvError = '', 3000);
+      }
+    });
+  }
+
+  showToast(): void {
+    this.toastMessage = 'Statut mis à jour';
+    setTimeout(() => this.toastMessage = '', 3000);
   }
 
   loadApplications(): void {
@@ -42,6 +81,12 @@ export class ApplicationsKanbanComponent implements OnInit {
     this.loadError = '';
     this.api.getCampaignApplications(this.campaignId).subscribe({
       next: (apps) => {
+        if (apps && apps.length > 0 && apps[0].recruitmentCampaign?.title) {
+          this.campaignTitle = apps[0].recruitmentCampaign.title;
+        } else {
+          this.campaignTitle = 'Campagne';
+        }
+
         // Reset columns
         this.columns.forEach(c => c.items = []);
         
@@ -90,7 +135,8 @@ export class ApplicationsKanbanComponent implements OnInit {
       // Persist across API
       this.api.updateApplicationStatus(movedApp.id, newStatusStr).subscribe({
         next: () => {
-          // Success, backend updated
+          this.showToast();
+          this.loadStats();
         },
         error: () => {
           // Rollback visually on error

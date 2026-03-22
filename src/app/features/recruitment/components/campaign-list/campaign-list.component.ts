@@ -70,7 +70,7 @@ export class CampaignListComponent implements OnInit {
     this.showForm = true;
     this.isEditMode = false;
     this.editingId = null;
-    this.formData = { title: '', description: '', startDate: '', endDate: '', maxCandidates: null };
+    this.formData = { title: '', description: '', startDate: new Date().toISOString().split('T')[0], endDate: '', maxCandidates: null };
     this.formError = '';
   }
 
@@ -105,6 +105,12 @@ export class CampaignListComponent implements OnInit {
 
   onSave(): void {
     if (!this.isFormValid()) return;
+
+    if (new Date(this.formData.endDate) <= new Date(this.formData.startDate)) {
+      this.formError = 'La date de fin doit être supérieure à la date de début';
+      return;
+    }
+
     this.isSaving = true;
     this.formError = '';
 
