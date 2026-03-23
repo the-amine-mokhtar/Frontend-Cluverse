@@ -1,0 +1,48 @@
+<div class="vacant-positions-container">
+  <div class="header-actions">
+    <h1 class="page-title">Postes Vacants</h1>
+    <button *ngIf="isPresident" class="btn-create" (click)="onCreatePosition()">
+      + Créer un poste
+    </button>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement des postes...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && positions.length === 0">
+    <div class="empty-icon">📁</div>
+    <h3>Aucun poste vacant</h3>
+    <p>Il n'y a actuellement aucun poste ouvert pour les élections.</p>
+  </div>
+
+  <div class="positions-grid" *ngIf="!isLoading && positions.length > 0">
+    <div class="position-card" *ngFor="let pos of positions">
+      <div class="card-header">
+        <h3 class="card-title">{{ pos.title }}</h3>
+        <span class="status-badge" [ngClass]="pos.status === 'OPEN' ? 'status-open' : 'status-closed'">
+          {{ pos.status === 'OPEN' ? 'OUVERT' : 'FERMÉ' }}
+        </span>
+      </div>
+      
+      <div class="card-body">
+        <p class="description">{{ pos.description }}</p>
+        
+        <div class="president-comment" *ngIf="pos.presidentComment">
+          <strong>Note du président :</strong>
+          <p><i>{{ pos.presidentComment }}</i></p>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button 
+          class="btn-simulate" 
+          [disabled]="pos.status === 'CLOSED'"
+          (click)="onSimulateInterview(pos.id)">
+          Simuler l'entretien
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

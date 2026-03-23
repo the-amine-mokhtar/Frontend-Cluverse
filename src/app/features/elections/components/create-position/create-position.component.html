@@ -1,0 +1,73 @@
+<div class="create-position-container">
+  <div class="form-wrapper">
+    <div class="header">
+      <h2>Créer un poste vacant</h2>
+      <p>Ajoutez un nouveau poste ouvert pour les élections de votre club.</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #createForm="ngForm" class="custom-form">
+      
+      <!-- Titre dropdown -->
+      <div class="form-group">
+        <label for="title">Titre du poste <span class="required">*</span></label>
+        <select 
+          id="title" 
+          name="title" 
+          [(ngModel)]="formData.title" 
+          required 
+          class="form-control">
+          <option value="" disabled selected>Sélectionnez un poste...</option>
+          <option *ngFor="let option of availableTitles" [value]="option">
+            {{ option }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Custom Title si "Autre" -->
+      <div class="form-group slide-down" *ngIf="isOtherSelected">
+        <label for="customTitle">Précisez le poste <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="customTitle" 
+          name="customTitle" 
+          [(ngModel)]="formData.customTitle" 
+          placeholder="Ex: Responsable Design"
+          class="form-control" />
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description">Description <span class="required">*</span></label>
+        <textarea 
+          id="description" 
+          name="description" 
+          [(ngModel)]="formData.description" 
+          required 
+          rows="4"
+          placeholder="Décrivez les missions et responsabilités associées à ce poste..."
+          class="form-control"></textarea>
+      </div>
+
+      <!-- President Comment -->
+      <div class="form-group">
+        <label for="presidentComment">Commentaires pour l'IA (critères, attentes...)</label>
+        <textarea 
+          id="presidentComment" 
+          name="presidentComment" 
+          [(ngModel)]="formData.presidentComment" 
+          rows="3"
+          placeholder="Ces commentaires seront utilisés par l'IA lors de la simulation d'entretien (ex: vérifie qu'il maîtrise Photoshop, pose des questions de stress...)"
+          class="form-control"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" (click)="onCancel()" [disabled]="isSubmitting">Annuler</button>
+        <button type="submit" class="btn-submit" [disabled]="!isFormValid()">
+          <span *ngIf="!isSubmitting">Créer le poste</span>
+          <span *ngIf="isSubmitting" class="spinner-small"></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

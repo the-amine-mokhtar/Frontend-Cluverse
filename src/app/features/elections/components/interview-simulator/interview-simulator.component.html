@@ -1,0 +1,134 @@
+<div class="simulator-container">
+
+  <!-- =============================== -->
+  <!-- SETUP SCREEN                      -->
+  <!-- =============================== -->
+  <div class="setup-screen" *ngIf="setupMode">
+    <div class="setup-card">
+      <h2>Configuration de l'entretien</h2>
+      <p class="subtitle">Poste : <strong>{{ positionTitle }}</strong></p>
+      
+      <div class="form-group">
+        <label>Langue de l'entretien</label>
+        <div class="radio-group">
+          <label class="radio-card">
+            <input type="radio" name="lang" value="FR" [(ngModel)]="language">
+            <span>Français</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="lang" value="EN" [(ngModel)]="language">
+            <span>English</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Durée estimée</label>
+        <div class="radio-group">
+          <label class="radio-card" *ngFor="let m of [5, 10, 15, 20]">
+            <input type="radio" name="duration" [value]="m" [(ngModel)]="durationMinutes">
+            <span>{{ m }} min</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="warning-box">
+        <span class="icon">🎤</span>
+        <p>Assurez-vous d'avoir un microphone fonctionnel. Vous devrez <strong>autoriser l'accès au micro</strong> lors du démarrage.</p>
+      </div>
+
+      <div class="actions">
+        <button class="btn-cancel" (click)="cancelSetup()">Annuler</button>
+        <button class="btn-start" (click)="startSimulation()" [disabled]="isStarting">
+          {{ isStarting ? 'Démarrage...' : 'Démarrer l\'entretien' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================== -->
+  <!-- INTERVIEW SCREEN                  -->
+  <!-- =============================== -->
+  <div class="interview-screen" *ngIf="!setupMode">
+    
+    <!-- Header -->
+    <div class="interview-header">
+      <div class="position-info">
+        <h3>{{ positionTitle }}</h3>
+        <span class="badge">{{ language === 'FR' ? 'Français' : 'English' }}</span>
+      </div>
+      <div class="timer" [class.danger]="timeLeft < 60">
+        ⏱ {{ formatTime(timeLeft) }}
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="interview-body">
+      
+      <!-- AVATAR / RECRUITER AREA -->
+      <div class="avatar-section">
+        <div class="avatar-container">
+          <!-- 3D Rings -->
+          <div class="ring ring-1"></div>
+          <div class="ring ring-2"></div>
+          <div class="ring ring-3"></div>
+          <div class="ring ring-4"></div>
+          <!-- Pulse Orb -->
+          <div class="avatar-orb" 
+               [ngClass]="recruiterState">
+          </div>
+        </div>
+
+        <div class="status-text">
+          <ng-container [ngSwitch]="recruiterState">
+            <span *ngSwitchCase="'idle'">Système prêt</span>
+            <span *ngSwitchCase="'listening'">🎙 En écoute...</span>
+            <span *ngSwitchCase="'thinking'">🤔 En réflexion...</span>
+            <span *ngSwitchCase="'speaking'">💬 En train de parler...</span>
+          </ng-container>
+        </div>
+        
+        <!-- Recruiter Subtitles -->
+        <div class="subtitles-box" *ngIf="recruiterState === 'speaking' || displayedText">
+          <p>{{ displayedText }}</p>
+        </div>
+      </div>
+
+      <!-- CHAT / TRANSCRIPT AREA -->
+      <div class="chat-section">
+        
+        <!-- Live Voice Transcript -->
+        <div class="interim-transcript" *ngIf="interimTranscript && recruiterState === 'listening'">
+          <div class="listening-wave">
+            <span></span><span></span><span></span>
+          </div>
+          <p>" {{ interimTranscript }} "</p>
+        </div>
+
+        <!-- Conversation History -->
+        <div class="history-container" #historyScroll>
+          <div class="message" 
+               *ngFor="let msg of conversation" 
+               [ngClass]="msg.role === 'user' ? 'msg-user' : 'msg-recruiter'">
+            
+            <div class="avatar-pic">
+              {{ msg.role === 'recruiter' ? '🤖' : '👤' }}
+            </div>
+            <div class="bubble">
+              {{ msg.text }}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- End Button Only (No input!) -->
+    <div class="interview-footer">
+      <button class="btn-end" (click)="endInterview()">
+        🔴 Terminer l'entretien
+      </button>
+    </div>
+
+  </div>
+</div>
