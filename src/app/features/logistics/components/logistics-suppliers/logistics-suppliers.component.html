@@ -1,0 +1,74 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1 class="page__title">Véhicules</h1>
+      <p class="page__subtitle">Flotte de transport récupérée depuis le backend.</p>
+    </div>
+
+    <div class="page__actions">
+      <button class="btn btn--primary" type="button" (click)="toggleCreate()">
+        {{ isCreateOpen ? 'Fermer formulaire' : '+ Ajouter vehicule' }}
+      </button>
+      <button class="btn btn--ghost" type="button" (click)="back()">Retour</button>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="isCreateOpen">
+    <div class="card__title">{{ editingId ? 'Modifier vehicule' : 'Nouveau vehicule' }}</div>
+
+    <form class="form" [formGroup]="vehicleForm" (ngSubmit)="saveVehicle()">
+      <div class="form__grid">
+        <div class="field">
+          <label class="field__label">Modele</label>
+          <input class="field__input" type="text" formControlName="model" placeholder="Ex: Renault Master" />
+          <div class="field__error" *ngIf="vehicleForm.controls.model.touched && vehicleForm.controls.model.invalid">
+            Modele obligatoire (min 2 caracteres).
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Immatriculation</label>
+          <input class="field__input" type="text" formControlName="plateNumber" placeholder="Ex: 123 TUN 456" />
+          <div class="field__error" *ngIf="vehicleForm.controls.plateNumber.touched && vehicleForm.controls.plateNumber.invalid">
+            Immatriculation obligatoire.
+          </div>
+        </div>
+      </div>
+
+      <label class="switch">
+        <input type="checkbox" formControlName="available" />
+        <span>Vehicule disponible</span>
+      </label>
+
+      <div class="feedback feedback--error" *ngIf="submitError">{{ submitError }}</div>
+      <div class="feedback feedback--ok" *ngIf="submitSuccess">{{ submitSuccess }}</div>
+
+      <div class="form__actions">
+        <button class="btn btn--primary" type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? (editingId ? 'Modification...' : 'Ajout...') : (editingId ? 'Modifier' : 'Ajouter') }}
+        </button>
+        <button class="btn btn--ghost" type="button" (click)="cancelForm()">Annuler</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="feedback" *ngIf="isLoading">Chargement des véhicules...</div>
+    <div class="feedback feedback--error" *ngIf="!isLoading && hasError">Erreur de chargement backend.</div>
+    <div class="feedback feedback--ok" *ngIf="!isLoading && !hasError && submitSuccess">{{ submitSuccess }}</div>
+
+    <div class="item" *ngFor="let v of vehicles">
+      <div>
+        <div class="strong">{{ v.model }}</div>
+        <div class="muted">{{ v.plateNumber }} • ID: {{ v.id }}</div>
+      </div>
+      <div class="item__actions">
+        <button class="btn btn--ghost btn--small" type="button" (click)="editVehicle(v)" [disabled]="isDeleting">Modifier</button>
+        <button class="btn btn--danger btn--small" type="button" (click)="deleteVehicle(v)" [disabled]="isDeleting">{{ isDeleting ? 'Suppression...' : 'Supprimer' }}</button>
+        <span class="pill" [class.pill--ok]="v.available">{{ v.available ? 'AVAILABLE' : 'UNAVAILABLE' }}</span>
+      </div>
+    </div>
+    <div class="feedback" *ngIf="!isLoading && !hasError && vehicles.length === 0">Aucun véhicule trouvé.</div>
+  </div>
+</div>
+

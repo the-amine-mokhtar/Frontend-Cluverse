@@ -1,0 +1,245 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1 class="page__title">Livraisons</h1>
+      <p class="page__subtitle">Planifie et suis les livraisons / recuperations.</p>
+    </div>
+
+    <div class="page__actions">
+      <button class="btn btn--primary" type="button" (click)="openCreateForm()">
+        + Ajouter un transport
+      </button>
+      <button class="btn btn--ghost" type="button" (click)="back()">Retour</button>
+    </div>
+  </div>
+
+  <!-- Modal pour création/modification -->
+  <div class="modal-overlay" *ngIf="showCreateForm" (click)="closeCreateForm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">{{ editingId ? 'Modifier le transport' : 'Ajouter un transport' }}</h2>
+        <button class="modal__close" type="button" (click)="closeCreateForm()">×</button>
+      </div>
+
+      <form class="form" [formGroup]="createForm" (ngSubmit)="submitCreate()">
+      <div class="form__section">
+        <div class="form__section-title">Planification</div>
+
+        <label class="field">
+          <span>scheduled_date</span>
+          <input class="input" type="datetime-local" formControlName="scheduledDate" />
+        </label>
+
+        <label class="field">
+          <span>departure_time</span>
+          <input class="input" type="datetime-local" formControlName="departureTime" />
+        </label>
+
+        <label class="field">
+          <span>arrival_time</span>
+          <input class="input" type="datetime-local" formControlName="arrivalTime" />
+        </label>
+
+        <label class="field">
+          <span>capacity</span>
+          <input class="input" type="number" min="1" formControlName="capacity" />
+        </label>
+
+        <label class="field">
+          <span>status</span>
+          <select class="input" formControlName="status">
+            <option value="PLANNED">PLANNED</option>
+            <option value="IN_PROGRESS">IN_PROGRESS</option>
+            <option value="COMPLETED">COMPLETED</option>
+            <option value="CANCELLED">CANCELLED</option>
+            <option value="CANCELED">CANCELED</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>club_id (optionnel)</span>
+          <select class="input" formControlName="clubId">
+            <option [ngValue]="null">Aucun</option>
+            <option *ngFor="let club of clubs; trackBy: trackById" [ngValue]="club.id">
+              {{ clubLabel(club) }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>event_id (optionnel)</span>
+          <select class="input" formControlName="eventId">
+            <option [ngValue]="null">Aucun</option>
+            <option *ngFor="let event of events; trackBy: trackById" [ngValue]="event.id">
+              {{ eventLabel(event) }}
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form__section">
+        <div class="form__section-title">Trajet</div>
+
+        <label class="field">
+          <span>departure</span>
+          <input class="input" type="text" formControlName="departure" placeholder="Texte libre (optionnel)" />
+        </label>
+
+        <label class="field">
+          <span>destination</span>
+          <input class="input" type="text" formControlName="destination" placeholder="Texte libre (optionnel)" />
+        </label>
+
+        <label class="field">
+          <span>departure_location_id</span>
+          <select class="input" formControlName="departureLocationId">
+            <option [ngValue]="null" disabled>Selectionner un lieu</option>
+            <option *ngFor="let location of locations; trackBy: trackById" [ngValue]="location.id">
+              {{ location.name || ('Lieu #' + location.id) }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>arrival_location_id</span>
+          <select class="input" formControlName="arrivalLocationId">
+            <option [ngValue]="null" disabled>Selectionner un lieu</option>
+            <option *ngFor="let location of locations; trackBy: trackById" [ngValue]="location.id">
+              {{ location.name || ('Lieu #' + location.id) }}
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form__section">
+        <div class="form__section-title">Ressources et conducteur</div>
+
+        <label class="field">
+          <span>vehicle_id</span>
+          <select class="input" formControlName="vehicleId">
+            <option [ngValue]="null" disabled>Selectionner un vehicule</option>
+            <option *ngFor="let vehicle of vehicles; trackBy: trackById" [ngValue]="vehicle.id">
+              {{ vehicle.model || 'Vehicule' }} ({{ vehicle.plateNumber || ('ID ' + vehicle.id) }})
+            </option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>vehicle_type</span>
+          <input class="input" type="text" formControlName="vehicleType" placeholder="Ex: Minibus" />
+        </label>
+
+        <label class="field">
+          <span>user_id</span>
+          <select class="input" formControlName="userId">
+            <option [ngValue]="null" disabled>Selectionner un utilisateur</option>
+            <option *ngFor="let user of users; trackBy: trackById" [ngValue]="user.id">
+              {{ user.fullName || user.email || ('Utilisateur #' + user.id) }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>driver_name</span>
+          <input class="input" type="text" formControlName="driverName" placeholder="Nom du chauffeur" />
+        </label>
+
+        <label class="field">
+          <span>driver_phone</span>
+          <input class="input" type="text" formControlName="driverPhone" placeholder="Telephone" />
+        </label>
+      </div>
+
+      <div class="form__section form__section--full">
+        <div class="form__section-title">Notes</div>
+
+        <label class="field field--full">
+          <span>notes</span>
+          <textarea class="input input--textarea" rows="3" formControlName="notes" placeholder="Informations complementaires"></textarea>
+        </label>
+      </div>
+
+      <div class="create__actions">
+        <button class="btn btn--primary" type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? (editingId ? 'Modification...' : 'Ajout...') : (editingId ? 'Modifier le transport' : 'Ajouter le transport') }}
+        </button>
+        <button class="btn btn--ghost" type="button" (click)="closeCreateForm()">Annuler</button>
+      </div>
+    </form>
+
+    <div class="feedback feedback--error" *ngIf="createError">
+      {{ createError }}
+    </div>
+    </div>
+  </div>
+
+  <div class="feedback feedback--ok" *ngIf="createSuccess">{{ createSuccess }}</div>
+
+  <div class="summary" *ngIf="!isLoading && !hasError">
+    <div class="summary__card">
+      <div class="summary__label">Transports</div>
+      <div class="summary__value">{{ totalDeliveries }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="feedback" *ngIf="isLoading">Chargement des transports...</div>
+    <div class="feedback feedback--error" *ngIf="!isLoading && hasError">Erreur de chargement backend.</div>
+
+    <div class="list">
+      <div class="item" *ngFor="let d of deliveries">
+        <div class="item__main">
+          <div class="item__top">
+            <div class="strong">{{ d.title }}</div>
+            <div class="code">{{ d.code }}</div>
+          </div>
+
+          <div class="meta-grid" *ngIf="d.hasDetails; else minimalDeliveryInfo">
+            <div class="meta-grid__cell">
+              <span class="meta-grid__label">Date planifiee</span>
+              <span class="meta-grid__value">{{ d.when }}</span>
+            </div>
+
+            <div class="meta-grid__cell">
+              <span class="meta-grid__label">Depart</span>
+              <span class="meta-grid__value">{{ d.departure }}</span>
+            </div>
+
+            <div class="meta-grid__cell">
+              <span class="meta-grid__label">Destination</span>
+              <span class="meta-grid__value">{{ d.destination }}</span>
+            </div>
+
+            <div class="meta-grid__cell">
+              <span class="meta-grid__label">Chauffeur / Assigne</span>
+              <span class="meta-grid__value">{{ d.driver }}</span>
+            </div>
+
+            <div class="meta-grid__cell">
+              <span class="meta-grid__label">Vehicule</span>
+              <span class="meta-grid__value">{{ d.vehicle }}</span>
+            </div>
+          </div>
+
+          <div class="notes" *ngIf="d.notes !== 'Non renseigne'">
+            <span class="notes__label">Notes:</span> {{ d.notes }}
+          </div>
+
+          <ng-template #minimalDeliveryInfo>
+            <div class="minimal">
+              <div class="minimal__line"><span class="minimal__label">Date planifiee:</span> {{ d.when }}</div>
+              <div class="minimal__line"><span class="minimal__label">Statut:</span> {{ d.statusLabel }}</div>
+              <div class="minimal__line">Les details de trajet seront affiches ici des qu'ils seront disponibles.</div>
+            </div>
+          </ng-template>
+        </div>
+        <div class="item__actions">
+          <button class="btn btn--ghost btn--small" type="button" (click)="editTransport(d.id)" [disabled]="isDeleting">Modifier</button>
+          <button class="btn btn--danger btn--small" type="button" (click)="deleteTransport(d.id, d.title)" [disabled]="isDeleting">{{ isDeleting ? 'Suppression...' : 'Supprimer' }}</button>
+          <span class="badge" [attr.data-status]="d.status">{{ d.statusLabel }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="feedback" *ngIf="!isLoading && !hasError && deliveries.length === 0">Aucune livraison trouvee.</div>
+  </div>
+</div>

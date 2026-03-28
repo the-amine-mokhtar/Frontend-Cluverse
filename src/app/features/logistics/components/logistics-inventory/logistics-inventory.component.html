@@ -1,0 +1,154 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1 class="page__title">Inventaire</h1>
+      <p class="page__subtitle">Suivi des stocks et alertes seuil minimum.</p>
+    </div>
+
+    <div class="page__actions">
+      <button class="btn btn--primary" type="button" (click)="toggleCreate()">
+        {{ isCreateOpen ? 'Fermer formulaire' : '+ Ajouter ressource' }}
+      </button>
+      <button class="btn btn--ghost" type="button" (click)="back()">Retour</button>
+    </div>
+  </div>
+
+  <div class="modal" *ngIf="isCreateOpen" (click)="toggleCreate()">
+    <div class="modal__content card" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <div>
+          <div class="card__title">{{ editingId ? 'Modifier ressource' : 'Nouvelle ressource' }}</div>
+          <div class="modal__subtitle">Club ID: {{ clubId || 'non detecte' }}</div>
+        </div>
+        <button class="btn btn--ghost" type="button" (click)="toggleCreate()">Fermer</button>
+      </div>
+
+      <form class="form" [formGroup]="resourceForm" (ngSubmit)="createResource()">
+        <div class="form__grid">
+          <div class="field">
+            <label class="field__label">Nom</label>
+            <input class="field__input" type="text" formControlName="name" placeholder="Ex: Chaises" />
+            <div class="field__error" *ngIf="resourceForm.controls.name.touched && resourceForm.controls.name.invalid">
+              Nom obligatoire (min 2 caracteres).
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label">Categorie / Etat</label>
+            <select class="field__input" formControlName="category">
+              <option *ngFor="let option of categoryOptions" [value]="option">{{ option }}</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field__label">Quantite (quantity)</label>
+            <input class="field__input" type="number" min="0" formControlName="quantity" />
+          </div>
+
+          <div class="field">
+            <label class="field__label">Quantite totale (quantity_total)</label>
+            <input class="field__input" type="number" min="0" formControlName="quantityTotal" />
+          </div>
+
+          <div class="field">
+            <label class="field__label">Quantite disponible (available_quantity)</label>
+            <input class="field__input" type="number" min="0" formControlName="availableQuantity" />
+          </div>
+
+          <div class="field">
+            <label class="field__label">Seuil min (low_stock_threshold)</label>
+            <input class="field__input" type="number" min="0" formControlName="minStock" />
+          </div>
+
+          <div class="field">
+            <label class="field__label">Cout unitaire (unit_cost)</label>
+            <input class="field__input" type="number" min="0" formControlName="unitCost" />
+          </div>
+
+          <div class="field">
+            <label class="field__label">Image</label>
+            <input class="field__input" type="file" accept="image/*" (change)="onImageFileSelected($event)" />
+            <div class="muted" *ngIf="selectedImageName">Fichier: {{ selectedImageName }}</div>
+            <div class="feedback" *ngIf="isUploadingImage">Upload image en cours...</div>
+            <div class="field__error" *ngIf="imageUploadError">{{ imageUploadError }}</div>
+          </div>
+
+          <div class="field">
+            <label class="field__label">Derniere mise a jour (last_updated)</label>
+            <input class="field__input" type="datetime-local" formControlName="lastUpdated" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Description</label>
+          <textarea class="field__input" rows="3" formControlName="description"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Notes</label>
+          <textarea class="field__input" rows="2" formControlName="notes"></textarea>
+        </div>
+
+        <div class="feedback feedback--error" *ngIf="submitError">{{ submitError }}</div>
+
+        <div class="form__actions">
+          <button class="btn btn--primary" type="submit" [disabled]="isSubmitting">
+            {{ isSubmitting ? (editingId ? 'Modification...' : 'Ajout...') : (editingId ? 'Modifier' : 'Ajouter') }}
+          </button>
+          <button class="btn btn--ghost" type="button" (click)="toggleCreate()">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="feedback" *ngIf="submitSuccess">{{ submitSuccess }}</div>
+    <div class="feedback feedback--error" *ngIf="submitError">{{ submitError }}</div>
+    <div class="feedback" *ngIf="isLoading">Chargement des ressources...</div>
+    <div class="feedback feedback--error" *ngIf="!isLoading && hasError">Erreur de chargement backend.</div>
+
+    <div class="thead">
+      <div>SKU</div>
+      <div>Article</div>
+      <div>Catégorie</div>
+      <div>Image</div>
+      <div>Qte</div>
+      <div>Dispo</div>
+      <div>Total</div>
+      <div>Min</div>
+      <div>Cout</div>
+      <div>Maj</div>
+      <div>État</div>
+      <div>Actions</div>
+    </div>
+
+    <div class="trow" *ngFor="let i of items">
+      <div class="muted">{{ i.sku }}</div>
+      <div class="strong">{{ i.name }}</div>
+      <div class="muted">{{ i.category }}</div>
+      <div>
+        <img *ngIf="i.imageUrl" [src]="i.imageUrl" alt="image" class="resource-image" />
+        <span *ngIf="!i.imageUrl" class="muted">-</span>
+      </div>
+      <div class="muted">{{ i.quantity }}</div>
+      <div class="muted">{{ i.availableQuantity }}</div>
+      <div class="muted">{{ i.quantityTotal }}</div>
+      <div class="muted">{{ i.min }}</div>
+      <div class="muted">{{ i.unitCost }}</div>
+      <div class="muted">{{ i.lastUpdated ? (i.lastUpdated | date:'short') : '-' }}</div>
+      <div>
+        <span class="pill" [class.pill--danger]="isLowStock(i)">
+          {{ isLowStock(i) ? 'LOW' : 'OK' }}
+        </span>
+      </div>
+      <div class="item__actions">
+        <button class="btn btn--small" type="button" (click)="editResource(i)">Modifier</button>
+        <button class="btn btn--small btn--danger" type="button" [disabled]="isDeleting" (click)="deleteResource(i)">
+          {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+    <div class="feedback" *ngIf="!isLoading && !hasError && items.length === 0">Aucune ressource trouvée.</div>
+  </div>
+</div>
+

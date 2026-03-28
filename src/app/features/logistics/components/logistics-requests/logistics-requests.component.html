@@ -1,0 +1,43 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1 class="page__title">Demandes logistiques</h1>
+      <p class="page__subtitle">Crée, suis et traite les demandes de matériel.</p>
+    </div>
+
+    <div class="page__actions">
+      <button class="btn btn--primary" type="button" (click)="goToNew()">+ Nouvelle demande</button>
+      <button class="btn btn--ghost" type="button" (click)="backToHome()">Retour</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="feedback" *ngIf="isLoading">Chargement des demandes...</div>
+    <div class="feedback feedback--error" *ngIf="!isLoading && hasError">Erreur de chargement depuis le backend.</div>
+
+    <div class="table">
+      <div class="thead">
+        <div>ID</div>
+        <div>Demande</div>
+        <div>Catégorie</div>
+        <div>Qté</div>
+        <div>Besoin le</div>
+        <div>Statut</div>
+      </div>
+
+      <div class="trow" *ngFor="let r of requests">
+        <div class="muted">{{ r.id }}</div>
+        <div class="strong">{{ r.title }}</div>
+        <div class="muted">{{ r.category }}</div>
+        <div class="muted">{{ r.quantity }}</div>
+        <div class="muted">{{ r.neededBy }}</div>
+        <div><span class="badge" [attr.data-status]="r.status">{{ r.status }}</span></div>
+      </div>
+
+      <div class="feedback" *ngIf="!isLoading && !hasError && requests.length === 0">
+        Aucune demande trouvée.
+      </div>
+    </div>
+  </div>
+</div>
+

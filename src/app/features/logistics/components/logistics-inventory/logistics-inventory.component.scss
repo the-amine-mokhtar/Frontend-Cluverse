@@ -1,0 +1,219 @@
+:host { display: block; }
+
+.page {
+  padding: 2rem;
+  color: #fff;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__title { margin: 0; font-size: 2rem; font-weight: 800; }
+  &__subtitle { margin: 0.35rem 0 0; color: #a0aec0; font-size: 0.95rem; }
+}
+
+.btn {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  background: transparent;
+  color: #e2e8f0;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    border-color: rgba(33, 183, 183, 0.28);
+    background: linear-gradient(135deg, rgba(33, 183, 183, 0.24), rgba(26, 146, 146, 0.2));
+    color: #d9ffff;
+  }
+
+  &--small {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.78rem;
+    border-radius: 8px;
+  }
+
+  &--danger {
+    border-color: rgba(239, 68, 68, 0.28);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.18));
+    color: #fecaca;
+  }
+}
+
+.card {
+  background: #1e2532;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.6rem;
+  overflow-x: auto;
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #f7fafc;
+  }
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(10, 14, 21, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+
+  &__content {
+    width: min(980px, 96vw);
+    max-height: 90vh;
+    overflow: auto;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.8rem;
+    margin-bottom: 0.65rem;
+  }
+
+  &__subtitle {
+    margin-top: 0.2rem;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+}
+
+.form {
+  display: grid;
+  gap: 0.85rem;
+
+  &__grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 900px) {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+
+  &__label {
+    font-size: 0.82rem;
+    color: #a0aec0;
+    font-weight: 700;
+  }
+
+  &__input {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.22);
+    color: #f7fafc;
+    border-radius: 10px;
+    padding: 0.7rem 0.75rem;
+    outline: none;
+
+    &:focus {
+      border-color: rgba(33, 183, 183, 0.42);
+      box-shadow: 0 0 0 2px rgba(33, 183, 183, 0.15);
+    }
+  }
+
+  &__error {
+    color: #fca5a5;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+}
+
+.feedback {
+  color: #a0aec0;
+  padding: 0.5rem 0.75rem;
+  &--error { color: #fca5a5; }
+}
+
+.thead, .trow {
+  display: grid;
+  grid-template-columns: 0.6fr 1.6fr 1fr 0.9fr 0.7fr 0.7fr 0.7fr 0.7fr 0.8fr 1fr 0.8fr 1.2fr;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 1240px;
+}
+
+.item__actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.resource-image {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.thead {
+  padding: 0.75rem 0.9rem;
+  color: #a0aec0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.trow {
+  padding: 0.85rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.muted { color: #a0aec0; }
+.strong { font-weight: 900; color: #f7fafc; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(72, 187, 120, 0.18);
+  background: rgba(72, 187, 120, 0.12);
+  color: #48bb78;
+
+  &--danger {
+    border-color: rgba(248, 113, 113, 0.18);
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+  }
+}
+

@@ -1,0 +1,96 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1 class="page__title">Nouvelle demande</h1>
+      <p class="page__subtitle">Décris ton besoin, on s’occupe du suivi.</p>
+    </div>
+
+    <div class="page__actions">
+      <button class="btn btn--ghost" type="button" (click)="cancel()">Retour</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="error" *ngIf="hasError">Erreur lors du chargement/envoi vers le backend.</div>
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label>Titre *</label>
+        <input type="text" formControlName="title" placeholder="Ex: Badges & Lanyards" />
+        <div class="error" *ngIf="form.controls.title.touched && form.controls.title.invalid">
+          Le titre est requis (min 3 caractères).
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Ressource *</label>
+          <select formControlName="resourceId">
+            <option [ngValue]="null">-- Choisir --</option>
+            <option *ngFor="let r of resources" [ngValue]="r.id">{{ r.name }} (stock: {{ r.availableQuantity }})</option>
+          </select>
+          <div class="error" *ngIf="form.controls.resourceId.touched && form.controls.resourceId.invalid">
+            La ressource est obligatoire.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Quantité *</label>
+          <input type="number" min="1" formControlName="quantity" />
+        </div>
+
+        <div class="field">
+          <label>Début *</label>
+          <input type="date" formControlName="neededBy" />
+          <div class="error" *ngIf="form.controls.neededBy.touched && form.controls.neededBy.invalid">
+            La date de debut est obligatoire.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Fin *</label>
+          <input type="date" formControlName="endDate" />
+          <div class="error" *ngIf="form.controls.endDate.touched && form.controls.endDate.invalid">
+            La date de fin est obligatoire.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Événement *</label>
+          <select formControlName="eventId">
+            <option [ngValue]="null">-- Choisir --</option>
+            <option *ngFor="let e of events" [ngValue]="e.id">{{ e.title || e.name || ('Event #' + e.id) }}</option>
+          </select>
+          <div class="error" *ngIf="form.controls.eventId.touched && form.controls.eventId.invalid">
+            L'evenement est obligatoire.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Utilisateur *</label>
+          <select formControlName="userId">
+            <option [ngValue]="null">-- Choisir --</option>
+            <option *ngFor="let u of users" [ngValue]="u.id">{{ u.fullName || u.email || ('User #' + u.id) }}</option>
+          </select>
+          <div class="error" *ngIf="form.controls.userId.touched && form.controls.userId.invalid">
+            L'utilisateur est obligatoire.
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Notes</label>
+        <textarea rows="4" formControlName="notes" placeholder="Contraintes, budget, liens, etc."></textarea>
+      </div>
+
+      <div class="form__actions">
+        <button class="btn btn--primary" type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Création...' : 'Créer' }}
+        </button>
+        <button class="btn btn--ghost" type="button" (click)="cancel()">Annuler</button>
+      </div>
+    </form>
+  </div>
+</div>
+
