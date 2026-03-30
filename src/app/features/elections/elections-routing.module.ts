@@ -6,9 +6,18 @@ import { CreatePositionComponent } from './components/create-position/create-pos
 import { InterviewSimulatorComponent } from './components/interview-simulator/interview-simulator.component';
 import { InterviewReportComponent } from './components/interview-report/interview-report.component';
 
+import { ElectionListComponent } from './components/election-list/election-list.component';
+import { CandidateListComponent } from './components/candidate-list/candidate-list.component';
+import { VoteListComponent } from './components/vote-list/vote-list.component';
+import { PositionListComponent } from './components/position-list/position-list.component';
+
 const routes: Routes = [
-  { path: '', redirectTo: 'vacant-positions', pathMatch: 'full' },
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: ElectionsHomeComponent },
+  { path: 'list', component: ElectionListComponent },
+  { path: 'candidates', component: CandidateListComponent },
+  { path: 'votes', component: VoteListComponent },
+  { path: 'positions-list', component: PositionListComponent },
   { path: 'vacant-positions', component: VacantPositionsComponent },
   { path: 'create-position', component: CreatePositionComponent },
   { path: 'interview/:positionId', component: InterviewSimulatorComponent },
