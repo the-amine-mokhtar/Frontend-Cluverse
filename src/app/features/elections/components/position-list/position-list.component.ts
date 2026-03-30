@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { PositionService } from '../../services/position.service';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-position-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxPaginationModule],
+  imports: [CommonModule, FormsModule, NgxPaginationModule, RouterModule],
   templateUrl: './position-list.component.html',
   styleUrl: './position-list.component.scss'
 })
@@ -21,19 +22,28 @@ export class PositionListComponent implements OnInit {
   sortColumn: string = '';
   sortOrder: 'asc' | 'desc' = 'asc';
 
-  constructor(private positionService: PositionService) {}
+  constructor(
+    private positionService: PositionService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    this.loadPositions();
+    this.route.queryParams.subscribe(params => {
+      // Check for incoming filters
+      if (params['positionId']) {
+        this.searchTerm = params['positionId'];
+      }
+      this.loadPositions();
+    });
   }
 
   loadPositions(): void {
     this.positionService.getByClubId().subscribe({
-      next: (data) => {
+      next: (data: any) => {
         this.positions = data || [];
         this.applyFilters();
       },
-      error: (err) => console.error(err)
+      error: (err: any) => console.error(err)
     });
   }
 
@@ -44,7 +54,9 @@ export class PositionListComponent implements OnInit {
       const term = this.searchTerm.toLowerCase();
       result = result.filter(p => 
         (p.name && p.name.toLowerCase().includes(term)) ||
-        (p.description && p.description.toLowerCase().includes(term))
+        (p.description && p.description.toLowerCase().includes(term)) ||
+        (p.id && p.id.toString() === term) ||
+        (p.currentHolderName && p.currentHolderName.toLowerCase().includes(term))
       );
     }
 
@@ -73,13 +85,13 @@ export class PositionListComponent implements OnInit {
   }
 
   deletePosition(id: number): void {
-    if (confirm('Delete this position?')) {
+    if (confirm('Delete this position completely?')) {
       this.positionService.delete(id).subscribe({
         next: () => {
           this.positions = this.positions.filter(p => p.id !== id);
           this.applyFilters();
         },
-        error: (err) => console.error(err)
+        error: (err: any) => console.error(err)
       });
     }
   }

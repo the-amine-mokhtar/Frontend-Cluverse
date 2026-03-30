@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { CandidateService } from '../../services/candidate.service';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-candidate-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxPaginationModule],
+  imports: [CommonModule, FormsModule, NgxPaginationModule, RouterModule],
   templateUrl: './candidate-list.component.html',
   styleUrl: './candidate-list.component.scss'
 })
@@ -21,19 +22,30 @@ export class CandidateListComponent implements OnInit {
   sortColumn: string = '';
   sortOrder: 'asc' | 'desc' = 'asc';
 
-  constructor(private candidateService: CandidateService) {}
+  constructor(
+    private candidateService: CandidateService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    this.loadCandidates();
+    this.route.queryParams.subscribe(params => {
+      // Check for incoming filters like electionId or positionId
+      if (params['electionId']) {
+        this.searchTerm = params['electionId'];
+      } else if (params['positionId']) {
+        this.searchTerm = params['positionId'];
+      }
+      this.loadCandidates();
+    });
   }
 
   loadCandidates(): void {
     this.candidateService.getCandidates().subscribe({
-      next: (data) => {
+      next: (data: any) => {
         this.candidates = data || [];
         this.applyFilters();
       },
-      error: (err) => console.error(err)
+      error: (err: any) => console.error(err)
     });
   }
 
@@ -44,7 +56,13 @@ export class CandidateListComponent implements OnInit {
       const term = this.searchTerm.toLowerCase();
       result = result.filter(c => 
         (c.program && c.program.toLowerCase().includes(term)) ||
-        (c.status && c.status.toLowerCase().includes(term))
+        (c.status && c.status.toLowerCase().includes(term)) ||
+        (c.userName && c.userName.toLowerCase().includes(term)) ||
+        (c.userEmail && c.userEmail.toLowerCase().includes(term)) ||
+        (c.election && c.election.id && c.election.id.toString() === term) ||
+        (c.electionId && c.electionId.toString() === term) ||
+        (c.positionId && c.positionId.toString() === term) ||
+        (c.position && c.position.id && c.position.id.toString() === term)
       );
     }
 
@@ -79,7 +97,7 @@ export class CandidateListComponent implements OnInit {
           this.candidates = this.candidates.filter(c => c.id !== id);
           this.applyFilters();
         },
-        error: (err) => console.error(err)
+        error: (err: any) => console.error(err)
       });
     }
   }

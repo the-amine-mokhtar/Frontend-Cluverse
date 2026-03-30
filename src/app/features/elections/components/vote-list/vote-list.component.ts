@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { VoteService } from '../../services/vote.service';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-vote-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxPaginationModule],
+  imports: [CommonModule, FormsModule, NgxPaginationModule, RouterModule],
   templateUrl: './vote-list.component.html',
   styleUrl: './vote-list.component.scss'
 })
@@ -21,19 +22,32 @@ export class VoteListComponent implements OnInit {
   sortColumn: string = '';
   sortOrder: 'asc' | 'desc' = 'asc';
 
-  constructor(private voteService: VoteService) {}
+  constructor(
+    private voteService: VoteService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    this.loadVotes();
+    this.route.queryParams.subscribe(params => {
+      // Check for incoming filters mapped from other lists
+      if (params['electionId']) {
+        this.searchTerm = params['electionId'];
+      } else if (params['candidateId']) {
+        this.searchTerm = params['candidateId'];
+      } else if (params['positionId']) {
+        this.searchTerm = params['positionId'];
+      }
+      this.loadVotes();
+    });
   }
 
   loadVotes(): void {
     this.voteService.getVotes().subscribe({
-      next: (data) => {
+      next: (data: any) => {
         this.votes = data || [];
         this.applyFilters();
       },
-      error: (err) => console.error(err)
+      error: (err: any) => console.error(err)
     });
   }
 
@@ -43,8 +57,12 @@ export class VoteListComponent implements OnInit {
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
       result = result.filter(v => 
-        (v.id && v.id.toString().toLowerCase().includes(term)) ||
-        (v.candidate && v.candidate.id && v.candidate.id.toString().toLowerCase().includes(term))
+        (v.id && v.id.toString() === term) ||
+        (v.candidate && v.candidate.id && v.candidate.id.toString() === term) ||
+        (v.election && v.election.id && v.election.id.toString() === term) ||
+        (v.electionId && v.electionId.toString() === term) ||
+        (v.voterName && v.voterName.toLowerCase().includes(term)) ||
+        (v.positionName && v.positionName.toLowerCase().includes(term))
       );
     }
 

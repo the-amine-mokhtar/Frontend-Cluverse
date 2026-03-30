@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { ElectionService } from '../../services/election.service';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-election-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxPaginationModule],
+  imports: [CommonModule, FormsModule, NgxPaginationModule, RouterModule],
   templateUrl: './election-list.component.html',
   styleUrl: './election-list.component.scss'
 })
@@ -21,19 +22,31 @@ export class ElectionListComponent implements OnInit {
   sortColumn: string = '';
   sortOrder: 'asc' | 'desc' = 'asc';
 
-  constructor(private electionService: ElectionService) {}
+  selectedElection: any = null;
+
+  constructor(
+    private electionService: ElectionService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    this.loadElections();
+    this.route.queryParams.subscribe(params => {
+      if (params['electionId']) {
+        this.searchTerm = params['electionId'];
+      } else if (params['positionId']) {
+        this.searchTerm = params['positionId'];
+      }
+      this.loadElections();
+    });
   }
 
   loadElections(): void {
     this.electionService.getElections().subscribe({
-      next: (data) => {
+      next: (data: any) => {
         this.elections = data || [];
         this.applyFilters();
       },
-      error: (err) => console.error(err)
+      error: (err: any) => console.error(err)
     });
   }
 
@@ -44,14 +57,21 @@ export class ElectionListComponent implements OnInit {
       const term = this.searchTerm.toLowerCase();
       result = result.filter(e => 
         (e.title && e.title.toLowerCase().includes(term)) ||
-        (e.status && e.status.toLowerCase().includes(term))
+        (e.status && e.status.toLowerCase().includes(term)) ||
+        (e.id && e.id.toString() === term) ||
+        (e.position && e.position.id && e.position.id.toString() === term) ||
+        (e.position && e.position.name && e.position.name.toLowerCase().includes(term))
       );
     }
 
     if (this.sortColumn) {
       result.sort((a, b) => {
-        const valA = a[this.sortColumn] ? a[this.sortColumn].toString().toLowerCase() : '';
-        const valB = b[this.sortColumn] ? b[this.sortColumn].toString().toLowerCase() : '';
+        let valA = a[this.sortColumn] ? a[this.sortColumn].toString().toLowerCase() : '';
+        let valB = b[this.sortColumn] ? b[this.sortColumn].toString().toLowerCase() : '';
+        if (this.sortColumn === 'dates') {
+          valA = a.startDate ? new Date(a.startDate).getTime() : 0;
+          valB = b.startDate ? new Date(b.startDate).getTime() : 0;
+        }
         if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;
         if (valA > valB) return this.sortOrder === 'asc' ? 1 : -1;
         return 0;
@@ -79,8 +99,16 @@ export class ElectionListComponent implements OnInit {
           this.elections = this.elections.filter(e => e.id !== id);
           this.applyFilters();
         },
-        error: (err) => console.error(err)
+        error: (err: any) => console.error(err)
       });
     }
+  }
+
+  openDetails(election: any): void {
+    this.selectedElection = election;
+  }
+
+  closeDetails(): void {
+    this.selectedElection = null;
   }
 }
