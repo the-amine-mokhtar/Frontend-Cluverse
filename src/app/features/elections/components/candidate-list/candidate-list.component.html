@@ -42,24 +42,26 @@
             <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-bold">{{ candidate.status || '-' }}</span>
           </td> 
           <td class="p-5 text-gray-500 font-medium">{{ candidate.submissionDate | date }}</td>
-          <td class="p-5 text-right space-x-2">
+          <td class="p-5">
+            <div class="flex items-center justify-end space-x-2">
             <!-- Edit Election Link -->
-            <a [routerLink]="['/dashboard/elections/list']" [queryParams]="{electionId: candidate.election?.id || candidate.electionId}" class="inline-block text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 p-2.5 rounded-full transition-all" title="Election Edit">
+            <a [routerLink]="['/dashboard/elections/list']" [queryParams]="{electionId: candidate.election?.id || candidate.electionId}" class="inline-flex items-center justify-center text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 p-2.5 rounded-full transition-all" title="Election Edit">
                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                  <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
                  <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
                </svg>
             </a>
             <!-- Link to Votes -->
-            <a [routerLink]="['/dashboard/elections/votes']" [queryParams]="{candidateId: candidate.id}" class="inline-block text-blue-400 hover:text-blue-600 hover:bg-blue-50 p-2.5 rounded-full transition-all" title="View Votes">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-              </svg>
+            <a [routerLink]="['/dashboard/elections/votes']" [queryParams]="{candidateId: candidate.id}" class="inline-flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 p-2.5 rounded-full transition-all" title="View Votes">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+               </svg>
             </a>
             <!-- Delete -->
-            <button class="text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2.5 rounded-full transition-all" title="Delete" (click)="deleteCandidate(candidate.id)">
+            <button class="inline-flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2.5 rounded-full transition-all" title="Delete" (click)="deleteCandidate(candidate.id)">
                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
+            </div>
           </td>
         </tr>
       </tbody>
