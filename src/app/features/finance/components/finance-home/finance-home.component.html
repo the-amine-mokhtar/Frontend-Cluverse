@@ -1,0 +1,98 @@
+<section class="finance-page">
+  <header class="finance-page__header">
+    <div>
+      <h1 class="finance-page__title">Finance Dashboard</h1>
+      <p class="finance-page__subtitle">Overview of budgets and club transactions</p>
+    </div>
+
+    <div class="finance-page__actions">
+      <button type="button" class="btn btn--primary" routerLink="/dashboard/finance/transactions">Add Transaction</button>
+    </div>
+  </header>
+
+  <nav class="finance-nav" aria-label="Finance sections">
+    <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/home">Dashboard</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/transactions">Transactions</a>
+  </nav>
+
+  <div class="stats-grid">
+    <article class="stat-card">
+      <span class="stat-card__label">Total Budget</span>
+      <span class="stat-card__value">{{ formatCurrency(totalBudget) }}</span>
+    </article>
+
+    <article class="stat-card">
+      <span class="stat-card__label">Spent</span>
+      <span class="stat-card__value stat-card__value--danger">{{ formatCurrency(totalSpent) }}</span>
+    </article>
+
+    <article class="stat-card">
+      <span class="stat-card__label">Remaining</span>
+      <span class="stat-card__value stat-card__value--success">{{ formatCurrency(totalBudget - totalSpent) }}</span>
+    </article>
+
+    <article class="stat-card">
+      <span class="stat-card__label">Monthly Net</span>
+      <span class="stat-card__value" [class.stat-card__value--success]="netFlow >= 0" [class.stat-card__value--danger]="netFlow < 0">
+        {{ netFlow >= 0 ? '+' : '-' }}{{ formatCurrency(absoluteNetFlow) }}
+      </span>
+    </article>
+  </div>
+
+  <div class="finance-grid">
+    <section class="panel">
+      <header class="panel__header">
+        <div>
+          <h2 class="panel__title">Budget Snapshot</h2>
+          <p class="panel__subtitle">Top categories by utilization</p>
+        </div>
+        <a routerLink="/dashboard/finance/budgets" class="panel__link">View all</a>
+      </header>
+
+      <div class="budget-list">
+        <article class="budget-card" *ngFor="let budget of budgetItems">
+          <div class="budget-card__top">
+            <div>
+              <h3 class="budget-card__title">{{ budget.title }}</h3>
+              <p class="budget-card__meta">{{ budget.department }}</p>
+            </div>
+            <span class="budget-card__amount">{{ formatCurrency(budget.spent) }}</span>
+          </div>
+
+          <div class="budget-card__progress" role="progressbar" [attr.aria-valuenow]="utilization(budget)" aria-valuemin="0" aria-valuemax="100">
+            <div class="budget-card__bar" [style.width.%]="utilization(budget)"></div>
+          </div>
+
+          <div class="budget-card__bottom">
+            <span>{{ utilization(budget) }}% used</span>
+            <strong>{{ formatCurrency(budget.total) }}</strong>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel__header">
+        <div>
+          <h2 class="panel__title">Recent Transactions</h2>
+          <p class="panel__subtitle">Latest activity in your ledger</p>
+        </div>
+        <a routerLink="/dashboard/finance/transactions" class="panel__link">View all</a>
+      </header>
+
+      <div class="transactions-list">
+        <article class="transaction-row" *ngFor="let transaction of recentTransactions">
+          <div>
+            <h3 class="transaction-row__title">{{ transaction.description }}</h3>
+            <p class="transaction-row__meta">{{ transaction.category }} . {{ transaction.date }} . {{ transaction.addedBy }}</p>
+          </div>
+
+          <span class="transaction-row__amount" [class.transaction-row__amount--income]="transaction.type === 'income'" [class.transaction-row__amount--expense]="transaction.type === 'expense'">
+            {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+          </span>
+        </article>
+      </div>
+    </section>
+  </div>
+</section>

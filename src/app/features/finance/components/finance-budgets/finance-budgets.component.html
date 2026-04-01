@@ -1,0 +1,90 @@
+<section class="finance-page">
+  <header class="finance-page__header">
+    <div>
+      <h1 class="finance-page__title">Budgets</h1>
+      <p class="finance-page__subtitle">Create, allocate, and manage your club budgets</p>
+    </div>
+
+    <div class="finance-page__actions">
+      <button type="button" class="btn btn--primary" (click)="openCreateBudgetForm()">Create Budget</button>
+    </div>
+  </header>
+
+  <section class="form-panel" *ngIf="showCreateBudgetForm">
+    <h2 class="form-panel__title">Create New Budget</h2>
+    <div class="form-grid">
+      <label class="field">
+        <span>Year</span>
+        <input type="number" min="2000" max="2100" [(ngModel)]="createBudgetModel.year" />
+      </label>
+
+      <label class="field">
+        <span>Category</span>
+        <select [(ngModel)]="createBudgetModel.category">
+          <option *ngFor="let category of budgetCategories" [ngValue]="category">{{ category }}</option>
+        </select>
+      </label>
+
+      <label class="field field--full">
+        <span>Total Allocated</span>
+        <input type="number" min="1" step="0.01" placeholder="Enter budget amount" [(ngModel)]="createBudgetModel.totalAllocated" />
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn--ghost" (click)="cancelCreateBudget()">Cancel</button>
+      <button type="button" class="btn btn--primary" [disabled]="isSubmitting" (click)="submitCreateBudget()">
+        {{ isSubmitting ? 'Creating...' : 'Save Budget' }}
+      </button>
+    </div>
+  </section>
+
+  <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="status" *ngIf="isLoading">Loading budgets...</p>
+
+  <nav class="finance-nav" aria-label="Finance sections">
+    <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
+    <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/budgets">Budgets</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/transactions">Transactions</a>
+  </nav>
+
+  <div class="budgets-grid">
+    <article class="budget-card" *ngFor="let item of budgetItems">
+      <div class="budget-card__top">
+        <div class="budget-card__icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7H21V17C21 18.105 20.105 19 19 19H5C3.895 19 3 18.105 3 17V7Z" />
+            <path d="M16 12H20" />
+            <path d="M6 10H12" />
+          </svg>
+        </div>
+
+        <div class="budget-card__title-group">
+          <h2 class="budget-card__title">{{ item.title }}</h2>
+          <p class="budget-card__meta">{{ item.department }}</p>
+        </div>
+      </div>
+
+      <div class="budget-card__row">
+        <span>Spent</span>
+        <strong>{{ formatCurrency(item.spent) }}</strong>
+      </div>
+
+      <div class="budget-card__progress" role="progressbar" [attr.aria-valuenow]="utilization(item)" aria-valuemin="0" aria-valuemax="100">
+        <div class="budget-card__bar" [style.width.%]="utilization(item)"></div>
+      </div>
+
+      <div class="budget-card__row">
+        <span>Budget</span>
+        <strong>{{ formatCurrency(item.total) }}</strong>
+      </div>
+
+      <div class="budget-card__row">
+        <span>Year</span>
+        <strong>{{ item.year }}</strong>
+      </div>
+    </article>
+  </div>
+
+  <p class="status" *ngIf="!isLoading && budgetItems.length === 0 && !errorMessage">No budgets found for your club.</p>
+</section>
