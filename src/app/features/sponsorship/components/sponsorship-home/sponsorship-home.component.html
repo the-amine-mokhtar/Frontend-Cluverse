@@ -1,0 +1,285 @@
+<div class="sponsors">
+  <div class="sponsors__header">
+    <div>
+      <h2 class="sponsors__title">Sponsors</h2>
+      <p class="sponsors__subtitle">Invite and track sponsor confirmations</p>
+    </div>
+
+    <div class="sponsors__header-actions">
+      <div class="sponsors__filter-wrap">
+        <button class="sponsors__filter-btn" (click)="toggleFilterMenu()">
+          Filter
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <div class="sponsors__filter-menu" *ngIf="showFilterMenu">
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Status</label>
+            <select [(ngModel)]="filterStatus" (ngModelChange)="onFiltersChanged()">
+              <option value="ALL">All</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="DENIED">Denied</option>
+            </select>
+          </div>
+
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Country Code</label>
+            <select [(ngModel)]="filterCountryCode" (ngModelChange)="onFiltersChanged()">
+              <option value="ALL">All Countries</option>
+              <option *ngFor="let option of countryCodeOptions" [value]="option.code">
+                {{ option.flag }} {{ option.code }} ({{ option.label }})
+              </option>
+            </select>
+          </div>
+
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Search</label>
+            <input type="text" [(ngModel)]="filterQuery" (ngModelChange)="onFiltersChanged()" placeholder="Name, email or phone" />
+          </div>
+
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Sort</label>
+            <select [(ngModel)]="filterSort" (ngModelChange)="onFiltersChanged()">
+              <option value="NEWEST">Newest</option>
+              <option value="OLDEST">Oldest</option>
+              <option value="NAME_ASC">Name A-Z</option>
+              <option value="NAME_DESC">Name Z-A</option>
+            </select>
+          </div>
+
+          <button class="sponsors__clear-filter-btn" (click)="clearFilters()">Clear filters</button>
+        </div>
+      </div>
+
+      <button class="sponsors__add-btn" (click)="openAddForm()">
+        Add Sponsor
+      </button>
+    </div>
+  </div>
+
+  <div class="sponsors__error" *ngIf="loadError">{{ loadError }}</div>
+
+  <div class="sponsors__card" *ngIf="isLoading">
+    <p class="sponsors__loading">Loading sponsors...</p>
+  </div>
+
+  <div class="sponsors__card" *ngIf="!isLoading">
+    <div class="sponsors__table-wrap" *ngIf="filteredSponsors.length > 0; else emptyState">
+      <table class="sponsors__table">
+        <colgroup>
+          <col class="sponsors__col sponsors__col--logo" />
+          <col class="sponsors__col sponsors__col--name" />
+          <col class="sponsors__col sponsors__col--email" />
+          <col class="sponsors__col sponsors__col--phone" />
+          <col class="sponsors__col sponsors__col--join-date" />
+          <col class="sponsors__col sponsors__col--status" />
+          <col class="sponsors__col sponsors__col--actions" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="sponsors__th sponsors__th--center">Logo</th>
+            <th class="sponsors__th sponsors__th--center">Name</th>
+            <th class="sponsors__th sponsors__th--center">Email</th>
+            <th class="sponsors__th sponsors__th--center">Phone</th>
+            <th class="sponsors__th sponsors__th--center">Join Date</th>
+            <th class="sponsors__th sponsors__th--center">Status</th>
+            <th class="sponsors__th sponsors__th--center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let sponsor of pagedSponsors">
+            <td class="sponsors__td sponsors__td--center">
+              <div class="sponsors__logo-thumb" *ngIf="sponsor.logoUrl; else noLogo">
+                <img [src]="sponsor.logoUrl" alt="Sponsor logo" />
+              </div>
+              <ng-template #noLogo>
+                <div class="sponsors__logo-thumb sponsors__logo-thumb--placeholder">--</div>
+              </ng-template>
+            </td>
+            <td class="sponsors__td sponsors__td--center">{{ sponsor.name }}</td>
+            <td class="sponsors__td sponsors__td--center">{{ sponsor.contactEmail }}</td>
+            <td class="sponsors__td sponsors__td--center">{{ sponsor.phone }}</td>
+            <td class="sponsors__td sponsors__td--center">{{ formatJoinDate(sponsor) }}</td>
+            <td class="sponsors__td sponsors__td--center">
+              <span class="sponsors__status-badge" [ngClass]="statusClass(sponsor.status)">
+                {{ sponsor.status || 'PENDING' }}
+              </span>
+            </td>
+            <td class="sponsors__td sponsors__td--center">
+              <div class="sponsors__actions-cell">
+                <button class="sponsors__icon-btn sponsors__icon-btn--edit" (click)="onEditSponsor(sponsor)" title="Modify sponsor">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                  </svg>
+                </button>
+                <button class="sponsors__icon-btn sponsors__icon-btn--delete" (click)="onDeleteSponsor(sponsor)" title="Delete sponsor">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+                <button class="sponsors__icon-btn sponsors__icon-btn--extra" (click)="onExtraAction(sponsor)" title="Reserved action">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="sponsors__empty">
+        <p class="sponsors__empty-title">No sponsors yet</p>
+        <p class="sponsors__empty-sub">Use Add Sponsor to send your first invitation.</p>
+      </div>
+    </ng-template>
+
+    <div class="sponsors__pagination" *ngIf="filteredSponsors.length > pageSize">
+      <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+      <span>Page {{ currentPage }} / {{ totalPages }}</span>
+      <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+  </div>
+
+  <div class="sponsors__overlay" *ngIf="showAddForm" (click)="closeAddForm()">
+    <div class="sponsors__dialog" (click)="$event.stopPropagation()">
+      <h3 class="sponsors__dialog-title">Add Sponsor</h3>
+
+      <div class="sponsors__success" *ngIf="submitSuccess">{{ submitSuccess }}</div>
+      <div class="sponsors__error" *ngIf="submitError">{{ submitError }}</div>
+
+      <div class="sponsors__form-field">
+        <label>Name</label>
+        <input type="text" [(ngModel)]="form.name" placeholder="Sponsor name" />
+      </div>
+
+      <div class="sponsors__form-field">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="form.contactEmail" placeholder="sponsor@email.com" />
+      </div>
+
+      <div class="sponsors__form-field">
+        <label>Phone</label>
+        <div class="sponsors__phone-row">
+          <select class="sponsors__country-select" [(ngModel)]="addCountryCode">
+            <option *ngFor="let option of countryCodeOptions" [value]="option.code">
+              {{ option.flag }} {{ option.code }}
+            </option>
+          </select>
+          <input
+            type="text"
+            [ngModel]="addPhoneDigits"
+            (ngModelChange)="onPhoneDigitsInput('add', $event)"
+            placeholder="8 digits"
+            maxlength="8"
+          />
+        </div>
+      </div>
+
+      <div class="sponsors__form-field">
+        <label>Logo</label>
+        <input type="file" accept="image/*" (change)="onLogoFileSelected('add', $event)" />
+        <div class="sponsors__logo-preview" *ngIf="addLogoPreview">
+          <img [src]="addLogoPreview" alt="Selected logo preview" />
+        </div>
+      </div>
+
+      <p class="sponsors__hint">
+        Confirm will create a Pending sponsor and send the invitation email.
+      </p>
+
+      <div class="sponsors__dialog-actions">
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="closeAddForm()" [disabled]="isSubmitting">Cancel</button>
+        <button class="sponsors__btn sponsors__btn--primary" (click)="onConfirmAdd()" [disabled]="!isFormValid() || isSubmitting">
+          {{ isSubmitting ? 'Sending...' : 'Confirm' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sponsors__overlay" *ngIf="showEditForm" (click)="closeEditForm()">
+    <div class="sponsors__dialog" (click)="$event.stopPropagation()">
+      <h3 class="sponsors__dialog-title">Modify Sponsor</h3>
+
+      <div class="sponsors__error" *ngIf="editError">{{ editError }}</div>
+
+      <div class="sponsors__form-field">
+        <label>Name</label>
+        <input type="text" [(ngModel)]="editForm.name" placeholder="Sponsor name" />
+      </div>
+
+      <div class="sponsors__form-field">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="editForm.contactEmail" placeholder="sponsor@email.com" />
+      </div>
+
+      <div class="sponsors__form-field">
+        <label>Phone</label>
+        <div class="sponsors__phone-row">
+          <select class="sponsors__country-select" [(ngModel)]="editCountryCode">
+            <option *ngFor="let option of countryCodeOptions" [value]="option.code">
+              {{ option.flag }} {{ option.code }}
+            </option>
+          </select>
+          <input
+            type="text"
+            [ngModel]="editPhoneDigits"
+            (ngModelChange)="onPhoneDigitsInput('edit', $event)"
+            placeholder="8 digits"
+            maxlength="8"
+          />
+        </div>
+      </div>
+
+      <div class="sponsors__form-field">
+        <label>Logo</label>
+        <input type="file" accept="image/*" (change)="onLogoFileSelected('edit', $event)" />
+        <div class="sponsors__logo-preview" *ngIf="editLogoPreview">
+          <img [src]="editLogoPreview" alt="Selected logo preview" />
+        </div>
+      </div>
+
+      <div class="sponsors__dialog-actions">
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="closeEditForm()" [disabled]="isUpdating">Cancel</button>
+        <button class="sponsors__btn sponsors__btn--primary" (click)="onConfirmEdit()" [disabled]="!isEditFormValid() || isUpdating">
+          {{ isUpdating ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sponsors__overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+    <div class="sponsors__dialog sponsors__dialog--delete" (click)="$event.stopPropagation()">
+      <h3 class="sponsors__dialog-title">Delete Sponsor</h3>
+      <p class="sponsors__hint sponsors__hint--delete">
+        Are you sure you want to delete
+        <strong>{{ pendingDelete?.name }}</strong>?
+      </p>
+
+      <div class="sponsors__form-field sponsors__form-field--compact">
+        <label>Reason to send</label>
+        <select [(ngModel)]="deleteReason">
+          <option *ngFor="let reason of deleteReasonOptions" [value]="reason">{{ reason }}</option>
+        </select>
+      </div>
+
+      <div class="sponsors__error" *ngIf="editError">{{ editError }}</div>
+
+      <div class="sponsors__dialog-actions">
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="closeDeleteConfirm()" [disabled]="isDeleting">Cancel</button>
+        <button class="sponsors__btn sponsors__btn--danger" (click)="onConfirmDelete()" [disabled]="isDeleting">
+          {{ isDeleting ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sponsors__toast" *ngIf="toastVisible" [ngClass]="'sponsors__toast--' + toastType">
+    {{ toastMessage }}
+  </div>
+</div>

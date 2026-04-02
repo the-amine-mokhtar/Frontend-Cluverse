@@ -33,6 +33,11 @@ const routes: Routes = [
       import('./features/verify/verify.module').then(m => m.VerifyModule),
   },
   {
+    path: 'sponsor-response',
+    loadChildren: () =>
+      import('./features/sponsor-response/sponsor-response.module').then(m => m.SponsorResponseModule)
+  },
+  {
     path: 'not-found',
     component: NotFoundComponent
   },
