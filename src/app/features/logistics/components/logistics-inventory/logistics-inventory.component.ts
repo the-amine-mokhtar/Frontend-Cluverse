@@ -3,13 +3,18 @@ import { Location } from '@angular/common';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
-import { LogisticsApiService, ResourceCreatePayload, ResourceItem } from '../../services/logistics-api.service';
+import {
+  InventoryTransactionItem,
+  InventoryTransactionType,
+  LogisticsApiService,
+  ResourceCreatePayload,
+  ResourceItem
+} from '../../services/logistics-api.service';
 
 type InventoryItem = {
   sku: number;
   name: string;
   category: string;
-  quantity: number;
   availableQuantity: number;
   quantityTotal: number;
   unitCost: number;
@@ -43,10 +48,17 @@ export class LogisticsInventoryComponent {
   items: InventoryItem[] = [];
   readonly clubId: number;
 
+  isTransactionsOpen = false;
+  isTransactionsLoading = false;
+  isTransactionSubmitting = false;
+  transactionsError = '';
+  selectedResource: InventoryItem | null = null;
+  transactions: InventoryTransactionItem[] = [];
+  readonly transactionTypeOptions: InventoryTransactionType[] = ['ADD', 'REMOVE', 'UPDATE'];
+
   readonly resourceForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     category: ['AVAILABLE', [Validators.required]],
-    quantity: [0, [Validators.required, Validators.min(0)]],
     quantityTotal: [0, [Validators.required, Validators.min(0)]],
     availableQuantity: [0, [Validators.required, Validators.min(0)]],
     minStock: [0, [Validators.required, Validators.min(0)]],
@@ -55,6 +67,13 @@ export class LogisticsInventoryComponent {
     lastUpdated: [''],
     description: [''],
     notes: ['']
+  });
+
+  readonly transactionForm = this.fb.group({
+    type: ['ADD' as InventoryTransactionType, [Validators.required]],
+    quantity: [1, [Validators.required, Validators.min(1)]],
+    date: ['', [Validators.required]],
+    reason: ['']
   });
 
   constructor(
@@ -68,6 +87,12 @@ export class LogisticsInventoryComponent {
     this.load();
   }
 
+  private toDateTimeLocalNow(): string {
+    const now = new Date();
+    const offsetDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return offsetDate.toISOString().slice(0, 16);
+  }
+
   private load(): void {
     this.isLoading = true;
     this.hasError = false;
@@ -77,7 +102,6 @@ export class LogisticsInventoryComponent {
           sku: i.id,
           name: i.name,
           category: String(i.status || 'AVAILABLE'),
-          quantity: Number((i as any).quantity ?? i.availableQuantity ?? 0),
           availableQuantity: Number(i.availableQuantity ?? 0),
           quantityTotal: Number(i.quantityTotal ?? 0),
           unitCost: Number(i.unitCost ?? 0),
@@ -93,6 +117,97 @@ export class LogisticsInventoryComponent {
       },
       complete: () => {
         this.isLoading = false;
+      }
+    });
+  }
+
+  openTransactions(item: InventoryItem): void {
+    this.selectedResource = item;
+    this.isTransactionsOpen = true;
+    this.transactionsError = '';
+    this.transactions = [];
+
+    this.transactionForm.reset({
+      type: 'ADD',
+      quantity: 1,
+      date: this.toDateTimeLocalNow(),
+      reason: ''
+    });
+
+    this.loadTransactions(item.sku);
+  }
+
+  closeTransactions(): void {
+    this.isTransactionsOpen = false;
+    this.selectedResource = null;
+    this.transactions = [];
+    this.transactionsError = '';
+  }
+
+  private loadTransactions(resourceId: number): void {
+    this.isTransactionsLoading = true;
+    this.transactionsError = '';
+
+    this.logisticsApi.getInventoryTransactionsByResource(resourceId).subscribe({
+      next: (items) => {
+        this.transactions = items;
+      },
+      error: (error) => {
+        const backendMessage =
+          error?.error?.message ||
+          error?.error?.error ||
+          error?.message ||
+          '';
+        this.transactionsError = backendMessage
+          ? `Echec chargement transactions: ${backendMessage}`
+          : 'Echec chargement transactions.';
+      },
+      complete: () => {
+        this.isTransactionsLoading = false;
+      }
+    });
+  }
+
+  createTransaction(): void {
+    if (!this.selectedResource) {
+      this.transactionsError = 'Ressource non selectionnee.';
+      return;
+    }
+
+    if (this.transactionForm.invalid) {
+      this.transactionForm.markAllAsTouched();
+      return;
+    }
+
+    this.isTransactionSubmitting = true;
+    this.transactionsError = '';
+
+    const value = this.transactionForm.getRawValue();
+    const payload = {
+      type: value.type as InventoryTransactionType,
+      quantity: Number(value.quantity),
+      date: `${value.date}:00`,
+      reason: String(value.reason || '').trim(),
+      resourceId: Number(this.selectedResource.sku)
+    };
+
+    this.logisticsApi.createInventoryTransaction(payload).subscribe({
+      next: () => {
+        this.loadTransactions(this.selectedResource!.sku);
+        this.load();
+      },
+      error: (error) => {
+        const backendMessage =
+          error?.error?.message ||
+          error?.error?.error ||
+          error?.message ||
+          '';
+        this.transactionsError = backendMessage
+          ? `Echec creation transaction: ${backendMessage}`
+          : 'Echec creation transaction.';
+      },
+      complete: () => {
+        this.isTransactionSubmitting = false;
       }
     });
   }
@@ -130,7 +245,6 @@ export class LogisticsInventoryComponent {
     this.resourceForm.reset({
       name: '',
       category: 'AVAILABLE',
-      quantity: 0,
       quantityTotal: 0,
       availableQuantity: 0,
       minStock: 0,
@@ -168,7 +282,6 @@ export class LogisticsInventoryComponent {
     this.resourceForm.patchValue({
       name: item.name,
       category: categoryValue,
-      quantity: item.quantity,
       quantityTotal: item.quantityTotal,
       availableQuantity: item.availableQuantity,
       minStock: item.min,
@@ -273,7 +386,6 @@ export class LogisticsInventoryComponent {
     }
 
     // Extract and normalize form values - NO id field
-    const quantity = Number(value.quantity) || 0;
     const quantityTotal = Number(value.quantityTotal) || 0;
     const availableQuantity = Number(value.availableQuantity) || 0;
     const name = String(value.name).trim();
@@ -285,6 +397,10 @@ export class LogisticsInventoryComponent {
     const lastUpdatedRaw = String(value.lastUpdated || '').trim();
     const lastUpdated = lastUpdatedRaw ? lastUpdatedRaw : null;
     const status = (value.category as ResourceCreatePayload['status']) || 'AVAILABLE';
+
+    // Backend entity doesn't have `quantity`, but API may still expect it.
+    // Keep it consistent by deriving it from `quantity_total`.
+    const quantity = quantityTotal;
 
     // Build strict ResourceCreatePayload - only fields that service expects
     const payload: ResourceCreatePayload = {

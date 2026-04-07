@@ -5,7 +5,6 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import {
-  ClubItem,
   EventItem,
   LocationItem,
   LogisticsApiService,
@@ -24,9 +23,7 @@ type Delivery = {
   when: string;
   departure: string;
   destination: string;
-  driver: string;
-  vehicle: string;
-  notes: string;
+  eventTitle: string;
   hasDetails: boolean;
   status: DeliveryStatus;
   statusLabel: string;
@@ -48,30 +45,20 @@ export class LogisticsDeliveriesComponent {
   editingId: number | null = null;
 
   deliveries: Delivery[] = [];
+  private rawTransports: any[] = [];
   vehicles: VehicleItem[] = [];
   users: UserItem[] = [];
   locations: LocationItem[] = [];
-  clubs: ClubItem[] = [];
   events: EventItem[] = [];
 
   readonly createForm = this.fb.group({
-    capacity: [1, [Validators.required, Validators.min(1)]],
-    arrivalTime: [''],
-    clubId: [null as number | null],
-    departureTime: [''],
-    eventId: [null as number | null],
-    departure: [''],
-    destination: [''],
-    driverName: [''],
-    driverPhone: [''],
-    notes: [''],
-    vehicleType: [''],
     scheduledDate: ['', [Validators.required]],
     departureLocationId: [null as number | null, [Validators.required]],
     arrivalLocationId: [null as number | null, [Validators.required]],
-    vehicleId: [null as number | null, [Validators.required]],
-    userId: [null as number | null, [Validators.required]],
-    status: ['PLANNED', [Validators.required]]
+    vehicleId: [null as string | null, [Validators.required]],
+    userId: [null as string | null, [Validators.required]],
+    status: ['PLANNED', [Validators.required]],
+    eventId: [null as number | null]
   });
 
   get totalDeliveries(): number {
@@ -88,25 +75,67 @@ export class LogisticsDeliveriesComponent {
     this.load();
   }
 
+  private normalizeIdList<T extends { id: any }>(items: T[] | null | undefined): T[] {
+    return (items || []).map((item) => ({
+      ...item,
+      id: Number(item.id)
+    }));
+  }
+
+  private ensureSelectedDropdownOptions(): void {
+    const pickSelectedId = (value: unknown): number | null => {
+      if (value === null || value === undefined) return null;
+      const num = Number(value);
+      return Number.isFinite(num) && num > 0 ? num : null;
+    };
+
+    const departureLocationId = pickSelectedId(this.createForm.get('departureLocationId')?.value);
+    const arrivalLocationId = pickSelectedId(this.createForm.get('arrivalLocationId')?.value);
+    const vehicleId = pickSelectedId(this.createForm.get('vehicleId')?.value);
+    const userId = pickSelectedId(this.createForm.get('userId')?.value);
+    const eventId = pickSelectedId(this.createForm.get('eventId')?.value);
+
+    const ensureOption = <T extends { id: number }>(
+      list: T[],
+      id: number | null,
+      makePlaceholder: (missingId: number) => T
+    ): void => {
+      if (id === null) return;
+      if (!list.some((item) => Number(item.id) === id)) {
+        list.push(makePlaceholder(id));
+      }
+    };
+
+    ensureOption(this.locations, departureLocationId, (id) => ({ id, name: `Lieu #${id} (archive)` } as any));
+    ensureOption(this.locations, arrivalLocationId, (id) => ({ id, name: `Lieu #${id} (archive)` } as any));
+    ensureOption(this.vehicles, vehicleId, (id) => ({ id, model: `Vehicule #${id} (archive)`, plateNumber: '-', available: false } as any));
+    ensureOption(this.users, userId, (id) => ({ id, fullName: `Utilisateur #${id} (archive)`, email: '' } as any));
+    ensureOption(this.events, eventId, (id) => ({ id, title: `Event #${id} (archive)` } as any));
+  }
+
   private loadSelectData(): void {
     forkJoin({
       vehicles: this.logisticsApi.getVehicles(),
       users: this.logisticsApi.getUsers(),
       locations: this.logisticsApi.getLocations(),
-      clubs: this.logisticsApi.getClubs(),
       events: this.logisticsApi.getEvents()
     }).subscribe({
-      next: ({ vehicles, users, locations, clubs, events }) => {
-        this.vehicles = vehicles || [];
-        this.users = users || [];
-        this.locations = locations || [];
-        this.clubs = clubs || [];
-        this.events = events || [];
+      next: ({ vehicles, users, locations, events }) => {
+        this.vehicles = this.normalizeIdList(vehicles as any);
+        this.users = this.normalizeIdList(users as any);
+        this.locations = this.normalizeIdList(locations as any);
+        this.events = this.normalizeIdList(events as any);
+        this.ensureSelectedDropdownOptions();
+        this.rebuildDeliveries();
       },
       error: () => {
-        this.createError = 'Impossible de charger les listes de selection (club, event, lieu, vehicule, utilisateur).';
+        this.createError = 'Impossible de charger les listes de selection (lieu, vehicule, utilisateur).';
       }
     });
+  }
+
+  private rebuildDeliveries(): void {
+    this.deliveries = (this.rawTransports || []).map((raw: any) => this.toDelivery(raw));
   }
 
   private load(): void {
@@ -115,7 +144,8 @@ export class LogisticsDeliveriesComponent {
 
     this.logisticsApi.getTransports().subscribe({
       next: (items: TransportItem[]) => {
-        this.deliveries = (items || []).map((raw: any) => this.toDelivery(raw));
+        this.rawTransports = (items || []) as any[];
+        this.rebuildDeliveries();
       },
       error: () => {
         this.hasError = true;
@@ -129,12 +159,29 @@ export class LogisticsDeliveriesComponent {
   private toDelivery(raw: any): Delivery {
     const id = Number(raw?.id ?? raw?.transportId ?? raw?.transport_id ?? 0);
     const status = this.normalizeStatus(raw?.status);
-    const departure = this.readText(raw?.departure ?? raw?.departureLocation?.name ?? raw?.departure_location?.name);
-    const destination = this.readText(raw?.destination ?? raw?.arrivalLocation?.name ?? raw?.arrival_location?.name);
-    const driver = this.readText(raw?.driverName ?? raw?.driver_name ?? raw?.user?.fullName ?? raw?.user?.name);
-    const vehicle = this.readText(raw?.vehicle?.model ?? raw?.vehicleType ?? raw?.vehicle_type);
-    const notes = this.readText(raw?.notes);
-    const hasDetails = [departure, destination, driver, vehicle, notes].some((value) => value !== 'Non renseigne');
+
+    const pickId = (...candidates: unknown[]): number | null => {
+      for (const candidate of candidates) {
+        if (candidate === null || candidate === undefined) {
+          continue;
+        }
+        const num = Number(candidate);
+        if (!Number.isNaN(num) && num > 0) {
+          return num;
+        }
+      }
+      return null;
+    };
+
+    const departureLocationId = pickId(raw?.departureLocationId, raw?.departure_location_id);
+    const arrivalLocationId = pickId(raw?.arrivalLocationId, raw?.arrival_location_id);
+    const eventId = pickId(raw?.eventId, raw?.event_id);
+
+    const departure = this.resolveLocationLabel(departureLocationId);
+    const destination = this.resolveLocationLabel(arrivalLocationId);
+    const eventTitle = this.resolveEventTitle(eventId);
+
+    const hasDetails = true;
 
     return {
       id,
@@ -143,13 +190,31 @@ export class LogisticsDeliveriesComponent {
       when: this.formatDate(raw?.scheduledDate ?? raw?.scheduled_date ?? raw?.departureTime ?? raw?.departure_time),
       departure,
       destination,
-      driver,
-      vehicle,
-      notes,
+      eventTitle,
       hasDetails,
       status,
       statusLabel: this.mapStatusLabel(status)
     };
+  }
+
+  private resolveLocationLabel(locationId: number | null): string {
+    if (locationId === null) {
+      return 'Non renseigne';
+    }
+
+    const found = this.locations.find((l) => Number(l.id) === locationId);
+    const name = (found?.name ?? '').trim();
+    return name.length > 0 ? name : `Lieu #${locationId}`;
+  }
+
+  private resolveEventTitle(eventId: number | null): string {
+    if (eventId === null) {
+      return 'Aucun';
+    }
+
+    const found = this.events.find((e) => Number(e.id) === eventId);
+    const title = ((found as any)?.title ?? (found as any)?.name ?? '').toString().trim();
+    return title.length > 0 ? title : `Event #${eventId}`;
   }
 
   private normalizeStatus(value: unknown): DeliveryStatus {
@@ -266,44 +331,34 @@ export class LogisticsDeliveriesComponent {
           if (id === null) {
             return;
           }
-          if (!list.some((item) => item.id === id)) {
+          if (!list.some((item) => Number(item.id) === id)) {
             list.push(makePlaceholder(id));
           }
         };
 
-        const clubId = pickId(transport.clubId, transport.club?.id, transport.club_id);
-        const eventId = pickId(transport.eventId, transport.event?.id, transport.event_id);
         const departureLocationId = pickId(transport.departureLocationId, transport.departureLocation?.id, transport.departure_location_id);
         const arrivalLocationId = pickId(transport.arrivalLocationId, transport.arrivalLocation?.id, transport.arrival_location_id);
         const vehicleId = pickId(transport.vehicleId, transport.vehicle?.id, transport.vehicle_id);
         const userId = pickId(transport.userId, transport.user?.id, transport.user_id);
+        const eventId = pickId(transport.eventId, transport.event?.id, transport.event_id);
 
-        ensureOption(this.clubs, clubId, (id) => ({ id, name: `Club #${id} (archive)` }));
-        ensureOption(this.events, eventId, (id) => ({ id, title: `Event #${id} (archive)` }));
         ensureOption(this.locations, departureLocationId, (id) => ({ id, name: `Lieu #${id} (archive)` }));
         ensureOption(this.locations, arrivalLocationId, (id) => ({ id, name: `Lieu #${id} (archive)` }));
         ensureOption(this.vehicles, vehicleId, (id) => ({ id, model: `Vehicule #${id} (archive)`, plateNumber: '-', available: false }));
         ensureOption(this.users, userId, (id) => ({ id, fullName: `Utilisateur #${id} (archive)`, email: '' }));
+        ensureOption(this.events, eventId, (id) => ({ id, title: `Event #${id} (archive)` } as any));
 
         this.createForm.patchValue({
-          capacity: transport.capacity ?? 1,
-          arrivalTime: datetimeToLocal(transport.arrivalTime),
-          clubId,
-          departureTime: datetimeToLocal(transport.departureTime),
-          eventId,
-          departure: transport.departure ?? '',
-          destination: transport.destination ?? '',
-          driverName: transport.driverName ?? '',
-          driverPhone: transport.driverPhone ?? '',
-          notes: transport.notes ?? '',
-          vehicleType: transport.vehicleType ?? '',
-          scheduledDate: datetimeToLocal(transport.scheduledDate),
+          scheduledDate: datetimeToLocal(transport.scheduledDate ?? transport.scheduled_date ?? null),
           departureLocationId,
           arrivalLocationId,
-          vehicleId,
-          userId,
-          status: transport.status ?? 'PLANNED'
+          vehicleId: vehicleId === null ? null : String(vehicleId),
+          userId: userId === null ? null : String(userId),
+          status: transport.status ?? 'PLANNED',
+          eventId
         });
+
+        this.ensureSelectedDropdownOptions();
       },
       error: (err) => {
         console.error('Erreur lors du chargement du transport:', err);
@@ -337,75 +392,37 @@ export class LogisticsDeliveriesComponent {
 
   private resetForm(): void {
     this.createForm.reset({
-      capacity: 1,
-      arrivalTime: '',
-      clubId: null,
-      departureTime: '',
-      eventId: null,
-      departure: '',
-      destination: '',
-      driverName: '',
-      driverPhone: '',
-      notes: '',
-      vehicleType: '',
       scheduledDate: '',
       departureLocationId: null,
       arrivalLocationId: null,
       vehicleId: null,
       userId: null,
-      status: 'PLANNED'
+      status: 'PLANNED',
+      eventId: null
     });
   }
 
   submitCreate(): void {
-    // Validation intelligente: en création, les IDs requis. En modification, seulement les champs visibles
-    const isCreating = !this.editingId;
-    
-    if (isCreating) {
-      // Mode création: validation stricte
-      if (this.createForm.invalid) {
-        this.createForm.markAllAsTouched();
-        return;
-      }
-    } else {
-      // Mode modification: validation minimale (juste les champs visibles et importants)
-      const value = this.createForm.getRawValue();
-      if (!value.scheduledDate || value.scheduledDate.trim().length === 0) {
-        this.createError = 'Erreur: la date planifiée est requise.';
-        return;
-      }
-      if (!value.status || value.status.trim().length === 0) {
-        this.createError = 'Erreur: le statut est requis.';
-        return;
-      }
+    if (this.createForm.invalid) {
+      this.createForm.markAllAsTouched();
+      return;
     }
 
     const value = this.createForm.getRawValue();
     const payload: TransportCreatePayload = {
-      capacity: Number(value.capacity),
-      arrivalTime: this.asNullableApiDateTime(value.arrivalTime || ''),
-      clubId: this.asNullableNumber(value.clubId),
-      departureTime: this.asNullableApiDateTime(value.departureTime || ''),
-      eventId: this.asNullableNumber(value.eventId),
-      departure: this.asNullableText(value.departure || ''),
-      destination: this.asNullableText(value.destination || ''),
-      driverName: this.asNullableText(value.driverName || ''),
-      driverPhone: this.asNullableText(value.driverPhone || ''),
-      notes: this.asNullableText(value.notes || ''),
-      vehicleType: this.asNullableText(value.vehicleType || ''),
       scheduledDate: this.asApiDateTime(value.scheduledDate || ''),
-      departureLocationId: this.asNullableNumber(value.departureLocationId),
-      arrivalLocationId: this.asNullableNumber(value.arrivalLocationId),
+      departureLocationId: Number(value.departureLocationId),
+      arrivalLocationId: Number(value.arrivalLocationId),
       status: value.status as TransportCreatePayload['status'],
-      vehicleId: this.asNullableNumber(value.vehicleId),
-      userId: this.asNullableNumber(value.userId)
+      vehicleId: Number(value.vehicleId),
+      userId: Number(value.userId),
+      eventId: value.eventId === null ? null : Number(value.eventId)
     };
 
     this.isSubmitting = true;
     this.createError = '';
     this.createSuccess = '';
 
-    console.log('submitCreate - isCreating:', isCreating, 'editingId:', this.editingId);
     const request = this.editingId 
       ? this.logisticsApi.updateTransport(this.editingId, payload)
       : this.logisticsApi.createTransport(payload);
@@ -436,36 +453,8 @@ export class LogisticsDeliveriesComponent {
     return value.length === 16 ? `${value}:00` : value;
   }
 
-  private asNullableApiDateTime(value: string): string | null {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      return null;
-    }
-    return this.asApiDateTime(trimmed);
-  }
-
-  private asNullableText(value: string): string | null {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  }
-
-  private asNullableNumber(value: unknown): number | null {
-    if (value === null || Number.isNaN(Number(value))) {
-      return null;
-    }
-    return Number(value);
-  }
-
   trackById(_: number, item: { id: number }): number {
     return item.id;
-  }
-
-  eventLabel(event: EventItem): string {
-    return (event.title || event.name || `Event #${event.id}`).trim();
-  }
-
-  clubLabel(club: ClubItem): string {
-    return (club.name || `Club #${club.id}`).trim();
   }
 
   private extractErrorMessage(error: unknown): string {

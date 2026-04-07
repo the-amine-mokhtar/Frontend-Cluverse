@@ -1,5 +1,9 @@
 import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
+import { LayoutModule } from '../../shared/layout/layout.module';
 import { LogisticsRoutingModule } from './logistics-routing.module';
 import { LogisticsHomeComponent } from './components/logistics-home/logistics-home.component';
 import { LogisticsRequestsComponent } from './components/logistics-requests/logistics-requests.component';
@@ -7,9 +11,38 @@ import { LogisticsRequestCreateComponent } from './components/logistics-request-
 import { LogisticsDeliveriesComponent } from './components/logistics-deliveries/logistics-deliveries.component';
 import { LogisticsInventoryComponent } from './components/logistics-inventory/logistics-inventory.component';
 import { LogisticsSuppliersComponent } from './components/logistics-suppliers/logistics-suppliers.component';
+import { LogisticsLayoutComponent } from './layout/logistics-layout.component';
+
+import { InventoryComponent } from './inventory/inventory.component';
+import { VehicleListComponent } from './vehicles/vehicle-list.component';
+import { VehicleFormComponent } from './vehicles/vehicle-form.component';
+import { VehicleDetailComponent } from './vehicles/vehicle-detail.component';
+import { TransportListComponent } from './transports/transport-list.component';
+import { TransportFormComponent } from './transports/transport-form.component';
+import { TransportDetailComponent } from './transports/transport-detail.component';
+import { TransportMapComponent } from './transports/transport-map.component';
+import { LogisticsDashboardComponent } from './dashboard/logistics-dashboard.component';
+import { ResourceListComponent } from './resources/resource-list.component';
+import { ResourceFormComponent } from './resources/resource-form.component';
+import { ResourceDetailComponent } from './resources/resource-detail.component';
 
 @NgModule({
   declarations: [
+    LogisticsLayoutComponent,
+    // MVP placeholders (replaced in steps 11-21)
+    LogisticsDashboardComponent,
+    ResourceListComponent,
+    ResourceFormComponent,
+    ResourceDetailComponent,
+    InventoryComponent,
+    VehicleListComponent,
+    VehicleFormComponent,
+    VehicleDetailComponent,
+    TransportListComponent,
+    TransportFormComponent,
+    TransportDetailComponent,
+
+    // Legacy logistics screens
     LogisticsHomeComponent,
     LogisticsRequestsComponent,
     LogisticsRequestCreateComponent,
@@ -17,6 +50,15 @@ import { LogisticsSuppliersComponent } from './components/logistics-suppliers/lo
     LogisticsInventoryComponent,
     LogisticsSuppliersComponent
   ],
-  imports: [SharedModule, LogisticsRoutingModule]
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    SharedModule,
+    LayoutModule,
+    LogisticsRoutingModule,
+    TransportMapComponent
+  ]
 })
 export class LogisticsModule { }

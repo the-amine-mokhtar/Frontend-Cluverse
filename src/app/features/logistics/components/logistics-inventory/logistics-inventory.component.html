@@ -41,11 +41,6 @@
           </div>
 
           <div class="field">
-            <label class="field__label">Quantite (quantity)</label>
-            <input class="field__input" type="number" min="0" formControlName="quantity" />
-          </div>
-
-          <div class="field">
             <label class="field__label">Quantite totale (quantity_total)</label>
             <input class="field__input" type="number" min="0" formControlName="quantityTotal" />
           </div>
@@ -101,6 +96,74 @@
     </div>
   </div>
 
+  <div class="modal" *ngIf="isTransactionsOpen" (click)="closeTransactions()">
+    <div class="modal__content card" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <div>
+          <div class="card__title">Transactions</div>
+          <div class="modal__subtitle" *ngIf="selectedResource">
+            Ressource: {{ selectedResource.name }} (SKU: {{ selectedResource.sku }})
+          </div>
+        </div>
+        <button class="btn btn--ghost" type="button" (click)="closeTransactions()">Fermer</button>
+      </div>
+
+      <div class="feedback" *ngIf="isTransactionsLoading">Chargement des transactions...</div>
+      <div class="feedback feedback--error" *ngIf="transactionsError">{{ transactionsError }}</div>
+
+      <div class="card" *ngIf="!isTransactionsLoading">
+        <div class="thead">
+          <div>ID</div>
+          <div>Type</div>
+          <div>Quantite</div>
+          <div>Date</div>
+          <div>Raison</div>
+        </div>
+        <div class="trow" *ngFor="let t of transactions">
+          <div class="muted">{{ t.id }}</div>
+          <div class="strong">{{ t.type }}</div>
+          <div class="muted">{{ t.quantity }}</div>
+          <div class="muted">{{ t.date || '-' }}</div>
+          <div class="muted">{{ t.reason || '-' }}</div>
+        </div>
+        <div class="feedback" *ngIf="transactions.length === 0">Aucune transaction.</div>
+      </div>
+
+      <form class="form" [formGroup]="transactionForm" (ngSubmit)="createTransaction()">
+        <div class="form__grid">
+          <div class="field">
+            <label class="field__label">Type</label>
+            <select class="field__input" formControlName="type">
+              <option *ngFor="let option of transactionTypeOptions" [value]="option">{{ option }}</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field__label">Quantite</label>
+            <input class="field__input" type="number" min="1" formControlName="quantity" />
+          </div>
+
+          <div class="field">
+            <label class="field__label">Date</label>
+            <input class="field__input" type="datetime-local" formControlName="date" />
+          </div>
+
+          <div class="field">
+            <label class="field__label">Raison</label>
+            <input class="field__input" type="text" formControlName="reason" placeholder="Ex: Achat, casse, correction..." />
+          </div>
+        </div>
+
+        <div class="form__actions">
+          <button class="btn btn--primary" type="submit" [disabled]="isTransactionSubmitting">
+            {{ isTransactionSubmitting ? 'Ajout...' : 'Ajouter transaction' }}
+          </button>
+          <button class="btn btn--ghost" type="button" (click)="closeTransactions()">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="card">
     <div class="feedback" *ngIf="submitSuccess">{{ submitSuccess }}</div>
     <div class="feedback feedback--error" *ngIf="submitError">{{ submitError }}</div>
@@ -110,15 +173,12 @@
     <div class="thead">
       <div>SKU</div>
       <div>Article</div>
-      <div>Catégorie</div>
+      <div>Categorie / Etat</div>
       <div>Image</div>
-      <div>Qte</div>
       <div>Dispo</div>
       <div>Total</div>
       <div>Min</div>
       <div>Cout</div>
-      <div>Maj</div>
-      <div>État</div>
       <div>Actions</div>
     </div>
 
@@ -130,19 +190,13 @@
         <img *ngIf="i.imageUrl" [src]="i.imageUrl" alt="image" class="resource-image" />
         <span *ngIf="!i.imageUrl" class="muted">-</span>
       </div>
-      <div class="muted">{{ i.quantity }}</div>
       <div class="muted">{{ i.availableQuantity }}</div>
       <div class="muted">{{ i.quantityTotal }}</div>
       <div class="muted">{{ i.min }}</div>
       <div class="muted">{{ i.unitCost }}</div>
-      <div class="muted">{{ i.lastUpdated ? (i.lastUpdated | date:'short') : '-' }}</div>
-      <div>
-        <span class="pill" [class.pill--danger]="isLowStock(i)">
-          {{ isLowStock(i) ? 'LOW' : 'OK' }}
-        </span>
-      </div>
       <div class="item__actions">
         <button class="btn btn--small" type="button" (click)="editResource(i)">Modifier</button>
+        <button class="btn btn--small" type="button" (click)="openTransactions(i)">Transactions</button>
         <button class="btn btn--small btn--danger" type="button" [disabled]="isDeleting" (click)="deleteResource(i)">
           {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
         </button>

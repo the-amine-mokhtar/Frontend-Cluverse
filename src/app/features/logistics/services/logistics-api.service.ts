@@ -22,6 +22,7 @@ export interface ResourceItem {
   lastUpdated: string;
   lowStockThreshold: number;
   notes: string;
+  clubId?: number;
 }
 
 export interface ResourceCreatePayload {
@@ -55,23 +56,13 @@ export interface TransportItem {
 }
 
 export interface TransportCreatePayload {
-  capacity: number;
-  arrivalTime?: string | null;
-  clubId?: number | null;
-  departureTime?: string | null;
-  eventId?: number | null;
-  departure?: string | null;
-  destination?: string | null;
-  driverName?: string | null;
-  driverPhone?: string | null;
-  notes?: string | null;
-  vehicleType?: string | null;
   scheduledDate: string;
-  arrivalLocationId?: number | null;
-  departureLocationId?: number | null;
+  arrivalLocationId: number;
+  departureLocationId: number;
   status: TransportStatus;
-  userId?: number | null;
-  vehicleId?: number | null;
+  userId: number;
+  vehicleId: number;
+  eventId?: number | null;
 }
 
 export interface VehicleItem {
@@ -108,6 +99,8 @@ export interface LocationItem {
   id: number;
   name?: string;
   address?: string;
+  latitude?: string;
+  longitude?: string;
 }
 
 export interface ReservationCreatePayload {
@@ -121,11 +114,104 @@ export interface ReservationCreatePayload {
   userId: number;
 }
 
+export interface InventoryTransactionItem {
+  id: number;
+  type: InventoryTransactionType;
+  quantity: number;
+  date: string;
+  reason: string;
+}
+
+export interface InventoryTransactionCreatePayload {
+  type: InventoryTransactionType;
+  quantity: number;
+  date: string;
+  reason: string;
+  resourceId: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class LogisticsApiService {
   private readonly baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
+
+  private normalizeBackendDateTime(value: unknown): string {
+    if (!value) {
+      return '';
+    }
+
+    const text = String(value).trim();
+    if (!text) {
+      return '';
+    }
+
+    // Common backend format: "YYYY-MM-DD HH:MM:SS.ffffff" -> ISO-like
+    // Keep it timezone-agnostic (local) to avoid unexpected shifts.
+    const hasSpaceSeparator = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(text);
+    if (!hasSpaceSeparator) {
+      return text;
+    }
+
+    // Trim microseconds to milliseconds if needed.
+    const parts = text.split(' ');
+    const datePart = parts[0];
+    const timePart = parts.slice(1).join(' ');
+    const match = timePart.match(/^(\d{2}:\d{2}:\d{2})(\.(\d+))?$/);
+    if (!match) {
+      return `${datePart}T${timePart}`;
+    }
+
+    const base = match[1];
+    const fraction = match[3] ?? '';
+    const ms = fraction ? fraction.padEnd(3, '0').slice(0, 3) : '';
+    return ms ? `${datePart}T${base}.${ms}` : `${datePart}T${base}`;
+  }
+
+  private normalizeResourceItem(raw: any): ResourceItem {
+    const id = Number(raw?.id ?? 0);
+    const name = String(raw?.name ?? '').trim();
+    const description = String(raw?.description ?? '').trim();
+    const notes = String(raw?.notes ?? '').trim();
+    const status = String(raw?.status ?? raw?.category ?? 'AVAILABLE') as ResourceStatus;
+
+    const unitCost = Number(raw?.unitCost ?? raw?.unit_cost ?? 0);
+    const quantityTotal = Number(raw?.quantityTotal ?? raw?.quantity_total ?? raw?.quantity ?? 0);
+    const availableQuantity = Number(raw?.availableQuantity ?? raw?.available_quantity ?? raw?.quantity ?? 0);
+    const quantity = Number(raw?.quantity ?? quantityTotal ?? availableQuantity ?? 0);
+
+    const lowStockThreshold = Number(raw?.lowStockThreshold ?? raw?.low_stock_threshold ?? 0);
+    const imageUrlValue = raw?.imageUrl ?? raw?.image_url;
+    const imageUrl = imageUrlValue ? String(imageUrlValue).trim() : '';
+    const lastUpdated = this.normalizeBackendDateTime(raw?.lastUpdated ?? raw?.last_updated);
+    const clubId = Number(raw?.clubId ?? raw?.club_id ?? raw?.club?.id ?? 0) || undefined;
+
+    return {
+      id,
+      name,
+      description,
+      unitCost,
+      status,
+      imageUrl,
+      quantity,
+      quantityTotal,
+      availableQuantity,
+      lastUpdated,
+      lowStockThreshold,
+      notes,
+      clubId
+    };
+  }
+
+  private normalizeInventoryTransactionItem(raw: any): InventoryTransactionItem {
+    const id = Number(raw?.id ?? 0);
+    const type = String(raw?.type ?? 'UPDATE') as InventoryTransactionType;
+    const quantity = Number(raw?.quantity ?? 0);
+    const date = this.normalizeBackendDateTime(raw?.date);
+    const reason = String(raw?.reason ?? '').trim();
+
+    return { id, type, quantity, date, reason };
+  }
 
   private authHeaders(): HttpHeaders {
     const token = localStorage.getItem('token') ?? '';
@@ -222,10 +308,10 @@ export class LogisticsApiService {
   }
 
   getResources(): Observable<ResourceItem[]> {
-    return this.getArrayWithFallback<ResourceItem>(
+    return this.getArrayWithFallback<any>(
       ['/api/resources', '/api/logistics/resources'],
       ['resources']
-    );
+    ).pipe(map((items) => items.map((i) => this.normalizeResourceItem(i))));
   }
 
   createResource(payload: ResourceCreatePayload): Observable<ResourceItem> {
@@ -287,10 +373,10 @@ export class LogisticsApiService {
       }
     ];
 
-    return this.postWithPayloadVariants<ResourceItem>(
+    return this.postWithPayloadVariants<any>(
       variants,
       ['/api/resources', '/api/logistics/resources']
-    );
+    ).pipe(map((created) => this.normalizeResourceItem(created)));
   }
 
   updateResource(id: number, payload: ResourceCreatePayload): Observable<ResourceItem> {
@@ -339,11 +425,11 @@ export class LogisticsApiService {
       payload
     ];
 
-    return this.putWithPayloadVariants<ResourceItem>(
+    return this.putWithPayloadVariants<any>(
       id,
       variants,
       ['/api/resources', '/api/logistics/resources']
-    );
+    ).pipe(map((updated) => this.normalizeResourceItem(updated)));
   }
 
   deleteResource(id: number): Observable<void> {
@@ -366,7 +452,8 @@ export class LogisticsApiService {
       responseType: 'text'
     }).pipe(
       catchError((error) => {
-        if ((error as any)?.status === 404) {
+        const status = Number((error as any)?.status ?? 0);
+        if (status === 404 || status === 405) {
           return this.http.post(`${this.baseUrl}/api/logistics/resources/upload-image`, formData, {
             headers,
             responseType: 'text'
@@ -391,6 +478,32 @@ export class LogisticsApiService {
     );
   }
 
+  getInventoryTransactionsByResource(resourceId: number): Observable<InventoryTransactionItem[]> {
+    return this.getArrayWithFallback<any>(
+      [`/api/inventory-transactions/resource/${resourceId}`, `/api/logistics/inventory-transactions/resource/${resourceId}`],
+      ['inventoryTransactions', 'transactions']
+    ).pipe(map((items) => items.map((i) => this.normalizeInventoryTransactionItem(i))));
+  }
+
+  createInventoryTransaction(payload: InventoryTransactionCreatePayload): Observable<InventoryTransactionItem> {
+    const resourceId = Number((payload as any).resourceId ?? (payload as any).resource_id ?? 0);
+    const quantity = Number((payload as any).quantity ?? 0);
+    const type = (payload as any).type ?? 'UPDATE';
+    const date = (payload as any).date ?? null;
+    const reason = (payload as any).reason ?? '';
+
+    const variants: unknown[] = [
+      { type, quantity, date, reason, resourceId },
+      { type, quantity, date, reason, resource_id: resourceId },
+      payload
+    ];
+
+    return this.postWithPayloadVariants<any>(
+      variants,
+      ['/api/inventory-transactions', '/api/logistics/inventory-transactions']
+    ).pipe(map((created) => this.normalizeInventoryTransactionItem(created)));
+  }
+
   getTransports(): Observable<TransportItem[]> {
     return this.getArrayWithFallback<TransportItem>(
       ['/api/transports', '/api/logistics/transports'],
@@ -413,57 +526,28 @@ export class LogisticsApiService {
 
   createTransport(payload: TransportCreatePayload): Observable<TransportItem> {
     const variants: unknown[] = [
-      // Variante 1: Snake_case complet (priorité haute - inclut tous les champs optionnels)
+      // Variante 1: CamelCase (TransportRequest backend)
       {
-        capacity: payload.capacity,
-        arrival_time: payload.arrivalTime ?? null,
-        club_id: payload.clubId ?? null,
-        departure_time: payload.departureTime ?? null,
-        event_id: payload.eventId ?? null,
-        departure: payload.departure ?? null,
-        destination: payload.destination ?? null,
-        driver_name: payload.driverName ?? null,
-        driver_phone: payload.driverPhone ?? null,
-        notes: payload.notes ?? null,
-        vehicle_type: payload.vehicleType ?? null,
-        scheduled_date: payload.scheduledDate,
-        arrival_location_id: payload.arrivalLocationId,
-        departure_location_id: payload.departureLocationId,
-        status: payload.status,
-        user_id: payload.userId,
-        vehicle_id: payload.vehicleId
-      },
-      // Variante 2: CamelCase complet (fallback si snake_case échoue)
-      {
-        capacity: payload.capacity,
-        arrivalTime: payload.arrivalTime ?? null,
-        clubId: payload.clubId ?? null,
-        departureTime: payload.departureTime ?? null,
-        eventId: payload.eventId ?? null,
-        departure: payload.departure ?? null,
-        destination: payload.destination ?? null,
-        driverName: payload.driverName ?? null,
-        driverPhone: payload.driverPhone ?? null,
-        notes: payload.notes ?? null,
-        vehicleType: payload.vehicleType ?? null,
         scheduledDate: payload.scheduledDate,
         arrivalLocationId: payload.arrivalLocationId,
         departureLocationId: payload.departureLocationId,
         status: payload.status,
         userId: payload.userId,
-        vehicleId: payload.vehicleId
+        vehicleId: payload.vehicleId,
+        eventId: payload.eventId ?? null
+      },
+      // Variante 2: Snake_case (fallback)
+      {
+        scheduled_date: payload.scheduledDate,
+        arrival_location_id: payload.arrivalLocationId,
+        departure_location_id: payload.departureLocationId,
+        status: payload.status,
+        user_id: payload.userId,
+        vehicle_id: payload.vehicleId,
+        event_id: payload.eventId ?? null
       },
       // Variante 3: Payload brut (fallback si formats ci-dessus échouent)
-      payload,
-      // Variante 4: Minimaliste (dernière chance - contient seulement champs obligatoires)
-      {
-        scheduledDate: payload.scheduledDate,
-        departureLocationId: payload.departureLocationId,
-        arrivalLocationId: payload.arrivalLocationId,
-        status: payload.status,
-        vehicleId: payload.vehicleId,
-        userId: payload.userId
-      }
+      payload
     ];
 
     return this.postWithPayloadVariants<TransportItem>(
@@ -485,7 +569,7 @@ export class LogisticsApiService {
     return this.http.put<T>(`${this.baseUrl}${currentEndpoint}/${id}`, currentPayload, { headers }).pipe(
       catchError((error) => {
         const status = Number((error as any)?.status ?? 0);
-        const canFallback = status === 0 || status === 404;
+        const canFallback = status === 0 || status === 404 || status === 400 || status === 415 || status === 422;
         
         if (restPayloads.length > 0 && canFallback) {
           return this.putWithPayloadVariants<T>(id, restPayloads, endpoints);
@@ -502,45 +586,25 @@ export class LogisticsApiService {
 
   updateTransport(id: number, payload: TransportCreatePayload): Observable<TransportItem> {
     const variants: unknown[] = [
-      // Variante 1: Snake_case complet (priorité haute)
+      // Variante 1: CamelCase (TransportRequest backend)
       {
-        capacity: payload.capacity,
-        arrival_time: payload.arrivalTime ?? null,
-        club_id: payload.clubId ?? null,
-        departure_time: payload.departureTime ?? null,
-        event_id: payload.eventId ?? null,
-        departure: payload.departure ?? null,
-        destination: payload.destination ?? null,
-        driver_name: payload.driverName ?? null,
-        driver_phone: payload.driverPhone ?? null,
-        notes: payload.notes ?? null,
-        vehicle_type: payload.vehicleType ?? null,
-        scheduled_date: payload.scheduledDate,
-        arrival_location_id: payload.arrivalLocationId,
-        departure_location_id: payload.departureLocationId,
-        status: payload.status,
-        user_id: payload.userId,
-        vehicle_id: payload.vehicleId
-      },
-      // Variante 2: CamelCase complet
-      {
-        capacity: payload.capacity,
-        arrivalTime: payload.arrivalTime ?? null,
-        clubId: payload.clubId ?? null,
-        departureTime: payload.departureTime ?? null,
-        eventId: payload.eventId ?? null,
-        departure: payload.departure ?? null,
-        destination: payload.destination ?? null,
-        driverName: payload.driverName ?? null,
-        driverPhone: payload.driverPhone ?? null,
-        notes: payload.notes ?? null,
-        vehicleType: payload.vehicleType ?? null,
         scheduledDate: payload.scheduledDate,
         arrivalLocationId: payload.arrivalLocationId,
         departureLocationId: payload.departureLocationId,
         status: payload.status,
         userId: payload.userId,
-        vehicleId: payload.vehicleId
+        vehicleId: payload.vehicleId,
+        eventId: payload.eventId ?? null
+      },
+      // Variante 2: Snake_case (fallback)
+      {
+        scheduled_date: payload.scheduledDate,
+        arrival_location_id: payload.arrivalLocationId,
+        departure_location_id: payload.departureLocationId,
+        status: payload.status,
+        user_id: payload.userId,
+        vehicle_id: payload.vehicleId,
+        event_id: payload.eventId ?? null
       },
       // Variante 3: Payload brut
       payload

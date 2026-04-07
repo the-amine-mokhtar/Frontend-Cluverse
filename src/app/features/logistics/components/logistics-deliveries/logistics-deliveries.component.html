@@ -31,47 +31,21 @@
         </label>
 
         <label class="field">
-          <span>departure_time</span>
-          <input class="input" type="datetime-local" formControlName="departureTime" />
-        </label>
-
-        <label class="field">
-          <span>arrival_time</span>
-          <input class="input" type="datetime-local" formControlName="arrivalTime" />
-        </label>
-
-        <label class="field">
-          <span>capacity</span>
-          <input class="input" type="number" min="1" formControlName="capacity" />
-        </label>
-
-        <label class="field">
           <span>status</span>
           <select class="input" formControlName="status">
             <option value="PLANNED">PLANNED</option>
             <option value="IN_PROGRESS">IN_PROGRESS</option>
             <option value="COMPLETED">COMPLETED</option>
-            <option value="CANCELLED">CANCELLED</option>
             <option value="CANCELED">CANCELED</option>
           </select>
         </label>
 
         <label class="field">
-          <span>club_id (optionnel)</span>
-          <select class="input" formControlName="clubId">
-            <option [ngValue]="null">Aucun</option>
-            <option *ngFor="let club of clubs; trackBy: trackById" [ngValue]="club.id">
-              {{ clubLabel(club) }}
-            </option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span>event_id (optionnel)</span>
+          <span>event_id</span>
           <select class="input" formControlName="eventId">
-            <option [ngValue]="null">Aucun</option>
+            <option [ngValue]="null">Aucun event</option>
             <option *ngFor="let event of events; trackBy: trackById" [ngValue]="event.id">
-              {{ eventLabel(event) }}
+              {{ event.title || event.name || ('Event #' + event.id) }}
             </option>
           </select>
         </label>
@@ -79,16 +53,6 @@
 
       <div class="form__section">
         <div class="form__section-title">Trajet</div>
-
-        <label class="field">
-          <span>departure</span>
-          <input class="input" type="text" formControlName="departure" placeholder="Texte libre (optionnel)" />
-        </label>
-
-        <label class="field">
-          <span>destination</span>
-          <input class="input" type="text" formControlName="destination" placeholder="Texte libre (optionnel)" />
-        </label>
 
         <label class="field">
           <span>departure_location_id</span>
@@ -117,45 +81,21 @@
         <label class="field">
           <span>vehicle_id</span>
           <select class="input" formControlName="vehicleId">
-            <option [ngValue]="null" disabled>Selectionner un vehicule</option>
-            <option *ngFor="let vehicle of vehicles; trackBy: trackById" [ngValue]="vehicle.id">
+            <option value="" disabled>Selectionner un vehicule</option>
+            <option *ngFor="let vehicle of vehicles; trackBy: trackById" [value]="vehicle.id">
               {{ vehicle.model || 'Vehicule' }} ({{ vehicle.plateNumber || ('ID ' + vehicle.id) }})
             </option>
           </select>
         </label>
 
         <label class="field">
-          <span>vehicle_type</span>
-          <input class="input" type="text" formControlName="vehicleType" placeholder="Ex: Minibus" />
-        </label>
-
-        <label class="field">
           <span>user_id</span>
           <select class="input" formControlName="userId">
-            <option [ngValue]="null" disabled>Selectionner un utilisateur</option>
-            <option *ngFor="let user of users; trackBy: trackById" [ngValue]="user.id">
+            <option value="" disabled>Selectionner un utilisateur</option>
+            <option *ngFor="let user of users; trackBy: trackById" [value]="user.id">
               {{ user.fullName || user.email || ('Utilisateur #' + user.id) }}
             </option>
           </select>
-        </label>
-
-        <label class="field">
-          <span>driver_name</span>
-          <input class="input" type="text" formControlName="driverName" placeholder="Nom du chauffeur" />
-        </label>
-
-        <label class="field">
-          <span>driver_phone</span>
-          <input class="input" type="text" formControlName="driverPhone" placeholder="Telephone" />
-        </label>
-      </div>
-
-      <div class="form__section form__section--full">
-        <div class="form__section-title">Notes</div>
-
-        <label class="field field--full">
-          <span>notes</span>
-          <textarea class="input input--textarea" rows="3" formControlName="notes" placeholder="Informations complementaires"></textarea>
         </label>
       </div>
 
@@ -194,10 +134,15 @@
             <div class="code">{{ d.code }}</div>
           </div>
 
-          <div class="meta-grid" *ngIf="d.hasDetails; else minimalDeliveryInfo">
+          <div class="meta-grid">
             <div class="meta-grid__cell">
               <span class="meta-grid__label">Date planifiee</span>
               <span class="meta-grid__value">{{ d.when }}</span>
+            </div>
+
+            <div class="meta-grid__cell">
+              <span class="meta-grid__label">Statut</span>
+              <span class="meta-grid__value">{{ d.statusLabel }}</span>
             </div>
 
             <div class="meta-grid__cell">
@@ -211,27 +156,10 @@
             </div>
 
             <div class="meta-grid__cell">
-              <span class="meta-grid__label">Chauffeur / Assigne</span>
-              <span class="meta-grid__value">{{ d.driver }}</span>
-            </div>
-
-            <div class="meta-grid__cell">
-              <span class="meta-grid__label">Vehicule</span>
-              <span class="meta-grid__value">{{ d.vehicle }}</span>
+              <span class="meta-grid__label">Event</span>
+              <span class="meta-grid__value">{{ d.eventTitle }}</span>
             </div>
           </div>
-
-          <div class="notes" *ngIf="d.notes !== 'Non renseigne'">
-            <span class="notes__label">Notes:</span> {{ d.notes }}
-          </div>
-
-          <ng-template #minimalDeliveryInfo>
-            <div class="minimal">
-              <div class="minimal__line"><span class="minimal__label">Date planifiee:</span> {{ d.when }}</div>
-              <div class="minimal__line"><span class="minimal__label">Statut:</span> {{ d.statusLabel }}</div>
-              <div class="minimal__line">Les details de trajet seront affiches ici des qu'ils seront disponibles.</div>
-            </div>
-          </ng-template>
         </div>
         <div class="item__actions">
           <button class="btn btn--ghost btn--small" type="button" (click)="editTransport(d.id)" [disabled]="isDeleting">Modifier</button>
