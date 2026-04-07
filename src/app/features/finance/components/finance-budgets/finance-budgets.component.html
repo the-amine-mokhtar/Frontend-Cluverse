@@ -19,8 +19,11 @@
       </label>
 
       <label class="field">
-        <span>Event ID (Optional)</span>
-        <input type="number" min="1" placeholder="Leave empty for club-wide budget" [(ngModel)]="createBudgetModel.eventId" />
+        <span>Event (Optional)</span>
+        <select [(ngModel)]="createBudgetModel.eventId">
+          <option [ngValue]="null">Club-wide budget</option>
+          <option *ngFor="let event of clubEvents" [ngValue]="event.id">{{ event.title }}</option>
+        </select>
       </label>
 
       <label class="field field--full">
@@ -80,6 +83,11 @@
       <div class="budget-card__row">
         <span>Year</span>
         <strong>{{ item.year }}</strong>
+      </div>
+
+      <div class="budget-card__row">
+        <span>Type</span>
+        <strong>{{ item.budgetType }}</strong>
       </div>
 
       <div class="budget-card__actions">

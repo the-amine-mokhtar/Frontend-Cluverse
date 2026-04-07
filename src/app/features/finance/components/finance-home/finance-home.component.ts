@@ -18,6 +18,16 @@ interface BudgetItem {
   total: number;
 }
 
+type AlertLevel = 'warning' | 'critical' | 'limit';
+
+interface BudgetUtilizationAlert {
+  title: string;
+  department: string;
+  utilization: number;
+  reachedThreshold: 70 | 90 | 100;
+  level: AlertLevel;
+}
+
 type TransactionType = 'income' | 'expense';
 type TransactionFilter = 'all' | TransactionType;
 type BudgetFilter = 'all' | 'healthy' | 'warning' | 'critical';
@@ -79,8 +89,10 @@ export class FinanceHomeComponent implements OnInit {
   budgetFilter: BudgetFilter = 'all';
   transactionSearchTerm = '';
   transactionFilter: TransactionFilter = 'all';
+  showBudgetAlertPopup = false;
   isLoading = false;
   errorMessage = '';
+  private dismissedBudgetAlertKeys = new Set<string>();
 
   constructor(
     private readonly financeService: FinanceService,
@@ -145,6 +157,50 @@ export class FinanceHomeComponent implements OnInit {
       }
       return true;
     });
+  }
+
+  get budgetUtilizationAlerts(): BudgetUtilizationAlert[] {
+    return this.budgetItems
+      .map((item) => {
+        const utilization = this.utilization(item);
+        if (utilization < 70) {
+          return null;
+        }
+
+        if (utilization >= 100) {
+          return {
+            title: item.title,
+            department: item.department,
+            utilization,
+            reachedThreshold: 100,
+            level: 'limit' as const
+          };
+        }
+
+        if (utilization >= 90) {
+          return {
+            title: item.title,
+            department: item.department,
+            utilization,
+            reachedThreshold: 90,
+            level: 'critical' as const
+          };
+        }
+
+        return {
+          title: item.title,
+          department: item.department,
+          utilization,
+          reachedThreshold: 70,
+          level: 'warning' as const
+        };
+      })
+      .filter((alert): alert is BudgetUtilizationAlert => alert !== null)
+      .sort((a, b) => b.utilization - a.utilization);
+  }
+
+  get popupBudgetUtilizationAlerts(): BudgetUtilizationAlert[] {
+    return this.budgetUtilizationAlerts.filter((alert) => !this.dismissedBudgetAlertKeys.has(this.getAlertKey(alert)));
   }
 
   get filteredRecentTransactions(): TransactionItem[] {
@@ -408,6 +464,17 @@ export class FinanceHomeComponent implements OnInit {
 
   cancelInvoicePanel(): void {
     this.showInvoicePanel = false;
+  }
+
+  closeBudgetAlertPopup(): void {
+    this.showBudgetAlertPopup = false;
+  }
+
+  dismissBudgetAlert(alert: BudgetUtilizationAlert): void {
+    this.dismissedBudgetAlertKeys.add(this.getAlertKey(alert));
+    if (this.popupBudgetUtilizationAlerts.length === 0) {
+      this.showBudgetAlertPopup = false;
+    }
   }
 
   get sponsorOptions(): SponsorDto[] {
@@ -747,6 +814,13 @@ export class FinanceHomeComponent implements OnInit {
     this.budgetItems = this.allBudgets
       .filter((budget) => this.normalizeYear(budget.year) === this.selectedExerciseYear)
       .map((budget) => this.toBudgetItem(budget, exerciseTransactions));
+
+    this.dismissedBudgetAlertKeys.clear();
+    this.showBudgetAlertPopup = this.budgetUtilizationAlerts.length > 0;
+  }
+
+  private getAlertKey(alert: BudgetUtilizationAlert): string {
+    return `${alert.title}|${alert.department}|${alert.reachedThreshold}`;
   }
 
   private get exerciseTransactions(): TransactionDto[] {
@@ -758,23 +832,43 @@ export class FinanceHomeComponent implements OnInit {
 
   private toBudgetItem(budget: BudgetDto, transactions: TransactionDto[]): BudgetItem {
     const year = this.normalizeYear(budget.year);
-    const spent = transactions
-      .filter((transaction) => {
-        if (transaction.type !== 'EXPENSE') {
-          return false;
-        }
-
-        const transactionDate = new Date(transaction.date);
-        return !Number.isNaN(transactionDate.getTime()) && transactionDate.getFullYear() === year;
-      })
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
+    const eventTitle = budget.event?.title?.trim() || '';
+    const spent = this.calculateSpentForBudget(budget, transactions, year);
+    const department = eventTitle || (budget.eventId ? `Event #${budget.eventId}` : 'Club-wide');
+    const budgetLabel = eventTitle || budget.budgetType || 'Annual Budget';
 
     return {
-      title: `Annual Budget ${year}`,
-      department: 'Club-wide',
+      title: `${budgetLabel} ${year}`,
+      department,
       spent,
       total: budget.totalAllocated
     };
+  }
+
+  private calculateSpentForBudget(budget: BudgetDto, transactions: TransactionDto[], year: number): number {
+    const expenseTransactions = transactions.filter((transaction) => {
+      if (transaction.type !== 'EXPENSE') {
+        return false;
+      }
+
+      const transactionDate = new Date(transaction.date);
+      return !Number.isNaN(transactionDate.getTime()) && transactionDate.getFullYear() === year;
+    });
+
+    const eventTitle = (budget.event?.title || '').trim().toLowerCase();
+    if (!eventTitle) {
+      return expenseTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+    }
+
+    const eventExpenses = expenseTransactions.filter((transaction) =>
+      (transaction.description || '').toLowerCase().includes(eventTitle)
+    );
+
+    if (eventExpenses.length === 0) {
+      return 0;
+    }
+
+    return eventExpenses.reduce((sum, transaction) => sum + transaction.amount, 0);
   }
 
   private toTransactionItem(transaction: TransactionDto): TransactionItem {

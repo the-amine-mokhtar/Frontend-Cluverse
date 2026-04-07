@@ -11,6 +11,8 @@ export interface BudgetDto {
   year: number | string;
   totalAllocated: number;
   eventId?: number | null;
+  event?: { id?: number; title?: string } | null;
+  budgetType?: string;
   category?: BudgetCategory;
 }
 
@@ -36,6 +38,12 @@ export interface SponsorshipDto {
   endDate?: string;
   status?: string;
   sponsor?: SponsorDto;
+  club?: { id?: number };
+}
+
+export interface EventDto {
+  id: number;
+  title: string;
   club?: { id?: number };
 }
 
@@ -88,7 +96,8 @@ export class FinanceService {
     const body = {
       year: this.normalizeYear(payload.year),
       totalAllocated: payload.totalAllocated,
-      club: { id: clubId }
+      club: { id: clubId },
+      event: payload.eventId ? { id: payload.eventId } : null
     };
 
     return this.http.post<BudgetDto>(`${this.baseUrl}/api/budgets`, body, {
@@ -101,7 +110,8 @@ export class FinanceService {
     const body = {
       year: this.normalizeYear(payload.year),
       totalAllocated: payload.totalAllocated,
-      club: { id: clubId }
+      club: { id: clubId },
+      event: payload.eventId ? { id: payload.eventId } : null
     };
 
     return this.http.put<BudgetDto>(`${this.baseUrl}/api/budgets/${budgetId}`, body, {
@@ -138,6 +148,15 @@ export class FinanceService {
       params: new HttpParams().set('clubId', String(clubId))
     }).pipe(
       map((sponsorships) => sponsorships.filter((item) => this.belongsToClub(item.club?.id, clubId)))
+    );
+  }
+
+  getEvents(clubId: number): Observable<EventDto[]> {
+    return this.http.get<EventDto[]>(`${this.baseUrl}/api/events`, {
+      headers: this.authHeaders(),
+      params: new HttpParams().set('clubId', String(clubId))
+    }).pipe(
+      map((events) => events.filter((item) => this.belongsToClub(item.club?.id, clubId)))
     );
   }
 

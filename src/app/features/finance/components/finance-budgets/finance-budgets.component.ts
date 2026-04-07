@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
-import { BudgetDto, FinanceService } from '../../../../core/services/finance.service';
+import { BudgetDto, EventDto, FinanceService } from '../../../../core/services/finance.service';
 
 interface BudgetItem {
   id: number;
   year: number;
   eventId: number | null;
+  eventTitle: string | null;
   title: string;
   department: string;
+  budgetType: string;
   spent: number;
   total: number;
 }
@@ -20,6 +22,7 @@ interface BudgetItem {
 })
 export class FinanceBudgetsComponent implements OnInit {
   budgetItems: BudgetItem[] = [];
+  clubEvents: EventDto[] = [];
 
   showCreateBudgetForm = false;
   editingBudgetId: number | null = null;
@@ -43,6 +46,7 @@ export class FinanceBudgetsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadClubEvents();
     this.loadBudgets();
   }
 
@@ -179,6 +183,23 @@ export class FinanceBudgetsComponent implements OnInit {
     });
   }
 
+  private loadClubEvents(): void {
+    const clubId = this.authHelperService.getClubId();
+
+    if (!clubId) {
+      return;
+    }
+
+    this.financeService.getEvents(clubId).subscribe({
+      next: (events) => {
+        this.clubEvents = [...events].sort((a, b) => a.title.localeCompare(b.title));
+      },
+      error: () => {
+        this.clubEvents = [];
+      }
+    });
+  }
+
   private formatHttpError(error: unknown): string {
     if (!(error instanceof HttpErrorResponse)) {
       return 'Unexpected client error.';
@@ -196,16 +217,22 @@ export class FinanceBudgetsComponent implements OnInit {
     const budgetData = budget as BudgetDto & {
       total_allocated?: number;
       event_id?: number | null;
+      event?: { id?: number; title?: string } | null;
+      budgetType?: string;
     };
-    const eventId = budgetData.eventId ?? budgetData.event_id ?? null;
+    const eventId = budgetData.event?.id ?? budgetData.eventId ?? budgetData.event_id ?? null;
     const totalAllocated = budgetData.totalAllocated ?? budgetData.total_allocated ?? 0;
     const year = this.normalizeYear(budgetData.year);
+    const eventTitle = budgetData.event?.title ?? null;
+    const budgetType = budgetData.budgetType ?? eventTitle ?? (eventId ? 'EVENT' : 'GENERAL');
     return {
       id: budgetData.id,
       year,
       eventId,
+      eventTitle,
       title: `Annual Budget ${year}`,
-      department: eventId ? `Event #${eventId}` : 'Club-wide',
+      department: eventTitle ?? (eventId ? `Event #${eventId}` : 'Club-wide'),
+      budgetType,
       spent: 0,
       total: totalAllocated
     };

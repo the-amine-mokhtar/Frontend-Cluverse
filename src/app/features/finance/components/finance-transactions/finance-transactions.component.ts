@@ -223,6 +223,86 @@ export class FinanceTransactionsComponent implements OnInit {
     }).format(value);
   }
 
+  exportTransactionsToExcel(): void {
+    const transactions = this.filteredTransactions;
+
+    if (transactions.length === 0) {
+      this.errorMessage = 'No transactions to export with the current filter.';
+      return;
+    }
+
+    const clubId = this.authHelperService.getClubId();
+    const preparedBy = this.authHelperService.getFullName() || 'Club Member';
+    const generatedAt = new Date();
+    const reportDate = generatedAt.toLocaleDateString();
+    const reportTime = generatedAt.toLocaleTimeString();
+
+    const rows = transactions
+      .map((transaction) => {
+        const signedAmount = transaction.type === 'income' ? transaction.amount : -transaction.amount;
+
+        return `
+          <tr>
+            <td>${this.escapeHtml(transaction.type.toUpperCase())}</td>
+            <td>${this.escapeHtml(transaction.description)}</td>
+            <td>${this.escapeHtml(transaction.date)}</td>
+            <td style="mso-number-format:'0.00'">${signedAmount.toFixed(2)}</td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    const totalNet = transactions.reduce((sum, transaction) => {
+      return sum + (transaction.type === 'income' ? transaction.amount : -transaction.amount);
+    }, 0);
+
+    const htmlWorkbook = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="utf-8" />
+          <style>
+            body { font-family: Segoe UI, Arial, sans-serif; color: #111827; }
+            .meta { margin-bottom: 16px; }
+            .meta h2 { margin: 0 0 6px; color: #0f172a; }
+            .meta p { margin: 0; font-size: 12px; color: #4b5563; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 12px; }
+            th { background: #e2e8f0; text-align: left; }
+            .total { margin-top: 12px; font-weight: 700; }
+          </style>
+        </head>
+        <body>
+          <div class="meta">
+            <h2>Transactions Export - Club #${clubId}</h2>
+            <p>Prepared by: ${this.escapeHtml(preparedBy)}</p>
+            <p>Generated on: ${this.escapeHtml(reportDate)} ${this.escapeHtml(reportTime)}</p>
+            <p>Filter: ${this.escapeHtml(this.activeFilter.toUpperCase())} | Search: ${this.escapeHtml(this.searchTerm || 'None')}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Amount (USD)</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="total">Net Total (USD): ${totalNet.toFixed(2)}</div>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlWorkbook], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const downloadLink = document.createElement('a');
+    const safeDate = generatedAt.toISOString().slice(0, 10);
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = `club-${clubId}-transactions-${safeDate}.xls`;
+    downloadLink.click();
+    URL.revokeObjectURL(downloadLink.href);
+  }
+
   private toTransactionItem(transaction: TransactionDto): TransactionItem {
     return {
       id: transaction.id,
@@ -270,5 +350,14 @@ export class FinanceTransactionsComponent implements OnInit {
 
   private getTodayDate(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }

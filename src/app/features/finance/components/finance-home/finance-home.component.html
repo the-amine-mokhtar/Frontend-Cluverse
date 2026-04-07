@@ -8,7 +8,6 @@
     <div class="finance-page__actions">
       <button type="button" class="btn btn--secondary" (click)="openInvoicePanel()">Facture Sponsor</button>
       <button type="button" class="btn btn--secondary" (click)="openExportCustomization()">Exporter Rapport</button>
-      <button type="button" class="btn btn--primary" routerLink="/dashboard/finance/transactions">Add Transaction</button>
     </div>
   </header>
 
@@ -27,6 +26,27 @@
       (ngModelChange)="onExerciseYearChange($event)">
       <option *ngFor="let year of availableExerciseYears" [ngValue]="year">{{ year }}</option>
     </select>
+  </section>
+
+  <section class="alert-popup" *ngIf="showBudgetAlertPopup && popupBudgetUtilizationAlerts.length > 0" aria-live="polite">
+    <header class="alert-popup__header">
+      <h3>Budget vs Actual Alerts</h3>
+      <button type="button" class="alert-popup__close" (click)="closeBudgetAlertPopup()">Close</button>
+    </header>
+
+    <div class="budget-alerts">
+      <article class="budget-alert" *ngFor="let alert of popupBudgetUtilizationAlerts" [class.budget-alert--warning]="alert.level === 'warning'" [class.budget-alert--critical]="alert.level === 'critical'" [class.budget-alert--limit]="alert.level === 'limit'">
+        <div>
+          <h3 class="budget-alert__title">{{ alert.title }}</h3>
+          <p class="budget-alert__meta">{{ alert.department }}</p>
+        </div>
+        <div class="budget-alert__right">
+          <span class="budget-alert__badge">{{ alert.reachedThreshold }}% Alert</span>
+          <strong>{{ alert.utilization }}% used</strong>
+          <button type="button" class="budget-alert__dismiss" (click)="dismissBudgetAlert(alert)">Dismiss</button>
+        </div>
+      </article>
+    </div>
   </section>
 
   <section class="branding-panel" *ngIf="showBrandingPanel">

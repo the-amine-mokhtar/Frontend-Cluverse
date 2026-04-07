@@ -6,6 +6,7 @@
     </div>
 
     <div class="finance-page__actions">
+      <button type="button" class="btn btn--secondary" (click)="exportTransactionsToExcel()">Export Excel</button>
       <button type="button" class="btn btn--primary" (click)="openCreateTransactionForm()">Add Transaction</button>
     </div>
   </header>
@@ -34,7 +35,7 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Amount (USD)</span>
+        <span class="field__label">Amount (TND)</span>
         <input class="field__control" type="number" min="1" placeholder="0" [(ngModel)]="newTransaction.amount" name="transactionAmount" />
       </label>
 
