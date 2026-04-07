@@ -37,6 +37,37 @@ export interface UpdateSponsorRequest {
   tokenExpiresAt?: string | null;
 }
 
+export type SponsorEmailDirection = 'OUTBOUND' | 'REPLY' | 'INBOUND';
+
+export interface SponsorEmailAttachment {
+  id: number;
+  originalFileName: string;
+  contentType: string;
+  sizeBytes: number;
+  fileUrl: string;
+}
+
+export interface SponsorEmail {
+  id: number;
+  subject: string;
+  body: string;
+  sentAt: string;
+  direction: SponsorEmailDirection;
+  inReplyToId?: number | null;
+  pinned?: boolean;
+  fromAddress?: string | null;
+  toAddress?: string | null;
+  externalMessageId?: string | null;
+  threadId?: string | null;
+  inReplyToMessageId?: string | null;
+  attachments?: SponsorEmailAttachment[];
+}
+
+export interface SendSponsorEmailRequest {
+  subject: string;
+  body: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -65,5 +96,49 @@ export class SponsorService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<Sponsor>(`${this.baseUrl}/${id}/logo`, formData);
+  }
+
+  getEmails(sponsorId: number): Observable<SponsorEmail[]> {
+    return this.http.get<SponsorEmail[]>(`${this.baseUrl}/${sponsorId}/emails`);
+  }
+
+  getEmail(sponsorId: number, emailId: number): Observable<SponsorEmail> {
+    return this.http.get<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}`);
+  }
+
+  sendEmail(sponsorId: number, payload: SendSponsorEmailRequest): Observable<SponsorEmail> {
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails`, payload);
+  }
+
+  sendEmailWithFiles(sponsorId: number, payload: SendSponsorEmailRequest, files: File[]): Observable<SponsorEmail> {
+    const formData = new FormData();
+    formData.append('subject', payload.subject);
+    formData.append('body', payload.body);
+    files.forEach(file => formData.append('files', file));
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/with-files`, formData);
+  }
+
+  replyEmail(sponsorId: number, emailId: number, payload: SendSponsorEmailRequest): Observable<SponsorEmail> {
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/reply`, payload);
+  }
+
+  replyEmailWithFiles(sponsorId: number, emailId: number, payload: SendSponsorEmailRequest, files: File[]): Observable<SponsorEmail> {
+    const formData = new FormData();
+    formData.append('subject', payload.subject);
+    formData.append('body', payload.body);
+    files.forEach(file => formData.append('files', file));
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/reply-with-files`, formData);
+  }
+
+  pinEmail(sponsorId: number, emailId: number): Observable<SponsorEmail> {
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/pin`, {});
+  }
+
+  unpinEmail(sponsorId: number, emailId: number): Observable<SponsorEmail> {
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/unpin`, {});
+  }
+
+  syncInboundEmails(): Observable<SponsorEmail[]> {
+    return this.http.post<SponsorEmail[]>(`${this.baseUrl}/emails/sync-inbound`, {});
   }
 }

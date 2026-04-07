@@ -1,6 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { SponsorService, Sponsor, CreateSponsorRequest, UpdateSponsorRequest } from '../../../../core/services/sponsor.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import {
+  SponsorService,
+  Sponsor,
+  CreateSponsorRequest,
+  UpdateSponsorRequest,
+  SponsorEmail,
+  SendSponsorEmailRequest,
+  SponsorEmailAttachment
+} from '../../../../core/services/sponsor.service';
+import { SponsorFileUtilsService } from '../../../../core/services/sponsor-file-utils.service';
 
 interface CountryCodeOption {
   code: string;
@@ -50,6 +60,33 @@ export class SponsorshipHomeComponent implements OnInit {
   toastVisible = false;
   private toastTimer?: ReturnType<typeof setTimeout>;
 
+  activeActionMenuSponsorId: number | null = null;
+
+  showEmailsModal = false;
+  emailsLoading = false;
+  emailsSyncing = false;
+  emailsSubmitting = false;
+  emailsError = '';
+  selectedEmailSponsor: Sponsor | null = null;
+  sponsorEmails: SponsorEmail[] = [];
+  selectedEmail: SponsorEmail | null = null;
+  showReplyBox = false;
+  replyBody = '';
+  replyFiles: File[] = [];
+  emailTab: 'LIST' | 'COMPOSE' = 'LIST';
+  composeForm: SendSponsorEmailRequest = {
+    subject: '',
+    body: ''
+  };
+  composeFiles: File[] = [];
+
+  showAttachmentViewer = false;
+  viewerAttachments: SponsorEmailAttachment[] = [];
+  viewerIndex = 0;
+  viewerZoom = 1;
+  viewerTextContent = '';
+  viewerTextLoading = false;
+
   addCountryCode = '+216';
   addPhoneDigits = '';
 
@@ -86,7 +123,11 @@ export class SponsorshipHomeComponent implements OnInit {
     phone: ''
   };
 
-  constructor(private sponsorService: SponsorService) {}
+  constructor(
+    private sponsorService: SponsorService,
+    private sponsorFileUtils: SponsorFileUtilsService,
+    private sanitizer: DomSanitizer
+  ) {}
 
   ngOnInit(): void {
     this.loadSponsors();
@@ -209,6 +250,14 @@ export class SponsorshipHomeComponent implements OnInit {
 
   get totalPages(): number {
     return Math.max(1, Math.ceil(this.filteredSponsors.length / this.pageSize));
+  }
+
+  get pinnedEmails(): SponsorEmail[] {
+    return this.sponsorEmails.filter(email => !!email.pinned);
+  }
+
+  get unpinnedEmails(): SponsorEmail[] {
+    return this.sponsorEmails.filter(email => !email.pinned);
   }
 
   get filteredSponsors(): Sponsor[] {
@@ -384,8 +433,347 @@ export class SponsorshipHomeComponent implements OnInit {
     });
   }
 
-  onExtraAction(sponsor: Sponsor): void {
-    this.showToast(`Extra action for ${sponsor.name} is reserved for next step.`, 'info');
+  toggleActionMenu(sponsor: Sponsor): void {
+    if (!sponsor.id) {
+      return;
+    }
+    this.activeActionMenuSponsorId = this.activeActionMenuSponsorId === sponsor.id ? null : sponsor.id;
+  }
+
+  onOpenEmails(sponsor: Sponsor): void {
+    if (!sponsor.id) {
+      return;
+    }
+
+    this.activeActionMenuSponsorId = null;
+    this.selectedEmailSponsor = sponsor;
+    this.showEmailsModal = true;
+    this.emailTab = 'LIST';
+    this.sponsorEmails = [];
+    this.selectedEmail = null;
+    this.showReplyBox = false;
+    this.replyBody = '';
+    this.replyFiles = [];
+    this.composeForm = {
+      subject: `Sponsorship Follow-up - ${sponsor.name}`,
+      body: ''
+    };
+    this.composeFiles = [];
+    this.loadSponsorEmails(sponsor.id);
+  }
+
+  onOpenHistory(sponsor: Sponsor): void {
+    if (!sponsor.id) {
+      return;
+    }
+    this.activeActionMenuSponsorId = null;
+  }
+
+  closeEmailsModal(): void {
+    this.showEmailsModal = false;
+    this.selectedEmailSponsor = null;
+    this.sponsorEmails = [];
+    this.selectedEmail = null;
+    this.showReplyBox = false;
+    this.replyBody = '';
+    this.replyFiles = [];
+    this.emailTab = 'LIST';
+    this.emailsError = '';
+    this.composeFiles = [];
+  }
+
+  setEmailTab(tab: 'LIST' | 'COMPOSE'): void {
+    this.emailTab = tab;
+    this.emailsError = '';
+    if (tab === 'COMPOSE') {
+      this.showReplyBox = false;
+    }
+  }
+
+  selectEmail(email: SponsorEmail): void {
+    this.selectedEmail = email;
+    this.showReplyBox = false;
+    this.replyBody = '';
+
+    if (!this.selectedEmailSponsor?.id) {
+      return;
+    }
+
+    this.sponsorService.getEmail(this.selectedEmailSponsor.id, email.id).subscribe({
+      next: (detailed) => {
+        this.selectedEmail = detailed;
+      },
+      error: () => {
+        this.selectedEmail = email;
+      }
+    });
+  }
+
+  openReplyBox(): void {
+    this.showReplyBox = true;
+    this.replyBody = '';
+    this.replyFiles = [];
+  }
+
+  sendComposeEmail(): void {
+    if (!this.selectedEmailSponsor?.id) {
+      return;
+    }
+
+    const subject = this.composeForm.subject.trim();
+    const body = this.composeForm.body.trim();
+    if (!subject || !body) {
+      this.emailsError = 'Subject and message are required.';
+      return;
+    }
+
+    this.emailsSubmitting = true;
+    this.emailsError = '';
+
+    const payload: SendSponsorEmailRequest = { subject, body };
+    const request$ = this.composeFiles.length > 0
+      ? this.sponsorService.sendEmailWithFiles(this.selectedEmailSponsor.id, payload, this.composeFiles)
+      : this.sponsorService.sendEmail(this.selectedEmailSponsor.id, payload);
+
+    request$.subscribe({
+      next: (created) => {
+        this.sponsorEmails = [created, ...this.sponsorEmails];
+        this.selectedEmail = created;
+        this.emailTab = 'LIST';
+        this.composeForm.body = '';
+        this.composeFiles = [];
+        this.emailsSubmitting = false;
+        this.showToast(`Email sent to ${this.selectedEmailSponsor?.name}.`, 'success');
+      },
+      error: (err: unknown) => {
+        this.emailsSubmitting = false;
+        this.emailsError = this.resolveError(err, 'Failed to send email.');
+      }
+    });
+  }
+
+  sendReply(): void {
+    if (!this.selectedEmailSponsor?.id || !this.selectedEmail?.id) {
+      return;
+    }
+
+    const body = this.replyBody.trim();
+    if (!body) {
+      this.emailsError = 'Reply message is required.';
+      return;
+    }
+
+    this.emailsSubmitting = true;
+    this.emailsError = '';
+
+    const payload: SendSponsorEmailRequest = { subject: '', body };
+    const request$ = this.replyFiles.length > 0
+      ? this.sponsorService.replyEmailWithFiles(this.selectedEmailSponsor.id, this.selectedEmail.id, payload, this.replyFiles)
+      : this.sponsorService.replyEmail(this.selectedEmailSponsor.id, this.selectedEmail.id, payload);
+
+    request$.subscribe({
+      next: (reply) => {
+        this.sponsorEmails = [reply, ...this.sponsorEmails];
+        this.selectedEmail = reply;
+        this.showReplyBox = false;
+        this.replyBody = '';
+        this.replyFiles = [];
+        this.emailsSubmitting = false;
+        this.showToast(`Reply sent to ${this.selectedEmailSponsor?.name}.`, 'success');
+      },
+      error: (err: unknown) => {
+        this.emailsSubmitting = false;
+        this.emailsError = this.resolveError(err, 'Failed to send reply.');
+      }
+    });
+  }
+
+  togglePin(email: SponsorEmail): void {
+    if (!this.selectedEmailSponsor?.id || !email?.id) {
+      return;
+    }
+
+    this.emailsSubmitting = true;
+    this.emailsError = '';
+
+    const request$ = email.pinned
+      ? this.sponsorService.unpinEmail(this.selectedEmailSponsor.id, email.id)
+      : this.sponsorService.pinEmail(this.selectedEmailSponsor.id, email.id);
+
+    request$.subscribe({
+      next: (updated) => {
+        this.sponsorEmails = this.sponsorEmails.map(item => item.id === updated.id ? updated : item);
+        this.selectedEmail = updated;
+        this.emailsSubmitting = false;
+        this.showToast(
+          updated.pinned ? 'Email pinned successfully.' : 'Email unpinned successfully.',
+          'success'
+        );
+      },
+      error: (err: unknown) => {
+        this.emailsSubmitting = false;
+        this.emailsError = this.resolveError(err, 'Failed to update pin status.');
+      }
+    });
+  }
+
+  formatEmailDate(value: string | undefined): string {
+    if (!value) {
+      return '--';
+    }
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  }
+
+  onComposeFilesSelected(event: Event): void {
+    this.composeFiles = this.mergeFiles(this.composeFiles, this.extractValidFiles(event));
+  }
+
+  removeComposeFile(index: number): void {
+    this.composeFiles = this.composeFiles.filter((_, i) => i !== index);
+  }
+
+  onReplyFilesSelected(event: Event): void {
+    this.replyFiles = this.mergeFiles(this.replyFiles, this.extractValidFiles(event));
+  }
+
+  removeReplyFile(index: number): void {
+    this.replyFiles = this.replyFiles.filter((_, i) => i !== index);
+  }
+
+  formatFileSize(sizeBytes: number | undefined): string {
+    return this.sponsorFileUtils.formatSize(sizeBytes || 0);
+  }
+
+  openAttachmentViewer(attachments: SponsorEmailAttachment[] | undefined, index: number): void {
+    if (!attachments || attachments.length === 0) {
+      return;
+    }
+    this.viewerAttachments = attachments;
+    this.viewerIndex = Math.max(0, Math.min(index, attachments.length - 1));
+    this.viewerZoom = 1;
+    this.showAttachmentViewer = true;
+    this.loadViewerTextIfNeeded();
+  }
+
+  closeAttachmentViewer(): void {
+    this.showAttachmentViewer = false;
+    this.viewerAttachments = [];
+    this.viewerIndex = 0;
+    this.viewerZoom = 1;
+    this.viewerTextContent = '';
+    this.viewerTextLoading = false;
+  }
+
+  get currentViewerAttachment(): SponsorEmailAttachment | null {
+    if (!this.viewerAttachments.length) {
+      return null;
+    }
+    return this.viewerAttachments[this.viewerIndex] || null;
+  }
+
+  previousAttachment(): void {
+    if (this.viewerAttachments.length === 0) {
+      return;
+    }
+    this.viewerIndex = (this.viewerIndex - 1 + this.viewerAttachments.length) % this.viewerAttachments.length;
+    this.viewerZoom = 1;
+    this.loadViewerTextIfNeeded();
+  }
+
+  nextAttachment(): void {
+    if (this.viewerAttachments.length === 0) {
+      return;
+    }
+    this.viewerIndex = (this.viewerIndex + 1) % this.viewerAttachments.length;
+    this.viewerZoom = 1;
+    this.loadViewerTextIfNeeded();
+  }
+
+  zoomInViewer(): void {
+    this.viewerZoom = Math.min(3, this.viewerZoom + 0.2);
+  }
+
+  zoomOutViewer(): void {
+    this.viewerZoom = Math.max(0.6, this.viewerZoom - 0.2);
+  }
+
+  isImageAttachment(att: SponsorEmailAttachment | null): boolean {
+    return !!att?.contentType?.startsWith('image/');
+  }
+
+  isPdfAttachment(att: SponsorEmailAttachment | null): boolean {
+    return att?.contentType === 'application/pdf';
+  }
+
+  isTextAttachment(att: SponsorEmailAttachment | null): boolean {
+    return !!att?.contentType?.startsWith('text/');
+  }
+
+  viewerTransformStyle(): string {
+    const att = this.currentViewerAttachment;
+    if (this.isPdfAttachment(att)) {
+      return 'scale(1)';
+    }
+    return `scale(${this.viewerZoom})`;
+  }
+
+  safeViewerPdfUrl(att: SponsorEmailAttachment | null): SafeResourceUrl | null {
+    if (!att?.fileUrl) {
+      return null;
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl(att.fileUrl);
+  }
+
+  directionLabel(direction: string | undefined): string {
+    if ((direction || '').toUpperCase() === 'INBOUND') {
+      return 'Inbound';
+    }
+    if ((direction || '').toUpperCase() === 'REPLY') {
+      return 'Reply';
+    }
+    return 'Outbound';
+  }
+
+  private loadSponsorEmails(sponsorId: number): void {
+    this.emailsLoading = true;
+    this.emailsError = '';
+    this.emailsSyncing = true;
+
+    // Show cached DB emails first, then refresh in background after mailbox sync.
+    this.fetchSponsorEmails(sponsorId);
+
+    this.sponsorService.syncInboundEmails().subscribe({
+      next: (synced) => {
+        this.emailsSyncing = false;
+        if (synced && synced.length > 0) {
+          this.fetchSponsorEmails(sponsorId);
+        }
+      },
+      error: (err: unknown) => {
+        this.emailsSyncing = false;
+        const reason = this.resolveError(err, 'Inbox sync failed.');
+        this.showToast(`Inbox sync failed: ${reason}`, 'info');
+      }
+    });
+  }
+
+  private fetchSponsorEmails(sponsorId: number): void {
+    const previouslySelectedId = this.selectedEmail?.id;
+
+    this.sponsorService.getEmails(sponsorId).subscribe({
+      next: (emails) => {
+        this.sponsorEmails = emails;
+        this.selectedEmail = emails.find(email => email.id === previouslySelectedId) || (emails.length > 0 ? emails[0] : null);
+        this.emailsLoading = false;
+      },
+      error: (err: unknown) => {
+        this.sponsorEmails = [];
+        this.selectedEmail = null;
+        this.emailsLoading = false;
+        this.emailsError = this.resolveError(err, 'Failed to load emails.');
+      }
+    });
   }
 
   onLogoFileSelected(mode: 'add' | 'edit', event: Event): void {
@@ -442,6 +830,56 @@ export class SponsorshipHomeComponent implements OnInit {
       code: '+216',
       local: normalized.replace(/^\+/, '').replace(/\D/g, '').slice(0, 8)
     };
+  }
+
+  private extractValidFiles(event: Event): File[] {
+    const input = event.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    const valid: File[] = [];
+
+    for (const file of files) {
+      const validation = this.sponsorFileUtils.validateFile(file);
+      if (validation) {
+        this.showToast(validation, 'error');
+        continue;
+      }
+      valid.push(file);
+    }
+
+    input.value = '';
+    return valid;
+  }
+
+  private mergeFiles(existing: File[], incoming: File[]): File[] {
+    const merged = [...existing];
+    for (const file of incoming) {
+      const duplicate = merged.some(f => f.name === file.name && f.size === file.size && f.type === file.type);
+      if (!duplicate) {
+        merged.push(file);
+      }
+    }
+    return merged;
+  }
+
+  private loadViewerTextIfNeeded(): void {
+    const attachment = this.currentViewerAttachment;
+    if (!this.isTextAttachment(attachment) || !attachment?.fileUrl) {
+      this.viewerTextContent = '';
+      this.viewerTextLoading = false;
+      return;
+    }
+
+    this.viewerTextLoading = true;
+    fetch(attachment.fileUrl)
+      .then(response => response.text())
+      .then(text => {
+        this.viewerTextContent = text;
+        this.viewerTextLoading = false;
+      })
+      .catch(() => {
+        this.viewerTextContent = 'Failed to load text preview.';
+        this.viewerTextLoading = false;
+      });
   }
 
   private resolveError(err: unknown, fallback: string): string {

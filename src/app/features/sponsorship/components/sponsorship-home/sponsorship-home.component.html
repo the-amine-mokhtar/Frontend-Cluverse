@@ -90,7 +90,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let sponsor of pagedSponsors">
+          <tr
+            *ngFor="let sponsor of pagedSponsors"
+            [class.sponsors__row--menu-open]="activeActionMenuSponsorId === sponsor.id"
+          >
             <td class="sponsors__td sponsors__td--center">
               <div class="sponsors__logo-thumb" *ngIf="sponsor.logoUrl; else noLogo">
                 <img [src]="sponsor.logoUrl" alt="Sponsor logo" />
@@ -108,7 +111,7 @@
                 {{ sponsor.status || 'PENDING' }}
               </span>
             </td>
-            <td class="sponsors__td sponsors__td--center">
+            <td class="sponsors__td sponsors__td--center sponsors__td--actions">
               <div class="sponsors__actions-cell">
                 <button class="sponsors__icon-btn sponsors__icon-btn--edit" (click)="onEditSponsor(sponsor)" title="Modify sponsor">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -120,11 +123,17 @@
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                   </svg>
                 </button>
-                <button class="sponsors__icon-btn sponsors__icon-btn--extra" (click)="onExtraAction(sponsor)" title="Reserved action">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
-                  </svg>
-                </button>
+                <div class="sponsors__menu-wrap">
+                  <button class="sponsors__icon-btn sponsors__icon-btn--extra" (click)="toggleActionMenu(sponsor)" title="More actions">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                    </svg>
+                  </button>
+                  <div class="sponsors__menu-dropdown" *ngIf="activeActionMenuSponsorId === sponsor.id">
+                    <button (click)="onOpenEmails(sponsor)">Emails</button>
+                    <button (click)="onOpenHistory(sponsor)">History</button>
+                  </div>
+                </div>
               </div>
             </td>
           </tr>
@@ -275,6 +284,188 @@
         <button class="sponsors__btn sponsors__btn--danger" (click)="onConfirmDelete()" [disabled]="isDeleting">
           {{ isDeleting ? 'Deleting...' : 'Delete' }}
         </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sponsors__overlay" *ngIf="showEmailsModal" (click)="closeEmailsModal()">
+    <div class="sponsors__dialog sponsors__dialog--emails" (click)="$event.stopPropagation()">
+      <div class="sponsors__emails-header">
+        <h3 class="sponsors__dialog-title">Emails · {{ selectedEmailSponsor?.name }}</h3>
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="closeEmailsModal()">Close</button>
+      </div>
+
+      <div class="sponsors__error" *ngIf="emailsError">{{ emailsError }}</div>
+
+      <div class="sponsors__emails-layout">
+        <nav class="sponsors__emails-navbar">
+          <button
+            class="sponsors__emails-tab"
+            [class.sponsors__emails-tab--active]="emailTab === 'LIST'"
+            (click)="setEmailTab('LIST')"
+          >
+            Emails List
+          </button>
+          <button
+            class="sponsors__emails-tab"
+            [class.sponsors__emails-tab--active]="emailTab === 'COMPOSE'"
+            (click)="setEmailTab('COMPOSE')"
+          >
+            Send an Email
+          </button>
+        </nav>
+
+        <section class="sponsors__emails-content" *ngIf="emailTab === 'LIST'">
+          <div class="sponsors__emails-loading" *ngIf="emailsLoading">Loading emails...</div>
+
+          <div class="sponsors__emails-empty" *ngIf="!emailsLoading && sponsorEmails.length === 0">
+            No emails sent yet for this sponsor.
+          </div>
+
+          <div class="sponsors__emails-grid" *ngIf="!emailsLoading && sponsorEmails.length > 0">
+            <div class="sponsors__emails-list">
+              <div class="sponsors__email-section" *ngIf="pinnedEmails.length > 0">
+                <div class="sponsors__email-section-title">Pinned</div>
+                <button
+                  class="sponsors__email-item sponsors__email-item--pinned"
+                  *ngFor="let email of pinnedEmails"
+                  [class.sponsors__email-item--active]="selectedEmail?.id === email.id"
+                  (click)="selectEmail(email)"
+                >
+                  <div class="sponsors__email-subject">{{ email.subject }}</div>
+                  <div class="sponsors__email-meta">
+                    <span>{{ directionLabel(email.direction) }}</span>
+                    <span>{{ formatEmailDate(email.sentAt) }}</span>
+                  </div>
+                </button>
+              </div>
+
+              <div class="sponsors__email-section">
+                <div class="sponsors__email-section-title">All Emails</div>
+                <button
+                  class="sponsors__email-item"
+                  *ngFor="let email of unpinnedEmails"
+                  [class.sponsors__email-item--active]="selectedEmail?.id === email.id"
+                  (click)="selectEmail(email)"
+                >
+                  <div class="sponsors__email-subject">{{ email.subject }}</div>
+                  <div class="sponsors__email-meta">
+                    <span>{{ directionLabel(email.direction) }}</span>
+                    <span>{{ formatEmailDate(email.sentAt) }}</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div class="sponsors__email-detail" *ngIf="selectedEmail as email">
+              <h4>{{ email.subject }}</h4>
+              <p class="sponsors__email-detail-meta">
+                {{ directionLabel(email.direction) }} · {{ formatEmailDate(email.sentAt) }}
+              </p>
+              <div class="sponsors__email-body">{{ email.body }}</div>
+
+              <div class="sponsors__email-attachments" *ngIf="email.attachments && email.attachments.length > 0">
+                <p class="sponsors__email-attachments-title">Attachments</p>
+                <button
+                  type="button"
+                  class="sponsors__attachment-link"
+                  *ngFor="let attachment of email.attachments; let i = index"
+                  (click)="openAttachmentViewer(email.attachments, i)"
+                >
+                  {{ attachment.originalFileName }}
+                  <span>({{ formatFileSize(attachment.sizeBytes) }})</span>
+                </button>
+              </div>
+
+              <div class="sponsors__email-detail-actions">
+                <button class="sponsors__btn sponsors__btn--secondary" (click)="togglePin(email)" [disabled]="emailsSubmitting">
+                  {{ email.pinned ? 'Unpin' : 'Pin' }}
+                </button>
+                <button class="sponsors__btn sponsors__btn--primary" (click)="openReplyBox()">Reply</button>
+              </div>
+
+              <div class="sponsors__form-field" *ngIf="showReplyBox">
+                <label>Reply message</label>
+                <textarea [(ngModel)]="replyBody" rows="4" placeholder="Write your reply..."></textarea>
+                <label>Attachments</label>
+                <input #replyFileInput class="sponsors__file-input" type="file" multiple accept="image/*,.pdf,.txt" (change)="onReplyFilesSelected($event)" />
+                <button class="sponsors__btn sponsors__btn--secondary" type="button" (click)="replyFileInput.click()">
+                  Choose files
+                </button>
+                <div class="sponsors__attachment-list" *ngIf="replyFiles.length > 0">
+                  <div class="sponsors__attachment-chip" *ngFor="let file of replyFiles; let i = index">
+                    <span>{{ file.name }}</span>
+                    <button type="button" (click)="removeReplyFile(i)">x</button>
+                  </div>
+                </div>
+                <div class="sponsors__dialog-actions">
+                  <button class="sponsors__btn sponsors__btn--secondary" (click)="showReplyBox = false" [disabled]="emailsSubmitting">Cancel</button>
+                  <button class="sponsors__btn sponsors__btn--primary" (click)="sendReply()" [disabled]="emailsSubmitting">
+                    {{ emailsSubmitting ? 'Sending...' : 'Send Reply' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sponsors__emails-content" *ngIf="emailTab === 'COMPOSE'">
+          <div class="sponsors__form-field">
+            <label>Subject</label>
+            <input type="text" [(ngModel)]="composeForm.subject" placeholder="Email subject" />
+          </div>
+          <div class="sponsors__form-field">
+            <label>Message</label>
+            <textarea [(ngModel)]="composeForm.body" rows="8" placeholder="Write your message..."></textarea>
+          </div>
+          <div class="sponsors__form-field">
+            <label>Attachments</label>
+            <input #composeFileInput class="sponsors__file-input" type="file" multiple accept="image/*,.pdf,.txt" (change)="onComposeFilesSelected($event)" />
+            <button class="sponsors__btn sponsors__btn--secondary" type="button" (click)="composeFileInput.click()">
+              Choose files
+            </button>
+            <div class="sponsors__attachment-list" *ngIf="composeFiles.length > 0">
+              <div class="sponsors__attachment-chip" *ngFor="let file of composeFiles; let i = index">
+                <span>{{ file.name }}</span>
+                <button type="button" (click)="removeComposeFile(i)">x</button>
+              </div>
+            </div>
+          </div>
+          <div class="sponsors__dialog-actions">
+            <button class="sponsors__btn sponsors__btn--primary" (click)="sendComposeEmail()" [disabled]="emailsSubmitting">
+              {{ emailsSubmitting ? 'Sending...' : 'Send Email' }}
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="sponsors__overlay" *ngIf="showAttachmentViewer" (click)="closeAttachmentViewer()">
+    <div class="sponsors__dialog sponsors__dialog--attachment-viewer" (click)="$event.stopPropagation()">
+      <div class="sponsors__emails-header">
+        <h3 class="sponsors__dialog-title">Attachment Viewer</h3>
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="closeAttachmentViewer()">Close</button>
+      </div>
+
+      <div class="sponsors__viewer-controls" *ngIf="currentViewerAttachment as att">
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="previousAttachment()">Previous</button>
+        <span>{{ viewerIndex + 1 }} / {{ viewerAttachments.length }} · {{ att.originalFileName }}</span>
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="nextAttachment()">Next</button>
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="zoomOutViewer()">-</button>
+        <button class="sponsors__btn sponsors__btn--secondary" (click)="zoomInViewer()">+</button>
+      </div>
+
+      <div class="sponsors__viewer-stage" *ngIf="currentViewerAttachment as att">
+        <div class="sponsors__viewer-zoom-wrap" [style.transform]="viewerTransformStyle()">
+          <img *ngIf="isImageAttachment(att)" [src]="att.fileUrl" alt="Attachment image" class="sponsors__viewer-image" />
+          <iframe *ngIf="isPdfAttachment(att)" [src]="safeViewerPdfUrl(att)" class="sponsors__viewer-pdf"></iframe>
+          <pre *ngIf="isTextAttachment(att) && !viewerTextLoading" class="sponsors__viewer-text">{{ viewerTextContent }}</pre>
+          <p *ngIf="isTextAttachment(att) && viewerTextLoading" class="sponsors__viewer-loading">Loading text preview...</p>
+          <p *ngIf="!isImageAttachment(att) && !isPdfAttachment(att) && !isTextAttachment(att)" class="sponsors__viewer-loading">
+            Preview not available. <a [href]="att.fileUrl" target="_blank" rel="noopener">Open file</a>
+          </p>
+        </div>
       </div>
     </div>
   </div>
