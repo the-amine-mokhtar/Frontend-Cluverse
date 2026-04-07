@@ -22,6 +22,23 @@ export interface TransactionDto {
   type: TransactionType;
 }
 
+export interface SponsorDto {
+  id: number;
+  name: string;
+  contactEmail?: string;
+  phone?: string;
+}
+
+export interface SponsorshipDto {
+  id: number;
+  amount: number;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  sponsor?: SponsorDto;
+  club?: { id?: number };
+}
+
 export interface CreateBudgetPayload {
   year: number | string;
   totalAllocated: number;
@@ -106,6 +123,21 @@ export class FinanceService {
       params: new HttpParams().set('clubId', String(clubId))
     }).pipe(
       map((transactions) => transactions.filter((transaction) => this.belongsToClub(transaction.club?.id, clubId)))
+    );
+  }
+
+  getSponsors(): Observable<SponsorDto[]> {
+    return this.http.get<SponsorDto[]>(`${this.baseUrl}/api/sponsors`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getSponsorships(clubId: number): Observable<SponsorshipDto[]> {
+    return this.http.get<SponsorshipDto[]>(`${this.baseUrl}/api/sponsorships`, {
+      headers: this.authHeaders(),
+      params: new HttpParams().set('clubId', String(clubId))
+    }).pipe(
+      map((sponsorships) => sponsorships.filter((item) => this.belongsToClub(item.club?.id, clubId)))
     );
   }
 
