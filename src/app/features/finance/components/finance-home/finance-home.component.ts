@@ -10,6 +10,12 @@ import {
   SponsorshipDto,
   TransactionDto
 } from '../../../../core/services/finance.service';
+import {
+  AiCashFlowForecastResult,
+  AiCashFlowProjection,
+  CashflowForecastAiService,
+  ForecastHorizon
+} from '../../services/cashflow-forecast-ai.service';
 
 interface BudgetItem {
   title: string;
@@ -90,6 +96,8 @@ export class FinanceHomeComponent implements OnInit {
   transactionSearchTerm = '';
   transactionFilter: TransactionFilter = 'all';
   showBudgetAlertPopup = false;
+  selectedForecastHorizon: ForecastHorizon = 3;
+  aiForecast: AiCashFlowForecastResult | null = null;
   isLoading = false;
   errorMessage = '';
   private dismissedBudgetAlertKeys = new Set<string>();
@@ -97,7 +105,8 @@ export class FinanceHomeComponent implements OnInit {
   constructor(
     private readonly financeService: FinanceService,
     private readonly authHelperService: AuthHelperService,
-    private readonly apiService: ApiService
+    private readonly apiService: ApiService,
+    private readonly cashflowForecastAiService: CashflowForecastAiService
   ) {}
 
   ngOnInit(): void {
@@ -201,6 +210,14 @@ export class FinanceHomeComponent implements OnInit {
 
   get popupBudgetUtilizationAlerts(): BudgetUtilizationAlert[] {
     return this.budgetUtilizationAlerts.filter((alert) => !this.dismissedBudgetAlertKeys.has(this.getAlertKey(alert)));
+  }
+
+  get forecastProjections(): AiCashFlowProjection[] {
+    return this.aiForecast?.projections ?? [];
+  }
+
+  get selectedForecastProjection(): AiCashFlowProjection | null {
+    return this.forecastProjections.find((projection) => projection.horizonMonths === this.selectedForecastHorizon) ?? null;
   }
 
   get filteredRecentTransactions(): TransactionItem[] {
@@ -429,6 +446,10 @@ export class FinanceHomeComponent implements OnInit {
 
     this.selectedExerciseYear = parsed;
     this.refreshDashboardView();
+  }
+
+  setForecastHorizon(horizon: ForecastHorizon): void {
+    this.selectedForecastHorizon = horizon;
   }
 
   utilization(item: BudgetItem): number {
@@ -814,6 +835,17 @@ export class FinanceHomeComponent implements OnInit {
     this.budgetItems = this.allBudgets
       .filter((budget) => this.normalizeYear(budget.year) === this.selectedExerciseYear)
       .map((budget) => this.toBudgetItem(budget, exerciseTransactions));
+
+    this.aiForecast = this.cashflowForecastAiService.generateForecast(
+      this.allTransactions,
+      this.allBudgets,
+      new Date(),
+      [1, 3, 6]
+    );
+
+    if (!this.forecastProjections.some((projection) => projection.horizonMonths === this.selectedForecastHorizon)) {
+      this.selectedForecastHorizon = 3;
+    }
 
     this.dismissedBudgetAlertKeys.clear();
     this.showBudgetAlertPopup = this.budgetUtilizationAlerts.length > 0;

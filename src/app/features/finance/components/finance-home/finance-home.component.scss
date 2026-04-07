@@ -212,6 +212,189 @@
   gap: 0.9rem;
 }
 
+.forecast-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #111111;
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+  padding: 0.3rem;
+  margin-bottom: 0.85rem;
+
+  &__btn {
+    border: none;
+    background: transparent;
+    color: #9aa0aa;
+    border-radius: 8px;
+    height: 2rem;
+    padding: 0 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    &--active {
+      background: #2f6fec;
+      color: #ffffff;
+    }
+  }
+}
+
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.forecast-health {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+
+  &__hint {
+    color: #94a3b8;
+    font-size: 0.78rem;
+  }
+}
+
+.reliability-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+
+  &--green {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+    color: #6ee7b7;
+  }
+
+  &--amber {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: #f59e0b;
+    color: #fcd34d;
+  }
+
+  &--red {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+}
+
+.forecast-card {
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+  background: #1e1e1e;
+  padding: 0.7rem;
+  display: grid;
+  gap: 0.3rem;
+
+  &__label {
+    color: #9aa0aa;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__value {
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+
+    &--income {
+      color: #4ade80;
+    }
+
+    &--expense {
+      color: #f87171;
+    }
+  }
+}
+
+.forecast-table-wrap {
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+  overflow: auto;
+  margin-bottom: 0.85rem;
+}
+
+.forecast-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid #2e2e2e;
+    text-align: left;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  th {
+    color: #a8a8a8;
+    font-weight: 700;
+    background: #111111;
+  }
+
+  td {
+    color: #f4f4f4;
+  }
+
+  &__income {
+    color: #4ade80 !important;
+    font-weight: 600;
+  }
+
+  &__expense {
+    color: #f87171 !important;
+    font-weight: 600;
+  }
+}
+
+.forecast-factors {
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+  background: #1e1e1e;
+  padding: 0.75rem;
+
+  &__title {
+    margin: 0 0 0.45rem;
+    color: #ffffff;
+    font-size: 0.88rem;
+  }
+
+  &__meta {
+    margin: 0 0 0.45rem;
+    color: #94a3b8;
+    font-size: 0.76rem;
+  }
+
+  &__list {
+    list-style: disc;
+    margin: 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.35rem;
+    color: #cbd5e1;
+    font-size: 0.8rem;
+  }
+
+  &__item--positive {
+    color: #4ade80;
+  }
+
+  &__item--negative {
+    color: #f87171;
+  }
+}
+
 .stat-card {
   background: #171717;
   border: 1px solid #2e2e2e;
@@ -879,21 +1062,34 @@
   }
 
   .kpi-card,
-  .trend-table-wrap {
+  .trend-table-wrap,
+  .forecast-card,
+  .forecast-factors,
+  .forecast-table-wrap,
+  .forecast-switch {
     background: #f8fafc;
     border-color: #e2e8f0;
   }
 
   .kpi-card__label,
   .split-bars__label,
-  .trend-table th {
+  .trend-table th,
+  .forecast-health__hint {
     color: #64748b;
   }
 
   .kpi-card__value,
   .split-bars__value,
-  .trend-table td {
+  .trend-table td,
+  .forecast-table td,
+  .forecast-card__value,
+  .forecast-factors__title,
+  .forecast-factors__list {
     color: #0f172a;
+  }
+
+  .forecast-factors__meta {
+    color: #64748b;
   }
 
   .split-bars__track {
@@ -902,6 +1098,37 @@
 
   .trend-table th {
     background: #eef2ff;
+  }
+
+  .forecast-table th {
+    color: #64748b;
+    background: #eef2ff;
+  }
+
+  .forecast-card__label {
+    color: #64748b;
+  }
+
+  .forecast-switch__btn {
+    color: #64748b;
+  }
+
+  .reliability-badge--green {
+    background: #dcfce7;
+    border-color: #22c55e;
+    color: #166534;
+  }
+
+  .reliability-badge--amber {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+  }
+
+  .reliability-badge--red {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #991b1b;
   }
 }
 

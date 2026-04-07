@@ -162,6 +162,108 @@
     </article>
   </div>
 
+  <section class="panel" *ngIf="aiForecast && forecastProjections.length > 0">
+    <header class="panel__header">
+      <div>
+        <h2 class="panel__title">AI Cash Flow Forecast</h2>
+        <p class="panel__subtitle">1, 3, and 6 month projections based on recurring flows and expected event budgets</p>
+      </div>
+    </header>
+
+    <div class="forecast-switch" role="tablist" aria-label="Forecast horizons">
+      <button type="button" class="forecast-switch__btn" [class.forecast-switch__btn--active]="selectedForecastHorizon === 1" (click)="setForecastHorizon(1)">1M</button>
+      <button type="button" class="forecast-switch__btn" [class.forecast-switch__btn--active]="selectedForecastHorizon === 3" (click)="setForecastHorizon(3)">3M</button>
+      <button type="button" class="forecast-switch__btn" [class.forecast-switch__btn--active]="selectedForecastHorizon === 6" (click)="setForecastHorizon(6)">6M</button>
+    </div>
+
+    <div class="forecast-health" *ngIf="selectedForecastProjection as forecast">
+      <span class="reliability-badge"
+            [class.reliability-badge--green]="forecast.backtestMape < 0.2"
+            [class.reliability-badge--amber]="forecast.backtestMape >= 0.2 && forecast.backtestMape <= 0.35"
+            [class.reliability-badge--red]="forecast.backtestMape > 0.35">
+        Reliability: {{ forecast.backtestMape < 0.2 ? 'Green' : (forecast.backtestMape <= 0.35 ? 'Amber' : 'Red') }}
+      </span>
+      <span class="forecast-health__hint">MAPE {{ (forecast.backtestMape * 100) | number:'1.0-1' }}%</span>
+    </div>
+
+    <div class="forecast-grid" *ngIf="selectedForecastProjection as forecast">
+      <article class="forecast-card">
+        <span class="forecast-card__label">Projected Inflow</span>
+        <strong class="forecast-card__value forecast-card__value--income">{{ formatCurrency(forecast.projectedInflow) }}</strong>
+      </article>
+
+      <article class="forecast-card">
+        <span class="forecast-card__label">Projected Outflow</span>
+        <strong class="forecast-card__value forecast-card__value--expense">{{ formatCurrency(forecast.projectedOutflow) }}</strong>
+      </article>
+
+      <article class="forecast-card">
+        <span class="forecast-card__label">Projected Net</span>
+        <strong class="forecast-card__value" [class.forecast-card__value--income]="forecast.projectedNet >= 0" [class.forecast-card__value--expense]="forecast.projectedNet < 0">
+          {{ forecast.projectedNet >= 0 ? '+' : '-' }}{{ formatCurrency(absValue(forecast.projectedNet)) }}
+        </strong>
+      </article>
+
+      <article class="forecast-card">
+        <span class="forecast-card__label">Confidence</span>
+        <strong class="forecast-card__value">{{ forecast.confidenceScore }}%</strong>
+      </article>
+
+      <article class="forecast-card">
+        <span class="forecast-card__label">Error Band</span>
+        <strong class="forecast-card__value">±{{ (forecast.errorBandRatio * 100) | number:'1.0-1' }}%</strong>
+      </article>
+
+      <article class="forecast-card">
+        <span class="forecast-card__label">Net Range</span>
+        <strong class="forecast-card__value">{{ formatCurrency(forecast.netLowerBound) }} to {{ formatCurrency(forecast.netUpperBound) }}</strong>
+      </article>
+
+      <article class="forecast-card">
+        <span class="forecast-card__label">Backtest MAPE</span>
+        <strong class="forecast-card__value">{{ (forecast.backtestMape * 100) | number:'1.0-1' }}%</strong>
+      </article>
+
+      <article class="forecast-card">
+        <span class="forecast-card__label">Directional Hit Rate</span>
+        <strong class="forecast-card__value">{{ (forecast.backtestHitRate * 100) | number:'1.0-1' }}%</strong>
+      </article>
+    </div>
+
+    <div class="forecast-table-wrap" *ngIf="selectedForecastProjection as forecast">
+      <table class="forecast-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Inflow</th>
+            <th>Outflow</th>
+            <th>Event Impact</th>
+            <th>Net</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let month of forecast.monthlyBreakdown">
+            <td>{{ month.monthLabel }}</td>
+            <td class="forecast-table__income">{{ formatCurrency(month.projectedInflow) }}</td>
+            <td class="forecast-table__expense">{{ formatCurrency(month.projectedOutflow) }}</td>
+            <td>{{ formatCurrency(month.eventOutflowShare) }}</td>
+            <td [class.forecast-table__income]="month.projectedNet >= 0" [class.forecast-table__expense]="month.projectedNet < 0">{{ month.projectedNet >= 0 ? '+' : '-' }}{{ formatCurrency(absValue(month.projectedNet)) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="forecast-factors" *ngIf="selectedForecastProjection as forecast">
+      <h3 class="forecast-factors__title">Forecast Drivers & Assumptions</h3>
+      <p class="forecast-factors__meta">Backtest samples: {{ forecast.backtestSampleSize }}</p>
+      <ul class="forecast-factors__list">
+        <li *ngFor="let factor of forecast.factors" [class.forecast-factors__item--positive]="factor.impact === 'positive'" [class.forecast-factors__item--negative]="factor.impact === 'negative'">
+          {{ factor.label }}
+        </li>
+      </ul>
+    </div>
+  </section>
+
   <p class="status" *ngIf="isLoading">Loading finance dashboard...</p>
   <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
