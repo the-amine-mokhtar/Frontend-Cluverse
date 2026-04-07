@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
-import { BudgetCategory, BudgetDto, FinanceService } from '../../../../core/services/finance.service';
+import { BudgetDto, FinanceService } from '../../../../core/services/finance.service';
 
 interface BudgetItem {
   id: number;
   year: number;
-  category: BudgetCategory;
+  eventId: number | null;
   title: string;
   department: string;
   spent: number;
@@ -20,16 +20,9 @@ interface BudgetItem {
 })
 export class FinanceBudgetsComponent implements OnInit {
   budgetItems: BudgetItem[] = [];
-  readonly budgetCategories: BudgetCategory[] = [
-    'EVENTS',
-    'EQUIPMENT',
-    'MARKETING',
-    'TRAVEL',
-    'OPERATIONS',
-    'OTHER'
-  ];
 
   showCreateBudgetForm = false;
+  editingBudgetId: number | null = null;
   isLoading = false;
   isSubmitting = false;
   errorMessage = '';
@@ -37,11 +30,11 @@ export class FinanceBudgetsComponent implements OnInit {
   createBudgetModel: {
     year: number;
     totalAllocated: number | null;
-    category: BudgetCategory;
+    eventId: number | null;
   } = {
     year: new Date().getFullYear(),
     totalAllocated: null,
-    category: 'EVENTS'
+    eventId: null
   };
 
   constructor(
@@ -55,11 +48,18 @@ export class FinanceBudgetsComponent implements OnInit {
 
   openCreateBudgetForm(): void {
     this.showCreateBudgetForm = true;
+    this.editingBudgetId = null;
+    this.createBudgetModel = {
+      year: new Date().getFullYear(),
+      totalAllocated: null,
+      eventId: null
+    };
     this.errorMessage = '';
   }
 
   cancelCreateBudget(): void {
     this.showCreateBudgetForm = false;
+    this.editingBudgetId = null;
     this.errorMessage = '';
   }
 
@@ -79,24 +79,79 @@ export class FinanceBudgetsComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    this.financeService.createBudget(clubId, {
+    const payload = {
       year: this.createBudgetModel.year,
       totalAllocated: this.createBudgetModel.totalAllocated,
-      category: this.createBudgetModel.category
-    }).subscribe({
+      eventId: this.createBudgetModel.eventId
+    };
+
+    if (this.editingBudgetId !== null) {
+      const budgetId = this.editingBudgetId;
+      this.financeService.updateBudget(clubId, budgetId, payload).subscribe({
+        next: (updatedBudget) => {
+          this.budgetItems = this.budgetItems.map((item) =>
+            item.id === budgetId ? this.toBudgetItem(updatedBudget) : item
+          );
+          this.showCreateBudgetForm = false;
+          this.editingBudgetId = null;
+          this.isSubmitting = false;
+        },
+        error: (error: unknown) => {
+          this.errorMessage = `Failed to update budget. ${this.formatHttpError(error)}`;
+          this.isSubmitting = false;
+        }
+      });
+      return;
+    }
+
+    this.financeService.createBudget(clubId, payload).subscribe({
       next: (createdBudget) => {
         this.budgetItems = [this.toBudgetItem(createdBudget), ...this.budgetItems];
         this.showCreateBudgetForm = false;
         this.createBudgetModel = {
           year: new Date().getFullYear(),
           totalAllocated: null,
-          category: 'EVENTS'
+          eventId: null
         };
         this.isSubmitting = false;
       },
       error: (error: unknown) => {
         this.errorMessage = `Failed to create budget. ${this.formatHttpError(error)}`;
         this.isSubmitting = false;
+      }
+    });
+  }
+
+  editBudget(item: BudgetItem): void {
+    this.editingBudgetId = item.id;
+    this.showCreateBudgetForm = true;
+    this.errorMessage = '';
+    this.createBudgetModel = {
+      year: item.year,
+      totalAllocated: item.total,
+      eventId: item.eventId
+    };
+  }
+
+  deleteBudget(item: BudgetItem): void {
+    const clubId = this.authHelperService.getClubId();
+
+    if (!clubId) {
+      this.errorMessage = 'Unable to detect club. Please login again.';
+      return;
+    }
+
+    this.errorMessage = '';
+
+    this.financeService.deleteBudget(clubId, item.id).subscribe({
+      next: () => {
+        this.budgetItems = this.budgetItems.filter((budget) => budget.id !== item.id);
+        if (this.editingBudgetId === item.id) {
+          this.cancelCreateBudget();
+        }
+      },
+      error: (error: unknown) => {
+        this.errorMessage = `Failed to delete budget. ${this.formatHttpError(error)}`;
       }
     });
   }
@@ -138,16 +193,36 @@ export class FinanceBudgetsComponent implements OnInit {
   }
 
   private toBudgetItem(budget: BudgetDto): BudgetItem {
-    const formattedCategory = budget.category.charAt(0) + budget.category.slice(1).toLowerCase();
-    return {
-      id: budget.id,
-      year: budget.year,
-      category: budget.category,
-      title: `${formattedCategory} Budget`,
-      department: formattedCategory,
-      spent: 0,
-      total: budget.totalAllocated
+    const budgetData = budget as BudgetDto & {
+      total_allocated?: number;
+      event_id?: number | null;
     };
+    const eventId = budgetData.eventId ?? budgetData.event_id ?? null;
+    const totalAllocated = budgetData.totalAllocated ?? budgetData.total_allocated ?? 0;
+    const year = this.normalizeYear(budgetData.year);
+    return {
+      id: budgetData.id,
+      year,
+      eventId,
+      title: `Annual Budget ${year}`,
+      department: eventId ? `Event #${eventId}` : 'Club-wide',
+      spent: 0,
+      total: totalAllocated
+    };
+  }
+
+  private normalizeYear(year: number | string): number {
+    if (typeof year === 'number') {
+      return year;
+    }
+
+    const parsed = new Date(year);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.getUTCFullYear();
+    }
+
+    const numericYear = Number(year);
+    return Number.isFinite(numericYear) ? numericYear : new Date().getFullYear();
   }
 
   utilization(item: BudgetItem): number {

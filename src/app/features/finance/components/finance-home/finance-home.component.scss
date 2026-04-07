@@ -166,6 +166,33 @@
   }
 }
 
+.panel-tools {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+
+  &__search,
+  &__filter {
+    height: 2.2rem;
+    border-radius: 9px;
+    border: 1px solid #2e2e2e;
+    background: #111111;
+    color: #f4f4f4;
+    font-size: 0.85rem;
+    padding: 0 0.75rem;
+  }
+
+  &__search {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  &__filter {
+    min-width: 180px;
+  }
+}
+
 .budget-list {
   display: grid;
   gap: 0.75rem;
@@ -332,6 +359,13 @@
     border-color: #e2e8f0;
   }
 
+  .panel-tools__search,
+  .panel-tools__filter {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+  }
+
   .budget-card__progress {
     background: #dbeafe;
   }
@@ -345,6 +379,14 @@
       .btn {
         flex: 1;
       }
+    }
+  }
+
+  .panel-tools {
+    &__search,
+    &__filter {
+      width: 100%;
+      min-width: 0;
     }
   }
 }

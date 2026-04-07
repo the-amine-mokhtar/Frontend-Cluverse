@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, catchError } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 
 export type BudgetCategory = 'EVENTS' | 'EQUIPMENT' | 'MARKETING' | 'TRAVEL' | 'OPERATIONS' | 'OTHER';
@@ -8,9 +8,10 @@ export type TransactionType = 'INCOME' | 'EXPENSE';
 
 export interface BudgetDto {
   id: number;
-  year: number;
+  year: number | string;
   totalAllocated: number;
-  category: BudgetCategory;
+  eventId?: number | null;
+  category?: BudgetCategory;
 }
 
 export interface TransactionDto {
@@ -22,12 +23,27 @@ export interface TransactionDto {
 }
 
 export interface CreateBudgetPayload {
-  year: number;
+  year: number | string;
   totalAllocated: number;
-  category: BudgetCategory;
+  eventId?: number | null;
+  category?: BudgetCategory;
+}
+
+export interface UpdateBudgetPayload {
+  year: number | string;
+  totalAllocated: number;
+  eventId?: number | null;
+  category?: BudgetCategory;
 }
 
 export interface CreateTransactionPayload {
+  amount: number;
+  date: string;
+  description: string;
+  type: TransactionType;
+}
+
+export interface UpdateTransactionPayload {
   amount: number;
   date: string;
   description: string;
@@ -43,97 +59,105 @@ export class FinanceService {
   constructor(private readonly http: HttpClient) {}
 
   getBudgets(clubId: number): Observable<BudgetDto[]> {
-    const financeEndpoint = `${this.baseUrl}/api/finance/budgets`;
-    const budgetsEndpoint = `${this.baseUrl}/api/budgets`;
-
-    return this.http.get<BudgetDto[]>(financeEndpoint, {
+    return this.http.get<Array<BudgetDto & { club?: { id?: number } }>>(`${this.baseUrl}/api/budgets`, {
       headers: this.authHeaders(),
       params: new HttpParams().set('clubId', String(clubId))
     }).pipe(
-      catchError(() => {
-        return this.http.get<BudgetDto[]>(`${financeEndpoint}/club/${clubId}`, {
-          headers: this.authHeaders()
-        });
-      }),
-      catchError(() => {
-        return this.http.get<BudgetDto[]>(budgetsEndpoint, {
-          headers: this.authHeaders(),
-          params: new HttpParams().set('clubId', String(clubId))
-        });
-      }),
-      catchError(() => {
-        return this.http.get<BudgetDto[]>(`${this.baseUrl}/api/clubs/${clubId}/budgets`, {
-          headers: this.authHeaders()
-        });
-      })
+      map((budgets) => budgets.filter((budget) => this.belongsToClub(budget.club?.id, clubId)))
     );
   }
 
   createBudget(clubId: number, payload: CreateBudgetPayload): Observable<BudgetDto> {
-    const financeEndpoint = `${this.baseUrl}/api/finance/budgets`;
-    const budgetsEndpoint = `${this.baseUrl}/api/budgets`;
-    const bodyWithClubId = { ...payload, clubId };
-    const bodyWithClubObject = { ...payload, club: { id: clubId } };
+    const body = {
+      year: this.normalizeYear(payload.year),
+      totalAllocated: payload.totalAllocated,
+      club: { id: clubId }
+    };
 
-    return this.http.post<BudgetDto>(financeEndpoint, bodyWithClubId, {
+    return this.http.post<BudgetDto>(`${this.baseUrl}/api/budgets`, body, {
       headers: this.authHeaders(),
       params: new HttpParams().set('clubId', String(clubId))
-    }).pipe(
-      catchError(() => {
-        return this.http.post<BudgetDto>(financeEndpoint, bodyWithClubObject, {
-          headers: this.authHeaders()
-        });
-      }),
-      catchError(() => {
-        return this.http.post<BudgetDto>(`${financeEndpoint}/club/${clubId}`, payload, {
-          headers: this.authHeaders()
-        });
-      }),
-      catchError(() => {
-        return this.http.post<BudgetDto>(budgetsEndpoint, bodyWithClubId, {
-          headers: this.authHeaders(),
-          params: new HttpParams().set('clubId', String(clubId))
-        });
-      }),
-      catchError(() => {
-        return this.http.post<BudgetDto>(`${this.baseUrl}/api/clubs/${clubId}/budgets`, payload, {
-          headers: this.authHeaders()
-        });
-      })
-    );
+    });
+  }
+
+  updateBudget(clubId: number, budgetId: number, payload: UpdateBudgetPayload): Observable<BudgetDto> {
+    const body = {
+      year: this.normalizeYear(payload.year),
+      totalAllocated: payload.totalAllocated,
+      club: { id: clubId }
+    };
+
+    return this.http.put<BudgetDto>(`${this.baseUrl}/api/budgets/${budgetId}`, body, {
+      headers: this.authHeaders(),
+      params: new HttpParams().set('clubId', String(clubId))
+    });
+  }
+
+  deleteBudget(clubId: number, budgetId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/budgets/${budgetId}`, {
+      headers: this.authHeaders(),
+      params: new HttpParams().set('clubId', String(clubId))
+    });
   }
 
   getTransactions(clubId: number): Observable<TransactionDto[]> {
-    const endpoint = `${this.baseUrl}/api/finance/transactions`;
-    return this.http.get<TransactionDto[]>(endpoint, {
+    return this.http.get<Array<TransactionDto & { club?: { id?: number } }>>(`${this.baseUrl}/api/transactions`, {
       headers: this.authHeaders(),
       params: new HttpParams().set('clubId', String(clubId))
     }).pipe(
-      catchError(() => {
-        return this.http.get<TransactionDto[]>(`${endpoint}/club/${clubId}`, {
-          headers: this.authHeaders()
-        });
-      })
+      map((transactions) => transactions.filter((transaction) => this.belongsToClub(transaction.club?.id, clubId)))
     );
   }
 
   createTransaction(clubId: number, payload: CreateTransactionPayload): Observable<TransactionDto> {
-    const endpoint = `${this.baseUrl}/api/finance/transactions`;
-    const body = { ...payload, clubId };
-    return this.http.post<TransactionDto>(endpoint, body, {
+    const body = { ...payload, club: { id: clubId } };
+
+    return this.http.post<TransactionDto>(`${this.baseUrl}/api/transactions`, body, {
       headers: this.authHeaders(),
       params: new HttpParams().set('clubId', String(clubId))
-    }).pipe(
-      catchError(() => {
-        return this.http.post<TransactionDto>(`${endpoint}/club/${clubId}`, body, {
-          headers: this.authHeaders()
-        });
-      })
-    );
+    });
+  }
+
+  updateTransaction(clubId: number, transactionId: number, payload: UpdateTransactionPayload): Observable<TransactionDto> {
+    const body = { ...payload, club: { id: clubId } };
+
+    return this.http.put<TransactionDto>(`${this.baseUrl}/api/transactions/${transactionId}`, body, {
+      headers: this.authHeaders(),
+      params: new HttpParams().set('clubId', String(clubId))
+    });
+  }
+
+  deleteTransaction(clubId: number, transactionId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/transactions/${transactionId}`, {
+      headers: this.authHeaders(),
+      params: new HttpParams().set('clubId', String(clubId))
+    });
   }
 
   private authHeaders(): HttpHeaders {
     const token = localStorage.getItem('token') ?? '';
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
+  private belongsToClub(entityClubId: number | undefined, clubId: number): boolean {
+    return entityClubId === undefined || entityClubId === clubId;
+  }
+
+  private normalizeYear(year: number | string): string {
+    if (typeof year === 'number') {
+      return `${year}-01-01`;
+    }
+
+    const parsed = new Date(year);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+
+    const numericYear = Number(year);
+    if (Number.isFinite(numericYear)) {
+      return `${numericYear}-01-01`;
+    }
+
+    return `${new Date().getFullYear()}-01-01`;
   }
 }

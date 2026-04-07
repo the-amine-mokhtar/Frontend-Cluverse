@@ -223,6 +223,29 @@
     border-radius: inherit;
     background: linear-gradient(90deg, #3b82f6, #60a5fa);
   }
+
+  &__actions {
+    margin-top: 0.9rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+  }
+
+  &__action {
+    border: 1px solid #2e2e2e;
+    background: #1e1e1e;
+    color: #a5a5a5;
+    border-radius: 8px;
+    height: 1.95rem;
+    padding: 0 0.65rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &--danger {
+      color: #f87171;
+    }
+  }
 }
 
 :host-context(body.light-mode) {
@@ -262,6 +285,12 @@
   .budget-card__meta,
   .budget-card__row {
     color: #64748b;
+  }
+
+  .budget-card__action {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #334155;
   }
 
   .budget-card__title,

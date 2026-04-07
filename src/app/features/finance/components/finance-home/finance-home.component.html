@@ -40,6 +40,9 @@
     </article>
   </div>
 
+  <p class="status" *ngIf="isLoading">Loading finance dashboard...</p>
+  <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
   <div class="finance-grid">
     <section class="panel">
       <header class="panel__header">
@@ -50,8 +53,23 @@
         <a routerLink="/dashboard/finance/budgets" class="panel__link">View all</a>
       </header>
 
+      <div class="panel-tools">
+        <input
+          class="panel-tools__search"
+          type="text"
+          placeholder="Search budget cards..."
+          [(ngModel)]="budgetSearchTerm"
+        />
+        <select class="panel-tools__filter" [(ngModel)]="budgetFilter">
+          <option value="all">All Utilization</option>
+          <option value="healthy">Healthy (&lt;70%)</option>
+          <option value="warning">Warning (70-90%)</option>
+          <option value="critical">Critical (&gt;90%)</option>
+        </select>
+      </div>
+
       <div class="budget-list">
-        <article class="budget-card" *ngFor="let budget of budgetItems">
+        <article class="budget-card" *ngFor="let budget of filteredBudgetItems">
           <div class="budget-card__top">
             <div>
               <h3 class="budget-card__title">{{ budget.title }}</h3>
@@ -69,6 +87,7 @@
             <strong>{{ formatCurrency(budget.total) }}</strong>
           </div>
         </article>
+        <p class="status" *ngIf="!isLoading && filteredBudgetItems.length === 0 && !errorMessage">No budgets match your search/filter.</p>
       </div>
     </section>
 
@@ -81,8 +100,22 @@
         <a routerLink="/dashboard/finance/transactions" class="panel__link">View all</a>
       </header>
 
+      <div class="panel-tools">
+        <input
+          class="panel-tools__search"
+          type="text"
+          placeholder="Search transactions..."
+          [(ngModel)]="transactionSearchTerm"
+        />
+        <select class="panel-tools__filter" [(ngModel)]="transactionFilter">
+          <option value="all">All Types</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </div>
+
       <div class="transactions-list">
-        <article class="transaction-row" *ngFor="let transaction of recentTransactions">
+        <article class="transaction-row" *ngFor="let transaction of filteredRecentTransactions">
           <div>
             <h3 class="transaction-row__title">{{ transaction.description }}</h3>
             <p class="transaction-row__meta">{{ transaction.category }} . {{ transaction.date }} . {{ transaction.addedBy }}</p>
@@ -92,6 +125,7 @@
             {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
           </span>
         </article>
+        <p class="status" *ngIf="!isLoading && filteredRecentTransactions.length === 0 && !errorMessage">No transactions match your search/filter.</p>
       </div>
     </section>
   </div>

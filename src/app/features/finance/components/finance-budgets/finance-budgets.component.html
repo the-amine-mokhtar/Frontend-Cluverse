@@ -11,7 +11,7 @@
   </header>
 
   <section class="form-panel" *ngIf="showCreateBudgetForm">
-    <h2 class="form-panel__title">Create New Budget</h2>
+    <h2 class="form-panel__title">{{ editingBudgetId !== null ? 'Edit Budget' : 'Create New Budget' }}</h2>
     <div class="form-grid">
       <label class="field">
         <span>Year</span>
@@ -19,10 +19,8 @@
       </label>
 
       <label class="field">
-        <span>Category</span>
-        <select [(ngModel)]="createBudgetModel.category">
-          <option *ngFor="let category of budgetCategories" [ngValue]="category">{{ category }}</option>
-        </select>
+        <span>Event ID (Optional)</span>
+        <input type="number" min="1" placeholder="Leave empty for club-wide budget" [(ngModel)]="createBudgetModel.eventId" />
       </label>
 
       <label class="field field--full">
@@ -34,7 +32,7 @@
     <div class="form-actions">
       <button type="button" class="btn btn--ghost" (click)="cancelCreateBudget()">Cancel</button>
       <button type="button" class="btn btn--primary" [disabled]="isSubmitting" (click)="submitCreateBudget()">
-        {{ isSubmitting ? 'Creating...' : 'Save Budget' }}
+        {{ isSubmitting ? (editingBudgetId !== null ? 'Updating...' : 'Creating...') : (editingBudgetId !== null ? 'Update Budget' : 'Save Budget') }}
       </button>
     </div>
   </section>
@@ -82,6 +80,11 @@
       <div class="budget-card__row">
         <span>Year</span>
         <strong>{{ item.year }}</strong>
+      </div>
+
+      <div class="budget-card__actions">
+        <button type="button" class="budget-card__action" (click)="editBudget(item)">Edit</button>
+        <button type="button" class="budget-card__action budget-card__action--danger" (click)="deleteBudget(item)">Delete</button>
       </div>
     </article>
   </div>

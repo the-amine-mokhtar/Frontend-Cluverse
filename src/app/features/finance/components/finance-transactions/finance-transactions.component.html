@@ -6,7 +6,7 @@
     </div>
 
     <div class="finance-page__actions">
-      <button type="button" class="btn btn--primary">Add Transaction</button>
+      <button type="button" class="btn btn--primary" (click)="openCreateTransactionForm()">Add Transaction</button>
     </div>
   </header>
 
@@ -15,6 +15,47 @@
     <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
     <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/transactions">Transactions</a>
   </nav>
+
+  <section class="form-panel" *ngIf="showCreateTransactionForm">
+    <h2 class="form-panel__title">{{ editingTransactionId !== null ? 'Edit Transaction' : 'Create New Transaction' }}</h2>
+
+    <div class="form-grid">
+      <label class="field">
+        <span class="field__label">Type</span>
+        <select class="field__control" [(ngModel)]="newTransaction.type" name="transactionType">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </label>
+
+      <label class="field field--wide">
+        <span class="field__label">Description</span>
+        <input class="field__control" type="text" placeholder="Describe the transaction" [(ngModel)]="newTransaction.description" name="transactionDescription" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Amount (USD)</span>
+        <input class="field__control" type="number" min="1" placeholder="0" [(ngModel)]="newTransaction.amount" name="transactionAmount" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Date</span>
+        <input class="field__control" type="date" [(ngModel)]="newTransaction.date" name="transactionDate" />
+      </label>
+    </div>
+
+    <p class="form-error" *ngIf="formErrorMessage">{{ formErrorMessage }}</p>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn--secondary" (click)="closeCreateTransactionForm()">Cancel</button>
+      <button type="button" class="btn btn--primary" [disabled]="isSubmitting" (click)="createTransaction()">
+        {{ editingTransactionId !== null ? 'Update Transaction' : 'Save Transaction' }}
+      </button>
+    </div>
+  </section>
+
+  <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="empty-state" *ngIf="isLoading">Loading transactions...</p>
 
   <section class="transactions-panel">
     <div class="transactions-toolbar">
@@ -59,9 +100,7 @@
           <tr>
             <th>Type</th>
             <th>Description</th>
-            <th>Category</th>
             <th>Date</th>
-            <th>Added By</th>
             <th class="align-right">Amount</th>
             <th class="align-right">Actions</th>
           </tr>
@@ -75,20 +114,18 @@
               </span>
             </td>
             <td class="description">{{ transaction.description }}</td>
-            <td>{{ transaction.category }}</td>
             <td>{{ transaction.date }}</td>
-            <td>{{ transaction.addedBy }}</td>
             <td class="align-right amount" [class.amount--income]="transaction.type === 'income'" [class.amount--expense]="transaction.type === 'expense'">
               {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
             </td>
             <td class="align-right actions">
-              <button type="button" class="icon-btn" aria-label="Edit transaction">Edit</button>
-              <button type="button" class="icon-btn icon-btn--danger" aria-label="Delete transaction">Delete</button>
+              <button type="button" class="icon-btn" aria-label="Edit transaction" (click)="editTransaction(transaction)">Edit</button>
+              <button type="button" class="icon-btn icon-btn--danger" aria-label="Delete transaction" (click)="deleteTransaction(transaction.id)">Delete</button>
             </td>
           </tr>
 
-          <tr *ngIf="filteredTransactions.length === 0">
-            <td colspan="7" class="empty-state">No transactions found for the selected filter.</td>
+          <tr *ngIf="!isLoading && filteredTransactions.length === 0">
+            <td colspan="5" class="empty-state">No transactions found for the selected filter.</td>
           </tr>
         </tbody>
       </table>
