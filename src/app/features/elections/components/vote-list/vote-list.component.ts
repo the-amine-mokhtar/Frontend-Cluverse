@@ -89,4 +89,16 @@ export class VoteListComponent implements OnInit {
     }
     this.applyFilters();
   }
+
+  deleteVote(id: number): void {
+    if (confirm('Are you sure you want to delete this vote?')) {
+      this.voteService.delete(id).subscribe({
+        next: () => {
+          this.votes = this.votes.filter(v => v.id !== id);
+          this.applyFilters();
+        },
+        error: (err: any) => console.error(err)
+      });
+    }
+  }
 }

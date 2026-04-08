@@ -1,0 +1,91 @@
+<div class="list-container mx-auto p-6 max-w-3xl animate-fade-in relative text-gray-800">
+  <div class="mb-6 pb-4 border-b">
+    <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+      {{ isEditMode ? 'Edit Position' : 'Create New Position' }}
+    </h2>
+    <p class="text-gray-500 mt-2 font-medium">Define roles that candidates can run for.</p>
+  </div>
+
+  <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/50 p-8">
+    <form [formGroup]="positionForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 flex items-center space-x-3 text-sm font-bold shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- General Info -->
+      <div class="space-y-6">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Role Name <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="name"
+            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800"
+            placeholder="President, Treasurer, etc.">
+          <p *ngIf="positionForm.get('name')?.invalid && positionForm.get('name')?.touched" class="text-red-500 text-xs mt-1 font-semibold">Name is required.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description</label>
+          <textarea formControlName="description" rows="3"
+            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 resize-none"
+            placeholder="Responsibilities and details..."></textarea>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Term Length (Months)</label>
+          <input type="number" formControlName="termLength" min="1"
+            class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Max Candidates</label>
+          <input type="number" formControlName="maxCandidates" min="1"
+            class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
+        </div>
+
+        <div class="flex items-center space-x-3 pt-4">
+          <input type="checkbox" formControlName="isElectable" id="isElectable"
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
+          <label for="isElectable" class="text-sm font-bold text-gray-700 cursor-pointer">Is Electable?</label>
+        </div>
+        
+        <div class="flex items-center space-x-3 pt-4">
+          <input type="checkbox" formControlName="isAutoRenew" id="isAutoRenew"
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
+          <label for="isAutoRenew" class="text-sm font-bold text-gray-700 cursor-pointer">Auto Renew Term?</label>
+        </div>
+      </div>
+
+      <!-- References -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Assign Club By ID</label>
+          <input type="number" formControlName="clubId"
+            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Current Holder User ID</label>
+          <input type="number" formControlName="currentHolderId"
+            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end space-x-4">
+        <a routerLink="/dashboard/elections/positions-list" class="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">
+          Cancel
+        </a>
+        <button type="submit" [disabled]="isSubmitting || positionForm.invalid"
+          class="px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Position' : 'Create Position') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

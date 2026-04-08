@@ -28,4 +28,12 @@ export class VoteService {
   castVote(request: any): Observable<any> {
     return this.http.post<any>(this.apiUrl, request, { headers: this.getAuthHeaders() });
   }
+
+  update(id: number, request: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${id}`, request, { headers: this.getAuthHeaders() });
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
+  }
 }
