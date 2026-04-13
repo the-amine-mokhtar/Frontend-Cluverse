@@ -71,6 +71,12 @@ export class PositionListComponent implements OnInit {
           return this.sortOrder === 'asc' ? valA - valB : valB - valA;
         }
         
+        if (this.sortColumn === 'electable') {
+          const valA = a.electable ? 1 : 0;
+          const valB = b.electable ? 1 : 0;
+          return this.sortOrder === 'asc' ? valA - valB : valB - valA;
+        }
+        
         const valA = a[this.sortColumn] ? a[this.sortColumn].toString().toLowerCase() : '';
         const valB = b[this.sortColumn] ? b[this.sortColumn].toString().toLowerCase() : '';
         if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;

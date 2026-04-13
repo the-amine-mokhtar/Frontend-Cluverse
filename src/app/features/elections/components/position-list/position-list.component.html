@@ -22,8 +22,9 @@
           <th class="p-5 cursor-pointer hover:text-orange-600 transition-colors" (click)="sortBy('id')">ID</th>
           <th class="p-5 cursor-pointer hover:text-orange-600 transition-colors" (click)="sortBy('name')">Name</th>
           <th class="p-5 cursor-pointer hover:text-orange-600 transition-colors" (click)="sortBy('currentHolderName')">Holder</th>
-          <th class="p-5 cursor-pointer hover:text-orange-600 transition-colors" (click)="sortBy('termLength')">Term (Days)</th>
+          <th class="p-5 cursor-pointer hover:text-orange-600 transition-colors" (click)="sortBy('electable')">Electable</th>
           <th class="p-5 cursor-pointer hover:text-orange-600 transition-colors" (click)="sortBy('autoRenew')">Auto-Renew</th>
+          <th class="p-5 cursor-pointer hover:text-orange-600 transition-colors" (click)="sortBy('termLength')">Term (Days)</th>
           <th class="p-5 text-right rounded-tr-2xl">Actions</th>
         </tr>
       </thead>
@@ -41,17 +42,27 @@
             </span>
             <span *ngIf="!position.currentHolderName" class="text-gray-400 italic">Vacant</span>
           </td>
-          <td class="p-5 text-gray-500 font-medium whitespace-nowrap">{{ position.termLength || '-' }}</td>
+          <td class="p-5 text-center">
+             <div *ngIf="position.electable === true" class="text-indigo-500 flex items-center justify-center space-x-1 font-bold">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+             </div>
+             <div *ngIf="position.electable === false" class="text-gray-300 flex items-center justify-center space-x-1 font-bold">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+             </div>
+             <div *ngIf="position.electable === null" class="text-gray-400 text-center font-bold">-</div>
+          </td>
           <td class="p-5">
-            <div *ngIf="position.autoRenew" class="text-green-500 flex items-center space-x-1 font-bold">
+            <div *ngIf="position.autoRenew === true" class="text-green-500 flex items-center space-x-1 font-bold">
                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                <span>Yes</span>
             </div>
-            <div *ngIf="!position.autoRenew" class="text-gray-400 flex items-center space-x-1 font-bold">
+            <div *ngIf="position.autoRenew === false" class="text-gray-400 flex items-center space-x-1 font-bold">
                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
                <span>No</span>
             </div>
+            <div *ngIf="position.autoRenew === null" class="text-gray-400 font-bold">-</div>
           </td>
+          <td class="p-5 text-gray-500 font-medium whitespace-nowrap">{{ position.termLength || '-' }}</td>
           <td class="p-5">
             <div class="flex items-center justify-end space-x-2">
             <!-- Edit Position Link -->

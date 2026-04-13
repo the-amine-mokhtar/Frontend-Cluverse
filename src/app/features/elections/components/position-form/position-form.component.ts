@@ -95,14 +95,19 @@ export class PositionFormComponent implements OnInit {
     this.errorMessage = '';
 
     const formValues = this.positionForm.value;
+    const isElectable = !!formValues.isElectable;
+    
     const payload = {
       ...formValues,
-      electable: formValues.isElectable,
-      autoRenew: formValues.isAutoRenew,
+      electable: isElectable,
+      autoRenew: isElectable ? formValues.isAutoRenew : null,
+      termLength: isElectable ? formValues.termLength : null,
+      maxCandidates: isElectable ? formValues.maxCandidates : null,
       clubId: this.clubId
     };
 
     delete (payload as any).isElectable;
+    delete (payload as any).isAutoRenew;
 
     const request$ = this.isEditMode
       ? this.positionService.update(this.positionId!, payload)

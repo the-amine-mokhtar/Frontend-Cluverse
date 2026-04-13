@@ -33,7 +33,19 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+      <div class="flex items-center justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6 font-bold">
+        <div>
+          <h4 class="text-sm font-bold text-blue-800 uppercase tracking-widest">Election Ready</h4>
+          <p class="text-xs text-blue-500 font-medium">Toggle this if members can run for this position.</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" formControlName="isElectable">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="election-settings-box grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 p-5 rounded-2xl border border-gray-100"
+           [class.hidden-settings]="!positionForm.get('isElectable')?.value">
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Term Length (Days)</label>
           <input type="number" formControlName="termLength" min="1"
@@ -45,13 +57,7 @@
             class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
         </div>
 
-        <div class="flex items-center space-x-3 pt-4">
-          <input type="checkbox" formControlName="isElectable" id="isElectable"
-            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
-          <label for="isElectable" class="text-sm font-bold text-gray-700 cursor-pointer">Is Electable?</label>
-        </div>
-
-        <div class="flex items-center space-x-3 pt-4">
+        <div class="flex items-center space-x-3 pt-4 md:col-span-2">
           <input type="checkbox" formControlName="isAutoRenew" id="isAutoRenew"
             class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
           <label for="isAutoRenew" class="text-sm font-bold text-gray-700 cursor-pointer">Auto Renew Term?</label>
