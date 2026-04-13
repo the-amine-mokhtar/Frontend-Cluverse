@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { PositionService } from '../../services/position.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 
 @Component({
   selector: 'app-position-list',
@@ -15,21 +16,23 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 export class PositionListComponent implements OnInit {
   positions: any[] = [];
   filteredPositions: any[] = [];
-  
+
   searchTerm: string = '';
   page: number = 1;
   itemsPerPage: number = 5;
   sortColumn: string = '';
   sortOrder: 'asc' | 'desc' = 'asc';
+  clubId: number = 0;
 
   constructor(
     private positionService: PositionService,
+    private authHelper: AuthHelperService,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.clubId = this.authHelper.getClubId();
     this.route.queryParams.subscribe(params => {
-      // Check for incoming filters
       if (params['positionId']) {
         this.searchTerm = params['positionId'];
       }
@@ -38,7 +41,7 @@ export class PositionListComponent implements OnInit {
   }
 
   loadPositions(): void {
-    this.positionService.getByClubId().subscribe({
+    this.positionService.getByClubId(this.clubId).subscribe({
       next: (data: any) => {
         this.positions = data || [];
         this.applyFilters();
@@ -52,7 +55,7 @@ export class PositionListComponent implements OnInit {
 
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      result = result.filter(p => 
+      result = result.filter(p =>
         (p.name && p.name.toLowerCase().includes(term)) ||
         (p.description && p.description.toLowerCase().includes(term)) ||
         (p.id && p.id.toString() === term) ||
@@ -62,6 +65,12 @@ export class PositionListComponent implements OnInit {
 
     if (this.sortColumn) {
       result.sort((a, b) => {
+        if (this.sortColumn === 'autoRenew') {
+          const valA = a.autoRenew ? 1 : 0;
+          const valB = b.autoRenew ? 1 : 0;
+          return this.sortOrder === 'asc' ? valA - valB : valB - valA;
+        }
+        
         const valA = a[this.sortColumn] ? a[this.sortColumn].toString().toLowerCase() : '';
         const valB = b[this.sortColumn] ? b[this.sortColumn].toString().toLowerCase() : '';
         if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;
@@ -71,7 +80,7 @@ export class PositionListComponent implements OnInit {
     }
 
     this.filteredPositions = result;
-    this.page = 1; 
+    this.page = 1;
   }
 
   sortBy(column: string): void {
