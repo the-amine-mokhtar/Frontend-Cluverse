@@ -1,0 +1,114 @@
+:host {
+  display: block;
+}
+
+.response-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(1000px 500px at 20% -10%, rgba(45, 212, 191, 0.16), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(59, 130, 246, 0.18), transparent 62%),
+    #0a0a1a;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+}
+
+.response-page__header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: rgba(10, 10, 26, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.response-page__brand {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.response-page__home-link {
+  color: #2dd4bf;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.response-page__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.response-page__card {
+  width: min(680px, 100%);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 44px 28px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+.response-page__badge {
+  display: inline-block;
+  background: rgba(45, 212, 191, 0.16);
+  border: 1px solid rgba(45, 212, 191, 0.4);
+  color: #2dd4bf;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.response-page__title {
+  margin: 14px 0 8px;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.response-page__message {
+  margin: 0 auto;
+  max-width: 48ch;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.65;
+}
+
+.response-page__cta {
+  display: inline-block;
+  margin-top: 20px;
+  text-decoration: none;
+  color: #0a0a1a;
+  background: #2dd4bf;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 10px 14px;
+}
+
+.response-page__footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 26, 0.9);
+}
+
+.response-page__footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+}
