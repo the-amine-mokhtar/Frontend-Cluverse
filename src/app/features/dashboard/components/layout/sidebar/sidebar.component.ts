@@ -1,4 +1,6 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { DashboardStateService } from '../../../../../core/services/dashboard-state.service';
 
 @Component({
@@ -6,14 +8,44 @@ import { DashboardStateService } from '../../../../../core/services/dashboard-st
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit, OnDestroy {
   @Input() showSidebar = false;
   @Output() closeSidebar = new EventEmitter<void>();
 
-  constructor(public dashState: DashboardStateService) {}
+  sponsorshipMenuOpen = false;
+  private routerEventsSub?: Subscription;
+
+  constructor(public dashState: DashboardStateService, private router: Router) {}
+
+  ngOnInit(): void {
+    this.syncSponsorshipMenuFromRoute();
+    this.routerEventsSub = this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.syncSponsorshipMenuFromRoute();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routerEventsSub?.unsubscribe();
+  }
 
   onClose(): void {
     this.closeSidebar.emit();
+  }
+
+  get isSponsorshipRoute(): boolean {
+    return this.router.url.startsWith('/dashboard/sponsorship');
+  }
+
+  toggleSponsorshipMenu(): void {
+    this.sponsorshipMenuOpen = !this.sponsorshipMenuOpen;
+  }
+
+  private syncSponsorshipMenuFromRoute(): void {
+    if (this.isSponsorshipRoute) {
+      this.sponsorshipMenuOpen = true;
+    }
   }
 
   get userInitials(): string {

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { ActivatedRoute } from '@angular/router';
 import {
   SponsorService,
   Sponsor,
@@ -11,6 +13,14 @@ import {
   SponsorEmailAttachment
 } from '../../../../core/services/sponsor.service';
 import { SponsorFileUtilsService } from '../../../../core/services/sponsor-file-utils.service';
+import { SponsorshipPdfService } from '../../../../core/services/sponsorship-pdf.service';
+import {
+  SponsorshipService,
+  Sponsorship,
+  SponsorshipStatus,
+  CreateSponsorshipRequest,
+  UpdateSponsorshipRequest
+} from '../../../../core/services/sponsorship.service';
 
 interface CountryCodeOption {
   code: string;
@@ -18,12 +28,71 @@ interface CountryCodeOption {
   label: string;
 }
 
+interface SponsorshipColumn {
+  status: SponsorshipStatus;
+  label: string;
+}
+
+interface SponsorshipMoveRequirement {
+  label: string;
+  met: boolean;
+}
+
+interface SponsorshipMoveGuide {
+  from: string;
+  to: string;
+  requirements: SponsorshipMoveRequirement[];
+  canMove: boolean;
+  note: string;
+}
+
 @Component({
   selector: 'app-sponsorship-home',
   templateUrl: './sponsorship-home.component.html',
   styleUrls: ['./sponsorship-home.component.scss']
 })
-export class SponsorshipHomeComponent implements OnInit {
+export class SponsorshipHomeComponent implements OnInit, OnDestroy {
+  sectionTab: 'SPONSORS' | 'SPONSORSHIPS' = 'SPONSORS';
+
+  readonly sponsorshipColumns: SponsorshipColumn[] = [
+    { status: 'PROSPECTING', label: 'Prospecting' },
+    { status: 'OUTREACH_SENT', label: 'Outreach Sent' },
+    { status: 'CONTRACT_SENT', label: 'Contract Sent' },
+    { status: 'SIGNED', label: 'Signed' },
+    { status: 'PAID', label: 'Paid' }
+  ];
+
+  sponsorships: Sponsorship[] = [];
+  sponsorshipsLoading = false;
+  sponsorshipsError = '';
+  sponsorshipSaving = false;
+  showAddSponsorshipForm = false;
+  showEditSponsorshipForm = false;
+  sponsorshipEditStatus: SponsorshipStatus = 'PROSPECTING';
+  private sponsorshipRefreshTimer?: ReturnType<typeof setInterval>;
+
+  sponsorshipForm: CreateSponsorshipRequest = {
+    sponsorId: 0,
+    eventName: '',
+    expectedAmount: null,
+    proposalSummary: '',
+    notes: ''
+  };
+
+  sponsorshipEditId: number | null = null;
+  sponsorshipEditForm: UpdateSponsorshipRequest = {
+    eventName: '',
+    expectedAmount: null,
+    agreedAmount: null,
+    paidAmount: null,
+    proposalSummary: '',
+    proposalDocumentName: '',
+    contractDocumentName: '',
+    signedDocumentName: '',
+    contractReference: '',
+    notes: ''
+  };
+
   readonly countryCodeOptions: CountryCodeOption[] = [
     { code: '+216', flag: '🇹🇳', label: 'Tunisia' },
     { code: '+33', flag: '🇫🇷', label: 'France' },
@@ -126,11 +195,31 @@ export class SponsorshipHomeComponent implements OnInit {
   constructor(
     private sponsorService: SponsorService,
     private sponsorFileUtils: SponsorFileUtilsService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private sponsorshipPdfService: SponsorshipPdfService,
+    private sponsorshipService: SponsorshipService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.loadSponsors();
+    this.route.data.subscribe((data) => {
+      const section = (data['section'] as 'SPONSORS' | 'SPONSORSHIPS' | undefined) || 'SPONSORS';
+      this.sectionTab = section;
+
+      if (section === 'SPONSORSHIPS') {
+        this.showFilterMenu = false;
+        this.activeActionMenuSponsorId = null;
+        this.loadSponsorships();
+        this.startSponsorshipAutoRefresh();
+      } else {
+        this.stopSponsorshipAutoRefresh();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.stopSponsorshipAutoRefresh();
   }
 
   loadSponsors(): void {
@@ -462,6 +551,295 @@ export class SponsorshipHomeComponent implements OnInit {
     this.loadSponsorEmails(sponsor.id);
   }
 
+  loadSponsorships(): void {
+    this.sponsorshipsLoading = true;
+    this.sponsorshipsError = '';
+
+    this.sponsorshipService.getAll().subscribe({
+      next: (data) => {
+        this.sponsorships = data;
+        this.sponsorshipsLoading = false;
+      },
+      error: (err: unknown) => {
+        this.sponsorshipsLoading = false;
+        this.sponsorshipsError = this.resolveError(err, 'Failed to load sponsorships.');
+      }
+    });
+  }
+
+  sponsorshipCards(status: SponsorshipStatus): Sponsorship[] {
+    return this.sponsorships.filter(item => item.status === status);
+  }
+
+  openAddSponsorshipForm(): void {
+    this.showAddSponsorshipForm = true;
+    this.showEditSponsorshipForm = false;
+    this.sponsorshipForm = {
+      sponsorId: this.sponsors[0]?.id || 0,
+      eventName: '',
+      expectedAmount: null,
+      proposalSummary: '',
+      notes: ''
+    };
+  }
+
+  cancelAddSponsorshipForm(): void {
+    this.showAddSponsorshipForm = false;
+  }
+
+  createSponsorship(): void {
+    if (!this.sponsorshipForm.sponsorId) {
+      this.showToast('Select a sponsor before creating a sponsorship.', 'error');
+      return;
+    }
+
+    this.sponsorshipSaving = true;
+    this.sponsorshipsError = '';
+
+    this.sponsorshipService.create(this.sponsorshipForm).subscribe({
+      next: (created) => {
+        this.sponsorships = [created, ...this.sponsorships];
+        this.sponsorshipSaving = false;
+        this.showAddSponsorshipForm = false;
+        this.showToast('Sponsorship card created in Prospecting.', 'success');
+      },
+      error: (err: unknown) => {
+        this.sponsorshipSaving = false;
+        this.sponsorshipsError = this.resolveError(err, 'Failed to create sponsorship.');
+        this.showToast(this.sponsorshipsError, 'error');
+      }
+    });
+  }
+
+  openEditSponsorshipForm(item: Sponsorship): void {
+    if (item.status !== 'PROSPECTING') {
+      this.showToast('Editing is only allowed while card is in Prospecting.', 'info');
+      return;
+    }
+    this.sponsorshipEditId = item.id;
+    this.showEditSponsorshipForm = true;
+    this.showAddSponsorshipForm = false;
+    this.sponsorshipEditStatus = item.status;
+    this.sponsorshipEditForm = {
+      eventName: item.eventName || '',
+      expectedAmount: item.expectedAmount ?? null,
+      agreedAmount: item.agreedAmount ?? null,
+      paidAmount: item.paidAmount ?? null,
+      proposalSummary: item.proposalSummary || '',
+      proposalDocumentName: item.proposalDocumentName || '',
+      contractDocumentName: item.contractDocumentName || '',
+      signedDocumentName: item.signedDocumentName || '',
+      contractReference: item.contractReference || '',
+      notes: item.notes || ''
+    };
+  }
+
+  cancelEditSponsorshipForm(): void {
+    this.showEditSponsorshipForm = false;
+    this.sponsorshipEditId = null;
+    this.sponsorshipEditStatus = 'PROSPECTING';
+  }
+
+  saveSponsorshipEdit(): void {
+    if (!this.sponsorshipEditId) {
+      return;
+    }
+
+    this.sponsorshipSaving = true;
+    this.sponsorshipService.update(this.sponsorshipEditId, this.sponsorshipEditForm).subscribe({
+      next: (updated) => {
+        this.sponsorships = this.sponsorships.map(item => item.id === updated.id ? updated : item);
+        this.sponsorshipSaving = false;
+        this.showEditSponsorshipForm = false;
+        this.sponsorshipEditId = null;
+        this.showToast('Sponsorship updated.', 'success');
+      },
+      error: (err: unknown) => {
+        this.sponsorshipSaving = false;
+        this.sponsorshipsError = this.resolveError(err, 'Failed to update sponsorship.');
+        this.showToast(this.sponsorshipsError, 'error');
+      }
+    });
+  }
+
+  deleteSponsorship(item: Sponsorship): void {
+    this.sponsorshipSaving = true;
+    this.sponsorshipService.delete(item.id).subscribe({
+      next: () => {
+        this.sponsorships = this.sponsorships.filter(entry => entry.id !== item.id);
+        this.sponsorshipSaving = false;
+        this.showToast('Sponsorship deleted.', 'success');
+      },
+      error: (err: unknown) => {
+        this.sponsorshipSaving = false;
+        this.sponsorshipsError = this.resolveError(err, 'Failed to delete sponsorship.');
+        this.showToast(this.sponsorshipsError, 'error');
+      }
+    });
+  }
+
+  moveSponsorship(item: Sponsorship, toStatus: SponsorshipStatus): void {
+    this.sponsorshipSaving = true;
+    this.sponsorshipService.move(item.id, toStatus).subscribe({
+      next: (updated) => {
+        this.sponsorships = this.sponsorships.map(entry => entry.id === updated.id ? updated : entry);
+        this.sponsorshipSaving = false;
+        this.showToast(`Moved to ${this.statusLabel(updated.status)}.`, 'success');
+      },
+      error: (err: unknown) => {
+        this.sponsorshipSaving = false;
+        const reason = this.resolveError(err, 'Failed to move sponsorship card.');
+        this.showToast(reason, 'error');
+      }
+    });
+  }
+
+  dropListId(status: SponsorshipStatus): string {
+    return `sponsors-kanban-${status.toLowerCase()}`;
+  }
+
+  connectedDropLists(status: SponsorshipStatus): string[] {
+    const connected: string[] = [];
+    const next = this.nextStatus(status);
+    if (next && !(status === 'OUTREACH_SENT' && next === 'CONTRACT_SENT')) {
+      connected.push(this.dropListId(next));
+    }
+    return connected;
+  }
+
+  onSponsorshipDrop(event: CdkDragDrop<Sponsorship[]>, targetStatus: SponsorshipStatus): void {
+    const dragged = event.item.data as Sponsorship | undefined;
+    if (!dragged || dragged.status === targetStatus || this.sponsorshipSaving) {
+      return;
+    }
+    if (this.isDeclinedOutreach(dragged)) {
+      this.showToast('Declined outreach cards cannot be moved. You can only delete them.', 'info');
+      return;
+    }
+    const currentIndex = this.sponsorshipColumns.findIndex(col => col.status === dragged.status);
+    const targetIndex = this.sponsorshipColumns.findIndex(col => col.status === targetStatus);
+    if (targetIndex <= currentIndex) {
+      this.showToast('Moving cards backwards is not allowed.', 'info');
+      return;
+    }
+    if (dragged.status === 'OUTREACH_SENT' && targetStatus === 'CONTRACT_SENT') {
+      this.showToast('This move is automatic after sponsor acceptance from outreach email.', 'info');
+      return;
+    }
+    this.moveSponsorship(dragged, targetStatus);
+  }
+
+  getEditMoveGuide(): SponsorshipMoveGuide | null {
+    const current = this.sponsorshipEditStatus;
+    const next = this.nextStatus(current);
+    if (!next) {
+      return {
+        from: this.statusLabel(current),
+        to: 'Completed',
+        requirements: [],
+        canMove: false,
+        note: 'This card is already in the final column.'
+      };
+    }
+
+    const requirements: SponsorshipMoveRequirement[] = [];
+    const agreed = this.sponsorshipEditForm.agreedAmount ?? 0;
+    const paid = this.sponsorshipEditForm.paidAmount ?? 0;
+    const hasSignedProof = !!this.sponsorshipEditForm.contractReference?.trim() || !!this.sponsorshipEditForm.signedDocumentName?.trim();
+
+    if (current === 'OUTREACH_SENT' && next === 'CONTRACT_SENT') {
+      requirements.push({ label: 'Sponsor must accept from outreach email', met: false });
+      requirements.push({ label: 'This transition is automatic', met: false });
+    } else if (current === 'CONTRACT_SENT' && next === 'SIGNED') {
+      requirements.push({ label: 'Signed document name OR contract reference is filled', met: hasSignedProof });
+    } else if (current === 'SIGNED' && next === 'PAID') {
+      requirements.push({ label: 'Agreed amount is greater than 0', met: agreed > 0 });
+      requirements.push({ label: 'Paid amount is at least equal to agreed amount', met: agreed > 0 && paid >= agreed });
+    } else {
+      requirements.push({ label: 'No mandatory fields for this move', met: true });
+    }
+
+    return {
+      from: this.statusLabel(current),
+      to: this.statusLabel(next),
+      canMove: requirements.every(req => req.met),
+      requirements,
+      note: 'Cards can only be dragged forward to the next column.'
+    };
+  }
+
+  isFieldEditable(field: 'eventName' | 'expectedAmount' | 'agreedAmount' | 'paidAmount' | 'proposalSummary' | 'proposalDocumentName' | 'contractDocumentName' | 'signedDocumentName' | 'contractReference' | 'notes'): boolean {
+    switch (this.sponsorshipEditStatus) {
+      case 'PROSPECTING':
+        return ['eventName', 'expectedAmount', 'proposalSummary', 'notes'].includes(field);
+      case 'OUTREACH_SENT':
+        return ['eventName', 'expectedAmount', 'proposalSummary', 'notes'].includes(field);
+      case 'CONTRACT_SENT':
+        return ['agreedAmount', 'contractDocumentName', 'contractReference', 'proposalSummary', 'notes'].includes(field);
+      case 'SIGNED':
+        return ['agreedAmount', 'paidAmount', 'signedDocumentName', 'contractReference', 'notes'].includes(field);
+      case 'PAID':
+        return ['paidAmount', 'notes'].includes(field);
+      default:
+        return false;
+    }
+  }
+
+  private startSponsorshipAutoRefresh(): void {
+    if (this.sponsorshipRefreshTimer) {
+      return;
+    }
+    this.sponsorshipRefreshTimer = setInterval(() => {
+      if (this.sectionTab === 'SPONSORSHIPS' && !this.sponsorshipSaving) {
+        this.loadSponsorships();
+      }
+    }, 15000);
+  }
+
+  private stopSponsorshipAutoRefresh(): void {
+    if (this.sponsorshipRefreshTimer) {
+      clearInterval(this.sponsorshipRefreshTimer);
+      this.sponsorshipRefreshTimer = undefined;
+    }
+  }
+
+  previousStatus(status: SponsorshipStatus): SponsorshipStatus | null {
+    const index = this.sponsorshipColumns.findIndex(col => col.status === status);
+    if (index <= 0) {
+      return null;
+    }
+    return this.sponsorshipColumns[index - 1].status;
+  }
+
+  nextStatus(status: SponsorshipStatus): SponsorshipStatus | null {
+    const index = this.sponsorshipColumns.findIndex(col => col.status === status);
+    if (index === -1 || index >= this.sponsorshipColumns.length - 1) {
+      return null;
+    }
+    return this.sponsorshipColumns[index + 1].status;
+  }
+
+  statusLabel(status: SponsorshipStatus): string {
+    return this.sponsorshipColumns.find(col => col.status === status)?.label || status;
+  }
+
+  sponsorshipProgress(item: Sponsorship): string {
+    const agreed = item.agreedAmount ?? 0;
+    const paid = item.paidAmount ?? 0;
+    if (agreed <= 0) {
+      return '--';
+    }
+    return `${Math.min(100, Math.round((paid / agreed) * 100))}%`;
+  }
+
+  isDeclinedOutreach(item: Sponsorship): boolean {
+    return item.status === 'OUTREACH_SENT' && (item.outreachDecision || '').toUpperCase() === 'DECLINED';
+  }
+
+  isSponsorshipDragDisabled(item: Sponsorship): boolean {
+    return this.sponsorshipSaving || this.isDeclinedOutreach(item);
+  }
+
   onOpenHistory(sponsor: Sponsor): void {
     if (!sponsor.id) {
       return;
@@ -550,6 +928,38 @@ export class SponsorshipHomeComponent implements OnInit {
         this.emailsError = this.resolveError(err, 'Failed to send email.');
       }
     });
+  }
+
+  async generateProposalPdfAttachment(): Promise<void> {
+    if (!this.selectedEmailSponsor) {
+      this.showToast('Select a sponsor first to generate a proposal PDF.', 'error');
+      return;
+    }
+
+    try {
+      const file = await this.sponsorshipPdfService.generateProposalPdf({
+        sponsorName: this.selectedEmailSponsor.name,
+        sponsorEmail: this.selectedEmailSponsor.contactEmail,
+        proposalSummary: this.composeForm.body,
+        contactName: 'Cluverse Sponsorship Team',
+        contactRole: 'Business Development',
+        contactEmail: 'contact@cluverse.tn'
+      });
+
+      this.composeFiles = this.mergeFiles(this.composeFiles, [file]);
+
+      if (!this.composeForm.subject.trim()) {
+        this.composeForm.subject = `Sponsorship Proposal - ${this.selectedEmailSponsor.name}`;
+      }
+
+      if (!this.composeForm.body.trim()) {
+        this.composeForm.body = `Dear ${this.selectedEmailSponsor.name},\n\nPlease find attached our sponsorship partnership proposal for the upcoming event. We would be delighted to collaborate with your team and discuss a package aligned with your goals.\n\nBest regards,\nCluverse Sponsorship Team`;
+      }
+
+      this.showToast('Proposal PDF generated and attached.', 'success');
+    } catch {
+      this.showToast('Failed to generate proposal PDF. Please try again.', 'error');
+    }
   }
 
   sendReply(): void {

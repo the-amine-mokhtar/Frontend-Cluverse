@@ -51,6 +51,234 @@
     gap: 0.65rem;
   }
 
+  &__kanban-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.9rem;
+    padding: 1rem 1.15rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--s-text);
+    }
+
+    p {
+      margin: 0.22rem 0 0;
+      font-size: 0.8rem;
+      color: var(--s-muted);
+    }
+  }
+
+  &__sponsorship-form {
+    padding: 1rem 1.15rem;
+
+    h3 {
+      margin: 0 0 0.7rem;
+      color: var(--s-text);
+      font-size: 0.94rem;
+    }
+  }
+
+  &__form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  &__kanban-loading {
+    padding: 1rem 1.15rem;
+    font-size: 0.86rem;
+    color: var(--s-muted);
+  }
+
+  &__kanban-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(220px, 1fr));
+    gap: 0.8rem;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  &__kanban-column {
+    background: var(--s-bg-card);
+    border: 1px solid var(--s-border);
+    border-radius: 14px;
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__kanban-column-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--s-border);
+    padding: 0.7rem 0.78rem;
+
+    span {
+      font-size: 0.77rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--s-muted);
+      text-transform: uppercase;
+    }
+
+    strong {
+      color: var(--s-text);
+      font-size: 0.8rem;
+    }
+  }
+
+  &__kanban-column-body {
+    padding: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-height: 290px;
+    overflow-y: auto;
+    transition: background-color 0.16s ease;
+
+    &.cdk-drop-list-dragging,
+    &.cdk-drop-list-receiving {
+      background: rgba(247, 185, 28, 0.08);
+    }
+  }
+
+  &__kanban-card {
+    border: 1px solid var(--s-border);
+    background: var(--s-bg-input);
+    border-radius: 12px;
+    padding: 0.62rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.52rem;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &--declined {
+      border-color: #7f1d1d;
+      background: #2a0f14;
+
+      .sponsors__kanban-summary,
+      .sponsors__kanban-card-head h4,
+      .sponsors__kanban-card-head p,
+      .sponsors__kanban-meta span {
+        color: #fecdd3;
+      }
+    }
+  }
+
+  &__declined-pill {
+    display: inline-flex;
+    margin-top: 0.28rem;
+    border: 1px solid #b91c1c;
+    color: #fecaca;
+    background: rgba(185, 28, 28, 0.22);
+    border-radius: 999px;
+    padding: 0.08rem 0.45rem;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  &__kanban-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+
+    h4 {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--s-text);
+    }
+
+    p {
+      margin: 0.16rem 0 0;
+      color: var(--s-muted);
+      font-size: 0.74rem;
+    }
+  }
+
+  &__kanban-sponsor {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--s-border);
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--s-muted);
+    font-size: 0.66rem;
+    font-weight: 700;
+    background: var(--s-bg-card);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__kanban-meta {
+    display: grid;
+    gap: 0.2rem;
+
+    span {
+      font-size: 0.71rem;
+      color: var(--s-muted);
+    }
+  }
+
+  &__kanban-summary {
+    margin: 0;
+    font-size: 0.74rem;
+    color: var(--s-text);
+    line-height: 1.4;
+  }
+
+  &__kanban-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+
+    .sponsors__btn {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.72rem;
+    }
+  }
+
+  &__kanban-empty {
+    padding: 0.9rem;
+    color: var(--s-muted);
+    font-size: 0.78rem;
+    text-align: center;
+    border: 1px dashed var(--s-border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.01);
+  }
+
+  .cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: 12px;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3);
+  }
+
+  .cdk-drag-placeholder {
+    opacity: 0.18;
+  }
+
+  .cdk-drag-animating {
+    transition: transform 200ms ease;
+  }
+
   &__filter-wrap {
     position: relative;
   }
@@ -567,6 +795,94 @@
 
   &__dialog--delete {
     max-width: 420px;
+  }
+
+  &__dialog--sponsorship {
+    max-width: 860px;
+    width: min(92vw, 860px);
+  }
+
+  &__pipeline-guide {
+    border: 1px solid var(--s-border);
+    background: var(--s-bg-input);
+    border-radius: 10px;
+    padding: 0.7rem 0.8rem;
+    margin-top: 0.55rem;
+  }
+
+  &__pipeline-guide-title {
+    margin: 0;
+    color: var(--s-text);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  &__pipeline-guide-sub {
+    margin: 0.2rem 0 0.5rem;
+    font-size: 0.74rem;
+    color: var(--s-muted);
+  }
+
+  &__pipeline-guide-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.35rem;
+
+    li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.5rem;
+      align-items: center;
+      font-size: 0.74rem;
+      color: var(--s-text);
+
+      span:first-child {
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 0.12rem 0.4rem;
+        min-width: 58px;
+        text-align: center;
+        font-size: 0.68rem;
+      }
+    }
+  }
+
+  &__pipeline-guide-item--ok {
+    span:first-child {
+      color: #3ecf8e;
+      background: rgba(62, 207, 142, 0.12);
+      border: 1px solid rgba(62, 207, 142, 0.3);
+    }
+  }
+
+  &__pipeline-guide-item--ko {
+    span:first-child {
+      color: #e05c5c;
+      background: rgba(224, 92, 92, 0.12);
+      border: 1px solid rgba(224, 92, 92, 0.3);
+    }
+  }
+
+  &__pipeline-guide-note {
+    margin: 0.55rem 0 0;
+    color: var(--s-muted);
+    font-size: 0.7rem;
+  }
+
+  &__pipeline-guide-status {
+    margin: 0.45rem 0 0;
+    font-size: 0.74rem;
+    font-weight: 700;
+
+    &--ok {
+      color: #3ecf8e;
+    }
+
+    &--ko {
+      color: #e05c5c;
+    }
   }
 
   &__dialog--emails {

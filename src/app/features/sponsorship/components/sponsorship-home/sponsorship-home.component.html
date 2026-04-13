@@ -1,11 +1,13 @@
 <div class="sponsors">
   <div class="sponsors__header">
     <div>
-      <h2 class="sponsors__title">Sponsors</h2>
-      <p class="sponsors__subtitle">Invite and track sponsor confirmations</p>
+      <h2 class="sponsors__title">{{ sectionTab === 'SPONSORSHIPS' ? 'Sponsorships' : 'Sponsors' }}</h2>
+      <p class="sponsors__subtitle">
+        {{ sectionTab === 'SPONSORSHIPS' ? 'Manage sponsorship pipeline with drag and drop' : 'Invite and track sponsor confirmations' }}
+      </p>
     </div>
 
-    <div class="sponsors__header-actions">
+    <div class="sponsors__header-actions" *ngIf="sectionTab === 'SPONSORS'">
       <div class="sponsors__filter-wrap">
         <button class="sponsors__filter-btn" (click)="toggleFilterMenu()">
           Filter
@@ -59,6 +61,189 @@
       </button>
     </div>
   </div>
+
+  <ng-container *ngIf="sectionTab === 'SPONSORSHIPS'">
+    <div class="sponsors__card sponsors__kanban-toolbar">
+      <div>
+        <h3>Sponsorship Pipeline</h3>
+        <p>Drag cards through the five guarded stages.</p>
+      </div>
+      <button class="sponsors__add-btn" (click)="openAddSponsorshipForm()">New Sponsorship</button>
+    </div>
+
+    <div class="sponsors__error" *ngIf="sponsorshipsError">{{ sponsorshipsError }}</div>
+
+    <div class="sponsors__overlay" *ngIf="showAddSponsorshipForm" (click)="cancelAddSponsorshipForm()">
+      <div class="sponsors__dialog sponsors__dialog--sponsorship" (click)="$event.stopPropagation()">
+        <h3 class="sponsors__dialog-title">Create Sponsorship</h3>
+        <div class="sponsors__form-grid">
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Sponsor</label>
+            <select [(ngModel)]="sponsorshipForm.sponsorId">
+              <option [ngValue]="0">Select sponsor</option>
+              <option *ngFor="let sponsor of sponsors" [ngValue]="sponsor.id">{{ sponsor.name }}</option>
+            </select>
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Event Name</label>
+            <input type="text" [(ngModel)]="sponsorshipForm.eventName" placeholder="Hackathon 2026" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Expected Amount</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="sponsorshipForm.expectedAmount" />
+          </div>
+        </div>
+        <div class="sponsors__form-field">
+          <label>Proposal Summary</label>
+          <textarea rows="3" [(ngModel)]="sponsorshipForm.proposalSummary" placeholder="Persuasive summary for this opportunity"></textarea>
+        </div>
+        <div class="sponsors__form-field">
+          <label>Notes</label>
+          <textarea rows="2" [(ngModel)]="sponsorshipForm.notes" placeholder="Internal notes"></textarea>
+        </div>
+        <div class="sponsors__dialog-actions">
+          <button class="sponsors__btn sponsors__btn--secondary" (click)="cancelAddSponsorshipForm()">Cancel</button>
+          <button class="sponsors__btn sponsors__btn--primary" [disabled]="sponsorshipSaving" (click)="createSponsorship()">
+            {{ sponsorshipSaving ? 'Creating...' : 'Create Card' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sponsors__overlay" *ngIf="showEditSponsorshipForm" (click)="cancelEditSponsorshipForm()">
+      <div class="sponsors__dialog sponsors__dialog--sponsorship" (click)="$event.stopPropagation()">
+        <h3 class="sponsors__dialog-title">Edit Sponsorship</h3>
+        <div class="sponsors__form-grid">
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Event Name</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.eventName" [disabled]="!isFieldEditable('eventName')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Expected Amount</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="sponsorshipEditForm.expectedAmount" [disabled]="!isFieldEditable('expectedAmount')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Agreed Amount</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="sponsorshipEditForm.agreedAmount" [disabled]="!isFieldEditable('agreedAmount')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Paid Amount</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="sponsorshipEditForm.paidAmount" [disabled]="!isFieldEditable('paidAmount')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Proposal Document Name</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.proposalDocumentName" [disabled]="!isFieldEditable('proposalDocumentName')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Contract Document Name</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.contractDocumentName" [disabled]="!isFieldEditable('contractDocumentName')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Signed Document Name</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.signedDocumentName" [disabled]="!isFieldEditable('signedDocumentName')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Contract Reference</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.contractReference" [disabled]="!isFieldEditable('contractReference')" />
+          </div>
+        </div>
+        <div class="sponsors__form-field">
+          <label>Proposal Summary</label>
+          <textarea rows="3" [(ngModel)]="sponsorshipEditForm.proposalSummary" [disabled]="!isFieldEditable('proposalSummary')"></textarea>
+        </div>
+        <div class="sponsors__form-field">
+          <label>Notes</label>
+          <textarea rows="2" [(ngModel)]="sponsorshipEditForm.notes" [disabled]="!isFieldEditable('notes')"></textarea>
+        </div>
+
+        <div class="sponsors__pipeline-guide" *ngIf="getEditMoveGuide() as guide">
+          <p class="sponsors__pipeline-guide-title">Drag and Drop Conditions</p>
+          <p class="sponsors__pipeline-guide-sub">{{ guide.from }} -> {{ guide.to }}</p>
+          <ul class="sponsors__pipeline-guide-list">
+            <li *ngFor="let req of guide.requirements" [class.sponsors__pipeline-guide-item--ok]="req.met" [class.sponsors__pipeline-guide-item--ko]="!req.met">
+              <span>{{ req.met ? 'OK' : 'Missing' }}</span>
+              <span>{{ req.label }}</span>
+            </li>
+          </ul>
+          <p class="sponsors__pipeline-guide-note">{{ guide.note }}</p>
+          <p class="sponsors__pipeline-guide-status" [class.sponsors__pipeline-guide-status--ok]="guide.canMove" [class.sponsors__pipeline-guide-status--ko]="!guide.canMove">
+            {{ guide.canMove ? 'This card can move to the next column.' : 'This card cannot move to the next column yet.' }}
+          </p>
+        </div>
+
+        <div class="sponsors__dialog-actions">
+          <button class="sponsors__btn sponsors__btn--secondary" (click)="cancelEditSponsorshipForm()">Cancel</button>
+          <button class="sponsors__btn sponsors__btn--primary" [disabled]="sponsorshipSaving" (click)="saveSponsorshipEdit()">
+            {{ sponsorshipSaving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sponsors__card sponsors__kanban-loading" *ngIf="sponsorshipsLoading">
+      Loading sponsorship pipeline...
+    </div>
+
+    <div class="sponsors__kanban-board" *ngIf="!sponsorshipsLoading">
+      <div class="sponsors__kanban-column" *ngFor="let column of sponsorshipColumns">
+        <div class="sponsors__kanban-column-head">
+          <span>{{ column.label }}</span>
+          <strong>{{ sponsorshipCards(column.status).length }}</strong>
+        </div>
+
+        <div
+          class="sponsors__kanban-column-body"
+          [id]="dropListId(column.status)"
+          cdkDropList
+          [cdkDropListData]="sponsorshipCards(column.status)"
+          [cdkDropListConnectedTo]="connectedDropLists(column.status)"
+          (cdkDropListDropped)="onSponsorshipDrop($event, column.status)"
+        >
+          <article
+            class="sponsors__kanban-card"
+            [class.sponsors__kanban-card--declined]="isDeclinedOutreach(item)"
+            *ngFor="let item of sponsorshipCards(column.status)"
+            cdkDrag
+            [cdkDragDisabled]="isSponsorshipDragDisabled(item)"
+            [cdkDragData]="item"
+          >
+            <div class="sponsors__kanban-card-head">
+              <div class="sponsors__kanban-sponsor">
+                <img *ngIf="item.sponsorLogoUrl" [src]="item.sponsorLogoUrl" alt="Sponsor logo" />
+                <span *ngIf="!item.sponsorLogoUrl">SP</span>
+              </div>
+              <div>
+                <h4>{{ item.sponsorName }}</h4>
+                <p>{{ item.eventName || 'No event yet' }}</p>
+                <span class="sponsors__declined-pill" *ngIf="isDeclinedOutreach(item)">Declined</span>
+              </div>
+            </div>
+
+            <div class="sponsors__kanban-meta">
+              <span>Expected: {{ item.expectedAmount || 0 }}</span>
+              <span>Agreed: {{ item.agreedAmount || 0 }}</span>
+              <span>Paid: {{ item.paidAmount || 0 }} ({{ sponsorshipProgress(item) }})</span>
+            </div>
+
+            <p class="sponsors__kanban-summary" *ngIf="item.proposalSummary">{{ item.proposalSummary }}</p>
+
+            <div class="sponsors__kanban-actions">
+              <button class="sponsors__btn sponsors__btn--secondary" *ngIf="item.status === 'PROSPECTING'" [disabled]="sponsorshipSaving" (click)="openEditSponsorshipForm(item)">
+                Edit
+              </button>
+              <button class="sponsors__btn sponsors__btn--danger" [disabled]="sponsorshipSaving" (click)="deleteSponsorship(item)">
+                Delete
+              </button>
+            </div>
+          </article>
+
+          <div class="sponsors__kanban-empty" *ngIf="sponsorshipCards(column.status).length === 0">Drop cards here</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="sectionTab === 'SPONSORS'">
 
   <div class="sponsors__error" *ngIf="loadError">{{ loadError }}</div>
 
@@ -432,6 +617,9 @@
             </div>
           </div>
           <div class="sponsors__dialog-actions">
+            <button class="sponsors__btn sponsors__btn--secondary" type="button" (click)="generateProposalPdfAttachment()" [disabled]="emailsSubmitting">
+              Generate Proposal PDF
+            </button>
             <button class="sponsors__btn sponsors__btn--primary" (click)="sendComposeEmail()" [disabled]="emailsSubmitting">
               {{ emailsSubmitting ? 'Sending...' : 'Send Email' }}
             </button>
@@ -473,4 +661,5 @@
   <div class="sponsors__toast" *ngIf="toastVisible" [ngClass]="'sponsors__toast--' + toastType">
     {{ toastMessage }}
   </div>
+  </ng-container>
 </div>
