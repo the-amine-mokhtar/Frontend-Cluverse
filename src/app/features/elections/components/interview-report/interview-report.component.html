@@ -1,45 +1,45 @@
-<div class="report-container">
+<div class="elections animate-fade-in" style="max-width: 1200px;">
   
-  <div class="loading-state" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Génération du rapport en cours...</p>
+  <div style="text-align: center; margin-top: 5rem;" *ngIf="isLoading">
+    <div style="border: 4px solid var(--e-border); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--e-primary); animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+    <p style="color: var(--e-muted); font-weight: 600;">Génération du rapport en cours...</p>
   </div>
 
-  <div class="error-state" *ngIf="!isLoading && error">
-    <div class="error-card">
-      <span class="icon">⚠️</span>
-      <p>{{ error }}</p>
-      <button class="btn-primary" (click)="goBack()">Retourner aux postes</button>
-    </div>
+  <div class="elections__empty" *ngIf="!isLoading && error" style="border: 1px solid var(--e-danger); background: rgba(252, 129, 129, 0.1);">
+    <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">⚠️</span>
+    <p style="color: var(--e-danger); margin-bottom: 1.5rem;">{{ error }}</p>
+    <button class="elections__btn elections__btn--primary" style="background: var(--e-danger);" (click)="goBack()">Retourner aux postes</button>
   </div>
 
   <div class="report-content" *ngIf="!isLoading && report">
     
     <!-- Title Area -->
-    <div class="report-header">
-      <div class="titles">
-        <h1>Rapport d'entretien</h1>
-        <h3>{{ report.memberName }} — {{ report.positionTitle }}</h3>
+    <div class="elections__header">
+      <div>
+        <h2 class="elections__title">Rapport d'entretien</h2>
+        <p class="elections__subtitle">{{ report.memberName }} — {{ report.positionTitle }}</p>
       </div>
-      <button class="btn-primary" (click)="goBack()">Retour aux postes</button>
+      <div class="elections__actions">
+        <button class="elections__btn elections__btn--secondary" (click)="goBack()">Retour aux postes</button>
+      </div>
     </div>
 
     <!-- Main Grid -->
-    <div class="report-grid">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
       
       <!-- Top Overview (Score & Rec) -->
-      <div class="card overview-card">
-        <div class="overview-item">
-          <h4>Score Global</h4>
+      <div class="elections__card" style="display: flex; justify-content: space-around; align-items: center; padding: 2rem;">
+        <div style="text-align: center;">
+          <h4 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 700; color: var(--e-muted); text-transform: uppercase;">Score Global</h4>
           <div class="score-circle" [ngClass]="{'good': report.globalScore >= 70, 'avg': report.globalScore >= 50 && report.globalScore < 70, 'bad': report.globalScore < 50}">
             <span>{{ report.globalScore }}<small>/100</small></span>
           </div>
         </div>
         
-        <div class="divider"></div>
+        <div style="width: 1px; height: 80px; background: var(--e-border);"></div>
         
-        <div class="overview-item">
-          <h4>Recommandation</h4>
+        <div style="text-align: center;">
+          <h4 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 700; color: var(--e-muted); text-transform: uppercase;">Recommandation</h4>
           <div class="recommendation-badge" [ngClass]="report.recommendation.toLowerCase()">
             <span class="rec-icon">{{ getRecommendationIcon(report.recommendation) }}</span>
             <span class="rec-label">{{ getRecommendationLabel(report.recommendation) }}</span>
@@ -48,8 +48,8 @@
       </div>
 
       <!-- Detailed Scores -->
-      <div class="card detail-scores-card">
-        <h4>Scores Détaillés</h4>
+      <div class="elections__card" style="padding: 1.5rem;">
+        <h4 style="margin: 0 0 1.25rem 0; font-size: 1rem; font-weight: 700; color: var(--e-text); text-transform: uppercase; border-bottom: 1px solid var(--e-border); padding-bottom: 0.75rem;">Scores Détaillés</h4>
         
         <div class="score-row">
           <span class="label">Technique</span>
@@ -77,20 +77,20 @@
       </div>
 
       <!-- Strengths / Weaknesses -->
-      <div class="card strengths-card">
-        <h4>Points Forts & Améliorations</h4>
-        <div class="lists-container">
-          <div class="list strengths">
-            <h5>✅ Points forts</h5>
-            <ul>
-              <li *ngFor="let s of report.strengths">{{ s }}</li>
+      <div class="elections__card" style="grid-column: 1 / -1; padding: 1.5rem;">
+        <h4 style="margin: 0 0 1.25rem 0; font-size: 1rem; font-weight: 700; color: var(--e-text); text-transform: uppercase; border-bottom: 1px solid var(--e-border); padding-bottom: 0.75rem;">Points Forts & Améliorations</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+          <div style="background: var(--e-bg-input); padding: 1.25rem; border-radius: 8px;">
+            <h5 style="margin: 0 0 1rem 0; font-size: 1rem; color: var(--e-success); font-weight: 700;">✅ Points forts</h5>
+            <ul style="margin: 0; padding-left: 1.2rem; color: var(--e-text);">
+              <li *ngFor="let s of report.strengths" style="margin-bottom: 0.5rem; line-height: 1.4;">{{ s }}</li>
               <li *ngIf="!report.strengths || report.strengths.length === 0">Aucun point fort spécifique relevé.</li>
             </ul>
           </div>
-          <div class="list weaknesses">
-            <h5>⚠️ Points à améliorer</h5>
-            <ul>
-              <li *ngFor="let w of report.weaknesses">{{ w }}</li>
+          <div style="background: var(--e-bg-input); padding: 1.25rem; border-radius: 8px;">
+            <h5 style="margin: 0 0 1rem 0; font-size: 1rem; color: var(--e-danger); font-weight: 700;">⚠️ Points à améliorer</h5>
+            <ul style="margin: 0; padding-left: 1.2rem; color: var(--e-text);">
+              <li *ngFor="let w of report.weaknesses" style="margin-bottom: 0.5rem; line-height: 1.4;">{{ w }}</li>
               <li *ngIf="!report.weaknesses || report.weaknesses.length === 0">Aucun point d'amélioration spécifique relevé.</li>
             </ul>
           </div>
@@ -98,14 +98,14 @@
       </div>
 
       <!-- Feedback -->
-      <div class="card feedback-card">
-        <h4>Feedback Global</h4>
-        <p class="feedback-text">{{ report.feedback }}</p>
+      <div class="elections__card" style="grid-column: 1 / -1; padding: 1.5rem;">
+        <h4 style="margin: 0 0 1.25rem 0; font-size: 1rem; font-weight: 700; color: var(--e-text); text-transform: uppercase; border-bottom: 1px solid var(--e-border); padding-bottom: 0.75rem;">Feedback Global</h4>
+        <p style="color: var(--e-text); line-height: 1.6; font-size: 1.05rem; font-style: italic; background: var(--e-primary-bg); padding: 1.5rem; border-left: 4px solid var(--e-primary); border-radius: 4px; margin: 0;">{{ report.feedback }}</p>
       </div>
 
       <!-- Conversation History -->
-      <div class="card history-card">
-        <h4>Historique de l'entretien</h4>
+      <div class="elections__card" style="grid-column: 1 / -1; padding: 1.5rem;">
+        <h4 style="margin: 0 0 1.25rem 0; font-size: 1rem; font-weight: 700; color: var(--e-text); text-transform: uppercase; border-bottom: 1px solid var(--e-border); padding-bottom: 0.75rem;">Historique de l'entretien</h4>
         <div class="chat-container">
           <div class="message" 
                *ngFor="let msg of report.conversation"

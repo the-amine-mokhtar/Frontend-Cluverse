@@ -1,89 +1,93 @@
-<div class="list-container mx-auto p-6 max-w-7xl animate-fade-in">
-  <div class="flex justify-between items-center mb-6 border-b pb-4">
-    <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-600">Voting Ledger</h2>
-    <div class="flex space-x-4">
+<div class="elections animate-fade-in">
+  <div class="elections__header">
+    <div>
+      <h2 class="elections__title">Voting Ledger</h2>
+      <p class="elections__subtitle">Manage the secure voting records</p>
+    </div>
+    <div class="elections__actions">
       <input 
         type="text" 
-        class="search-input w-72 p-3 font-medium text-gray-700 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all"
+        class="elections__search"
         placeholder="Filter by Voter, ID..." 
         [(ngModel)]="searchTerm" 
         (input)="applyFilters()"
       />
-      <a routerLink="/dashboard/elections/votes/form" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all">
+      <a routerLink="/dashboard/elections/votes/form" class="elections__btn elections__btn--primary">
         + Vote
       </a>
     </div>
   </div>
 
-  <div class="overflow-x-auto bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/50">
-    <table class="w-full text-left border-collapse">
-      <thead>
-        <tr class="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-500 uppercase text-xs font-bold tracking-widest border-b border-gray-200">
-          <th class="p-5 cursor-pointer hover:text-purple-600 transition-colors" (click)="sortBy('id')">Vote ID</th>
-          <th class="p-5 cursor-pointer hover:text-purple-600 transition-colors" (click)="sortBy('voterName')">Voter</th>
-          <th class="p-5 cursor-pointer hover:text-purple-600 transition-colors" (click)="sortBy('positionName')">Position</th>
-          <th class="p-5 cursor-pointer hover:text-purple-600 transition-colors" (click)="sortBy('timestamp')">Timestamp</th>
-          <th class="p-5 cursor-pointer hover:text-purple-600 transition-colors" (click)="sortBy('isValid')">Valid</th>
-          <th class="p-5 cursor-pointer hover:text-purple-600 transition-colors" (click)="sortBy('voteWeight')">Weight</th>
-          <th class="p-5 text-right rounded-tr-2xl">Links</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-100 text-sm">
-        <tr 
-          *ngFor="let vote of filteredVotes | paginate: { itemsPerPage: itemsPerPage, currentPage: page }" 
-          class="table-row group hover:bg-white/80 transition-all duration-300 transform"
-        >
-          <td class="p-5 text-gray-400 font-mono">{{ vote.id }}</td>
-          <td class="p-5 text-gray-800 font-bold group-hover:text-purple-600 transition-colors">{{ vote.voterName || 'Anonymous' }}</td>
-          <td class="p-5 font-semibold">
-            <!-- Position Link -->
-            <a *ngIf="vote.positionName" [routerLink]="['/dashboard/elections/positions-list']" [queryParams]="{positionId: vote.position?.id || vote.positionId}" class="text-purple-500 hover:text-purple-700 underline underline-offset-2">
-              {{ vote.positionName }}
-            </a>
-            <span *ngIf="!vote.positionName" class="text-gray-400">-</span>
-          </td>
-          <td class="p-5 text-gray-500 font-medium">{{ vote.timestamp | date:'short' }}</td>
-          <td class="p-5">
-            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">{{ vote.isValid ? 'Yes' : 'No' }}</span>
-          </td>
-          <td class="p-5 text-gray-800 font-bold group-hover:text-purple-600 transition-colors">{{ vote.voteWeight || 1 }}</td>
-          <td class="p-5">
-            <div class="flex items-center justify-end space-x-2">
-            <!-- Edit Vote Link -->
-            <a [routerLink]="['/dashboard/elections/votes/form', vote.id]" class="inline-flex items-center justify-center text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50 p-2.5 rounded-full transition-all" title="Edit Vote">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                 <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                 <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-               </svg>
-            </a>
-            <!-- Link to Election -->
-            <a [routerLink]="['/dashboard/elections/list']" [queryParams]="{electionId: vote.election?.id || vote.electionId}" class="inline-flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 p-2.5 rounded-full transition-all" title="View Election">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                 <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                 <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-               </svg>
-            </a>
-            <!-- Link to Candidate -->
-            <a [routerLink]="['/dashboard/elections/candidates']" [queryParams]="{candidateId: vote.candidate?.id || vote.candidateId}" class="inline-flex items-center justify-center text-teal-400 hover:text-teal-600 hover:bg-teal-50 p-2.5 rounded-full transition-all" title="View Candidate">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-              </svg>
-            </a>
-            <!-- Delete Vote -->
-            <button class="inline-flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2.5 rounded-full transition-all" title="Delete Vote" (click)="deleteVote(vote.id)">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <div class="flex justify-between items-center p-5 bg-gray-50/50 border-t border-gray-100 rounded-b-2xl">
-      <div class="text-xs text-gray-500 font-bold tracking-wider uppercase">
-        Page {{ page }}
+  <div class="elections__card">
+    <div class="elections__table-wrap" *ngIf="filteredVotes.length > 0; else emptyState">
+      <table class="elections__table">
+        <thead>
+          <tr>
+            <th (click)="sortBy('id')">Vote ID</th>
+            <th (click)="sortBy('voterName')">Voter</th>
+            <th (click)="sortBy('positionName')">Position</th>
+            <th (click)="sortBy('timestamp')">Timestamp</th>
+            <th (click)="sortBy('isValid')">Valid</th>
+            <th (click)="sortBy('voteWeight')">Weight</th>
+            <th style="text-align: right">Links</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let vote of filteredVotes | paginate: { itemsPerPage: itemsPerPage, currentPage: page }">
+            <td style="color: var(--e-muted); font-family: monospace;">{{ vote.id }}</td>
+            <td style="font-weight: 700;">{{ vote.voterName || 'Anonymous' }}</td>
+            <td style="font-weight: 600;">
+              <a *ngIf="vote.positionName" [routerLink]="['/dashboard/elections/positions-list']" [queryParams]="{positionId: vote.position?.id || vote.positionId}" style="color: var(--e-secondary); text-decoration: underline;">
+                {{ vote.positionName }}
+              </a>
+              <span *ngIf="!vote.positionName" style="color: var(--e-muted);">-</span>
+            </td>
+            <td style="color: var(--e-muted); font-weight: 500;">{{ vote.timestamp | date:'short' }}</td>
+            <td>
+              <span class="elections__badge" [ngClass]="vote.isValid ? 'elections__badge--success' : 'elections__badge--danger'">{{ vote.isValid ? 'Yes' : 'No' }}</span>
+            </td>
+            <td style="font-weight: 700;">{{ vote.voteWeight || 1 }}</td>
+            <td>
+              <div class="elections__actions-cell">
+                <a [routerLink]="['/dashboard/elections/votes/form', vote.id]" class="elections__icon-btn elections__icon-btn--edit" title="Edit Vote">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+                <a [routerLink]="['/dashboard/elections/list']" [queryParams]="{electionId: vote.election?.id || vote.electionId}" class="elections__icon-btn elections__icon-btn--success" title="View Election">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+                <a [routerLink]="['/dashboard/elections/candidates']" [queryParams]="{candidateId: vote.candidate?.id || vote.candidateId}" class="elections__icon-btn elections__icon-btn--info" title="View Candidate">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+                <button class="elections__icon-btn elections__icon-btn--delete" title="Delete Vote" (click)="deleteVote(vote.id)">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="elections__pagination">
+        <div class="e-page-info">
+          Page {{ page }}
+        </div>
+        <pagination-controls (pageChange)="page = $event" class="modern-pagination"></pagination-controls>
       </div>
-      <pagination-controls (pageChange)="page = $event" class="modern-pagination text-sm font-semibold"></pagination-controls>
     </div>
+    
+    <ng-template #emptyState>
+      <div class="elections__empty">
+        <p style="font-weight: 600; font-size: 1.1rem; color: var(--e-text); margin-bottom: 0.5rem;">No votes found</p>
+        <p>No registers available matching your criteria.</p>
+      </div>
+    </ng-template>
   </div>
 </div>

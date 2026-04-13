@@ -1,84 +1,80 @@
-<div class="list-container mx-auto p-6 max-w-3xl animate-fade-in relative text-gray-800">
-  <div class="mb-6 pb-4 border-b">
-    <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-      {{ isEditMode ? 'Edit Position' : 'Create New Position' }}
-    </h2>
-    <p class="text-gray-500 mt-2 font-medium">Define roles that candidates can run for.</p>
+<div class="elections animate-fade-in" style="max-width: 800px;">
+  <div class="elections__header">
+    <div>
+      <h2 class="elections__title">
+        {{ isEditMode ? 'Edit Position' : 'Create New Position' }}
+      </h2>
+      <p class="elections__subtitle">Define roles that candidates can run for.</p>
+    </div>
   </div>
 
-  <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/50 p-8">
-    <form [formGroup]="positionForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <div class="elections__card">
+    <form [formGroup]="positionForm" (ngSubmit)="onSubmit()" class="elections__form">
 
-      <div *ngIf="errorMessage" class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 flex items-center space-x-3 text-sm font-bold shadow-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <div *ngIf="errorMessage" class="elections__error-alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
         </svg>
         <span>{{ errorMessage }}</span>
       </div>
 
-      <div class="space-y-6">
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Role Name <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="name"
-            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800"
-            placeholder="President, Treasurer, etc.">
-          <p *ngIf="positionForm.get('name')?.invalid && positionForm.get('name')?.touched" class="text-red-500 text-xs mt-1 font-semibold">Name is required.</p>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description</label>
-          <textarea formControlName="description" rows="3"
-            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 resize-none"
-            placeholder="Responsibilities and details..."></textarea>
+      <div class="elections__form-field">
+        <label>Role Name <span style="color: var(--e-danger);">*</span></label>
+        <input type="text" formControlName="name" placeholder="President, Treasurer, etc.">
+        <div *ngIf="positionForm.get('name')?.invalid && positionForm.get('name')?.touched" class="e-error-text">
+          Name is required.
         </div>
       </div>
 
-      <div class="flex items-center justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6 font-bold">
+      <div class="elections__form-field">
+        <label>Description</label>
+        <textarea formControlName="description" rows="3" style="resize: none;" placeholder="Responsibilities and details..."></textarea>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; background: var(--e-primary-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--e-primary-border); margin-bottom: 1.5rem;">
         <div>
-          <h4 class="text-sm font-bold text-blue-800 uppercase tracking-widest">Election Ready</h4>
-          <p class="text-xs text-blue-500 font-medium">Toggle this if members can run for this position.</p>
+          <h4 style="margin: 0; font-size: 0.875rem; font-weight: 700; color: var(--e-primary); text-transform: uppercase;">Decide with election</h4>
+          <p style="margin: 0; margin-top: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--e-secondary);">Toggle this if members can run for this position.</p>
         </div>
-        <label class="toggle-switch">
+        <label class="elections__toggle-switch">
           <input type="checkbox" formControlName="isElectable">
           <span class="slider"></span>
         </label>
       </div>
 
-      <div class="election-settings-box grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 p-5 rounded-2xl border border-gray-100"
-           [class.hidden-settings]="!positionForm.get('isElectable')?.value">
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Term Length (Days)</label>
-          <input type="number" formControlName="termLength" min="1"
-            class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
+      <div class="elections__animated-box elections__form-grid"
+           [class.hidden-box]="!positionForm.get('isElectable')?.value"
+           style="background: var(--e-bg-input); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--e-border); margin-bottom: 1.5rem;">
+        
+        <div class="elections__form-field" style="margin-bottom: 0;">
+          <label>Term Length (Days)</label>
+          <input type="number" formControlName="termLength" min="1">
         </div>
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Max Candidates</label>
-          <input type="number" formControlName="maxCandidates" min="1"
-            class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
+        
+        <div class="elections__form-field" style="margin-bottom: 0;">
+          <label>Max Candidates</label>
+          <input type="number" formControlName="maxCandidates" min="1">
         </div>
 
-        <div class="flex items-center space-x-3 pt-4 md:col-span-2">
-          <input type="checkbox" formControlName="isAutoRenew" id="isAutoRenew"
-            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
-          <label for="isAutoRenew" class="text-sm font-bold text-gray-700 cursor-pointer">Auto Renew Term?</label>
+        <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+          <input type="checkbox" formControlName="isAutoRenew" id="isAutoRenew" style="width: auto; margin: 0; cursor: pointer;">
+          <label for="isAutoRenew" style="margin: 0; cursor: pointer; text-transform: none; letter-spacing: normal;">Auto Renew Term?</label>
         </div>
       </div>
 
-      <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Current Holder</label>
-        <select formControlName="currentHolderId"
-          class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
+      <div class="elections__form-field">
+        <label>Current Holder</label>
+        <select formControlName="currentHolderId">
           <option [ngValue]="null">No current holder</option>
           <option *ngFor="let member of members" [ngValue]="member.userId">{{ member.firstName }} {{ member.lastName }}</option>
         </select>
       </div>
 
-      <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end space-x-4">
-        <a routerLink="/dashboard/elections/positions-list" class="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">
+      <div class="elections__form-actions">
+        <a routerLink="/dashboard/elections/positions-list" class="elections__btn elections__btn--secondary">
           Cancel
         </a>
-        <button type="submit" [disabled]="isSubmitting || positionForm.invalid"
-          class="px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        <button type="submit" [disabled]="isSubmitting || positionForm.invalid" class="elections__btn elections__btn--primary">
           {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Position' : 'Create Position') }}
         </button>
       </div>

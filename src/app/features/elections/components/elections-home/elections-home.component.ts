@@ -3,40 +3,36 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'app-elections-home',
   template: `
-    <div class="elections-dashboard animate-fade-in p-8 max-w-7xl mx-auto">
-      <h1 class="text-5xl font-extrabold mb-10 pb-4 border-b border-gray-200">
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-          Elections Control Panel
-        </span>
-      </h1>
+    <div class="elections">
+      <h1 class="elections__title">Elections Control Panel</h1>
       
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <a routerLink="../list" class="dashboard-card bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800">
-          <div class="card-icon">🗳️</div>
+      <div class="elections__grid">
+        <a routerLink="../list" class="elections__card elections__card--primary">
+          <div class="elections__card-icon">🗳️</div>
           <h3>Elections</h3>
           <p>Manage election events and status</p>
         </a>
         
-        <a routerLink="../candidates" class="dashboard-card bg-gradient-to-br from-teal-500 to-emerald-700 hover:from-teal-600 hover:to-emerald-800">
-          <div class="card-icon">👥</div>
+        <a routerLink="../candidates" class="elections__card elections__card--secondary">
+          <div class="elections__card-icon">👥</div>
           <h3>Candidates</h3>
           <p>Register and oversee candidates</p>
         </a>
         
-        <a routerLink="../votes" class="dashboard-card bg-gradient-to-br from-purple-500 to-pink-700 hover:from-purple-600 hover:to-pink-800">
-          <div class="card-icon">🎫</div>
+        <a routerLink="../votes" class="elections__card elections__card--warning">
+          <div class="elections__card-icon">🎫</div>
           <h3>Votes</h3>
           <p>Track secure voting records</p>
         </a>
         
-        <a routerLink="../positions-list" class="dashboard-card bg-gradient-to-br from-orange-500 to-red-700 hover:from-orange-600 hover:to-red-800">
-          <div class="card-icon">💼</div>
+        <a routerLink="../positions-list" class="elections__card elections__card--danger">
+          <div class="elections__card-icon">💼</div>
           <h3>Positions</h3>
           <p>Configure election roles</p>
         </a>
 
-        <a routerLink="../vacant-positions" class="dashboard-card bg-gradient-to-br from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black">
-          <div class="card-icon">🎤</div>
+        <a routerLink="../vacant-positions" class="elections__card">
+          <div class="elections__card-icon">🎤</div>
           <h3>Interviews</h3>
           <p>AI Voice Interview Simulator</p>
         </a>
@@ -44,63 +40,104 @@ import { Component } from '@angular/core';
     </div>
   `,
   styles: [`
-    .animate-fade-in {
+    @import '../../elections-theme.scss';
+
+    .elections {
+      padding: 2.5rem;
+      max-width: 85rem;
+      margin: 0 auto;
       animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+    
+    .elections__title {
+      font-size: 3.5rem;
+      font-weight: 900;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--e-border);
+      color: var(--e-text);
+      letter-spacing: -0.05em;
     }
-    .dashboard-card {
+    
+    .elections__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+
+    .elections__card {
       display: flex;
       flex-direction: column;
       padding: 2.5rem;
       border-radius: 1.5rem;
-      color: white;
+      background: var(--e-bg-card);
+      border: 1px solid var(--e-border);
+      color: var(--e-text);
       text-decoration: none;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      cursor: pointer;
       position: relative;
       overflow: hidden;
       
-      &::after {
+      &::before {
         content: '';
         position: absolute;
-        top: 0; right: 0; bottom: 0; left: 0;
-        background: linear-gradient(rgba(255,255,255,0.1), transparent);
+        top: 0; left: 0; width: 4px; height: 100%;
+        background: var(--e-primary);
         opacity: 0;
         transition: opacity 0.3s;
       }
 
+      &--primary {
+        --card-accent: var(--e-primary);
+        &::before { background: var(--e-primary); }
+      }
+      
+      &--secondary {
+        --card-accent: var(--e-secondary);
+        &::before { background: var(--e-secondary); }
+      }
+      
+      &--warning {
+        --card-accent: var(--e-warning);
+        &::before { background: var(--e-warning); }
+      }
+
+      &--danger {
+        --card-accent: var(--e-danger);
+        &::before { background: var(--e-danger); }
+      }
+
       &:hover {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        transform: translateY(-8px) scale(1.01);
+        box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.1);
+        background: var(--e-row-hover);
         
-        &::after {
-          opacity: 1;
+        &::before { opacity: 1; }
+        
+        .elections__card-icon {
+          transform: scale(1.1) rotate(5deg);
         }
       }
       
-      .card-icon {
+      .elections__card-icon {
         font-size: 3.5rem;
         margin-bottom: 1.5rem;
-        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       }
       
       h3 {
         font-size: 1.75rem;
         font-weight: 800;
-        margin-bottom: 0.5rem;
-        margin-top: 0;
-        letter-spacing: -0.025em;
+        margin: 0 0 0.5rem 0;
+        color: var(--e-text);
       }
       
       p {
         font-size: 1rem;
-        opacity: 0.9;
-        font-weight: 500;
+        color: var(--e-muted);
         margin: 0;
+        font-weight: 500;
       }
     }
   `]
