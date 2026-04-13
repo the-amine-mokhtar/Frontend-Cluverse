@@ -38,7 +38,10 @@
           <td class="p-5 text-gray-600 font-medium whitespace-nowrap">
             <span *ngIf="position.currentHolderName" class="flex items-center space-x-2">
               <div class="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">{{ position.currentHolderName.charAt(0) }}</div>
-              <span>{{ position.currentHolderName }}</span>
+              <span>
+                {{ position.currentHolderName }}
+                <span *ngIf="position.heldSince" class="text-xs text-gray-400 font-normal opacity-80">({{ getDaysHeld(position.heldSince) }} days)</span>
+              </span>
             </span>
             <span *ngIf="!position.currentHolderName" class="text-gray-400 italic">Vacant</span>
           </td>

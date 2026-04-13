@@ -110,4 +110,18 @@ export class PositionListComponent implements OnInit {
       });
     }
   }
+
+  getDaysHeld(heldSince: string | null): number | null {
+    if (!heldSince) return null;
+    
+    let since = new Date(heldSince);
+    since.setHours(0,0,0,0);
+    
+    let now = new Date();
+    now.setHours(0,0,0,0);
+    
+    const diffTime = now.getTime() - since.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? diffDays : 0;
+  }
 }
