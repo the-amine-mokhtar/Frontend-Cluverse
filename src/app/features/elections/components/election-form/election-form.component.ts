@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ElectionService } from '../../services/election.service';
 import { PositionService } from '../../services/position.service';
+import { AuthHelperService } from '../../../../core/services/auth-helper.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-election-form',
@@ -18,17 +20,20 @@ export class ElectionFormComponent implements OnInit {
   electionId: number | null = null;
   errorMessage: string = '';
   isSubmitting = false;
-  positions: any[] = [];
+  availablePositions: any[] = [];
+  clubId: number = 0;
 
   constructor(
     private fb: FormBuilder,
     private electionService: ElectionService,
     private positionService: PositionService,
+    private authHelper: AuthHelperService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.clubId = this.authHelper.getClubId();
     this.initForm();
     this.loadData();
     this.route.paramMap.subscribe(params => {
@@ -47,16 +52,28 @@ export class ElectionFormComponent implements OnInit {
       description: [''],
       startDate: ['', [Validators.required]],
       endDate: ['', [Validators.required]],
-      status: ['PENDING', [Validators.required]],
-      positionId: [null],
-      clubId: [null]
+      status: ['OPEN', [Validators.required]],
+      positionId: [null, [Validators.required]]
     });
   }
 
   loadData(): void {
-    this.positionService.getByClubId().subscribe({
-      next: (data) => this.positions = data,
-      error: (err) => console.error('Failed to load positions', err)
+    forkJoin({
+      positions: this.positionService.getByClubId(this.clubId),
+      elections: this.electionService.getElections(this.clubId)
+    }).subscribe({
+      next: ({ positions, elections }) => {
+        const usedPositionIds = new Set(
+          elections
+            .filter((e: any) => e.status === 'PENDING' || e.status === 'ACTIVE')
+            .map((e: any) => e.position?.id)
+            .filter((id: any) => id != null)
+        );
+        this.availablePositions = positions.filter(
+          (p: any) => p.electable && !usedPositionIds.has(p.id)
+        );
+      },
+      error: (err) => console.error('Failed to load data', err)
     });
   }
 
@@ -64,16 +81,17 @@ export class ElectionFormComponent implements OnInit {
     this.electionService.getById(id).subscribe({
       next: (data) => {
         if (data.startDate) {
-          data.startDate = new Date(data.startDate).toISOString().slice(0, 16);
+          data.startDate = new Date(data.startDate).toISOString().slice(0, 10);
         }
         if (data.endDate) {
-          data.endDate = new Date(data.endDate).toISOString().slice(0, 16);
+          data.endDate = new Date(data.endDate).toISOString().slice(0, 10);
         }
         if (data.position && data.position.id) {
-           data.positionId = data.position.id;
-        }
-        if (data.club && data.club.id) {
-           data.clubId = data.club.id;
+          data.positionId = data.position.id;
+          const alreadyInList = this.availablePositions.some(p => p.id === data.position.id);
+          if (!alreadyInList) {
+            this.availablePositions.push(data.position);
+          }
         }
         this.electionForm.patchValue(data);
       },
@@ -100,13 +118,16 @@ export class ElectionFormComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    const payload = { ...this.electionForm.value };
-    
-    const requestArgs = this.isEditMode 
+    const payload = {
+      ...this.electionForm.value,
+      clubId: this.clubId
+    };
+
+    const request$ = this.isEditMode
       ? this.electionService.update(this.electionId!, payload)
       : this.electionService.create(payload);
 
-    requestArgs.subscribe({
+    request$.subscribe({
       next: () => {
         this.router.navigate(['/dashboard/elections/list']);
       },

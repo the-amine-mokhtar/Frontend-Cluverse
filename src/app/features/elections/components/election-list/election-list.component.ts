@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { ElectionService } from '../../services/election.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 
 @Component({
   selector: 'app-election-list',
@@ -15,7 +16,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 export class ElectionListComponent implements OnInit {
   elections: any[] = [];
   filteredElections: any[] = [];
-  
+
   searchTerm: string = '';
   page: number = 1;
   itemsPerPage: number = 5;
@@ -23,13 +24,16 @@ export class ElectionListComponent implements OnInit {
   sortOrder: 'asc' | 'desc' = 'asc';
 
   selectedElection: any = null;
+  clubId: number = 0;
 
   constructor(
     private electionService: ElectionService,
+    private authHelper: AuthHelperService,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.clubId = this.authHelper.getClubId();
     this.route.queryParams.subscribe(params => {
       if (params['electionId']) {
         this.searchTerm = params['electionId'];
@@ -41,7 +45,7 @@ export class ElectionListComponent implements OnInit {
   }
 
   loadElections(): void {
-    this.electionService.getElections().subscribe({
+    this.electionService.getElections(this.clubId).subscribe({
       next: (data: any) => {
         this.elections = data || [];
         this.applyFilters();
@@ -55,7 +59,7 @@ export class ElectionListComponent implements OnInit {
 
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      result = result.filter(e => 
+      result = result.filter(e =>
         (e.title && e.title.toLowerCase().includes(term)) ||
         (e.status && e.status.toLowerCase().includes(term)) ||
         (e.id && e.id.toString() === term) ||
@@ -79,7 +83,7 @@ export class ElectionListComponent implements OnInit {
     }
 
     this.filteredElections = result;
-    this.page = 1; 
+    this.page = 1;
   }
 
   sortBy(column: string): void {
