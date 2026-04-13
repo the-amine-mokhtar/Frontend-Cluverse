@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PositionService } from '../../services/position.service';
+import { AuthHelperService } from '../../../../core/services/auth-helper.service';
+import { ApiService } from '../../../../core/services/api.service';
 
 @Component({
   selector: 'app-position-form',
@@ -17,16 +19,22 @@ export class PositionFormComponent implements OnInit {
   positionId: number | null = null;
   errorMessage: string = '';
   isSubmitting = false;
+  clubId: number = 0;
+  members: any[] = [];
 
   constructor(
     private fb: FormBuilder,
     private positionService: PositionService,
+    private authHelper: AuthHelperService,
+    private apiService: ApiService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.clubId = this.authHelper.getClubId();
     this.initForm();
+    this.loadMembers();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -45,23 +53,28 @@ export class PositionFormComponent implements OnInit {
       maxCandidates: [2, [Validators.required, Validators.min(1)]],
       isElectable: [true],
       isAutoRenew: [false],
-      clubId: [null],
       currentHolderId: [null]
+    });
+  }
+
+  loadMembers(): void {
+    if (!this.clubId) return;
+    this.apiService.getClubMembers(this.clubId).subscribe({
+      next: (data) => this.members = data || [],
+      error: (err) => console.error('Failed to load members', err)
     });
   }
 
   loadPosition(id: number): void {
     this.positionService.getById(id).subscribe({
       next: (data) => {
-        // Map backend DTO field defaults
         this.positionForm.patchValue({
           name: data.name,
           description: data.description,
           termLength: data.termLength,
           maxCandidates: data.maxCandidates,
-          isElectable: data.isElectable !== undefined ? data.isElectable : true,
-          isAutoRenew: data.isAutoRenew !== undefined ? data.isAutoRenew : false,
-          clubId: data.clubId || null,
+          isElectable: data.electable,
+          isAutoRenew: data.autoRenew,
           currentHolderId: data.currentHolderId || null
         });
       },
@@ -81,13 +94,21 @@ export class PositionFormComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    const payload = { ...this.positionForm.value };
-    
-    const requestArgs = this.isEditMode 
+    const formValues = this.positionForm.value;
+    const payload = {
+      ...formValues,
+      electable: formValues.isElectable,
+      autoRenew: formValues.isAutoRenew,
+      clubId: this.clubId
+    };
+
+    delete (payload as any).isElectable;
+
+    const request$ = this.isEditMode
       ? this.positionService.update(this.positionId!, payload)
       : this.positionService.create(payload);
 
-    requestArgs.subscribe({
+    request$.subscribe({
       next: () => {
         this.router.navigate(['/dashboard/elections/positions-list']);
       },
