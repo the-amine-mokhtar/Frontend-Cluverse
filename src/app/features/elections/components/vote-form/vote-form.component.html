@@ -8,7 +8,7 @@
 
   <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/50 p-8">
     <form [formGroup]="voteForm" (ngSubmit)="onSubmit()" class="space-y-6">
-      
+
       <div *ngIf="errorMessage" class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 flex items-center space-x-3 text-sm font-bold shadow-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -31,7 +31,7 @@
           <select formControlName="candidateId"
             class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800">
             <option [ngValue]="null">Select the candidate</option>
-            <option *ngFor="let cand of candidates" [ngValue]="cand.id">{{ (cand.user?.firstName + ' ' + cand.user?.lastName) || 'Candidate ' + cand.id }}</option>
+            <option *ngFor="let cand of candidates" [ngValue]="cand.id">{{ cand.userName || 'Candidate ' + cand.id }}</option>
           </select>
           <p *ngIf="voteForm.get('candidateId')?.invalid && voteForm.get('candidateId')?.touched" class="text-red-500 text-xs mt-1 font-semibold">Valid Candidate is required.</p>
         </div>

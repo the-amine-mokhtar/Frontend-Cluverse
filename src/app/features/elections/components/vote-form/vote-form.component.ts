@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { VoteService } from '../../services/vote.service';
 import { ElectionService } from '../../services/election.service';
 import { CandidateService } from '../../services/candidate.service';
+import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 
 @Component({
   selector: 'app-vote-form',
@@ -27,13 +28,14 @@ export class VoteFormComponent implements OnInit {
     private voteService: VoteService,
     private electionService: ElectionService,
     private candidateService: CandidateService,
+    private authHelper: AuthHelperService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.initForm();
-    this.loadData();
+    this.loadElections();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -46,18 +48,29 @@ export class VoteFormComponent implements OnInit {
 
   initForm(): void {
     this.voteForm = this.fb.group({
-      candidateId: [null, [Validators.required, Validators.min(1)]],
-      electionId: [null, [Validators.required, Validators.min(1)]],
+      candidateId: [null, [Validators.required]],
+      electionId: [null, [Validators.required]],
+    });
+
+    this.voteForm.get('electionId')!.valueChanges.subscribe(electionId => {
+      this.onElectionChanged(electionId);
     });
   }
 
-  loadData(): void {
-    this.electionService.getElections().subscribe({
-      next: (data) => this.elections = data,
+  loadElections(): void {
+    const clubId = this.authHelper.getClubId();
+    this.electionService.getElections(clubId).subscribe({
+      next: (data) => this.elections = data.filter((e: any) => e.status === 'OPEN'),
       error: (err) => console.error('Failed to load elections', err)
     });
-    this.candidateService.getCandidates().subscribe({
-      next: (data) => this.candidates = data,
+  }
+
+  onElectionChanged(electionId: number): void {
+    this.voteForm.get('candidateId')!.setValue(null);
+    this.candidates = [];
+    if (!electionId) return;
+    this.candidateService.getCandidates(electionId).subscribe({
+      next: (data) => this.candidates = data || [],
       error: (err) => console.error('Failed to load candidates', err)
     });
   }
@@ -87,12 +100,12 @@ export class VoteFormComponent implements OnInit {
     this.errorMessage = '';
 
     const payload = { ...this.voteForm.value };
-    
-    const requestArgs = this.isEditMode 
+
+    const request$ = this.isEditMode
       ? this.voteService.update(this.voteId!, payload)
       : this.voteService.castVote(payload);
 
-    requestArgs.subscribe({
+    request$.subscribe({
       next: () => {
         this.router.navigate(['/dashboard/elections/votes']);
       },
