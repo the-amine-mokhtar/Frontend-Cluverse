@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CandidateService } from '../../services/candidate.service';
 import { ElectionService } from '../../services/election.service';
-import { PositionService } from '../../services/position.service';
+import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 
 @Component({
   selector: 'app-candidate-form',
@@ -20,20 +20,21 @@ export class CandidateFormComponent implements OnInit {
   errorMessage: string = '';
   isSubmitting = false;
   elections: any[] = [];
-  positions: any[] = [];
+  selectedElection: any = null;
+  candidateCount: number = 0;
 
   constructor(
     private fb: FormBuilder,
     private candidateService: CandidateService,
     private electionService: ElectionService,
-    private positionService: PositionService,
+    private authHelper: AuthHelperService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.initForm();
-    this.loadData();
+    this.loadElections();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -46,21 +47,34 @@ export class CandidateFormComponent implements OnInit {
 
   initForm(): void {
     this.candidateForm = this.fb.group({
-      positionId: [null, [Validators.required, Validators.min(1)]],
-      electionId: [null, [Validators.required, Validators.min(1)]],
+      electionId: [null, [Validators.required]],
       program: ['', [Validators.required]],
       bio: ['']
     });
+
+    this.candidateForm.get('electionId')!.valueChanges.subscribe(electionId => {
+      this.onElectionChanged(electionId);
+    });
   }
 
-  loadData(): void {
-    this.electionService.getElections().subscribe({
-      next: (data) => this.elections = data,
+  loadElections(): void {
+    const clubId = this.authHelper.getClubId();
+    this.electionService.getElections(clubId).subscribe({
+      next: (data) => this.elections = data.filter((e: any) => e.status === 'OPEN'),
       error: (err) => console.error('Failed to load elections', err)
     });
-    this.positionService.getByClubId().subscribe({
-      next: (data) => this.positions = data,
-      error: (err) => console.error('Failed to load positions', err)
+  }
+
+  onElectionChanged(electionId: number): void {
+    if (!electionId) {
+      this.selectedElection = null;
+      this.candidateCount = 0;
+      return;
+    }
+    this.selectedElection = this.elections.find(e => e.id === electionId) || null;
+    this.candidateService.getCandidates(electionId).subscribe({
+      next: (candidates) => this.candidateCount = candidates.length,
+      error: () => this.candidateCount = 0
     });
   }
 
@@ -68,11 +82,13 @@ export class CandidateFormComponent implements OnInit {
     this.candidateService.getById(id).subscribe({
       next: (data) => {
         this.candidateForm.patchValue({
-          positionId: data.positionId || null,
           electionId: data.electionId || null,
           program: data.program || '',
           bio: data.bio || ''
         });
+        if (data.electionId) {
+          this.onElectionChanged(data.electionId);
+        }
       },
       error: (err) => {
         console.error(err);
@@ -90,14 +106,17 @@ export class CandidateFormComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    const payload = { ...this.candidateForm.value };
-    
-    // Note: create uses submitCandidacy. It takes payload.
-    const requestArgs = this.isEditMode 
+    const positionId = this.selectedElection?.position?.id || null;
+    const payload = {
+      ...this.candidateForm.value,
+      positionId
+    };
+
+    const request$ = this.isEditMode
       ? this.candidateService.update(this.candidateId!, payload)
       : this.candidateService.submitCandidacy(payload);
 
-    requestArgs.subscribe({
+    request$.subscribe({
       next: () => {
         this.router.navigate(['/dashboard/elections/candidates']);
       },
