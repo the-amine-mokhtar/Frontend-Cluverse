@@ -6,6 +6,7 @@
     </div>
 
     <div class="finance-page__actions">
+      <a class="btn btn--secondary" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
       <button type="button" class="btn btn--secondary" (click)="exportTransactionsToExcel()">Export Excel</button>
       <button type="button" class="btn btn--primary" (click)="openCreateTransactionForm()">Add Transaction</button>
     </div>
@@ -15,6 +16,7 @@
     <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
     <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
     <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/transactions">Transactions</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
   </nav>
 
   <section class="form-panel" *ngIf="showCreateTransactionForm">

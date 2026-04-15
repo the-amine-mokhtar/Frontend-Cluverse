@@ -75,6 +75,25 @@ export interface UpdateTransactionPayload {
   type: TransactionType;
 }
 
+export interface CreateStripePaymentIntentPayload {
+  amountCents: number;
+  currency: string;
+  sponsorName: string;
+  sponsorEmail: string;
+  sponsorPhone: string;
+  reference: string;
+}
+
+export interface CreateStripePaymentIntentResponse {
+  clientSecret: string;
+  paymentIntentId: string;
+  publishableKey: string;
+}
+
+export interface StripePublicConfigResponse {
+  publishableKey: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -182,6 +201,18 @@ export class FinanceService {
     return this.http.delete<void>(`${this.baseUrl}/api/transactions/${transactionId}`, {
       headers: this.authHeaders(),
       params: new HttpParams().set('clubId', String(clubId))
+    });
+  }
+
+  createStripePaymentIntent(payload: CreateStripePaymentIntentPayload): Observable<CreateStripePaymentIntentResponse> {
+    return this.http.post<CreateStripePaymentIntentResponse>(`${this.baseUrl}/api/stripe/create-payment-intent`, payload, {
+      headers: this.authHeaders()
+    });
+  }
+
+  getStripePublicConfig(): Observable<StripePublicConfigResponse> {
+    return this.http.get<StripePublicConfigResponse>(`${this.baseUrl}/api/stripe/public-config`, {
+      headers: this.authHeaders()
     });
   }
 

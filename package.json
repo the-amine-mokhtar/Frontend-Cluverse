@@ -19,6 +19,7 @@
     "@angular/platform-browser": "^17.3.0",
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
+    "@stripe/stripe-js": "^4.7.0",
     "gsap": "^3.14.2",
     "ngx-image-cropper": "^9.1.6",
     "rxjs": "~7.8.0",
