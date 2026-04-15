@@ -18,6 +18,7 @@ import { VehicleDetailComponent } from './vehicles/vehicle-detail.component';
 import { TransportListComponent } from './transports/transport-list.component';
 import { TransportFormComponent } from './transports/transport-form.component';
 import { TransportDetailComponent } from './transports/transport-detail.component';
+import { TransportPlannerComponent } from './components/transport-planner/transport-planner.component';
 
 // -----------------------------------------------------------------------------
 // MVP placeholders (replaced in steps 11-21 with real component files).
@@ -49,6 +50,8 @@ const routes: Routes = [
       { path: 'transports/new', component: TransportFormComponent },
       { path: 'transports/:id', component: TransportDetailComponent },
       { path: 'transports/:id/edit', component: TransportFormComponent },
+
+      { path: 'planner', component: TransportPlannerComponent },
 
       // Legacy screens (kept to avoid breaking existing navigation)
       { path: 'legacy', component: LogisticsHomeComponent },

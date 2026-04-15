@@ -29,7 +29,7 @@ export class TransportListComponent implements OnInit {
   filteredUpcoming: Transport[] = [];
   filteredHistory: Transport[] = [];
 
-  pageSize = 4;
+  pageSize = 10;
 
   upcomingPage = 1;
   upcomingTotalPages = 1;

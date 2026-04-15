@@ -6,6 +6,7 @@ import { defaultIfEmpty } from 'rxjs/operators';
 
 import { Vehicle } from '../models/vehicle.model';
 import { VehicleService } from '../services/vehicle.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-vehicle-form',
@@ -32,7 +33,8 @@ export class VehicleFormComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private location: Location,
-    private vehicleService: VehicleService
+    private vehicleService: VehicleService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -129,6 +131,7 @@ export class VehicleFormComponent implements OnInit {
         next: () => {
           didEmit = true;
           console.log('[VehicleFormComponent] update succeeded');
+          this.toastService.success('Véhicule mis à jour avec succès');
           this.isSubmitting = false;
           this.router.navigate(['/logistics/vehicles', this.vehicleId]);
         },
@@ -136,6 +139,7 @@ export class VehicleFormComponent implements OnInit {
           didEmit = true;
           console.error('[VehicleFormComponent] update failed', error);
           this.errorMessage = 'Impossible d\'enregistrer les modifications.';
+          this.toastService.error('Erreur lors de la mise à jour');
           this.isSubmitting = false;
         },
         complete: () => {
@@ -155,6 +159,7 @@ export class VehicleFormComponent implements OnInit {
       next: () => {
         didEmit = true;
         console.log('[VehicleFormComponent] create succeeded');
+        this.toastService.success('Véhicule créé avec succès');
         this.isSubmitting = false;
         this.router.navigate(['/logistics/vehicles']);
       },
@@ -162,6 +167,7 @@ export class VehicleFormComponent implements OnInit {
         didEmit = true;
         console.error('[VehicleFormComponent] create failed', error);
         this.errorMessage = 'Impossible de créer le véhicule.';
+        this.toastService.error('Erreur lors de la création');
         this.isSubmitting = false;
       },
       complete: () => {

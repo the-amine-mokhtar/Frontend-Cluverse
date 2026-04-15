@@ -10,6 +10,7 @@ import { Transport, TransportStatus } from '../models/transport.model';
 
 import { VehicleService } from '../services/vehicle.service';
 import { TransportService } from '../services/transport.service';
+import { ToastService } from '../../../core/services/toast.service';
 import {
   EventItem,
   LocationItem,
@@ -61,6 +62,7 @@ export class TransportFormComponent implements OnInit {
     private location: Location,
     private vehicleService: VehicleService,
     private transportService: TransportService,
+    private toastService: ToastService,
     private logisticsApi: LogisticsApiService
   ) {}
 
@@ -77,6 +79,19 @@ export class TransportFormComponent implements OnInit {
     }
 
     this.loadLookupsForCreate();
+
+    // Pre-fill from query params (from transport planner)
+    const qVehicleId = this.route.snapshot.queryParams['vehicleId'];
+    const qDate = this.route.snapshot.queryParams['scheduledDate'];
+    
+    if (qVehicleId) {
+      this.form.patchValue({ vehicleId: qVehicleId.toString() });
+    }
+    if (qDate) {
+      // Format for datetime-local input: remove seconds if present
+      const formatted = qDate.substring(0, 16);
+      this.form.patchValue({ scheduledDate: formatted });
+    }
   }
 
   private loadLookupsForCreate(): void {
@@ -235,6 +250,7 @@ export class TransportFormComponent implements OnInit {
         next: () => {
           didEmit = true;
           console.log('[TransportFormComponent] update succeeded');
+          this.toastService.success('Transport mis à jour avec succès');
           this.isSubmitting = false;
           this.router.navigate(['/logistics/transports', this.transportId]);
         },
@@ -242,6 +258,7 @@ export class TransportFormComponent implements OnInit {
           didEmit = true;
           console.error('[TransportFormComponent] update failed', error);
           this.errorMessage = 'Impossible d\'enregistrer le transport.';
+          this.toastService.error('Erreur lors de la mise à jour');
           this.isSubmitting = false;
         },
         complete: () => {
@@ -261,6 +278,7 @@ export class TransportFormComponent implements OnInit {
       next: () => {
         didEmit = true;
         console.log('[TransportFormComponent] create succeeded');
+        this.toastService.success('Transport planifié avec succès');
         this.isSubmitting = false;
         this.router.navigate(['/logistics/transports']);
       },
@@ -268,6 +286,7 @@ export class TransportFormComponent implements OnInit {
         didEmit = true;
         console.error('[TransportFormComponent] create failed', error);
         this.errorMessage = 'Impossible de planifier le transport.';
+        this.toastService.error('Erreur lors de la création');
         this.isSubmitting = false;
       },
       complete: () => {
@@ -391,6 +410,17 @@ export class TransportFormComponent implements OnInit {
       return address;
     }
     return `Lieu #${l.id}`;
+  }
+
+  getLocationName(locationId: string | number | null | undefined): string | null {
+    if (!locationId) return null;
+    const id = Number(locationId);
+    const location = this.locations.find(l => Number(l.id) === id);
+    if (location) {
+      const name = String((location as any)?.name ?? '').trim();
+      return name || null;
+    }
+    return null;
   }
 
   private ensureLookupsContainSelected(transport: Transport): void {

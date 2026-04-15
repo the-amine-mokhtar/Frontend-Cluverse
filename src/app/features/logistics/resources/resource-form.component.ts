@@ -6,6 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { Resource, ResourceStatus } from '../models/resource.model';
 import { ResourceService } from '../services/resource.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { RESOURCE_STATUS_LABELS } from '../utils/status-labels';
 import { AuthHelperService } from '../../../core/services/auth-helper.service';
 
@@ -50,6 +51,7 @@ export class ResourceFormComponent implements OnInit {
     private router: Router,
     private location: Location,
     private resourceService: ResourceService,
+    private toastService: ToastService,
     private authHelper: AuthHelperService
   ) {}
 
@@ -201,12 +203,14 @@ export class ResourceFormComponent implements OnInit {
       this.resourceService.update(this.resourceId, payload).subscribe({
         next: () => {
           console.log('[ResourceFormComponent] update succeeded');
+          this.toastService.success('Ressource mise à jour avec succès');
           this.isSubmitting = false;
           this.router.navigate(['/logistics/resources']);
         },
         error: (error) => {
           console.error('[ResourceFormComponent] update failed', error);
           this.errorMessage = this.toUserMessage(error, 'Impossible d\'enregistrer la ressource.');
+          this.toastService.error('Erreur lors de la mise à jour');
           this.isSubmitting = false;
         }
       });
@@ -216,12 +220,14 @@ export class ResourceFormComponent implements OnInit {
     this.resourceService.create(payload).subscribe({
       next: () => {
         console.log('[ResourceFormComponent] create succeeded');
+        this.toastService.success('Ressource créée avec succès');
         this.isSubmitting = false;
         this.router.navigate(['/logistics/resources']);
       },
       error: (error) => {
         console.error('[ResourceFormComponent] create failed', error);
         this.errorMessage = this.toUserMessage(error, 'Impossible de créer la ressource.');
+        this.toastService.error('Erreur lors de la création');
         this.isSubmitting = false;
       }
     });

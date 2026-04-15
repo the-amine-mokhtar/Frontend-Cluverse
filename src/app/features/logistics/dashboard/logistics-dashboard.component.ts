@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { defaultIfEmpty } from 'rxjs/operators';
 
@@ -47,6 +48,7 @@ export class LogisticsDashboardComponent implements OnInit {
   readonly getStatusBadgeClasses = getStatusBadgeClasses;
 
   constructor(
+    private router: Router,
     private resourceService: ResourceService,
     private vehicleService: VehicleService,
     private transportService: TransportService,
@@ -220,5 +222,9 @@ export class LogisticsDashboardComponent implements OnInit {
     }
 
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  navigateToLowStockResources(): void {
+    this.router.navigate(['/logistics/resources'], { queryParams: { filter: 'low-stock' } });
   }
 }

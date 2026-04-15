@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { Resource, ResourceStatus } from '../models/resource.model';
 import { ResourceService } from '../services/resource.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { RESOURCE_STATUS_LABELS, getStatusBadgeClasses } from '../utils/status-labels';
 
 @Component({
@@ -33,12 +35,22 @@ export class ResourceListComponent implements OnInit {
 
   constructor(
     private resourceService: ResourceService,
-    private location: Location
+    private location: Location,
+    private toastService: ToastService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     const storedClubId = Number(localStorage.getItem('clubId') ?? 0);
     this.clubId = Number.isFinite(storedClubId) ? storedClubId : 0;
+
+    // Check for low-stock filter from query params
+    this.route.queryParams.subscribe(params => {
+      if (params['filter'] === 'low-stock') {
+        this.statusFilter = 'ALL';
+        this.searchText = 'LOW_STOCK_FILTER';
+      }
+    });
 
     this.load();
   }
@@ -72,11 +84,16 @@ export class ResourceListComponent implements OnInit {
     const query = this.searchText.trim().toLowerCase();
     const status = this.statusFilter;
 
-    this.filteredResources = this.resources.filter((r) => {
-      const matchesName = !query || (r.name ?? '').toLowerCase().includes(query);
-      const matchesStatus = status === 'ALL' || r.status === status;
-      return matchesName && matchesStatus;
-    });
+    // Special case: low-stock filter
+    if (query === 'low_stock_filter') {
+      this.filteredResources = this.resources.filter(r => this.isLowStock(r));
+    } else {
+      this.filteredResources = this.resources.filter((r) => {
+        const matchesName = !query || (r.name ?? '').toLowerCase().includes(query);
+        const matchesStatus = status === 'ALL' || r.status === status;
+        return matchesName && matchesStatus;
+      });
+    }
 
     this.currentPage = 1;
     this.applyPagination();
@@ -213,14 +230,50 @@ export class ResourceListComponent implements OnInit {
 
     this.resourceService.delete(resource.id).subscribe({
       next: () => {
+        this.toastService.success(`Ressource "${resource.name}" supprimée avec succès`);
         this.load();
       },
       error: (error) => {
         console.error('[ResourceListComponent] delete failed', error);
         this.errorMessage = 'Impossible de supprimer la ressource.';
+        this.toastService.error('Erreur lors de la suppression');
         this.loading = false;
       }
     });
+  }
+
+  exportToCSV(): void {
+    if (this.filteredResources.length === 0) {
+      this.toastService.error('Aucune ressource à exporter');
+      return;
+    }
+
+    const headers = ['Nom', 'Statut', 'Quantité totale', 'Quantité disponible', 'Coût unitaire', 'Seuil stock bas', 'Description'];
+    const rows = this.filteredResources.map(r => [
+      r.name || '',
+      this.statusLabels[r.status]?.label || r.status,
+      r.quantityTotal || 0,
+      r.availableQuantity || 0,
+      this.unitCostValue(r) || 0,
+      r.lowStockThreshold || 0,
+      (r.description || '').replace(/"/g, '""')
+    ]);
+
+    const csvContent = [
+      headers.map(h => `"${h}"`).join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `ressources-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.toastService.success('Export CSV réussi');
   }
 
   goBack(): void {

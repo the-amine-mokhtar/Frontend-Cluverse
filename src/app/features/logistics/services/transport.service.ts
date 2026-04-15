@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { EMPTY, Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment.development';
 import { Transport, TransportStatus } from '../models/transport.model';
+import { TransportPrediction } from '../models/transport-prediction.model';
 
 @Injectable({ providedIn: 'root' })
 export class TransportService {
@@ -125,6 +126,36 @@ export class TransportService {
       catchError((error) => {
         console.error('[TransportService] updateAllStatuses failed', error);
         return of({ success: false, updatedCount: 0 });
+      })
+    );
+  }
+
+  getPrediction(
+    departureLocationId: number,
+    arrivalLocationId: number,
+    scheduledDate: string,
+    departureCityName?: string,
+    arrivalCityName?: string
+  ): Observable<TransportPrediction> {
+    let params = new HttpParams()
+      .set('departureLocationId', departureLocationId.toString())
+      .set('arrivalLocationId', arrivalLocationId.toString())
+      .set('scheduledDate', scheduledDate);
+    
+    if (departureCityName) {
+      params = params.set('departureName', departureCityName);
+    }
+    if (arrivalCityName) {
+      params = params.set('arrivalName', arrivalCityName);
+    }
+    
+    return this.http.get<TransportPrediction>(`${this.endpoint}/prediction`, {
+      headers: this.authHeaders(),
+      params
+    }).pipe(
+      catchError((error) => {
+        console.error('[TransportService] getPrediction failed', error);
+        return EMPTY;
       })
     );
   }

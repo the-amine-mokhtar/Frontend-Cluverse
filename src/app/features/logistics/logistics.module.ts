@@ -21,10 +21,12 @@ import { TransportListComponent } from './transports/transport-list.component';
 import { TransportFormComponent } from './transports/transport-form.component';
 import { TransportDetailComponent } from './transports/transport-detail.component';
 import { TransportMapComponent } from './transports/transport-map.component';
+import { TransportPredictionComponent } from './transports/transport-prediction.component';
 import { LogisticsDashboardComponent } from './dashboard/logistics-dashboard.component';
 import { ResourceListComponent } from './resources/resource-list.component';
 import { ResourceFormComponent } from './resources/resource-form.component';
 import { ResourceDetailComponent } from './resources/resource-detail.component';
+import { TransportPlannerComponent } from './components/transport-planner/transport-planner.component';
 
 @NgModule({
   declarations: [
@@ -41,6 +43,8 @@ import { ResourceDetailComponent } from './resources/resource-detail.component';
     TransportListComponent,
     TransportFormComponent,
     TransportDetailComponent,
+    TransportPredictionComponent,
+    TransportPlannerComponent,
 
     // Legacy logistics screens
     LogisticsHomeComponent,
