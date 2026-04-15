@@ -25,10 +25,9 @@
           <tr>
             <th (click)="sortBy('id')">Vote ID</th>
             <th (click)="sortBy('voterName')">Voter</th>
-            <th (click)="sortBy('positionName')">Position</th>
+            <th>Candidate (Position)</th>
+            <th (click)="sortBy('electionName')">Election</th>
             <th (click)="sortBy('timestamp')">Timestamp</th>
-            <th (click)="sortBy('isValid')">Valid</th>
-            <th (click)="sortBy('voteWeight')">Weight</th>
             <th style="text-align: right">Links</th>
           </tr>
         </thead>
@@ -36,17 +35,12 @@
           <tr *ngFor="let vote of filteredVotes | paginate: { itemsPerPage: itemsPerPage, currentPage: page }">
             <td style="color: var(--e-muted); font-family: monospace;">{{ vote.id }}</td>
             <td style="font-weight: 700;">{{ vote.voterName || 'Anonymous' }}</td>
-            <td style="font-weight: 600;">
-              <a *ngIf="vote.positionName" [routerLink]="['/dashboard/elections/positions-list']" [queryParams]="{positionId: vote.position?.id || vote.positionId}" style="color: var(--e-secondary); text-decoration: underline;">
-                {{ vote.positionName }}
-              </a>
-              <span *ngIf="!vote.positionName" style="color: var(--e-muted);">-</span>
-            </td>
-            <td style="color: var(--e-muted); font-weight: 500;">{{ vote.timestamp | date:'short' }}</td>
             <td>
-              <span class="elections__badge" [ngClass]="vote.isValid ? 'elections__badge--success' : 'elections__badge--danger'">{{ vote.isValid ? 'Yes' : 'No' }}</span>
+              <div style="font-weight: 700;">{{ vote.candidate?.userName || 'N/A' }}</div>
+              <div style="font-size: 0.75rem; color: var(--e-muted);">({{ vote.positionName || 'N/A' }})</div>
             </td>
-            <td style="font-weight: 700;">{{ vote.voteWeight || 1 }}</td>
+            <td style="font-weight: 600; color: var(--e-secondary);">{{ vote.electionName || 'N/A' }}</td>
+            <td style="color: var(--e-muted); font-weight: 500;">{{ vote.timestamp | date:'short' }}</td>
             <td>
               <div class="elections__actions-cell">
                 <a [routerLink]="['/dashboard/elections/votes/form', vote.id]" class="elections__icon-btn elections__icon-btn--edit" title="Edit Vote">
@@ -56,9 +50,10 @@
                   </svg>
                 </a>
                 <a [routerLink]="['/dashboard/elections/list']" [queryParams]="{electionId: vote.election?.id || vote.electionId}" class="elections__icon-btn elections__icon-btn--success" title="View Election">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 10a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z"/>
+                    <path d="M7 6h10a1 1 0 010 2H7a1 1 0 010-2z"/>
+                    <path d="M9.5 13.5l2 2 4-4" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </a>
                 <a [routerLink]="['/dashboard/elections/candidates']" [queryParams]="{candidateId: vote.candidate?.id || vote.candidateId}" class="elections__icon-btn elections__icon-btn--info" title="View Candidate">

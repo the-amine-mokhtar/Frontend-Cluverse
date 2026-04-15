@@ -27,6 +27,7 @@
             <th (click)="sortBy('userName')">Member</th>
             <th (click)="sortBy('program')">Program</th>
             <th (click)="sortBy('status')">Status</th>
+            <th (click)="sortBy('voteCount')">Votes</th>
             <th (click)="sortBy('submissionDate')">Submitted</th>
             <th style="text-align: right">Actions</th>
           </tr>
@@ -44,6 +45,12 @@
             <td>
               <span class="elections__badge elections__badge--primary">{{ candidate.status || '-' }}</span>
             </td> 
+            <td>
+              <div style="font-weight: 700;">{{ candidate.voteCount }} / {{ candidate.totalElectionVotes }}</div>
+              <div style="font-size: 0.75rem; color: var(--e-success); font-weight: 600;">
+                {{ candidate.percentage | number:'1.1-1' }}%
+              </div>
+            </td>
             <td>{{ candidate.submissionDate | date }}</td>
             <td>
               <div class="elections__actions-cell">
