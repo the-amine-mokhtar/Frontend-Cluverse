@@ -65,7 +65,7 @@ export class ElectionFormComponent implements OnInit {
       next: ({ positions, elections }) => {
         const usedPositionIds = new Set(
           elections
-            .filter((e: any) => e.status === 'PENDING' || e.status === 'ACTIVE')
+            .filter((e: any) => String(e.status || '').toUpperCase() === 'OPEN')
             .map((e: any) => e.position?.id)
             .filter((id: any) => id != null)
         );

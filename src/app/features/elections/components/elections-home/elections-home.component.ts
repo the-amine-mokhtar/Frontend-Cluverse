@@ -7,6 +7,12 @@ import { Component } from '@angular/core';
       <h1 class="elections__title">Elections Control Panel</h1>
       
       <div class="elections__grid">
+        <a routerLink="../dashboard" class="elections__card elections__card--success">
+          <div class="elections__card-icon">🧠</div>
+          <h3>Dashboard</h3>
+          <p>Real-time analytics & simulation</p>
+        </a>
+
         <a routerLink="../list" class="elections__card elections__card--primary">
           <div class="elections__card-icon">🗳️</div>
           <h3>Elections</h3>
@@ -101,6 +107,11 @@ import { Component } from '@angular/core';
       &--warning {
         --card-accent: var(--e-warning);
         &::before { background: var(--e-warning); }
+      }
+
+      &--success {
+        --card-accent: var(--e-success);
+        &::before { background: var(--e-success); }
       }
 
       &--danger {

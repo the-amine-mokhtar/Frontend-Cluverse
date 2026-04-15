@@ -1,0 +1,231 @@
+<div class="e-dashboard" *ngIf="isAdmin; else forbiddenState">
+  <div class="hero">
+    <div class="hero__title-wrap">
+      <h1 class="hero__title">Election Command Center</h1>
+      <p class="hero__subtitle">A live operations cockpit for every election lifecycle, outcome, and candidate momentum.</p>
+    </div>
+    <div class="hero__actions">
+      <input
+        class="hero__search"
+        type="text"
+        placeholder="Search election by title, id, status or position"
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+      />
+      <a class="hero__new" routerLink="/dashboard/elections/elections/form">Create Election</a>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <article class="kpi">
+      <p>Total Elections</p>
+      <h3>{{ elections.length }}</h3>
+      <span>{{ openElectionCount }} open now</span>
+    </article>
+    <article class="kpi kpi--blue">
+      <p>Live Votes</p>
+      <h3>{{ totalVotesAll }}</h3>
+      <span>Updated {{ lastSync | date:'shortTime' }}</span>
+    </article>
+    <article class="kpi kpi--green">
+      <p>Candidates</p>
+      <h3>{{ totalCandidatesAll }}</h3>
+      <span>{{ totalPositionsAll }} positions tracked</span>
+    </article>
+    <article class="kpi kpi--amber">
+      <p>Pulse Score</p>
+      <h3>{{ pulseScore }}%</h3>
+      <span>Engagement {{ engagementIndex }} | Competition {{ competitionIndex }}</span>
+    </article>
+  </div>
+
+  <div class="layout">
+    <section class="panel panel--table">
+      <div class="panel__head">
+        <h2>Election Intelligence Table</h2>
+        <p>{{ filteredElections.length }} results</p>
+      </div>
+
+      <div class="status-filters">
+        <button
+          *ngFor="let filter of statusFilters"
+          type="button"
+          [class.is-active]="selectedStatus === filter"
+          (click)="setStatusFilter(filter)"
+        >
+          {{ filter }}
+          <span>{{ statusCounts[filter] }}</span>
+        </button>
+      </div>
+
+      <div class="table-wrap" *ngIf="!isLoading; else loadingState">
+        <table>
+          <thead>
+            <tr>
+              <th>Election</th>
+              <th>Status</th>
+              <th>Dates</th>
+              <th>Candidates</th>
+              <th>Votes</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let election of filteredElections"
+              (click)="selectElection(election)"
+              [class.is-selected]="selectedElection?.id === election.id"
+            >
+              <td>
+                <h4>{{ election.title || 'Untitled Election' }}</h4>
+                <p>#{{ election.id }} • {{ election.position?.name || 'No position link' }}</p>
+              </td>
+              <td>
+                <span
+                  class="status"
+                  [class.status--open]="electionStatusIs(election, 'OPEN')"
+                  [class.status--closed]="electionStatusIs(election, 'CLOSED')"
+                  [class.status--archived]="electionStatusIs(election, 'ARCHIVED')"
+                >
+                  {{ election.status || 'UNKNOWN' }}
+                </span>
+              </td>
+              <td>{{ election.startDate | date:'mediumDate' }} → {{ election.endDate | date:'mediumDate' }}</td>
+              <td>{{ electionCandidateCount(election.id) }}</td>
+              <td>{{ electionVoteCount(election.id) }}</td>
+              <td>
+                <div class="progress">
+                  <span [style.width.%]="electionProgress(election)"></span>
+                </div>
+                <strong>{{ electionProgress(election) }}%</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel panel--meta">
+      <div class="panel__head">
+        <h2>Global Landscape</h2>
+        <p>Distribution and dynamics</p>
+      </div>
+      <div class="donut" [style.background]="getDonutStyle()">
+        <div>
+          <strong>{{ elections.length }}</strong>
+          <small>elections</small>
+        </div>
+      </div>
+      <div class="mini-bars">
+        <div>
+          <label>Open</label>
+          <span [style.width.%]="openRatio"></span>
+        </div>
+        <div>
+          <label>Closed</label>
+          <span [style.width.%]="closedRatio"></span>
+        </div>
+        <div>
+          <label>Archived</label>
+          <span [style.width.%]="archivedRatio"></span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel panel--focus" *ngIf="hasSelectedElection">
+    <div class="panel__head">
+      <h2>{{ selectedElection?.title }}</h2>
+      <p>{{ selectedElection?.status }} • {{ selectedElection?.position?.name || 'No position assigned' }}</p>
+    </div>
+
+    <div class="focus-grid">
+      <article class="focus-card">
+        <h3>Leader Board</h3>
+        <div class="leader-row" *ngFor="let candidate of selectedLeaderboard">
+          <div class="leader-row__head">
+            <strong>#{{ candidate.rank }} {{ candidate.name }}</strong>
+            <span>{{ candidate.voteCount }} votes</span>
+          </div>
+          <div class="leader-bar">
+            <span [style.width.%]="candidate.share"></span>
+          </div>
+          <small>{{ candidate.share }}% share</small>
+        </div>
+      </article>
+
+      <article class="focus-card">
+        <h3>Position Vote Breakdown</h3>
+        <div class="break-row" *ngFor="let item of positionVoteBreakdown">
+          <label>{{ item.label }}</label>
+          <div class="break-row__bar">
+            <span [style.width.%]="item.ratio"></span>
+          </div>
+          <strong>{{ item.votes }}</strong>
+        </div>
+      </article>
+
+      <article class="focus-card focus-card--wide">
+        <div class="focus-card__title">
+          <h3>Real-Time Candidate Vote Viewer</h3>
+          <p>Each dot is one vote in motion inside the candidate sphere.</p>
+        </div>
+
+        <svg *ngIf="candidateBubbles.length; else noBubbleData" [attr.viewBox]="'0 0 ' + bubbleViewWidth + ' ' + bubbleViewHeight" class="bubble-stage">
+          <g *ngFor="let bubble of candidateBubbles; let i = index; trackBy: orbTrackBy">
+            <defs>
+              <clipPath [attr.id]="'clip-' + bubble.id + '-' + i">
+                <circle [attr.cx]="bubble.x" [attr.cy]="bubble.y" [attr.r]="bubble.radius - 2"></circle>
+              </clipPath>
+            </defs>
+            <circle [attr.cx]="bubble.x" [attr.cy]="bubble.y" [attr.r]="bubble.radius" [attr.fill]="bubble.color + '1A'" [attr.stroke]="bubble.color" stroke-width="2.4"></circle>
+            <g [attr.clip-path]="'url(#clip-' + bubble.id + '-' + i + ')'">
+              <circle *ngFor="let dot of bubble.dots" [attr.cx]="dot.x" [attr.cy]="dot.y" r="2.2" [attr.fill]="dot.color"></circle>
+            </g>
+            <text [attr.x]="bubble.x" [attr.y]="bubble.y - 4" text-anchor="middle" class="bubble-stage__name">{{ bubble.name }}</text>
+            <text [attr.x]="bubble.x" [attr.y]="bubble.y + 16" text-anchor="middle" class="bubble-stage__votes">{{ bubble.votes }} votes • {{ bubble.share }}%</text>
+          </g>
+        </svg>
+        <ng-template #noBubbleData>
+          <div class="empty-chip">No candidates available for this election yet.</div>
+        </ng-template>
+      </article>
+
+      <article class="focus-card focus-card--wide">
+        <h3>Recent Vote Stream</h3>
+        <table class="votes-table" *ngIf="recentVotes.length; else noVotesStream">
+          <thead>
+            <tr>
+              <th>Voter</th>
+              <th>Candidate</th>
+              <th>Position</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let vote of recentVotes; trackBy: voteTrackBy">
+              <td>{{ vote.voterName || 'Anonymous' }}</td>
+              <td>{{ vote.candidate?.userName || vote.candidateName || 'Unknown' }}</td>
+              <td>{{ vote.positionName || vote.position?.name || selectedElection?.position?.name || 'General' }}</td>
+              <td>{{ getVoteTime(vote) ? (getVoteTime(vote) | date:'short') : 'Now' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noVotesStream>
+          <div class="empty-chip">No votes recorded in this election yet.</div>
+        </ng-template>
+      </article>
+    </div>
+  </section>
+</div>
+
+<ng-template #loadingState>
+  <div class="state">Loading election intelligence...</div>
+</ng-template>
+
+<ng-template #forbiddenState>
+  <div class="forbidden">
+    <h2>Admin Access Required</h2>
+    <p>This dashboard is reserved for admin roles.</p>
+  </div>
+</ng-template>

@@ -6,6 +6,7 @@ import { InterviewSimulatorComponent } from './components/interview-simulator/in
 import { InterviewReportComponent } from './components/interview-report/interview-report.component';
 
 import { ElectionListComponent } from './components/election-list/election-list.component';
+import { ElectionDashboardComponent } from './components/election-dashboard/election-dashboard.component';
 import { CandidateListComponent } from './components/candidate-list/candidate-list.component';
 import { VoteListComponent } from './components/vote-list/vote-list.component';
 import { PositionListComponent } from './components/position-list/position-list.component';
@@ -18,6 +19,7 @@ import { VoteFormComponent } from './components/vote-form/vote-form.component';
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: ElectionsHomeComponent },
+  { path: 'dashboard', component: ElectionDashboardComponent },
   { path: 'list', component: ElectionListComponent },
   { path: 'elections/form', component: ElectionFormComponent },
   { path: 'elections/form/:id', component: ElectionFormComponent },

@@ -47,9 +47,9 @@
             <td>
               <span class="elections__badge" 
                     [ngClass]="{
-                      'elections__badge--success': election.status === 'ACTIVE',
-                      'elections__badge--warning': election.status === 'PENDING',
-                      'elections__badge--gray': election.status === 'COMPLETED'
+                      'elections__badge--success': election.status === 'OPEN',
+                      'elections__badge--warning': election.status === 'CLOSED',
+                      'elections__badge--gray': election.status === 'ARCHIVED'
                     }">
                 {{ election.status || 'UNKNOWN' }}
               </span>
@@ -123,9 +123,9 @@
           <label>Status</label>
           <span class="elections__badge" 
                 [ngClass]="{
-                  'elections__badge--success': selectedElection.status === 'ACTIVE',
-                  'elections__badge--warning': selectedElection.status === 'PENDING',
-                  'elections__badge--gray': selectedElection.status === 'COMPLETED'
+                  'elections__badge--success': selectedElection.status === 'OPEN',
+                  'elections__badge--warning': selectedElection.status === 'CLOSED',
+                  'elections__badge--gray': selectedElection.status === 'ARCHIVED'
                 }">
             {{ selectedElection.status }}
           </span>
