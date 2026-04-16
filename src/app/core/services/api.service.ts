@@ -310,6 +310,21 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
   getInterviewReport(sessionId: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/api/elections/interview/report/${sessionId}`, { headers: this.authHeaders() });
   }
+
+  passToInterview(applicationId: number, config: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/api/applications/${applicationId}/interview`,
+      config,
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  getInterviewResult(applicationId: number): Observable<any> {
+    return this.http.get<any>(
+      `${this.baseUrl}/api/interview-configs/application/${applicationId}/result`,
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
 }
 
 
