@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════════════════════════
+   CLUBS SHOWCASE SECTION
+   ═══════════════════════════════════════════════════════════ */
+
+$deep-navy: #0A0A1A;
+$accent-teal: #2DD4BF;
+$heading-color: rgba(255, 255, 255, 0.95);
+$body-color: rgba(255, 255, 255, 0.70);
+
+:host {
+  display: block;
+}
+
+.clubs-section {
+  background: $deep-navy;
+  padding: 10vh 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.container {
+  max-width: 1140px;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
+  justify-content: center;
+}
+
+/* ─── Section Titles ───────────────────────────────────────── */
+.section-header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.beat-title {
+  position: relative;
+  margin-bottom: 15px;
+  display: inline-block;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-size: clamp(32px, 5vw, 64px);
+  
+  /* Luminous shimmer sweep from hero-sequence */
+  color: transparent;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.95) 25%,
+    rgba(255, 255, 255, 0.50) 45%,
+    rgba(255, 255, 255, 0.95) 55%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 100%;
+  animation: shimmerText 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.15));
+
+  /* Bottom teal line similar to faq-section */
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    width: 60px;
+    height: 2px;
+    background: $accent-teal;
+    bottom: -15px;
+    margin-left: -30px;
+  }
+}
+
+.section-subtitle {
+  color: $body-color;
+  font-size: 16px;
+  max-width: 600px;
+  margin: 25px auto 0;
+  line-height: 1.6;
+}
+
+/* ─── Grid & Cards ────────────────────────────────────────── */
+.showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+  width: 100%;
+  padding: 0 15px;
+  margin-bottom: 60px;
+}
+
+.showcase-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: rgba($accent-teal, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  &__logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &__logo-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 600;
+    color: $heading-color;
+    margin: 0;
+  }
+
+  &__club-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: $accent-teal;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__desc {
+    color: $body-color;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  &__meta {
+    margin-top: 15px;
+    color: $body-color;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    svg { opacity: 0.7; }
+  }
+
+  &__footer {
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* ─── Buttons & States ─────────────────────────────────────── */
+.btn-apply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 24px;
+  background: $accent-teal;
+  color: $deep-navy;
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba($accent-teal, 0.3);
+  }
+
+  svg { width: 18px; height: 18px; }
+}
+
+.empty-state {
+  width: 100%;
+  text-align: center;
+  padding: 40px 20px;
+  color: $body-color;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  margin-bottom: 60px;
+  font-size: 16px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 60px;
+  color: $body-color;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: $accent-teal;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+/* ─── Keyframes ───────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmerText {
+  0% { background-position: 100% 50%; }
+  50% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}

@@ -1,1 +1,326 @@
-// Styles are embedded in the component HTML
+// ─── Design Tokens ─────────────────────────────────────────────────────────────
+$bg-page:    #111111;
+$bg-card:    #171717;
+$bg-inner:   #1e1e1e;
+$border:     #2e2e2e;
+$text-main:  #ffffff;
+$text-muted: #676767;
+$accent:     #f7b91c;
+$danger:     #e05c5c;
+$success:    #3ecf8e;
+$warning:    #f59e0b;
+$purple:     #8b5cf6;
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+:host { display: block; }
+
+.results-page {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  color: $text-main;
+  min-height: calc(100vh - 80px);
+}
+
+// ─── Header ─────────────────────────────────────────────────────────────
+.kbn-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .builder__back-btn {
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid $border;
+    border-radius: 8px;
+    cursor: pointer;
+    color: $text-muted;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: 0.2s;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-main;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.2rem;
+    letter-spacing: -0.02em;
+  }
+
+  &__subtitle {
+    font-size: 0.85rem;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+// ─── Grid & Cards ─────────────────────────────────────────────────────────────
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.result-card {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  animation: fadeInUp 0.4s ease;
+
+  &:hover {
+    border-color: rgba($text-main, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  &--pending {
+    opacity: 0.8;
+    .result-card__score-box { background: rgba($text-muted, 0.1); color: $text-muted; }
+  }
+
+  &__header {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  &__info {
+    flex: 1;
+    h3 { margin: 0 0 0.25rem; font-size: 1.1rem; font-weight: 600; }
+  }
+
+  &__email { font-size: 0.8rem; color: $text-muted; margin-bottom: 0.75rem; display: block; }
+
+  &__score-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    background: rgba($accent, 0.1);
+    color: $accent;
+
+    span { font-size: 0.6rem; font-weight: 500; opacity: 0.7; margin-top: -2px; }
+
+    &.score-high { background: rgba($success, 0.1); color: $success; }
+    &.score-mid { background: rgba($warning, 0.1); color: $warning; }
+    &.score-low { background: rgba($danger, 0.1); color: $danger; }
+  }
+
+  &__body {
+    padding: 0 1.5rem 1.5rem;
+    flex: 1;
+  }
+
+  &__impression {
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    
+    &--rejeter { color: $danger; }
+    &--considerer { color: $warning; }
+    &--accepter { color: $success; }
+  }
+
+  &__status {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba($purple, 0.1);
+    color: $purple;
+    border: 1px solid rgba($purple, 0.2);
+
+    &.status-done {
+      background: rgba($success, 0.1);
+      color: $success;
+      border-color: rgba($success, 0.2);
+    }
+  }
+
+  &__actions {
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid $border;
+  }
+}
+
+// ─── Modal ─────────────────────────────────────────────────────────────
+.kbn-modal {
+  &__overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 2000; display: flex; align-items: center; justify-content: center;
+    animation: fadeInUp 0.2s; padding: 1rem; backdrop-filter: blur(4px);
+  }
+
+  &__dialog {
+    background: $bg-card; border: 1px solid $border; border-radius: 20px;
+    width: 100%; max-width: 650px; overflow: hidden; max-height: 90vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  &__header {
+    padding: 1.5rem 2rem; border-bottom: 1px solid $border;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; background: rgba(255,255,255,0.02);
+
+    .header-info {
+        display: flex; align-items: center; gap: 1rem;
+    }
+  }
+
+  &__title { margin: 0; font-size: 1.4rem; font-weight: 700; }
+
+  &__close {
+    font-size: 1.8rem; line-height: 1; background: transparent; border: none;
+    color: $text-muted; cursor: pointer; transition: 0.2s; padding: 0.5rem;
+    &:hover { color: $text-main; transform: rotate(90deg); }
+  }
+
+  &__body {
+    padding: 2rem; overflow-y: auto; flex: 1;
+  }
+}
+
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  &__summary-card {
+    background: $bg-inner;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid $border;
+    
+    h4 { margin: 0 0 0.75rem; font-size: 0.9rem; color: $text-muted; text-transform: uppercase; letter-spacing: 0.05em; }
+    p { margin: 0; line-height: 1.6; color: rgba($text-main, 0.9); font-size: 0.95rem; }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    @media (max-width: 500px) { grid-template-columns: 1fr; }
+  }
+
+  &__points {
+    h4 {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 1rem; font-size: 1rem; font-weight: 600;
+    }
+
+    ul { padding: 0; margin: 0; list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+
+    li {
+      padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.88rem;
+      background: rgba(255,255,255,0.03); border: 1px solid transparent;
+      display: flex; align-items: center; gap: 10px;
+
+      &::before { content: "•"; font-size: 1.2rem; line-height: 1; }
+    }
+
+    &--strengths {
+      h4 { color: $success; }
+      li { border-color: rgba($success, 0.1); &::before { color: $success; } }
+    }
+
+    &--weaknesses {
+      h4 { color: $danger; }
+      li { border-color: rgba($danger, 0.1); &::before { color: $danger; } }
+    }
+  }
+}
+
+// ─── States ─────────────────────────────────────────────────────────────
+.loading-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; padding: 4rem; color: $text-muted;
+
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid $border;
+    border-top-color: $accent; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+.empty-state {
+  text-align: center; padding: 5rem 2rem; color: $text-muted;
+  background: rgba($bg-card, 0.5); border: 1px dashed $border; border-radius: 20px;
+  
+  .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; display: block; }
+  h3 { color: $text-main; margin-bottom: 0.5rem; }
+  p { font-size: 0.9rem; }
+}
+
+// ─── Buttons ─────────────────────────────────────────────────────────────
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0.6rem 1.25rem; border-radius: 10px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+  font-size: 0.9rem; gap: 8px;
+
+  &--primary {
+    background: $accent; color: #000;
+    &:hover { background: lighten($accent, 5%); transform: translateY(-1px); }
+  }
+
+  &--outline {
+    background: transparent; border-color: $border; color: $text-main;
+    &:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.2); }
+  }
+
+  &--full { width: 100%; }
+}
+
+// ─── Light Mode Support ─────────────────────────────────────────────────────────────
+body.light-mode {
+  .results-page { color: #111; }
+  .kbn-header .builder__back-btn { background: #f0f0f0; color: #555; border-color: #ddd; }
+  .result-card {
+    background: #fff; border-color: #eee;
+    &__actions { background: #fafafa; }
+  }
+  .report__summary-card { background: #f9f9f9; border-color: #eee; }
+  .report__points li { background: #fff; border-color: #eee; }
+  .kbn-modal__dialog { background: #fff; border-color: #eee; }
+  .kbn-modal__header { border-bottom-color: #eee; background: rgba(0,0,0,0.01); }
+  .empty-state { background: #fdfdfd; border-color: #ddd; }
+}

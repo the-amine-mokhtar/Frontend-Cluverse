@@ -1,129 +1,132 @@
 <div class="results-page">
-  <!-- Detail Modal -->
-  <div class="kbn-modal__overlay" *ngIf="selectedResult" (click)="closeResult()">
-    <div class="kbn-modal__dialog" style="max-width: 650px; max-height: 85vh; overflow-y: auto;" (click)="$event.stopPropagation()">
-      <div class="kbn-modal__header">
-        <div>
-          <h3 class="kbn-modal__title">{{ selectedResult.candidateName }}</h3>
-          <p style="color: var(--body); font-size: 0.85rem; margin-top: 0.25rem;">{{ selectedResult.candidateEmail }}</p>
-        </div>
-        <button class="kbn-modal__close" (click)="closeResult()">&times;</button>
-      </div>
-
-      <div class="kbn-modal__body" *ngIf="selectedResult.interviewResult?.status === 'TERMINE'; else notDone">
-        <!-- Score + Impression -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 1.5rem;">
-          <div style="text-align: center;">
-            <div style="font-size: 2.5rem; font-weight: 800; line-height: 1;"
-              [style.color]="getScoreColor(selectedResult.interviewResult?.report?.overall_score || 0)">
-              {{ selectedResult.interviewResult?.report?.overall_score || 0 }}
-            </div>
-            <div style="font-size: 0.75rem; color: var(--body); margin-top: 0.25rem;">Score / 100</div>
-          </div>
-          <div style="text-align: center;">
-            <div style="font-size: 1.2rem; font-weight: 700; padding: 0.5rem 1.2rem; border-radius: 20px;"
-              [style.background]="getImpressionColor(selectedResult.interviewResult?.report?.impression || '') + '22'"
-              [style.color]="getImpressionColor(selectedResult.interviewResult?.report?.impression || '')">
-              {{ selectedResult.interviewResult?.report?.impression || '—' }}
-            </div>
-          </div>
-        </div>
-
-        <!-- Points forts -->
-        <div style="margin-bottom: 1.25rem;" *ngIf="selectedResult.interviewResult?.report?.strengths?.length">
-          <h4 style="color: #22c55e; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span>✓</span> Points forts
-          </h4>
-          <div *ngFor="let s of selectedResult.interviewResult.report.strengths"
-            style="padding: 0.6rem 1rem; background: rgba(34,197,94,0.08); border-left: 3px solid #22c55e; border-radius: 0 8px 8px 0; margin-bottom: 0.5rem; color: var(--body);">
-            {{ s }}
-          </div>
-        </div>
-
-        <!-- Points faibles -->
-        <div style="margin-bottom: 1.25rem;" *ngIf="selectedResult.interviewResult?.report?.weaknesses?.length">
-          <h4 style="color: #ef4444; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span>✗</span> Points faibles
-          </h4>
-          <div *ngFor="let w of selectedResult.interviewResult.report.weaknesses"
-            style="padding: 0.6rem 1rem; background: rgba(239,68,68,0.08); border-left: 3px solid #ef4444; border-radius: 0 8px 8px 0; margin-bottom: 0.5rem; color: var(--body);">
-            {{ w }}
-          </div>
-        </div>
-
-        <!-- Résumé -->
-        <div *ngIf="selectedResult.interviewResult?.report?.summary"
-          style="padding: 1rem 1.25rem; background: rgba(255,255,255,0.04); border-radius: 10px; border-left: 3px solid var(--accent-teal);">
-          <h4 style="margin-bottom: 0.6rem; color: var(--heading);">Résumé de l'entretien</h4>
-          <p style="color: var(--body); line-height: 1.7; font-size: 0.92rem;">
-            {{ selectedResult.interviewResult.report.summary }}
-          </p>
-        </div>
-      </div>
-
-      <ng-template #notDone>
-        <div style="text-align: center; padding: 3rem; color: var(--body);">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
-          <p>L'entretien n'a pas encore été passé.</p>
-          <p style="font-size: 0.85rem; margin-top: 0.5rem;">Le candidat recevra le lien par email.</p>
-        </div>
-      </ng-template>
-    </div>
-  </div>
-
-  <!-- Header -->
-  <div class="kbn-header">
+  
+  <!-- ── Header ── -->
+  <header class="kbn-header">
     <div class="kbn-header__left">
-      <button class="btn btn--text builder__back-btn" routerLink="/dashboard/recruitment">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        Retour
+      <button class="builder__back-btn" [routerLink]="['/dashboard/recruitment', campaignId, 'applications']">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour au Kanban
       </button>
       <div>
-        <h2 class="kbn-title">Résultats des entretiens</h2>
-        <p class="kbn-subtitle">Consultez les résultats des candidats ayant passé l'entretien IA</p>
+        <h2 class="kbn-header__title">Résultats des Entretiens IA</h2>
+        <p class="kbn-header__subtitle">Analyse détaillée des performances et recommandations</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── States ── -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Analyse des résultats en cours...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && applications.length === 0">
+    <span class="icon">📋</span>
+    <h3>Aucun entretien trouvé</h3>
+    <p>Les résultats apparaîtront une fois que les candidats auront terminé leur session IA.</p>
+  </div>
+
+  <!-- ── Results Grid ── -->
+  <div class="results-grid" *ngIf="!isLoading && applications.length > 0">
+    <div 
+      class="result-card" 
+      *ngFor="let app of applications"
+      [class.result-card--pending]="!app.interviewResult?.report"
+    >
+      <div class="result-card__header">
+        <div class="result-card__info">
+          <h3>{{ app.candidateName }}</h3>
+          <span class="result-card__email">{{ app.candidateEmail }}</span>
+          <span class="result-card__status" [class.status-done]="app.interviewResult?.report">
+            {{ app.interviewResult?.report ? 'Entretien terminé' : 'En attente' }}
+          </span>
+        </div>
+        
+        <div 
+          *ngIf="app.interviewResult?.report"
+          class="result-card__score-box" 
+          [ngClass]="getScoreClass(app.interviewResult.report.overall_score)"
+        >
+          {{ app.interviewResult.report.overall_score }}
+          <span>/100</span>
+        </div>
+      </div>
+
+      <div class="result-card__body">
+        <div class="result-card__impression" *ngIf="app.interviewResult?.report" [ngClass]="'result-card__impression--' + app.interviewResult.report.impression.toLowerCase()">
+          <span [ngSwitch]="app.interviewResult.report.impression.toLowerCase()">
+            <span *ngSwitchCase="'accepter'">✅</span>
+            <span *ngSwitchCase="'rejeter'">❌</span>
+            <span *ngSwitchDefault>⚠️</span>
+          </span>
+          {{ app.interviewResult.report.impression }}
+        </div>
+        <p *ngIf="!app.interviewResult?.report" style="color: var(--body); font-style: italic; font-size: 0.85rem;">
+          Le candidat n'a pas encore passé son entretien.
+        </p>
+      </div>
+
+      <div class="result-card__actions" *ngIf="app.interviewResult?.report">
+        <button class="btn btn--primary btn--full" (click)="openDetail(app)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          Voir le rapport complet
+        </button>
       </div>
     </div>
   </div>
 
-  <div class="kbn-loading" *ngIf="isLoading"><div class="spinner"></div> Chargement...</div>
-  <div class="kbn-error" *ngIf="loadError">{{ loadError }}</div>
-
-  <!-- Results Table -->
-  <div class="results-table" *ngIf="!isLoading && !loadError">
-    <div *ngIf="applications.length === 0" style="text-align: center; padding: 3rem; color: var(--body);">
-      Aucun candidat en phase entretien pour cette campagne.
-    </div>
-    <div class="result-card" *ngFor="let app of applications" (click)="openResult(app)">
-      <div class="result-card__left">
-        <div class="result-card__name">{{ app.candidateName }}</div>
-        <div class="result-card__email">{{ app.candidateEmail }}</div>
+  <!-- ── Detail Modal ── -->
+  <div class="kbn-modal__overlay" *ngIf="selectedResult" (click)="closeDetail()">
+    <div class="kbn-modal__dialog" (click)="$event.stopPropagation()">
+      <div class="kbn-modal__header">
+        <div class="header-info">
+          <h3 class="kbn-modal__title">{{ selectedResult.candidateName }}</h3>
+          <div 
+            class="result-card__score-box" 
+            [ngClass]="getScoreClass(selectedResult.interviewResult.report.overall_score)"
+            style="width: 40px; height: 40px; font-size: 0.9rem;"
+          >
+            {{ selectedResult.interviewResult.report.overall_score }}
+          </div>
+        </div>
+        <button class="kbn-modal__close" (click)="closeDetail()">&times;</button>
       </div>
-      <div class="result-card__right">
-        <span *ngIf="app.interviewResult?.status === 'TERMINE'" class="result-card__score"
-          [style.color]="getScoreColor(app.interviewResult?.report?.overall_score || 0)">
-          {{ app.interviewResult?.report?.overall_score }}/100
-        </span>
-        <span *ngIf="app.interviewResult?.status === 'TERMINE'" class="result-card__impression"
-          [style.color]="getImpressionColor(app.interviewResult?.report?.impression || '')">
-          {{ app.interviewResult?.report?.impression }}
-        </span>
-        <span *ngIf="app.interviewResult?.status !== 'TERMINE'" style="color: var(--body); font-size: 0.85rem;">
-          En attente
-        </span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+
+      <div class="kbn-modal__body" *ngIf="selectedResult.interviewResult?.report">
+        <div class="report">
+          <!-- Summary -->
+          <section class="report__summary-card">
+            <h4>Résumé du recruteur IA</h4>
+            <p>{{ selectedResult.interviewResult.report.summary }}</p>
+          </section>
+
+          <!-- Grid: Strengths & Weaknesses -->
+          <div class="report__grid">
+            <!-- Strengths -->
+            <section class="report__points report__points--strengths">
+              <h4><span>💪</span> Points Forts</h4>
+              <ul>
+                <li *ngFor="let s of selectedResult.interviewResult.report.strengths">{{ s }}</li>
+              </ul>
+            </section>
+
+            <!-- Weaknesses -->
+            <section class="report__points report__points--weaknesses">
+              <h4><span>🎯</span> Axes d'amélioration</h4>
+              <ul>
+                <li *ngFor="let w of selectedResult.interviewResult.report.weaknesses">{{ w }}</li>
+              </ul>
+            </section>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
 </div>
-
-<style>
-.results-page { padding: 1.5rem; }
-.results-table { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
-.result-card { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; cursor: pointer; transition: background 0.2s; }
-.result-card:hover { background: rgba(255,255,255,0.06); }
-.result-card__name { font-weight: 600; color: var(--heading); }
-.result-card__email { font-size: 0.85rem; color: var(--body); margin-top: 0.25rem; }
-.result-card__right { display: flex; align-items: center; gap: 1rem; }
-.result-card__score { font-weight: 700; font-size: 1.1rem; }
-.result-card__impression { font-weight: 600; font-size: 0.9rem; }
-</style>

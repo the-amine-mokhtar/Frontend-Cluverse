@@ -56,23 +56,17 @@ export class InterviewResultsComponent implements OnInit {
     try { return JSON.parse(str); } catch { return []; }
   }
 
-  openResult(app: any): void {
+  openDetail(app: any): void {
     this.selectedResult = app;
   }
 
-  closeResult(): void {
+  closeDetail(): void {
     this.selectedResult = null;
   }
 
-  getScoreColor(score: number): string {
-    if (score >= 70) return '#22c55e';
-    if (score >= 40) return '#f59e0b';
-    return '#ef4444';
-  }
-
-  getImpressionColor(impression: string): string {
-    if (impression === 'Accepter') return '#22c55e';
-    if (impression === 'À considérer') return '#f59e0b';
-    return '#ef4444';
+  getScoreClass(score: number): string {
+    if (score >= 80) return 'score-high';
+    if (score >= 50) return 'score-mid';
+    return 'score-low';
   }
 }

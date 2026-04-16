@@ -33,6 +33,11 @@ const routes: Routes = [
       import('./features/verify/verify.module').then(m => m.VerifyModule),
   },
   {
+    path: 'interview',
+    loadChildren: () =>
+      import('./features/interview/interview.module').then(m => m.InterviewModule)
+  },
+  {
     path: 'not-found',
     component: NotFoundComponent
   },
