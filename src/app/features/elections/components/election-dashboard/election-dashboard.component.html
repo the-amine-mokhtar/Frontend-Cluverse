@@ -1,7 +1,7 @@
 <div class="e-dashboard" *ngIf="isAdmin; else forbiddenState">
   <div class="hero">
     <div class="hero__title-wrap">
-      <h1 class="hero__title">Election Command Center</h1>
+      <h1 class="hero__title">Election Live view</h1>
       <p class="hero__subtitle">A live operations cockpit for every election lifecycle, outcome, and candidate momentum.</p>
     </div>
     <div class="hero__actions">
@@ -42,7 +42,7 @@
   <div class="layout">
     <section class="panel panel--table">
       <div class="panel__head">
-        <h2>Election Intelligence Table</h2>
+        <h2>Elections</h2>
         <p>{{ filteredElections.length }} results</p>
       </div>
 
@@ -107,8 +107,7 @@
 
     <section class="panel panel--meta">
       <div class="panel__head">
-        <h2>Global Landscape</h2>
-        <p>Distribution and dynamics</p>
+        <h2>Global view</h2>
       </div>
       <div class="donut" [style.background]="getDonutStyle()">
         <div>
@@ -119,16 +118,16 @@
       <div class="mini-bars">
         <div>
           <label>Open</label>
-          <span [style.width.%]="openRatio"></span>
+          <span [style.width.%]="openRatio" style="background: #10b981;"></span>
         </div>
         <div>
           <label>Closed</label>
-          <span [style.width.%]="closedRatio"></span>
+          <span [style.width.%]="closedRatio" style="background: #f59e0b;"></span>
         </div>
         <div>
           <label>Archived</label>
-          <span [style.width.%]="archivedRatio"></span>
-        </div>
+          <span [style.width.%]="archivedRatio" style="background: #64748b;"></span>
+         </div>
       </div>
     </section>
   </div>
@@ -154,16 +153,6 @@
         </div>
       </article>
 
-      <article class="focus-card">
-        <h3>Position Vote Breakdown</h3>
-        <div class="break-row" *ngFor="let item of positionVoteBreakdown">
-          <label>{{ item.label }}</label>
-          <div class="break-row__bar">
-            <span [style.width.%]="item.ratio"></span>
-          </div>
-          <strong>{{ item.votes }}</strong>
-        </div>
-      </article>
 
       <article class="focus-card focus-card--wide">
         <div class="focus-card__title">
