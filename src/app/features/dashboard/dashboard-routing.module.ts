@@ -43,9 +43,9 @@ const routes: Routes = [
           import('../recruitment/recruitment.module').then(m => m.RecruitmentModule)
       },
       {
-        path: 'skills',
+        path: 'competencies',
         loadChildren: () =>
-          import('../skills/skills.module').then(m => m.SkillsModule)
+          import('../competencies/competencies.module').then(m => m.CompetenciesModule)
       },
       {
         path: 'logistics',

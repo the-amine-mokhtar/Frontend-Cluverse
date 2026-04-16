@@ -1,0 +1,312 @@
+<section class="member-shell">
+  <div class="member-shell__glow member-shell__glow--one"></div>
+  <div class="member-shell__glow member-shell__glow--two"></div>
+
+  <header class="member-hero">
+    <div class="member-hero__left">
+      <p class="member-eyebrow">
+        <span class="member-eyebrow__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 2 4 5v5c0 5.2 3.6 9.8 8 12 4.4-2.2 8-6.8 8-12V5l-8-3Z" />
+            <path d="M12 7v6l4 2" />
+          </svg>
+        </span>
+        Member Growth Matrix
+      </p>
+      <h2>Track Progress, Reveal Gaps, Trigger Endorsements</h2>
+      <p>
+        Centralize member skill levels with clean operational controls so leaders can quickly
+        understand readiness and prioritize coaching.
+      </p>
+    </div>
+
+    <div class="member-actions">
+      <a class="m-btn m-btn--ghost m-btn--icon" routerLink="../">
+        <span class="m-btn__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M4 6h16v3H4zM4 11h10v3H4zM4 16h16v2H4z" />
+          </svg>
+        </span>
+        Competencies
+      </a>
+      <a class="m-btn m-btn--ghost m-btn--icon" routerLink="../insights">
+        <span class="m-btn__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M4 19h16v2H4zM7 14h2v5H7zm4-4h2v9h-2zm4-7h2v16h-2z" />
+          </svg>
+        </span>
+        Insights
+      </a>
+      <button type="button" class="m-btn m-btn--ghost m-btn--icon" (click)="loadInitialData()" [disabled]="loading">
+        <span class="m-btn__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 5v4l4-4-4-4v3a8 8 0 1 0 7.75 6H17a5 5 0 1 1-5-5Z" />
+          </svg>
+        </span>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="errorMessage" class="m-alert m-alert--error">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="m-alert m-alert--success">{{ successMessage }}</div>
+  <div class="m-alert m-alert--info" *ngIf="speechHealthStatus">
+    Speech Analyzer: <strong>{{ speechHealthStatus }}</strong> (model {{ speechHealthModel || 'unknown' }})
+  </div>
+
+  <article class="m-card m-card--speech-test">
+    <h3>
+      <span class="m-title-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 1 0 6 0V6a3 3 0 0 0-3-3zm-7 9h2a5 5 0 0 0 10 0h2a7 7 0 0 1-6 6.93V22h-2v-3.07A7 7 0 0 1 5 12z" />
+        </svg>
+      </span>
+      Speech Analyzer Test
+    </h3>
+
+    <div class="m-speech-panel">
+      <label>
+        Sujet de test
+        <input
+          type="text"
+          [(ngModel)]="speechTopic"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Ex: Presente ton plan de leadership pour le prochain semestre"
+        />
+      </label>
+
+      <button type="button" class="m-btn" (click)="pickRandomTopic()">
+        Sujet aleatoire IA
+      </button>
+
+      <label>
+        Member competency
+        <select [(ngModel)]="selectedSpeechMemberCompetencyId" [ngModelOptions]="{ standalone: true }">
+          <option [ngValue]="0">Select competency</option>
+          <option *ngFor="let item of memberCompetencies; trackBy: trackById" [ngValue]="item.id">
+            {{ getMemberLabel(item.userId) }} - {{ getCompetencyLabel(item.skillId) }}
+          </option>
+        </select>
+      </label>
+
+      <label>
+        SessionId from speech session
+        <input
+          type="text"
+          [(ngModel)]="globalSpeechSessionId"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Ex: interview-2026-04-15-001"
+        />
+      </label>
+
+      <button
+        type="button"
+        class="m-btn m-btn--primary"
+        [disabled]="isRecordingSpeech || speechSyncingId === selectedSpeechMemberCompetencyId || selectedSpeechMemberCompetencyId === 0 || !globalSpeechSessionId.trim()"
+        (click)="syncSpeechReportFromPanel()"
+      >
+        Sync Speech Result
+      </button>
+
+      <button
+        type="button"
+        class="m-btn m-btn--primary"
+        [disabled]="isRecordingSpeech || selectedSpeechMemberCompetencyId === 0 || !speechTopic.trim()"
+        (click)="startSpeechTest()"
+      >
+        Start Voice Test
+      </button>
+
+      <button
+        type="button"
+        class="m-btn"
+        [disabled]="!isRecordingSpeech"
+        (click)="stopSpeechTest()"
+      >
+        Stop Recording
+      </button>
+    </div>
+
+    <div class="m-speech-live">
+      <p>
+        <strong>Etat:</strong>
+        <span class="badge">{{ liveSocketState }}</span>
+      </p>
+      <p>
+        <strong>Score live:</strong>
+        {{ liveScore }}/100 ({{ liveLevel }})
+      </p>
+      <p><strong>Debit estime:</strong> {{ liveSpeechRate }} mots/min</p>
+      <p><strong>Pauses:</strong> {{ livePausesPerMinute }} / min</p>
+      <p><strong>Mots de remplissage:</strong> {{ liveFillersPerMinute }} / min</p>
+      <p><strong>Confiance transcription:</strong> {{ liveConfidence }}%</p>
+      <p *ngIf="globalSpeechSessionId"><strong>SessionId courant:</strong> {{ globalSpeechSessionId }}</p>
+      <p class="m-live-transcript" *ngIf="liveTranscript"><strong>Transcript live:</strong> {{ liveTranscript }}</p>
+
+      <div class="m-improvement-box">
+        <strong>Axes d amelioration:</strong>
+        <ul>
+          <li *ngFor="let tip of improvementTips">{{ tip }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="m-speech-feedback" *ngIf="speechTestFeedback">
+      <strong>Last AI feedback:</strong> {{ speechTestFeedback }}
+    </p>
+  </article>
+
+  <div class="member-grid">
+    <article class="m-card m-card--sticky">
+      <h3>
+        <span class="m-title-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v8h16v-8a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4Zm-2 6V6a2 2 0 1 1 4 0v2Z" />
+          </svg>
+        </span>
+        {{ isEditing ? 'Edit Member Progress' : 'Assign Competency To Member' }}
+      </h3>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="m-form" *ngIf="!isEditing; else editMode">
+        <label>
+          Member
+          <select formControlName="userId">
+            <option [ngValue]="0">Select member</option>
+            <option *ngFor="let member of members; trackBy: trackByMember" [ngValue]="member.userId">
+              {{ member.firstName || '' }} {{ member.lastName || '' }} {{ member.email ? '(' + member.email + ')' : '' }}
+            </option>
+          </select>
+        </label>
+        <small class="m-error" *ngIf="formUserIdControl.touched && formUserIdControl.invalid">Member is required.</small>
+
+        <label>
+          Competency
+          <select formControlName="skillId">
+            <option [ngValue]="0">Select competency</option>
+            <option *ngFor="let competency of competencies; trackBy: trackByCompetency" [ngValue]="competency.id">
+              {{ competency.name }} - {{ competency.category }}
+            </option>
+          </select>
+        </label>
+        <small class="m-error" *ngIf="formSkillIdControl.touched && formSkillIdControl.invalid">Competency is required.</small>
+
+        <div class="m-dual">
+          <label>
+            Current Level
+            <input type="number" formControlName="currentLevel" min="0" max="100" />
+          </label>
+          <label>
+            Target Level
+            <input type="number" formControlName="targetLevel" min="0" max="100" />
+          </label>
+        </div>
+
+        <div class="m-form__actions">
+          <button type="submit" class="m-btn m-btn--primary" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Create Assignment' }}
+          </button>
+        </div>
+      </form>
+
+      <ng-template #editMode>
+        <form [formGroup]="editForm" (ngSubmit)="submit()" class="m-form">
+          <div class="m-readonly">
+            <div><span>Member</span><strong>{{ getMemberLabel(form.controls.userId.value) }}</strong></div>
+            <div><span>Competency</span><strong>{{ getCompetencyLabel(form.controls.skillId.value) }}</strong></div>
+          </div>
+
+          <div class="m-dual">
+            <label>
+              Current Level
+              <input type="number" formControlName="currentLevel" min="0" max="100" />
+            </label>
+            <label>
+              Target Level
+              <input type="number" formControlName="targetLevel" min="0" max="100" />
+            </label>
+          </div>
+
+          <div class="m-form__actions">
+            <button type="submit" class="m-btn m-btn--primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Update Assignment' }}
+            </button>
+            <button type="button" class="m-btn m-btn--ghost" (click)="cancelEdit()">Cancel</button>
+          </div>
+        </form>
+      </ng-template>
+    </article>
+
+    <article class="m-card">
+      <div class="m-card__head">
+        <div>
+          <h3>
+            <span class="m-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M4 18h16v2H4zM6 6h4v10H6zM11 10h4v6h-4zM16 4h4v12h-4z" />
+              </svg>
+            </span>
+            Member Competency Timeline
+          </h3>
+          <p>Use one filter and act directly on records.</p>
+        </div>
+        <select class="m-filter" [(ngModel)]="selectedMemberUserId">
+          <option [ngValue]="0">All members</option>
+          <option *ngFor="let member of members; trackBy: trackByMember" [ngValue]="member.userId">
+            {{ member.firstName || '' }} {{ member.lastName || '' }}
+          </option>
+        </select>
+      </div>
+
+      <div *ngIf="loading" class="m-state">Loading assignments...</div>
+      <div *ngIf="!loading && memberCompetencies.length === 0" class="m-state">No member competency data yet.</div>
+      <div *ngIf="!loading && memberCompetencies.length > 0 && filteredMemberCompetencies.length === 0" class="m-state">No result for this filter.</div>
+
+      <ul *ngIf="!loading && filteredMemberCompetencies.length > 0" class="m-list">
+        <li *ngFor="let item of filteredMemberCompetencies; trackBy: trackById" class="m-list__item">
+          <div class="m-list__main">
+            <div class="m-list__headline">
+              <strong>{{ getMemberLabel(item.userId) }}</strong>
+              <span class="m-muted">
+                <span class="m-mini-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M4 4h16v16H4zM8 8h8v2H8zm0 4h5v2H8z" />
+                  </svg>
+                </span>
+                {{ getCompetencyLabel(item.skillId) }}
+              </span>
+            </div>
+            <div class="m-badges">
+              <span class="badge">{{ item.category }}</span>
+              <span [class]="levelBadgeClass(item.gap)">Gap {{ item.gap }}</span>
+              <span class="badge">Endorsements {{ item.endorsementCount }}</span>
+              <span [class]="sourceBadgeClass(item.lastUpdatedBy)">{{ sourceLabel(item.lastUpdatedBy) }}</span>
+            </div>
+            <p>Current {{ item.currentLevel }} / Target {{ item.targetLevel }} / Previous {{ item.previousLevel }}</p>
+            <small class="m-muted">Updated by {{ sourceLabel(item.lastUpdatedBy) }} on {{ item.lastUpdated | date:'medium' }}</small>
+          </div>
+          <div class="m-list__actions">
+            <button type="button" class="m-btn m-btn--small" (click)="refreshGap(item)">Gap</button>
+            <button type="button" class="m-btn m-btn--small" (click)="endorse(item)">Endorse</button>
+            <button type="button" class="m-btn m-btn--small" (click)="edit(item)">Edit</button>
+            <input
+              class="m-session-input"
+              type="text"
+              [(ngModel)]="speechSessionIds[item.id]"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Speech sessionId"
+            />
+            <button
+              type="button"
+              class="m-btn m-btn--small"
+              [disabled]="speechSyncingId === item.id"
+              (click)="syncSpeechReport(item)"
+            >
+              {{ speechSyncingId === item.id ? 'Sync...' : 'Sync Speech' }}
+            </button>
+            <button type="button" class="m-btn m-btn--small m-btn--danger" (click)="delete(item)">Delete</button>
+          </div>
+        </li>
+      </ul>
+    </article>
+  </div>
+</section>
