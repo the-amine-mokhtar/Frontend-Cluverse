@@ -39,7 +39,24 @@
     </article>
   </div>
 
-  <div class="layout">
+  <div class="dashboard-tabs">
+    <button
+      class="dashboard-tabs__button"
+      [class.is-active]="activeTab === 'elections'"
+      (click)="activeTab = 'elections'"
+    >
+      Elections
+    </button>
+    <button
+      class="dashboard-tabs__button"
+      [class.is-active]="activeTab === 'members'"
+      (click)="activeTab = 'members'; loadClubMembers()"
+    >
+      Members Hierarchy
+    </button>
+  </div>
+
+  <div class="layout" *ngIf="activeTab === 'elections'">
     <section class="panel panel--table">
       <div class="panel__head">
         <h2>Elections</h2>
@@ -206,6 +223,46 @@
       </article>
     </div>
   </section>
+</div>
+
+<!-- MEMBERS HIERARCHY TAB -->
+<div class="members-hierarchy" *ngIf="activeTab === 'members'">
+  <div class="hierarchy-container" *ngIf="!isLoadingMembers; else membersLoading">
+    <div class="hierarchy-level" *ngFor="let level of memberHierarchyLevels">
+      <div class="hierarchy-level__label" *ngIf="level.levelName">
+        {{ level.levelName }}
+      </div>
+      <div class="hierarchy-pills">
+        <div
+          class="member-pill"
+          *ngFor="let member of level.members"
+        >
+          <div class="member-pill__icon">
+            <span *ngIf="member.role === 'ADMIN' || member.role === 'CLUB_ADMIN'" class="icon-crown" title="Admin">👑</span>
+            <span *ngIf="member.role === 'TREASURER'" class="icon-money" title="Treasurer">💰</span>
+            <span *ngIf="member.role === 'HR_MANAGER'" class="icon-people" title="HR Manager">👥</span>
+            <span *ngIf="member.role !== 'ADMIN' && member.role !== 'CLUB_ADMIN' && member.role !== 'TREASURER' && member.role !== 'HR_MANAGER'" class="icon-default">•</span>
+          </div>
+          <div class="member-pill__content">
+            <div class="member-pill__name">{{ member.firstName }} {{ member.lastName }}</div>
+            <div class="member-pill__role">{{ member.role }}</div>
+          </div>
+          <div class="member-pill__status" [class.is-inactive]="!member.active">
+            <span *ngIf="member.active" class="status-badge status-badge--active">Active</span>
+            <span *ngIf="!member.active" class="status-badge status-badge--inactive">Inactive</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hierarchy-empty" *ngIf="memberHierarchyLevels.length === 0">
+      <p>No members found for this club.</p>
+    </div>
+  </div>
+
+  <ng-template #membersLoading>
+    <div class="state">Loading members hierarchy...</div>
+  </ng-template>
 </div>
 
 <ng-template #loadingState>

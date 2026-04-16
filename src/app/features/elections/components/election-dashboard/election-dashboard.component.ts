@@ -9,6 +9,7 @@ import { CandidateService } from '../../services/candidate.service';
 import { VoteService } from '../../services/vote.service';
 import { PositionService } from '../../services/position.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
+import { ApiService } from '../../../../core/services/api.service';
 
 type StatusFilter = 'ALL' | 'OPEN' | 'CLOSED' | 'ARCHIVED';
 
@@ -38,6 +39,11 @@ interface DotNode extends SimulationNodeDatum {
   color: string;
 }
 
+interface MemberHierarchyLevel {
+  levelName: string;
+  members: any[];
+}
+
 @Component({
   selector: 'app-election-dashboard',
   standalone: true,
@@ -48,11 +54,14 @@ interface DotNode extends SimulationNodeDatum {
 export class ElectionDashboardComponent implements OnInit, OnDestroy {
   readonly statusFilters: StatusFilter[] = ['ALL', 'OPEN', 'CLOSED', 'ARCHIVED'];
   readonly bubblePalette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#f97316'];
+  readonly roleHierarchy = ['CLUB_ADMIN', 'ADMIN', 'PRESIDENT', 'VICE_PRESIDENT', 'TREASURER', 'SECRETARY', 'HR_MANAGER', 'MEMBER'];
 
   clubId = 0;
   role = '';
   isAdmin = false;
   isLoading = true;
+  isLoadingMembers = false;
+  activeTab: 'elections' | 'members' = 'elections';
   lastSync = new Date();
 
   searchTerm = '';
@@ -83,12 +92,17 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
   private bubbleSimulation: Simulation<DotNode, undefined> | null = null;
   private pollSub?: Subscription;
 
+  // Members hierarchy
+  allClubMembers: any[] = [];
+  memberHierarchyLevels: MemberHierarchyLevel[] = [];
+
   constructor(
     private electionService: ElectionService,
     private candidateService: CandidateService,
     private voteService: VoteService,
     private positionService: PositionService,
-    private authHelper: AuthHelperService
+    private authHelper: AuthHelperService,
+    private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -104,7 +118,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     this.clubId = this.authHelper.getClubId();
     this.loadDashboardData();
 
-    this.pollSub = interval(9000)
+    this.pollSub = interval(4500)
       .pipe(
         switchMap(() =>
           forkJoin({
@@ -498,5 +512,88 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
       return 0;
     }
     return Number(vote.candidateId || vote.candidate?.id || 0);
+  }
+
+  loadClubMembers(): void {
+    if (this.allClubMembers.length > 0) {
+      this.buildHierarchyLevels();
+      return;
+    }
+
+    this.isLoadingMembers = true;
+    this.apiService.getClubMembers(this.clubId).subscribe({
+      next: (members) => {
+        this.allClubMembers = members || [];
+        this.buildHierarchyLevels();
+        this.isLoadingMembers = false;
+      },
+      error: (err) => {
+        console.error('Error loading club members:', err);
+        this.isLoadingMembers = false;
+      }
+    });
+  }
+
+  private buildHierarchyLevels(): void {
+    const roleOrder = ['CLUB_ADMIN', 'PRESIDENT', 'VICE_PRESIDENT', 'TREASURER', 'SECRETARY', 'MEMBER', 'HR_MANAGER'];
+
+    // Group members by role
+    const membersByRole: { [key: string]: any[] } = {};
+    roleOrder.forEach(role => {
+      membersByRole[role] = [];
+    });
+
+    this.allClubMembers.forEach(member => {
+      const role = member.role || 'MEMBER';
+      if (!membersByRole[role]) {
+        membersByRole[role] = [];
+      }
+      membersByRole[role].push(member);
+    });
+
+    // Sort each role group by name
+    Object.keys(membersByRole).forEach(role => {
+      membersByRole[role].sort((a, b) => {
+        const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+        const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+    });
+
+    // Build hierarchy levels
+    this.memberHierarchyLevels = [];
+
+    // Level 1: ADMIN
+    if (membersByRole['CLUB_ADMIN']?.length > 0) {
+      this.memberHierarchyLevels.push({
+        levelName: 'Leadership',
+        members: membersByRole['CLUB_ADMIN']
+      });
+    }
+
+    // Level 2: PRESIDENT, VICE_PRESIDENT, TREASURER, SECRETARY
+    const middleRoles = ['PRESIDENT', 'VICE_PRESIDENT', 'TREASURER', 'SECRETARY','HR_MANAGER'];
+    const middleMembers: any[] = [];
+
+    middleRoles.forEach(role => {
+      if (membersByRole[role]?.length > 0) {
+        middleMembers.push(...membersByRole[role]);
+      }
+    });
+
+    if (middleMembers.length > 0) {
+      this.memberHierarchyLevels.push({
+        levelName: 'Officers',
+        members: middleMembers
+      });
+    }
+
+    // Level 3: MEMBER
+    if (membersByRole['MEMBER']?.length > 0) {
+      this.memberHierarchyLevels.push({
+        levelName: 'Members',
+        members: membersByRole['MEMBER']
+      });
+    }
   }
 }
