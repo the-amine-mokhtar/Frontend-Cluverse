@@ -36,4 +36,8 @@ export class VoteService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
+
+  getMyVote(electionId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/my?electionId=${electionId}`, { headers: this.getAuthHeaders() });
+  }
 }

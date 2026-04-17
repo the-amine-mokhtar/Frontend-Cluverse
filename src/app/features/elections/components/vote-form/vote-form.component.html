@@ -1,56 +1,142 @@
-<div class="elections animate-fade-in" style="max-width: 600px;">
-  <div class="elections__header">
-    <div>
-      <h2 class="elections__title">
-        {{ isEditMode ? 'Edit Vote' : 'Cast Vote' }}
-      </h2>
-      <p class="elections__subtitle">Select the candidate you wish to cast your vote for.</p>
+<div class="vote-pie" [class.fade-out]="animState === 'fading-out'" [class.fade-in]="animState === 'fading-in'">
+
+  <!-- Error -->
+  <div *ngIf="errorMessage" class="vote-pie__error">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+    </svg>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Back Arrow (candidates view) -->
+  <button *ngIf="view === 'candidates'" class="vote-pie__back" (click)="goBackToElections()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    <span>Elections</span>
+  </button>
+
+  <!-- Title -->
+  <div class="vote-pie__header">
+    <h2 class="vote-pie__title" *ngIf="view === 'elections'">Select Election</h2>
+    <h2 class="vote-pie__title" *ngIf="view === 'candidates'">{{ selectedElection?.title || 'Election' }}</h2>
+    <p class="vote-pie__subtitle" *ngIf="view === 'elections'">Click a slice to choose an election</p>
+    <p class="vote-pie__subtitle" *ngIf="view === 'candidates'">
+      {{ selectedElection?.position?.name || '' }}
+      <span *ngIf="userVote" class="vote-pie__voted-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        You voted
+      </span>
+    </p>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="slices.length === 0 && animState === 'visible'" class="vote-pie__empty">
+    <p *ngIf="view === 'elections'">No open elections available.</p>
+    <p *ngIf="view === 'candidates'">No candidates registered for this election.</p>
+  </div>
+
+  <!-- SVG Pie Chart -->
+  <svg *ngIf="slices.length > 0" class="vote-pie__chart" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+    <g *ngFor="let slice of slices; let i = index"
+       class="vote-pie__slice"
+       [class.hovered]="hoveredIndex === i"
+       (mouseenter)="onSliceHover(i)"
+       (mouseleave)="onSliceLeave()"
+       (click)="onSliceClick(i)">
+
+      <!-- Slice path -->
+      <path [attr.d]="slice.path"
+            [attr.fill]="slice.color"
+            [attr.stroke]="hoveredIndex === i ? '#fff' : 'rgba(0,0,0,0.3)'"
+            stroke-width="2"
+            [style.filter]="hoveredIndex === i ? 'brightness(1.25) drop-shadow(0 0 12px ' + slice.color + ')' : 'none'"
+            style="cursor: pointer; transition: filter 0.2s ease;"/>
+
+      <!-- Label text -->
+      <text [attr.x]="slice.labelX" [attr.y]="slice.labelY - 6"
+            text-anchor="middle" dominant-baseline="middle"
+            fill="#fff" font-size="13" font-weight="700"
+            style="pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,0.7);">
+        {{ slice.label }}
+      </text>
+      <text *ngIf="slice.sublabel" [attr.x]="slice.labelX" [attr.y]="slice.labelY + 12"
+            text-anchor="middle" dominant-baseline="middle"
+            fill="rgba(255,255,255,0.7)" font-size="11" font-weight="500"
+            style="pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">
+        ({{ slice.sublabel }})
+      </text>
+
+      <!-- Voted tick -->
+      <text *ngIf="slice.voted" [attr.x]="slice.labelX" [attr.y]="slice.labelY + 28"
+            text-anchor="middle" dominant-baseline="middle"
+            fill="#10b981" font-size="20" font-weight="900"
+            style="pointer-events: none; filter: drop-shadow(0 0 4px rgba(16,185,129,0.6));">
+        ✓
+      </text>
+    </g>
+
+    <!-- Center hole for donut look -->
+    <circle [attr.cx]="cx" [attr.cy]="cy" r="60" fill="var(--e-bg-card, #171717)"/>
+    <text [attr.x]="cx" [attr.y]="cy - 6" text-anchor="middle" fill="var(--e-muted, #676767)" font-size="11" font-weight="600">
+      {{ view === 'elections' ? elections.length : candidates.length }}
+    </text>
+    <text [attr.x]="cx" [attr.y]="cy + 10" text-anchor="middle" fill="var(--e-muted, #676767)" font-size="10">
+      {{ view === 'elections' ? 'Elections' : 'Candidates' }}
+    </text>
+  </svg>
+
+  <!-- Candidate Profile Panel -->
+  <div *ngIf="view === 'candidates' && selectedCandidate" class="vote-pie__profile animate-slide-up">
+    <div class="vote-pie__profile-layout">
+      <!-- Left sidebar -->
+      <div class="vote-pie__profile-sidebar">
+        <div class="vote-pie__avatar" [style.background]="palette[candidates.indexOf(selectedCandidate) % palette.length] + '22'"
+             [style.color]="palette[candidates.indexOf(selectedCandidate) % palette.length]">
+          {{ getInitials(selectedCandidate.userName) }}
+        </div>
+        <h3 class="vote-pie__profile-name">{{ selectedCandidate.userName || 'Unknown' }}</h3>
+        <span class="vote-pie__profile-status" [class]="'vote-pie__profile-status--' + (selectedCandidate.status || '').toLowerCase()">
+          {{ getCandidateStatusLabel(selectedCandidate.status) }}
+        </span>
+        <div class="vote-pie__profile-meta">
+          <div class="vote-pie__profile-meta-item">
+            <span class="vote-pie__profile-meta-label">Election</span>
+            <span>{{ selectedElection?.title || 'N/A' }}</span>
+          </div>
+          <div class="vote-pie__profile-meta-item">
+            <span class="vote-pie__profile-meta-label">Position</span>
+            <span>{{ selectedElection?.position?.name || 'N/A' }}</span>
+          </div>
+          <div class="vote-pie__profile-meta-item" *ngIf="selectedCandidate.userEmail">
+            <span class="vote-pie__profile-meta-label">Email</span>
+            <span>{{ selectedCandidate.userEmail }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right content -->
+      <div class="vote-pie__profile-main">
+        <div class="vote-pie__profile-section">
+          <h4>Bio</h4>
+          <p>{{ selectedCandidate.bio || 'No bio provided.' }}</p>
+        </div>
+        <div class="vote-pie__profile-section">
+          <h4>Program</h4>
+          <p>{{ selectedCandidate.program || 'No program statement.' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vote action -->
+    <div class="vote-pie__profile-actions">
+      <button class="vote-pie__action-btn" [class]="voteButtonClass"
+              [disabled]="isSubmitting"
+              (click)="onVoteAction()">
+        <span *ngIf="isSubmitting" class="vote-pie__spinner"></span>
+        {{ isSubmitting ? 'Processing...' : voteButtonLabel }}
+      </button>
     </div>
   </div>
 
-  <div class="elections__card">
-    <form [formGroup]="voteForm" (ngSubmit)="onSubmit()" class="elections__form">
-
-      <div *ngIf="errorMessage" class="elections__error-alert">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-        </svg>
-        <span>{{ errorMessage }}</span>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <div class="elections__form-field">
-          <label>Target Election <span style="color: var(--e-danger);">*</span></label>
-          <select formControlName="electionId">
-            <option [ngValue]="null">Select the election</option>
-            <option *ngFor="let election of elections" [ngValue]="election.id">{{ election.title || 'Election ' + election.id }}</option>
-          </select>
-          <div *ngIf="voteForm.get('electionId')?.invalid && voteForm.get('electionId')?.touched" class="e-error-text">
-            Valid Election is required.
-          </div>
-        </div>
-        
-        <div class="elections__form-field">
-          <label>Target Candidate <span style="color: var(--e-danger);">*</span></label>
-          <select formControlName="candidateId">
-            <option [ngValue]="null">Select the candidate</option>
-            <option *ngFor="let cand of candidates" [ngValue]="cand.id">{{ cand.userName || 'Candidate ' + cand.id }}</option>
-          </select>
-          <div *ngIf="voteForm.get('candidateId')?.invalid && voteForm.get('candidateId')?.touched" class="e-error-text">
-            Valid Candidate is required.
-          </div>
-        </div>
-      </div>
-
-      <div class="elections__form-actions">
-        <a routerLink="/dashboard/elections/votes" class="elections__btn elections__btn--secondary">
-          Cancel
-        </a>
-        <button type="submit" [disabled]="isSubmitting || voteForm.invalid" class="elections__btn elections__btn--primary">
-          {{ isSubmitting ? 'Processing...' : (isEditMode ? 'Update Vote' : 'Cast Vote') }}
-        </button>
-      </div>
-
-    </form>
-  </div>
 </div>
