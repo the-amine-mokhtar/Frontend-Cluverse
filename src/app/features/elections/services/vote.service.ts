@@ -40,4 +40,8 @@ export class VoteService {
   getMyVote(electionId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/my?electionId=${electionId}`, { headers: this.getAuthHeaders() });
   }
+
+  getMyVotes(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/my/all`, { headers: this.getAuthHeaders() });
+  }
 }

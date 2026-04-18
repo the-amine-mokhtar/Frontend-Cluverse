@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { VoteService } from '../../services/vote.service';
 import { ElectionService } from '../../services/election.service';
 import { CandidateService } from '../../services/candidate.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
+import { catchError, forkJoin, of } from 'rxjs';
 
 interface PieSlice {
   index: number;
@@ -28,11 +29,12 @@ interface PieSlice {
   templateUrl: './vote-form.component.html',
   styleUrls: ['./vote-form.component.scss']
 })
-export class VoteFormComponent implements OnInit {
-  readonly palette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#f97316'];
+export class VoteFormComponent implements OnInit, OnDestroy {
+  readonly palette = ['#7c3aed', '#2563eb', '#06b6d4', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6'];
   readonly cx = 250;
   readonly cy = 250;
   readonly radius = 200;
+  readonly innerRadius = 56;
 
   view: 'elections' | 'candidates' = 'elections';
   animState: 'visible' | 'fading-out' | 'fading-in' = 'visible';
@@ -45,10 +47,15 @@ export class VoteFormComponent implements OnInit {
   selectedCandidate: any = null;
   hoveredIndex: number = -1;
   userVote: any = null; // current user's vote for selected election
+  votedElectionIds = new Set<string>();
 
   errorMessage = '';
   isSubmitting = false;
   currentUserId = 0;
+  toastMessage = '';
+  toastType: 'success' | 'error' | 'info' = 'success';
+  toastVisible = false;
+  private toastTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private voteService: VoteService,
@@ -62,6 +69,12 @@ export class VoteFormComponent implements OnInit {
     this.loadElections();
   }
 
+  ngOnDestroy(): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+  }
+
   // ─── Data Loading ────────────────────────────────────────
 
   loadElections(): void {
@@ -69,7 +82,7 @@ export class VoteFormComponent implements OnInit {
     this.electionService.getElections(clubId).subscribe({
       next: (data) => {
         this.elections = (data || []).filter((e: any) => e.status === 'OPEN');
-        this.buildElectionSlices();
+        this.loadElectionVoteFlags();
       },
       error: () => this.errorMessage = 'Failed to load elections'
     });
@@ -82,6 +95,37 @@ export class VoteFormComponent implements OnInit {
         this.loadMyVote(electionId);
       },
       error: () => this.errorMessage = 'Failed to load candidates'
+    });
+  }
+
+  private loadElectionVoteFlags(): void {
+    if (!this.elections.length) {
+      this.votedElectionIds = new Set<string>();
+      this.buildElectionSlices();
+      return;
+    }
+
+    const voteRequests = this.elections.map((election: any) =>
+      this.voteService.getMyVote(election.id).pipe(
+        catchError(() => of(null))
+      )
+    );
+
+    forkJoin(voteRequests).subscribe({
+      next: (votes) => {
+        const votedIds = new Set<string>();
+        votes.forEach((vote: any, index: number) => {
+          if (vote) {
+            votedIds.add(String(this.elections[index]?.id));
+          }
+        });
+        this.votedElectionIds = votedIds;
+        this.buildElectionSlices();
+      },
+      error: () => {
+        this.votedElectionIds = new Set<string>();
+        this.buildElectionSlices();
+      }
     });
   }
 
@@ -107,7 +151,7 @@ export class VoteFormComponent implements OnInit {
       items,
       (e) => e.title || `Election ${e.id}`,
       (e) => e.position?.name || '',
-      () => false
+      (e) => this.votedElectionIds.has(String(e.id))
     );
   }
 
@@ -136,9 +180,13 @@ export class VoteFormComponent implements OnInit {
 
     if (hovered >= 0 && hovered < count) {
       const expandedPct = Math.max(40, basePercentage);
-      const remainingPct = 100 - expandedPct;
-      const otherPct = remainingPct / (count - 1);
-      percentages = items.map((_, i) => i === hovered ? expandedPct : otherPct);
+      if (count === 1) {
+        percentages = [100];
+      } else {
+        const remainingPct = 100 - expandedPct;
+        const otherPct = remainingPct / (count - 1);
+        percentages = items.map((_, i) => i === hovered ? expandedPct : otherPct);
+      }
     } else {
       percentages = items.map(() => basePercentage);
     }
@@ -257,7 +305,7 @@ export class VoteFormComponent implements OnInit {
 
   get voteButtonLabel(): string {
     if (!this.userVote) return 'Vote';
-    if (this.userVote.candidate?.id === this.selectedCandidate?.id) return 'Cancel Vote';
+    if (this.userVote.candidate?.id === this.selectedCandidate?.id) return 'Remove Vote';
     return 'Change Vote';
   }
 
@@ -298,12 +346,33 @@ export class VoteFormComponent implements OnInit {
 
   private afterVoteAction(): void {
     this.isSubmitting = false;
+    if (!this.userVote) {
+      this.showToast('Vote submitted successfully.', 'success');
+    } else if (this.userVote.candidate?.id === this.selectedCandidate?.id) {
+      this.showToast('Vote removed successfully.', 'info');
+    } else {
+      this.showToast('Vote changed successfully.', 'success');
+    }
+    this.loadElectionVoteFlags();
     this.loadMyVote(this.selectedElection.id);
   }
 
   private handleVoteError(err: any): void {
     this.isSubmitting = false;
     this.errorMessage = err.error?.message || 'Vote action failed.';
+    this.showToast(this.errorMessage, 'error');
+  }
+
+  private showToast(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
+    this.toastMessage = message;
+    this.toastType = type;
+    this.toastVisible = true;
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+    this.toastTimer = setTimeout(() => {
+      this.toastVisible = false;
+    }, 3200);
   }
 
   // ─── Helpers ─────────────────────────────────────────────
