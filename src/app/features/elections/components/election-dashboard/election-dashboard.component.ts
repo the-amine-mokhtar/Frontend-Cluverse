@@ -386,12 +386,29 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
   }
 
   shareToFacebook(): void {
-    if (!this.closeResult) {
+    if (!this.closeResult || !this.generatedResultBlob) {
       return;
     }
-    const quote = encodeURIComponent(this.getShareCaption());
-    const url = encodeURIComponent(window.location.href);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`, '_blank', 'noopener,noreferrer');
+    this.blobToBase64(this.generatedResultBlob).then((imageBase64) => {
+      this.electionService.publishElectionResultToFacebook({
+        message: this.getShareCaption(),
+        imageBase64,
+        privatePost: false
+      }).subscribe({
+        next: () => {
+          this.showCloseToast('Posted publicly to Facebook page.', 'success');
+        },
+        error: (err) => {
+          const message = err?.error?.message || 'Facebook API not configured. Opening fallback share.';
+          this.showCloseToast(message, 'info');
+          const quote = encodeURIComponent(this.getShareCaption());
+          const url = encodeURIComponent(window.location.href);
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`, '_blank', 'noopener,noreferrer');
+        }
+      });
+    }).catch(() => {
+      this.showCloseToast('Could not prepare image for Facebook.', 'error');
+    });
   }
 
   async shareToInstagram(): Promise<void> {
@@ -419,6 +436,32 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     } catch {
       this.showCloseToast('Could not copy caption.', 'error');
     }
+  }
+
+  async copyShareLink(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      this.showCloseToast('Link copied.', 'success');
+    } catch {
+      this.showCloseToast('Could not copy link.', 'error');
+    }
+  }
+
+  connectFacebookMetaApp(): void {
+    this.electionService.getFacebookOAuthUrl().subscribe({
+      next: (response) => {
+        const url = response?.url;
+        if (url) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        } else {
+          this.showCloseToast('Facebook OAuth URL is missing.', 'error');
+        }
+      },
+      error: (err) => {
+        const message = err?.error?.message || 'Meta app is not configured yet on backend.';
+        this.showCloseToast(message, 'error');
+      }
+    });
   }
 
   downloadResultImage(): void {
@@ -905,6 +948,22 @@ for (let i = 3; i < result.candidates.length; i += 1) {
     const position = this.closeResult.positionName || 'Position';
     const winner = `${this.closeResult.winnerFirstName} ${this.closeResult.winnerLastName}`.trim();
     return `${club} welcomes its new ${position}: ${winner}`;
+  }
+
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result;
+        if (typeof result === 'string') {
+          resolve(result);
+        } else {
+          reject(new Error('Failed to convert blob to base64.'));
+        }
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
   }
 
   private drawWrappedText(

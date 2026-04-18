@@ -828,6 +828,7 @@ td p {
 .result-modal__actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.6rem;
   padding: 0.85rem 1rem;
   border-top: 1px solid var(--e-border);

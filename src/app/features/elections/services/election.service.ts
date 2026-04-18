@@ -40,4 +40,12 @@ export class ElectionService {
   closeElection(id: number): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/${id}/close`, {}, { headers: this.getAuthHeaders() });
   }
+
+  getFacebookOAuthUrl(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/api/social/facebook/oauth/url`, { headers: this.getAuthHeaders() });
+  }
+
+  publishElectionResultToFacebook(payload: { message: string; imageBase64: string; privatePost: boolean }): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/api/social/facebook/publish`, payload, { headers: this.getAuthHeaders() });
+  }
 }
