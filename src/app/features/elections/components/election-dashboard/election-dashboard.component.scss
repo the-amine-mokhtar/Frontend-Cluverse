@@ -852,6 +852,18 @@ td p {
     border-color: rgba(236, 72, 153, 0.35);
     color: #db2777;
   }
+
+  &--download {
+    background: var(--e-primary-bg);
+    border-color: var(--e-primary-border);
+    color: var(--e-primary);
+  }
+
+  &--meta {
+    background: var(--e-bg-input);
+    border-color: var(--e-border);
+    color: var(--e-text);
+  }
 }
 
 @keyframes close-spin {

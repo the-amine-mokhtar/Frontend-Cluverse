@@ -295,6 +295,8 @@
       <img *ngIf="resultImageUrl" [src]="resultImageUrl" alt="Election result template" />
     </div>
     <div class="result-modal__actions">
+      <button type="button" class="share-btn share-btn--download" (click)="downloadResultImage()">Download image</button>
+      <button type="button" class="share-btn share-btn--meta" (click)="copyShareCaption()">Copy caption</button>
       <button type="button" class="share-btn share-btn--fb" (click)="shareToFacebook()">Share to Facebook</button>
       <button type="button" class="share-btn share-btn--ig" (click)="shareToInstagram()">Share to Instagram</button>
     </div>

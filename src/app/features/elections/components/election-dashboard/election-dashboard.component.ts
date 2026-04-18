@@ -389,9 +389,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     if (!this.closeResult) {
       return;
     }
-    const quote = encodeURIComponent(
-      `${this.closeResult.clubName || this.clubName} welcomes its new ${this.closeResult.positionName}: ${this.closeResult.winnerFirstName} ${this.closeResult.winnerLastName}`
-    );
+    const quote = encodeURIComponent(this.getShareCaption());
     const url = encodeURIComponent(window.location.href);
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`, '_blank', 'noopener,noreferrer');
   }
@@ -412,6 +410,28 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     }
     window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
     this.showCloseToast('Instagram opened. Upload the downloaded result image.', 'info');
+  }
+
+  async copyShareCaption(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.getShareCaption());
+      this.showCloseToast('Caption copied.', 'success');
+    } catch {
+      this.showCloseToast('Could not copy caption.', 'error');
+    }
+  }
+
+  downloadResultImage(): void {
+    if (!this.resultImageUrl || !this.closeResult) {
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = this.resultImageUrl;
+    a.download = `election-result-${this.closeResult.electionId}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    this.showCloseToast('Image downloaded.', 'success');
   }
 
   getVoteTime(vote: any): Date | null {
@@ -875,6 +895,16 @@ for (let i = 3; i < result.candidates.length; i += 1) {
       return '';
     }
     return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
+  }
+
+  private getShareCaption(): string {
+    if (!this.closeResult) {
+      return 'Election result announcement';
+    }
+    const club = this.closeResult.clubName || this.clubName || 'Club';
+    const position = this.closeResult.positionName || 'Position';
+    const winner = `${this.closeResult.winnerFirstName} ${this.closeResult.winnerLastName}`.trim();
+    return `${club} welcomes its new ${position}: ${winner}`;
   }
 
   private drawWrappedText(
