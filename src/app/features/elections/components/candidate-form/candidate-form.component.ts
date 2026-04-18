@@ -22,6 +22,7 @@ export class CandidateFormComponent implements OnInit {
   elections: any[] = [];
   selectedElection: any = null;
   candidateCount: number = 0;
+  lockedElectionTitle = '';
 
   constructor(
     private fb: FormBuilder,
@@ -60,7 +61,13 @@ export class CandidateFormComponent implements OnInit {
   loadElections(): void {
     const clubId = this.authHelper.getClubId();
     this.electionService.getElections(clubId).subscribe({
-      next: (data) => this.elections = data.filter((e: any) => e.status === 'OPEN'),
+      next: (data) => {
+        this.elections = data.filter((e: any) => e.status === 'OPEN');
+        const currentElectionId = this.candidateForm.get('electionId')?.value;
+        if (this.isEditMode && currentElectionId) {
+          this.onElectionChanged(currentElectionId);
+        }
+      },
       error: (err) => console.error('Failed to load elections', err)
     });
   }
@@ -86,6 +93,7 @@ export class CandidateFormComponent implements OnInit {
           program: data.program || '',
           bio: data.bio || ''
         });
+        this.lockedElectionTitle = data.electionTitle || data.election?.title || '';
         if (data.electionId) {
           this.onElectionChanged(data.electionId);
         }
@@ -106,9 +114,13 @@ export class CandidateFormComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
+    const electionId = this.isEditMode
+      ? (this.candidateForm.get('electionId')?.value || null)
+      : this.candidateForm.value.electionId;
     const positionId = this.selectedElection?.position?.id || null;
     const payload = {
       ...this.candidateForm.value,
+      electionId,
       positionId
     };
 
