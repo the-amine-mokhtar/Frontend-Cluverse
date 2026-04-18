@@ -719,7 +719,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
 
     const canvas = document.createElement('canvas');
     const width = 1180;
-    const baseHeight = 1020;
+    const baseHeight = 1320;
     const extraRows = Math.max(0, result.candidates.length - 3);
     const height = baseHeight + extraRows * 48;
     canvas.width = width;
@@ -739,7 +739,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     ctx.font = '700 42px Inter, Arial';
     const club = result.clubName || this.clubName || 'Club';
     const position = result.positionName || 'Position';
-    const winnerText = `${result.winnerFirstName || ''} (${result.winnerLastName || ''})`.trim();
+    const winnerText = `${result.winnerFirstName || ''} ${result.winnerLastName || ''}`.trim();
     ctx.fillText(`${club} welcomes its new ${position} :`, 72, 120);
     ctx.font = '800 56px Inter, Arial';
     ctx.fillStyle = '#a5b4fc';
@@ -754,7 +754,29 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     ctx.fillText(`Duration: ${result.startDate} -> ${end.toISOString().slice(0, 10)} (${days} days)`, width - 72, 72);
     ctx.textAlign = 'left';
 
-    const podiumTop = 520;
+    const winnerCandidate = result.candidates.find(candidate => candidate.candidateId === result.winnerCandidateId);
+    const winnerMeta = this.selectedElectionCandidates.find(
+      candidate => Number(candidate.id || candidate.candidateId || 0) === result.winnerCandidateId
+    );
+    const winnerBio = String(winnerMeta?.bio || 'No bio provided.');
+    const winnerProgram = String(winnerMeta?.program || 'No program provided.');
+    const winnerLine = winnerCandidate ? `${winnerCandidate.fullName}` : `${result.winnerFirstName} ${result.winnerLastName}`;
+
+    let winnerSectionY = 270;
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 22px Inter, Arial';
+    ctx.fillText('🧬 Bio', 72, winnerSectionY);
+    winnerSectionY += 30;
+    winnerSectionY = this.drawWrappedText(ctx, winnerBio, 72, winnerSectionY, width - 144, 27, '#e2e8f0', '500 20px Inter, Arial');
+
+    winnerSectionY += 18;
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 22px Inter, Arial';
+    ctx.fillText('📋 Program', 72, winnerSectionY);
+    winnerSectionY += 30;
+    winnerSectionY = this.drawWrappedText(ctx, winnerProgram, 72, winnerSectionY, width - 144, 27, '#e2e8f0', '500 20px Inter, Arial');
+
+    const podiumTop = Math.max(840, winnerSectionY + 240);
     const laneWidth = 220;
     const centers = [width / 2 - laneWidth, width / 2, width / 2 + laneWidth];
     const heights = [170, 240, 130];
@@ -778,17 +800,18 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
       const label = candidate
         ? `${candidate.fullName} (${candidate.votes} votes)`
         : `No candidate (0 votes)`;
+      const decoratedLabel = candidate && candidateIndex === 0 ? `🏆 ${label}` : label;
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '700 19px Inter, Arial';
       if (visualIndex === 0) {
         ctx.textAlign = 'right'; // second place label ends at right
-        ctx.fillText(this.trimLabel(label, 30), x + 172, y - 18);
+        ctx.fillText(this.trimLabel(decoratedLabel, 30), x + 172, y - 18);
       } else if (visualIndex === 2) {
         ctx.textAlign = 'left'; // third place label starts at left
-        ctx.fillText(this.trimLabel(label, 30), x + 8, y - 18);
+        ctx.fillText(this.trimLabel(decoratedLabel, 30), x + 8, y - 18);
       } else {
         ctx.textAlign = 'center';
-        ctx.fillText(this.trimLabel(label, 30), center, y - 18);
+        ctx.fillText(this.trimLabel(decoratedLabel, 30), center, y - 18);
       }
 
       ctx.fillStyle = colors[visualIndex];
@@ -801,58 +824,36 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     let listY = podiumTop + 70;
     ctx.strokeStyle = 'rgba(148,163,184,0.4)';
     ctx.lineWidth = 1;
-    for (let i = 3; i < result.candidates.length; i += 1) {
-      const candidate = result.candidates[i];
-      ctx.beginPath();
-      ctx.moveTo(72, listY - 26);
-      ctx.lineTo(width - 72, listY - 26);
-      ctx.stroke();
-      ctx.fillStyle = '#cbd5e1';
-      ctx.font = '600 24px Inter, Arial';
-      ctx.fillText(`${i + 1}. ${candidate.fullName} (${candidate.votes} votes)`, 72, listY);
-      listY += 46;
+const marginTop = 2;
+const marginBottom = 2;
+
+for (let i = 3; i < result.candidates.length; i += 1) {
+  const candidate = result.candidates[i];
+
+  ctx.beginPath();
+  ctx.moveTo(72, listY - 26);
+  ctx.lineTo(width - 72, listY - 26);
+  ctx.stroke();
+
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '600 24px Inter, Arial';
+
+  ctx.fillText(
+    `${i + 1}. ${candidate.fullName} (${candidate.votes} votes)`,
+    72,
+    listY + marginTop
+  );
+
+  listY += 46 + marginTop + marginBottom;
+}
+
+    const logo = await this.loadImage('assets/logos/Logo+Nom+Slogan.png');
+    if (logo) {
+      const logoWidth = 360;
+      const scale = logoWidth / logo.width;
+      const logoHeight = logo.height * scale;
+      ctx.drawImage(logo, 42, height - logoHeight - 28, logoWidth, logoHeight);
     }
-
-    const winnerCandidate = result.candidates.find(candidate => candidate.candidateId === result.winnerCandidateId);
-    const winnerMeta = this.selectedElectionCandidates.find(
-      candidate => Number(candidate.id || candidate.candidateId || 0) === result.winnerCandidateId
-    );
-    const winnerBio = String(winnerMeta?.bio || 'No bio provided.');
-    const winnerProgram = String(winnerMeta?.program || 'No program provided.');
-    const winnerLine = winnerCandidate ? `${winnerCandidate.fullName}` : `${result.winnerFirstName} ${result.winnerLastName}`;
-
-    let winnerSectionY = listY + 28;
-    ctx.fillStyle = '#fef08a';
-    ctx.font = '800 30px Inter, Arial';
-    ctx.fillText(`🏆 Winner: ${winnerLine}`, 72, winnerSectionY);
-
-    winnerSectionY += 38;
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = '700 22px Inter, Arial';
-    ctx.fillText('🧬 Bio', 72, winnerSectionY);
-    winnerSectionY += 30;
-    winnerSectionY = this.drawWrappedText(ctx, winnerBio, 72, winnerSectionY, width - 144, 27, '#e2e8f0', '500 20px Inter, Arial');
-
-    winnerSectionY += 18;
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = '700 22px Inter, Arial';
-    ctx.fillText('📋 Program', 72, winnerSectionY);
-    winnerSectionY += 30;
-    this.drawWrappedText(ctx, winnerProgram, 72, winnerSectionY, width - 144, 27, '#e2e8f0', '500 20px Inter, Arial');
-
-    const logoY = height - 44;
-    ctx.fillStyle = '#4f46e5';
-    ctx.beginPath();
-    ctx.arc(60, logoY - 6, 16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '800 17px Inter, Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('C', 60, logoY);
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = '700 20px Inter, Arial';
-    ctx.fillText('Cluverse', 84, logoY + 2);
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) {
@@ -906,6 +907,15 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
       ctx.fillText(line, x, cursorY);
     }
     return cursorY + lineHeight;
+  }
+
+  private loadImage(src: string): Promise<HTMLImageElement | null> {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = src;
+    });
   }
 
   private showCloseToast(message: string, type: 'success' | 'error' | 'info'): void {
