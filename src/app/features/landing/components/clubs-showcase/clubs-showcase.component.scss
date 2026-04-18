@@ -7,6 +7,9 @@ $accent-teal: #2DD4BF;
 $heading-color: rgba(255, 255, 255, 0.95);
 $body-color: rgba(255, 255, 255, 0.70);
 
+$hoverEasing: cubic-bezier(0.23, 1, 0.32, 1);
+$returnEasing: cubic-bezier(0.445, 0.05, 0.55, 0.95);
+
 :host {
   display: block;
 }
@@ -88,121 +91,208 @@ $body-color: rgba(255, 255, 255, 0.70);
   line-height: 1.6;
 }
 
-/* ─── Grid & Cards ────────────────────────────────────────── */
-.showcase-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 30px;
+/* ─── 3D Cards ────────────────────────────────────────── */
+.showcase-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   width: 100%;
   padding: 0 15px;
   margin-bottom: 60px;
 }
 
-.showcase-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-
+.card-wrap {
+  margin: 15px;
+  transform: perspective(800px);
+  transform-style: preserve-3d;
+  cursor: pointer;
+  
   &:hover {
-    transform: translateY(-5px);
-    border-color: rgba($accent-teal, 0.3);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    .card-info {
+      transform: translateY(0);
+    }
+    .card-info p {
+      opacity: 1;
+    }
+    .card-info, .card-info p {
+      transition: 0.6s $hoverEasing;
+    }
+    .card-info:after {
+      transition: 5s $hoverEasing;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .card-bg {
+      transition: 
+        0.6s $hoverEasing,
+        opacity 5s $hoverEasing;
+      opacity: 0.8;
+    }
+    .card {
+      transition:
+        0.6s $hoverEasing,
+        box-shadow 2s $hoverEasing;
+      box-shadow:
+        rgba(white, 0.2) 0 0 40px 5px,
+        rgba(white, 1) 0 0 0 1px,
+        rgba(black, 0.66) 0 30px 60px 0,
+        inset $deep-navy 0 0 0 5px,
+        inset rgba(white, 0.5) 0 0 0 6px;
+    }
   }
+}
 
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
+.card {
+  position: relative;
+  flex: 0 0 240px;
+  width: 240px;
+  height: 320px;
+  background-color: $deep-navy;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow:
+    rgba(black, 0.66) 0 30px 60px 0,
+    inset $deep-navy 0 0 0 5px,
+    inset rgba(white, 0.5) 0 0 0 6px;
+  transition: 1s $returnEasing;
+}
+
+.card-bg {
+  opacity: 0.5;
+  position: absolute;
+  top: -20px; left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  padding: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  transition:
+    1s $returnEasing,
+    opacity 5s 1s $returnEasing;
+  pointer-events: none;
+}
+
+.card-info {
+  box-sizing: border-box;
+  padding: 20px;
+  position: absolute;
+  bottom: 0;
+  color: $heading-color;
+  transform: translateY(40%);
+  transition: 0.6s 1.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+  width: 100%;
+  
+  p {
+    opacity: 0;
+    text-shadow: rgba(black, 1) 0 2px 3px;
+    transition: 0.6s 1.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+    color: $body-color;
+    font-size: 14px;
+    margin-top: 10px;
+    line-height: 1.5em;
   }
-
-  &__logo {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.05);
+  
+  * {
+    position: relative;
+    z-index: 1;
   }
-
-  &__logo-small {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(to bottom, transparent 0%, rgba(#000, 0.8) 100%);
+    background-blend-mode: overlay;
+    opacity: 0;
+    transform: translateY(100%);
+    transition: 5s 1s $returnEasing;
   }
 
   &__title {
-    font-size: 22px;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: rgba(black, 0.8) 0 2px 4px;
+  }
+  &__desc {
+    margin: 0;
+  }
+}
+
+/* ─── Active Campaigns List ───────────────────────────────────── */
+.campaigns-list {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.campaign-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba($accent-teal, 0.3);
+  }
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  &__club-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: $accent-teal;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  &__title {
+    font-size: 18px;
     font-weight: 600;
     color: $heading-color;
     margin: 0;
   }
 
-  &__club-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: $accent-teal;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  &__desc {
-    color: $body-color;
-    font-size: 15px;
-    line-height: 1.6;
-    margin: 0;
-  }
-
-  &__meta {
-    margin-top: 15px;
-    color: $body-color;
-    font-size: 14px;
+  &__right {
     display: flex;
     align-items: center;
-    gap: 8px;
-    
-    svg { opacity: 0.7; }
   }
 
-  &__footer {
-    margin-top: 25px;
-    padding-top: 25px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  &__apply-link {
+    color: $accent-teal;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    padding: 8px 16px;
+    border: 1px solid rgba($accent-teal, 0.5);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba($accent-teal, 0.1);
+      border-color: $accent-teal;
+      box-shadow: 0 4px 10px rgba($accent-teal, 0.2);
+    }
   }
 }
 
-/* ─── Buttons & States ─────────────────────────────────────── */
-.btn-apply {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px 24px;
-  background: $accent-teal;
-  color: $deep-navy;
-  font-weight: 600;
-  font-size: 15px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba($accent-teal, 0.3);
-  }
-
-  svg { width: 18px; height: 18px; }
-}
-
+/* ─── Shared States ─────────────────────────────────────────── */
 .empty-state {
   width: 100%;
   text-align: center;

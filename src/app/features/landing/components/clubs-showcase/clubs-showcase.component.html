@@ -26,26 +26,30 @@
           Aucun club partenaire actif pour le moment.
         </div>
 
-        <div class="showcase-grid" *ngIf="clubs.length > 0">
-          <div class="showcase-card" *ngFor="let club of clubs">
-            <div class="showcase-card__header">
-              <img *ngIf="club.logoUrl" [src]="club.logoUrl" [alt]="club.name" class="showcase-card__logo" />
-              <div *ngIf="!club.logoUrl" class="showcase-card__logo" style="display: flex; align-items: center; justify-content: center;">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
-              </div>
-              <div>
-                <h3 class="showcase-card__title">{{ club.name }}</h3>
+        <div class="showcase-container" *ngIf="clubs.length > 0">
+          <div class="card-wrap"
+            *ngFor="let club of clubs"
+            (mousemove)="handleMouseMove($event, club)"
+            (mouseenter)="handleMouseEnter(club)"
+            (mouseleave)="handleMouseLeave(club)">
+            <div class="card" [ngStyle]="getCardStyle(club)">
+              <div class="card-bg"
+                   [style.backgroundImage]="club.logoUrl ? 'url(' + club.logoUrl + ')' : 'none'"
+                   [style.backgroundColor]="club.logoUrl ? 'transparent' : 'rgba(255, 255, 255, 0.05)'"
+                   [ngStyle]="getCardBgTransform(club)"></div>
+              <div class="card-info">
+                <h1 class="card-info__title">{{ club.name }}</h1>
+                <p class="card-info__desc">{{ club.description || 'Une organisation dynamique contribuant activement à la vie du campus universitaire.' }}</p>
               </div>
             </div>
-            <p class="showcase-card__desc">{{ club.description || "Une organisation dynamique contribuant activement à la vie du campus universitaire." }}</p>
           </div>
         </div>
       </div>
 
       <!-- ─── Section 2: Campagnes de recrutement ─── -->
-      <div class="row" style="margin-top: 40px;">
+      <div class="row" style="margin-top: 60px;">
         <div class="section-header">
-          <h2 class="beat-title">Rejoignez un Club</h2>
+          <h2 class="beat-title">Campagnes Actives</h2>
           <p class="section-subtitle">N'attendez plus, consultez les campagnes actives et postulez pour développer vos compétences.</p>
         </div>
       </div>
@@ -55,32 +59,14 @@
           Aucune campagne de recrutement ouverte actuellement.
         </div>
 
-        <div class="showcase-grid" *ngIf="activeCampaigns.length > 0">
-          <div class="showcase-card" *ngFor="let campaign of activeCampaigns">
-            <div class="showcase-card__header">
-              <img *ngIf="campaign.club.logoUrl" [src]="campaign.club.logoUrl" [alt]="campaign.club.name" class="showcase-card__logo-small" />
-              <div *ngIf="!campaign.club.logoUrl" class="showcase-card__logo-small" style="display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.05);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
-              </div>
-              <h4 class="showcase-card__club-name">{{ campaign.club.name }}</h4>
+        <div class="campaigns-list" *ngIf="activeCampaigns.length > 0">
+          <div class="campaign-item" *ngFor="let campaign of activeCampaigns">
+            <div class="campaign-item__left">
+              <h4 class="campaign-item__club-name">{{ campaign.club.name }}</h4>
+              <h3 class="campaign-item__title">{{ campaign.title }}</h3>
             </div>
-
-            <h3 class="showcase-card__title" style="margin-bottom: 10px;">{{ campaign.title }}</h3>
-            <p class="showcase-card__desc">{{ campaign.description }}</p>
-            
-            <div class="showcase-card__meta">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              Fin des candidatures : {{ campaign.endDate | date:'dd/MM/yyyy' }}
-            </div>
-
-            <div class="showcase-card__footer">
-              <button class="btn-apply" (click)="applyToCampaign(campaign)">
-                Postuler
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-              </button>
+            <div class="campaign-item__right">
+              <a [routerLink]="['/apply', campaign.publicLink]" class="campaign-item__apply-link">Postuler</a>
             </div>
           </div>
         </div>
