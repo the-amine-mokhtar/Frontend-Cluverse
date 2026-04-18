@@ -347,13 +347,15 @@
 
   p {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--e-text);
-    line-height: 1.6;
+    line-height: 1.7;
     background: var(--vp-surface-soft);
-    padding: 0.85rem 0.9rem;
+    padding: 1.1rem;
     border-radius: 12px;
     border: 1px solid var(--e-border);
+    min-height: 250px;
+    overflow-y: auto;
   }
 }
 
@@ -474,11 +476,13 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   10%,
   85% {
     opacity: 1;
     transform: translateY(0);
   }
+
   100% {
     opacity: 0;
     transform: translateY(-8px);
