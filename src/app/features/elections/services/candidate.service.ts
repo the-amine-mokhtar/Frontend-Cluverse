@@ -8,6 +8,7 @@ import { environment } from '../../../../environments/environment.development';
 })
 export class CandidateService {
   private apiUrl = `${environment.apiUrl}/api/candidates`;
+  private bioGeneratorApiUrl = 'http://localhost:8091';
 
   constructor(private http: HttpClient) {}
 
@@ -36,4 +37,9 @@ export class CandidateService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
+
+  generateBio(payload: { extractedText: string; position?: string }): Observable<{ bio: string; prompt: string }> {
+    return this.http.post<{ bio: string; prompt: string }>(`${this.bioGeneratorApiUrl}/generate-bio`, payload);
+  }
+
 }

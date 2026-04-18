@@ -55,7 +55,22 @@
       </div>
 
       <div class="elections__form-field">
-        <label>Short Biography</label>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.5rem;">
+          <label style="margin-bottom: 0;">Short Biography</label>
+          <button
+            type="button"
+            class="elections__btn elections__btn--secondary"
+            style="padding: 0.45rem 0.85rem; font-size: 0.85rem;"
+            (click)="openPdfPicker()"
+            [disabled]="isExtractingPdf"
+          >
+            {{ isExtractingPdf ? (extractionStatus || 'Extracting PDF...') : 'Generate from PDF' }}
+          </button>
+        </div>
+        <input #pdfInput type="file" accept=".pdf,application/pdf" style="display: none;" (change)="onPdfSelected($event)" />
+        <div *ngIf="pdfGenerationError" class="e-error-text" style="margin-bottom: 0.5rem;">
+          {{ pdfGenerationError }}
+        </div>
         <textarea formControlName="bio" rows="2" style="resize: none;" placeholder="A little bit about yourself..."></textarea>
       </div>
 

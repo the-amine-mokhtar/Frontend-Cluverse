@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { CandidateService } from '../../services/candidate.service';
 import { ElectionService } from '../../services/election.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
+import * as pdfjsLib from 'pdfjs-dist';
 
 @Component({
   selector: 'app-candidate-form',
@@ -14,6 +16,7 @@ import { AuthHelperService } from '../../../../core/services/auth-helper.service
   styleUrls: ['./candidate-form.component.scss']
 })
 export class CandidateFormComponent implements OnInit {
+  @ViewChild('pdfInput') pdfInputRef?: ElementRef<HTMLInputElement>;
   candidateForm!: FormGroup;
   isEditMode = false;
   candidateId: number | null = null;
@@ -23,6 +26,10 @@ export class CandidateFormComponent implements OnInit {
   selectedElection: any = null;
   candidateCount: number = 0;
   lockedElectionTitle = '';
+  pdfGenerationError = '';
+  isExtractingPdf = false;
+
+  extractionStatus: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -138,5 +145,77 @@ export class CandidateFormComponent implements OnInit {
         this.isSubmitting = false;
       }
     });
+  }
+
+  openPdfPicker(): void {
+    if (this.isExtractingPdf) {
+      return;
+    }
+    this.pdfGenerationError = '';
+    this.pdfInputRef?.nativeElement.click();
+  }
+
+  async onPdfSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files.length > 0 ? input.files[0] : null;
+    input.value = '';
+    if (!file) {
+      return;
+    }
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      this.pdfGenerationError = 'Please select a valid PDF file.';
+      return;
+    }
+
+    this.isExtractingPdf = true;
+    this.pdfGenerationError = '';
+    this.extractionStatus = 'Extracting text from PDF...';
+
+    try {
+      const extractedText = await this.extractTextFromPdf(file);
+      if (!extractedText.trim()) {
+        this.pdfGenerationError = 'No text could be extracted from this PDF.';
+        return;
+      }
+
+      this.extractionStatus = 'Generating AI bio (may take a moment)...';
+      const generated = await firstValueFrom(
+        this.candidateService.generateBio({
+          extractedText,
+          position: this.selectedElection?.position?.name || ''
+        })
+      );
+      this.candidateForm.patchValue({ bio: generated.bio || '' });
+      this.candidateForm.get('bio')?.markAsDirty();
+      this.candidateForm.get('bio')?.markAsTouched();
+    } catch (err: any) {
+      console.error('Bio generation error:', err);
+      this.pdfGenerationError = 'PDF analysis or bio generation failed. Check if the bio service is running.';
+    } finally {
+      this.isExtractingPdf = false;
+      this.extractionStatus = '';
+    }
+  }
+
+  private async extractTextFromPdf(file: File): Promise<string> {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages: string[] = [];
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => ('str' in item ? item.str : ''))
+        .filter((value: string) => value.trim().length > 0)
+        .join(' ');
+      if (pageText) {
+        pages.push(pageText);
+      }
+    }
+
+    return pages.join('\n').replace(/\s+/g, ' ').trim();
   }
 }
