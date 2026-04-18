@@ -36,4 +36,8 @@ export class ElectionService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
+
+  closeElection(id: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/close`, {}, { headers: this.getAuthHeaders() });
+  }
 }

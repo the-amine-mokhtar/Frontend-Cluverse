@@ -1,4 +1,7 @@
 <div class="e-dashboard" *ngIf="isAdmin; else forbiddenState">
+  <div class="close-toast" *ngIf="closeToast" [class]="'close-toast close-toast--' + closeToastType">
+    {{ closeToast }}
+  </div>
   <div class="hero">
     <div class="hero__title-wrap">
       <h1 class="hero__title">Election Live view</h1>
@@ -173,9 +176,21 @@
 
       <article class="focus-card focus-card--wide">
         <div class="focus-card__title">
-          <h3>Real-Time Candidate Vote Viewer</h3>
-          <p>Each dot is one vote in motion inside the candidate sphere.</p>
+          <div>
+            <h3>Real-Time Candidate Vote Viewer</h3>
+            <p>Each dot is one vote in motion inside the candidate sphere.</p>
+          </div>
+          <button
+            class="manual-close-btn"
+            type="button"
+            [disabled]="isClosingElection || !electionStatusIs(selectedElection, 'OPEN')"
+            (click)="closeElectionManually()"
+          >
+            <span class="manual-close-btn__spinner" *ngIf="isClosingElection"></span>
+            {{ isClosingElection ? 'Closing election…' : 'Manually close' }}
+          </button>
         </div>
+        <div class="close-error" *ngIf="closeError">{{ closeError }}</div>
 
         <svg *ngIf="candidateBubbles.length; else noBubbleData" [attr.viewBox]="'0 0 ' + bubbleViewWidth + ' ' + bubbleViewHeight" class="bubble-stage">
           <g *ngFor="let bubble of candidateBubbles; let i = index; trackBy: orbTrackBy">
@@ -268,6 +283,23 @@
 <ng-template #loadingState>
   <div class="state">Loading election intelligence...</div>
 </ng-template>
+
+<div class="result-modal" *ngIf="showResultModal">
+  <div class="result-modal__backdrop" (click)="closeResultModal()"></div>
+  <div class="result-modal__card">
+    <div class="result-modal__head">
+      <h3>Election Result Template</h3>
+      <button type="button" (click)="closeResultModal()">✕</button>
+    </div>
+    <div class="result-modal__body">
+      <img *ngIf="resultImageUrl" [src]="resultImageUrl" alt="Election result template" />
+    </div>
+    <div class="result-modal__actions">
+      <button type="button" class="share-btn share-btn--fb" (click)="shareToFacebook()">Share to Facebook</button>
+      <button type="button" class="share-btn share-btn--ig" (click)="shareToInstagram()">Share to Instagram</button>
+    </div>
+  </div>
+</div>
 
 <ng-template #forbiddenState>
   <div class="forbidden">

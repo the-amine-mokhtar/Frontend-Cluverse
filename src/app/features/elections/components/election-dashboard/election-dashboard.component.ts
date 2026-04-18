@@ -44,6 +44,27 @@ interface MemberHierarchyLevel {
   members: any[];
 }
 
+interface CloseCandidateResult {
+  candidateId: number;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  votes: number;
+}
+
+interface ElectionCloseResult {
+  electionId: number;
+  electionTitle: string;
+  positionName: string;
+  clubName: string;
+  startDate: string;
+  closedAt: string;
+  winnerCandidateId: number;
+  winnerFirstName: string;
+  winnerLastName: string;
+  candidates: CloseCandidateResult[];
+}
+
 @Component({
   selector: 'app-election-dashboard',
   standalone: true,
@@ -91,10 +112,19 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
   candidateBubbles: CandidateBubble[] = [];
   private bubbleSimulation: Simulation<DotNode, undefined> | null = null;
   private pollSub?: Subscription;
+  private generatedResultBlob: Blob | null = null;
 
   // Members hierarchy
   allClubMembers: any[] = [];
   memberHierarchyLevels: MemberHierarchyLevel[] = [];
+  clubName = '';
+  isClosingElection = false;
+  closeError = '';
+  closeToast = '';
+  closeToastType: 'success' | 'error' | 'info' = 'success';
+  showResultModal = false;
+  resultImageUrl = '';
+  closeResult: ElectionCloseResult | null = null;
 
   constructor(
     private electionService: ElectionService,
@@ -116,6 +146,11 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.clubId = this.authHelper.getClubId();
+    this.apiService.getClubById(this.clubId).subscribe({
+      next: (club) => {
+        this.clubName = String(club?.name || '');
+      }
+    });
     this.loadDashboardData();
 
     this.pollSub = interval(4500)
@@ -308,6 +343,75 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
 
   voteTrackBy(_: number, vote: any): number {
     return vote.id;
+  }
+
+  closeElectionManually(): void {
+    if (!this.selectedElection || this.isClosingElection) {
+      return;
+    }
+
+    if (!this.electionStatusIs(this.selectedElection, 'OPEN')) {
+      this.showCloseToast('Only OPEN elections can be manually closed.', 'info');
+      return;
+    }
+
+    this.isClosingElection = true;
+    this.closeError = '';
+
+    this.electionService.closeElection(this.selectedElection.id).subscribe({
+      next: async (result: ElectionCloseResult) => {
+        this.isClosingElection = false;
+        this.closeResult = result;
+        this.updateElectionStatusLocally(result.electionId, 'CLOSED');
+        await this.generateResultGraphic(result);
+        this.showResultModal = true;
+        this.showCloseToast('Election closed successfully.', 'success');
+        this.loadDashboardData();
+      },
+      error: (err) => {
+        this.isClosingElection = false;
+        this.closeError = err?.error?.message || err?.error?.error || 'Failed to close election.';
+        this.showCloseToast(this.closeError, 'error');
+      }
+    });
+  }
+
+  closeResultModal(): void {
+    this.showResultModal = false;
+    if (this.resultImageUrl) {
+      URL.revokeObjectURL(this.resultImageUrl);
+      this.resultImageUrl = '';
+    }
+    this.generatedResultBlob = null;
+  }
+
+  shareToFacebook(): void {
+    if (!this.closeResult) {
+      return;
+    }
+    const quote = encodeURIComponent(
+      `${this.closeResult.clubName || this.clubName} welcomes its new ${this.closeResult.positionName}: ${this.closeResult.winnerFirstName} ${this.closeResult.winnerLastName}`
+    );
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`, '_blank', 'noopener,noreferrer');
+  }
+
+  async shareToInstagram(): Promise<void> {
+    if (this.generatedResultBlob && navigator.share) {
+      const file = new File([this.generatedResultBlob], 'election-result.png', { type: 'image/png' });
+      try {
+        await navigator.share({
+          title: 'Election Result',
+          text: 'Election result announcement',
+          files: [file]
+        });
+        return;
+      } catch {
+        // ignore and use fallback
+      }
+    }
+    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+    this.showCloseToast('Instagram opened. Upload the downloaded result image.', 'info');
   }
 
   getVoteTime(vote: any): Date | null {
@@ -595,5 +699,140 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
         members: membersByRole['MEMBER']
       });
     }
+  }
+
+  private updateElectionStatusLocally(electionId: number, status: string): void {
+    this.elections = this.elections.map(election =>
+      election.id === electionId ? { ...election, status } : election
+    );
+    if (this.selectedElection?.id === electionId) {
+      this.selectedElection = { ...this.selectedElection, status };
+    }
+    this.applyFilters();
+  }
+
+  private async generateResultGraphic(result: ElectionCloseResult): Promise<void> {
+    if (this.resultImageUrl) {
+      URL.revokeObjectURL(this.resultImageUrl);
+      this.resultImageUrl = '';
+    }
+
+    const canvas = document.createElement('canvas');
+    const width = 1180;
+    const baseHeight = 840;
+    const extraRows = Math.max(0, result.candidates.length - 3);
+    const height = baseHeight + extraRows * 48;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, '#0f172a');
+    gradient.addColorStop(1, '#1e293b');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '700 42px Inter, Arial';
+    const club = result.clubName || this.clubName || 'Club';
+    const position = result.positionName || 'Position';
+    const winnerText = `${result.winnerFirstName || ''} (${result.winnerLastName || ''})`.trim();
+    ctx.fillText(`${club} welcomes its new ${position} :`, 72, 120);
+    ctx.font = '800 56px Inter, Arial';
+    ctx.fillStyle = '#a5b4fc';
+    ctx.fillText(winnerText, 72, 190);
+
+    const start = new Date(result.startDate);
+    const end = new Date();
+    const days = Math.max(0, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    ctx.font = '600 24px Inter, Arial';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Duration: ${result.startDate} -> ${end.toISOString().slice(0, 10)} (${days} days)`, width - 72, 72);
+    ctx.textAlign = 'left';
+
+    const podiumTop = 420;
+    const laneWidth = 220;
+    const centers = [width / 2 - laneWidth, width / 2, width / 2 + laneWidth];
+    const heights = [170, 240, 130];
+    const order = [1, 0, 2]; // second, first, third visual order
+    const colors = ['#64748b', '#f59e0b', '#94a3b8'];
+
+    order.forEach((candidateIndex, visualIndex) => {
+      const candidate = result.candidates[candidateIndex];
+      const center = centers[visualIndex];
+      const blockHeight = heights[visualIndex];
+      const x = center - 90;
+      const y = podiumTop - blockHeight;
+      ctx.fillStyle = '#0b1220';
+      ctx.strokeStyle = colors[visualIndex];
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(x, y, 180, blockHeight, 18);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = colors[visualIndex];
+      ctx.font = '800 44px Inter, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(candidateIndex + 1), center, y + 54);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '700 20px Inter, Arial';
+      const label = candidate
+        ? `${candidate.fullName} (${candidate.votes} votes)`
+        : `No candidate (0 votes)`;
+      ctx.fillText(this.trimLabel(label, 24), center, y + blockHeight - 22);
+      ctx.textAlign = 'left';
+    });
+
+    let listY = podiumTop + 70;
+    ctx.strokeStyle = 'rgba(148,163,184,0.4)';
+    ctx.lineWidth = 1;
+    for (let i = 3; i < result.candidates.length; i += 1) {
+      const candidate = result.candidates[i];
+      ctx.beginPath();
+      ctx.moveTo(72, listY - 26);
+      ctx.lineTo(width - 72, listY - 26);
+      ctx.stroke();
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '600 24px Inter, Arial';
+      ctx.fillText(`${i + 1}. ${candidate.fullName} (${candidate.votes} votes)`, 72, listY);
+      listY += 46;
+    }
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) {
+      return;
+    }
+    this.generatedResultBlob = blob;
+    this.resultImageUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = this.resultImageUrl;
+    a.download = `election-result-${result.electionId}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  private trimLabel(value: string, max: number): string {
+    if (!value) {
+      return '';
+    }
+    return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
+  }
+
+  private showCloseToast(message: string, type: 'success' | 'error' | 'info'): void {
+    this.closeToast = message;
+    this.closeToastType = type;
+    setTimeout(() => {
+      if (this.closeToast === message) {
+        this.closeToast = '';
+      }
+    }, 3200);
   }
 }
