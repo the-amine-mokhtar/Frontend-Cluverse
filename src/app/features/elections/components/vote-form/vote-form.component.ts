@@ -10,7 +10,9 @@ import { catchError, forkJoin, of } from 'rxjs';
 interface PieSlice {
   index: number;
   label: string;
+  displayLabel: string;
   sublabel: string;
+  displaySublabel: string;
   path: string;
   labelX: number;
   labelY: number;
@@ -206,7 +208,9 @@ export class VoteFormComponent implements OnInit, OnDestroy {
       slices.push({
         index: i,
         label: labelFn(items[i]),
+        displayLabel: this.truncateForSlice(labelFn(items[i]), pct, false),
         sublabel: sublabelFn(items[i]),
+        displaySublabel: this.truncateForSlice(sublabelFn(items[i]), pct, true),
         path: this.describeArc(this.cx, this.cy, this.radius, startAngle, endAngle),
         labelX: this.cx + Math.cos(midRad) * labelDist,
         labelY: this.cy + Math.sin(midRad) * labelDist,
@@ -234,6 +238,19 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   private polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
     const rad = (angleDeg * Math.PI) / 180;
     return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  private truncateForSlice(value: string, percentage: number, isSublabel: boolean): string {
+    if (!value) return '';
+
+    const maxChars = isSublabel
+      ? Math.max(8, Math.floor(percentage / 2.8))
+      : Math.max(9, Math.floor(percentage / 2.2));
+
+    if (value.length <= maxChars) {
+      return value;
+    }
+    return `${value.slice(0, Math.max(1, maxChars - 1)).trim()}…`;
   }
 
   // ─── Interactions ────────────────────────────────────────

@@ -45,12 +45,14 @@
 
         <text [attr.x]="slice.labelX" [attr.y]="slice.labelY - 8" text-anchor="middle" dominant-baseline="middle"
               fill="#ffffff" font-size="13" font-weight="800" style="pointer-events:none;">
-          {{ slice.label }}
+          <title>{{ slice.label }}</title>
+          {{ slice.displayLabel }}
           <tspan *ngIf="slice.voted" fill="#34d399"> ✓</tspan>
         </text>
         <text *ngIf="slice.sublabel" [attr.x]="slice.labelX" [attr.y]="slice.labelY + 12" text-anchor="middle" dominant-baseline="middle"
               fill="rgba(255,255,255,0.82)" font-size="10" font-weight="600" style="pointer-events:none;">
-          {{ slice.sublabel }}
+          <title>{{ slice.sublabel }}</title>
+          {{ slice.displaySublabel }}
         </text>
       </g>
 
