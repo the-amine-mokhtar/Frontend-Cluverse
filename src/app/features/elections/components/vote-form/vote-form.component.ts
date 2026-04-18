@@ -229,9 +229,12 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   // ─── SVG Arc Utility ─────────────────────────────────────
 
   private describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
-    const start = this.polarToCartesian(cx, cy, r, endAngle);
+    const isFullCircle = (endAngle - startAngle) >= 360;
+    const effectiveEndAngle = isFullCircle ? startAngle + 359.99 : endAngle;
+
+    const start = this.polarToCartesian(cx, cy, r, effectiveEndAngle);
     const end = this.polarToCartesian(cx, cy, r, startAngle);
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    const largeArc = (effectiveEndAngle - startAngle) > 180 ? 1 : 0;
     return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
   }
 
