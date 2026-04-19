@@ -13,7 +13,7 @@
 
   <div class="report-content" *ngIf="!isLoading && report">
     
-    <!-- Title Area -->
+    
     <div class="elections__header">
       <div>
         <h2 class="elections__title">Rapport d'entretien</h2>
@@ -24,10 +24,10 @@
       </div>
     </div>
 
-    <!-- Main Grid -->
+    
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
       
-      <!-- Top Overview (Score & Rec) -->
+      
       <div class="elections__card" style="display: flex; justify-content: space-around; align-items: center; padding: 2rem;">
         <div style="text-align: center;">
           <h4 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 700; color: var(--e-muted); text-transform: uppercase;">Score Global</h4>
@@ -47,7 +47,7 @@
         </div>
       </div>
 
-      <!-- Detailed Scores -->
+      
       <div class="elections__card" style="padding: 1.5rem;">
         <h4 style="margin: 0 0 1.25rem 0; font-size: 1rem; font-weight: 700; color: var(--e-text); text-transform: uppercase; border-bottom: 1px solid var(--e-border); padding-bottom: 0.75rem;">Scores Détaillés</h4>
         
@@ -76,7 +76,7 @@
         </div>
       </div>
 
-      <!-- Strengths / Weaknesses -->
+      
       <div class="elections__card" style="grid-column: 1 / -1; padding: 1.5rem;">
         <h4 style="margin: 0 0 1.25rem 0; font-size: 1rem; font-weight: 700; color: var(--e-text); text-transform: uppercase; border-bottom: 1px solid var(--e-border); padding-bottom: 0.75rem;">Points Forts & Améliorations</h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
@@ -97,13 +97,13 @@
         </div>
       </div>
 
-      <!-- Feedback -->
+      
       <div class="elections__card" style="grid-column: 1 / -1; padding: 1.5rem;">
         <h4 style="margin: 0 0 1.25rem 0; font-size: 1rem; font-weight: 700; color: var(--e-text); text-transform: uppercase; border-bottom: 1px solid var(--e-border); padding-bottom: 0.75rem;">Feedback Global</h4>
         <p style="color: var(--e-text); line-height: 1.6; font-size: 1.05rem; font-style: italic; background: var(--e-primary-bg); padding: 1.5rem; border-left: 4px solid var(--e-primary); border-radius: 4px; margin: 0;">{{ report.feedback }}</p>
       </div>
 
-      <!-- Conversation History -->
+      
       <div class="elections__card" style="grid-column: 1 / -1; padding: 1.5rem;">
         <h4 style="margin: 0 0 1.25rem 0; font-size: 1rem; font-weight: 700; color: var(--e-text); text-transform: uppercase; border-bottom: 1px solid var(--e-border); padding-bottom: 0.75rem;">Historique de l'entretien</h4>
         <div class="chat-container">

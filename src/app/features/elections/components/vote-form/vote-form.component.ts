@@ -48,7 +48,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   selectedElection: any = null;
   selectedCandidate: any = null;
   hoveredIndex: number = -1;
-  userVote: any = null; // current user's vote for selected election
+  userVote: any = null; 
   votedElectionIds = new Set<string>();
 
   errorMessage = '';
@@ -77,7 +77,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Data Loading ────────────────────────────────────────
+  
 
   loadElections(): void {
     const clubId = this.authHelper.getClubId();
@@ -144,7 +144,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Pie Slice Building ──────────────────────────────────
+  
 
   buildElectionSlices(): void {
     const items = this.elections;
@@ -194,7 +194,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     }
 
     const slices: PieSlice[] = [];
-    let currentAngle = -90; // start at top
+    let currentAngle = -90; 
 
     for (let i = 0; i < count; i++) {
       const pct = percentages[i];
@@ -226,7 +226,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     return slices;
   }
 
-  // ─── SVG Arc Utility ─────────────────────────────────────
+  
 
   private describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
     const isFullCircle = (endAngle - startAngle) >= 360;
@@ -256,7 +256,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     return `${value.slice(0, Math.max(1, maxChars - 1)).trim()}…`;
   }
 
-  // ─── Interactions ────────────────────────────────────────
+  
 
   onSliceHover(index: number): void {
     this.hoveredIndex = index;
@@ -290,7 +290,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     this.hoveredIndex = -1;
     this.errorMessage = '';
 
-    // Fade out elections, then load + show candidates
+    
     this.animState = 'fading-out';
     setTimeout(() => {
       this.view = 'candidates';
@@ -321,7 +321,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
   }
 
-  // ─── Vote Logic ──────────────────────────────────────────
+  
 
   get voteButtonLabel(): string {
     if (!this.userVote) return 'Vote';
@@ -342,20 +342,20 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     if (!this.userVote) {
-      // Cast new vote
+      
       const payload = { electionId: this.selectedElection.id, candidateId: this.selectedCandidate.id };
       this.voteService.castVote(payload).subscribe({
         next: () => this.afterVoteAction(),
         error: (err) => this.handleVoteError(err)
       });
     } else if (this.userVote.candidate?.id === this.selectedCandidate.id) {
-      // Cancel vote
+      
       this.voteService.delete(this.userVote.id).subscribe({
         next: () => this.afterVoteAction(),
         error: (err) => this.handleVoteError(err)
       });
     } else {
-      // Change vote
+      
       const payload = { electionId: this.selectedElection.id, candidateId: this.selectedCandidate.id };
       this.voteService.update(this.userVote.id, payload).subscribe({
         next: () => this.afterVoteAction(),
@@ -395,7 +395,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     }, 3200);
   }
 
-  // ─── Helpers ─────────────────────────────────────────────
+  
 
   getInitials(name: string): string {
     if (!name) return '?';

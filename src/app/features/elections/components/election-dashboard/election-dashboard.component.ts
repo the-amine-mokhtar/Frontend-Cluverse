@@ -127,12 +127,12 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
   private pollSub?: Subscription;
   private generatedResultBlob: Blob | null = null;
 
-  // Vote trajectory chart
+  
   @ViewChild('voteChartCanvas') voteChartCanvasRef!: ElementRef<HTMLCanvasElement>;
   private voteChart: Chart | null = null;
   private chartReady = false;
 
-  // Members hierarchy
+  
   allClubMembers: any[] = [];
   memberHierarchyLevels: MemberHierarchyLevel[] = [];
   clubName = '';
@@ -451,7 +451,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
         });
         return;
       } catch {
-        // ignore and use fallback
+        
       }
     }
     window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
@@ -721,7 +721,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
       ? new Date(this.getVoteTime(votes[0])!).getTime() 
       : new Date(this.selectedElection.startDate).getTime();
 
-    // Create shared timestamps for all candidates to ensure tooltips align correctly
+    
     const sharedTimestamps: number[] = [globalFirstVoteTime];
     const iterDate = new Date(globalFirstVoteTime);
     iterDate.setHours(23, 59, 59, 999);
@@ -747,7 +747,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
         dataPoints.push({ x: ts, y: currentCount });
       });
 
-      // Actual data dataset
+      
       datasets.push({
         label: cand.name,
         data: dataPoints,
@@ -760,7 +760,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
         candidateId: cand.id
       });
 
-      // Projection Estimation
+      
       const n = dataPoints.length;
       let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
       dataPoints.forEach(p => {
@@ -871,7 +871,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
                 }
               } else if (targetCandidateId !== null) {
                 const isMatch = ds.candidateId === targetCandidateId;
-                ds.borderColor = isMatch ? baseColor : baseColor + '33'; // Softer blur (20% opacity)
+                ds.borderColor = isMatch ? baseColor : baseColor + '33'; 
                 ds.borderWidth = isMatch ? (ds.isProjection ? 3 : 4) : 1;
               } else {
                 ds.borderColor = baseColor;
@@ -929,7 +929,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
   private buildHierarchyLevels(): void {
     const roleOrder = ['CLUB_ADMIN', 'PRESIDENT', 'VICE_PRESIDENT', 'TREASURER', 'SECRETARY', 'MEMBER', 'HR_MANAGER'];
 
-    // Group members by role
+    
     const membersByRole: { [key: string]: any[] } = {};
     roleOrder.forEach(role => {
       membersByRole[role] = [];
@@ -943,7 +943,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
       membersByRole[role].push(member);
     });
 
-    // Sort each role group by name
+    
     Object.keys(membersByRole).forEach(role => {
       membersByRole[role].sort((a, b) => {
         const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
@@ -952,10 +952,10 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
       });
     });
 
-    // Build hierarchy levels
+    
     this.memberHierarchyLevels = [];
 
-    // Level 1: ADMIN
+    
     if (membersByRole['CLUB_ADMIN']?.length > 0) {
       this.memberHierarchyLevels.push({
         levelName: 'Leadership',
@@ -963,7 +963,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
       });
     }
 
-    // Level 2: PRESIDENT, VICE_PRESIDENT, TREASURER, SECRETARY
+    
     const middleRoles = ['PRESIDENT', 'VICE_PRESIDENT', 'TREASURER', 'SECRETARY','HR_MANAGER'];
     const middleMembers: any[] = [];
 
@@ -980,7 +980,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
       });
     }
 
-    // Level 3: MEMBER
+    
     if (membersByRole['MEMBER']?.length > 0) {
       this.memberHierarchyLevels.push({
         levelName: 'Members',
@@ -1068,7 +1068,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
     const laneWidth = 220;
     const centers = [width / 2 - laneWidth, width / 2, width / 2 + laneWidth];
     const heights = [170, 240, 130];
-    const order = [1, 0, 2]; // second, first, third visual order
+    const order = [1, 0, 2]; 
     const colors = ['#64748b', '#f59e0b', '#94a3b8'];
 
     order.forEach((candidateIndex, visualIndex) => {
@@ -1092,10 +1092,10 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '700 19px Inter, Arial';
       if (visualIndex === 0) {
-        ctx.textAlign = 'right'; // second place label ends at right
+        ctx.textAlign = 'right'; 
         ctx.fillText(this.trimLabel(decoratedLabel, 30), x + 172, y - 18);
       } else if (visualIndex === 2) {
-        ctx.textAlign = 'left'; // third place label starts at left
+        ctx.textAlign = 'left'; 
         ctx.fillText(this.trimLabel(decoratedLabel, 30), x + 8, y - 18);
       } else {
         ctx.textAlign = 'center';

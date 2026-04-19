@@ -29,7 +29,7 @@ export class CandidateListComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      // Check for incoming filters like electionId or positionId
+      
       if (params['electionId']) {
         this.searchTerm = params['electionId'];
       } else if (params['positionId']) {

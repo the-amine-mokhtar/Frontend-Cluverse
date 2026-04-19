@@ -1,4 +1,4 @@
-/* Election Module Design System Tokens */
+
 :host {
   display: block;
   --e-bg-page: transparent;
@@ -64,7 +64,7 @@
   --e-danger-border: #fecaca;
 }
 
-/* Base Layout Block */
+
 .elections {
   padding: 2rem;
   max-width: 80rem;
@@ -154,7 +154,7 @@
     }
   }
 
-  /* Cards */
+  
   &__card {
     background: var(--e-bg-card);
     border: 1px solid var(--e-border);
@@ -162,7 +162,7 @@
     overflow: hidden;
   }
 
-  /* Table System */
+  
   &__table-wrap {
     overflow-x: auto;
   }
@@ -199,7 +199,7 @@
     }
   }
 
-  /* Badges */
+  
   &__badge {
     display: inline-block;
     font-size: 0.7rem;
@@ -215,7 +215,7 @@
     &--gray    { background: var(--e-bg-input);   color: var(--e-muted);   border: 1px solid var(--e-border);        }
   }
 
-  /* Icons/Actions */
+  
   &__icon-btn {
     width: 32px;
     height: 32px;
@@ -244,7 +244,7 @@
     gap: 0.35rem;
   }
 
-  /* Pagination Wrap */
+  
   &__pagination {
     display: flex;
     align-items: center;
@@ -267,7 +267,7 @@
     color: var(--e-muted);
   }
 
-  /* Form System */
+  
   &__form {
     padding: 2rem;
   }
@@ -343,7 +343,7 @@
   }
 }
 
-/* Global Animations (Use ::ng-deep if needed in specific components, or just keep here) */
+
 .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
 @keyframes fadeIn {
@@ -367,7 +367,7 @@
   }
 }
 
-/* Pagination Overrides */
+
 ::ng-deep .modern-pagination .ngx-pagination {
   margin-bottom: 0;
   padding-left: 0;
@@ -400,7 +400,7 @@
   }
 }
 
-/* Modal Overlay & Content */
+
 ::ng-deep {
   .elections__modal-overlay {
     position: fixed;
@@ -465,7 +465,7 @@
     }
   }
 
-  /* Toggle Switch */
+  
   .elections__toggle-switch {
     position: relative;
     display: inline-block;

@@ -105,9 +105,9 @@
     </ng-template>
   </div>
 
-  <!-- Modal overlay with clickaway listener -->
+  
   <div *ngIf="selectedElection" class="elections__modal-overlay animate-fade-in" (click)="closeDetails()">
-    <!-- Modal content pane, stops click events bubbling up to backdrop -->
+    
     <div class="elections__modal-content" (click)="$event.stopPropagation()">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
         <h3 class="modal-title">{{ selectedElection.title }}</h3>

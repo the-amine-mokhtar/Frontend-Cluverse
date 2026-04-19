@@ -152,7 +152,7 @@
     </section>
   </div>
 
-  <section class="panel panel--focus" *ngIf="hasSelectedElection">
+  <section class="panel panel--focus" *ngIf="activeTab === 'elections' && hasSelectedElection">
     <div class="panel__head">
       <h2>{{ selectedElection?.title }}</h2>
       <p>{{ selectedElection?.status }} • {{ selectedElection?.position?.name || 'No position assigned' }}</p>
@@ -255,7 +255,7 @@
   </section>
 </div>
 
-<!-- MEMBERS HIERARCHY TAB -->
+
 <div class="members-hierarchy" *ngIf="activeTab === 'members'">
   <div class="hierarchy-container" *ngIf="!isLoadingMembers; else membersLoading">
     <div class="hierarchy-level" *ngFor="let level of memberHierarchyLevels">

@@ -29,7 +29,7 @@ export class VoteListComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      // Check for incoming filters mapped from other lists
+      
       if (params['electionId']) {
         this.searchTerm = params['electionId'];
       } else if (params['candidateId']) {
