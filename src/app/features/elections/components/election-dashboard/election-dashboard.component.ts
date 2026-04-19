@@ -1,9 +1,22 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { forkJoin, interval, Subscription, switchMap } from 'rxjs';
 import { forceCollide, forceSimulation, forceX, forceY, Simulation, SimulationNodeDatum } from 'd3';
+import {
+  Chart,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  TimeScale,
+  Tooltip,
+  Legend,
+  Filler,
+  CategoryScale
+} from 'chart.js';
+import 'chartjs-adapter-date-fns';
 import { ElectionService } from '../../services/election.service';
 import { CandidateService } from '../../services/candidate.service';
 import { VoteService } from '../../services/vote.service';
@@ -72,7 +85,7 @@ interface ElectionCloseResult {
   templateUrl: './election-dashboard.component.html',
   styleUrl: './election-dashboard.component.scss'
 })
-export class ElectionDashboardComponent implements OnInit, OnDestroy {
+export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly statusFilters: StatusFilter[] = ['ALL', 'OPEN', 'CLOSED', 'ARCHIVED'];
   readonly bubblePalette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#f97316'];
   readonly roleHierarchy = ['CLUB_ADMIN', 'ADMIN', 'PRESIDENT', 'VICE_PRESIDENT', 'TREASURER', 'SECRETARY', 'HR_MANAGER', 'MEMBER'];
@@ -114,6 +127,11 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
   private pollSub?: Subscription;
   private generatedResultBlob: Blob | null = null;
 
+  // Vote trajectory chart
+  @ViewChild('voteChartCanvas') voteChartCanvasRef!: ElementRef<HTMLCanvasElement>;
+  private voteChart: Chart | null = null;
+  private chartReady = false;
+
   // Members hierarchy
   allClubMembers: any[] = [];
   memberHierarchyLevels: MemberHierarchyLevel[] = [];
@@ -132,8 +150,14 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     private voteService: VoteService,
     private positionService: PositionService,
     private authHelper: AuthHelperService,
-    private apiService: ApiService
-  ) {}
+    private apiService: ApiService,
+    private zone: NgZone
+  ) {
+    Chart.register(
+      LineController, LineElement, PointElement,
+      LinearScale, TimeScale, Tooltip, Legend, Filler, CategoryScale
+    );
+  }
 
   ngOnInit(): void {
     this.role = this.authHelper.getRole().toUpperCase();
@@ -176,9 +200,14 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
+  ngAfterViewInit(): void {
+    this.chartReady = true;
+  }
+
   ngOnDestroy(): void {
     this.pollSub?.unsubscribe();
     this.bubbleSimulation?.stop();
+    this.destroyVoteChart();
   }
 
   loadDashboardData(): void {
@@ -575,6 +604,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
       .sort((a, b) => b.votes - a.votes);
 
     this.buildBubbleViewer();
+    setTimeout(() => this.buildVoteChart(), 0);
   }
 
   private buildBubbleViewer(): void {
@@ -665,6 +695,201 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
           dots: grouped[index]
         }));
       });
+  }
+
+  private buildVoteChart(): void {
+    if (!this.chartReady || !this.voteChartCanvasRef) {
+      return;
+    }
+
+    this.destroyVoteChart();
+
+    const votes = [...this.selectedElectionVotes].sort(
+      (a, b) => new Date(this.getVoteTime(a) || 0).getTime() - new Date(this.getVoteTime(b) || 0).getTime()
+    );
+
+    if (!votes.length) {
+      return;
+    }
+
+    const datasets: any[] = [];
+    const candidates = this.selectedLeaderboard;
+    const now = new Date();
+    const projectionEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    const globalFirstVoteTime = votes.length > 0 
+      ? new Date(this.getVoteTime(votes[0])!).getTime() 
+      : new Date(this.selectedElection.startDate).getTime();
+
+    // Create shared timestamps for all candidates to ensure tooltips align correctly
+    const sharedTimestamps: number[] = [globalFirstVoteTime];
+    const iterDate = new Date(globalFirstVoteTime);
+    iterDate.setHours(23, 59, 59, 999);
+    while (iterDate.getTime() < now.getTime()) {
+      sharedTimestamps.push(iterDate.getTime());
+      iterDate.setDate(iterDate.getDate() + 1);
+    }
+    sharedTimestamps.push(now.getTime());
+
+    candidates.forEach((cand, idx) => {
+      const color = this.bubblePalette[idx % this.bubblePalette.length];
+      const candVotes = votes.filter(v => this.resolveCandidateId(v) === cand.id);
+
+      const dataPoints: { x: number, y: number }[] = [];
+      let currentCount = 0;
+      let voteIdx = 0;
+
+      sharedTimestamps.forEach(ts => {
+        while (voteIdx < candVotes.length && new Date(this.getVoteTime(candVotes[voteIdx])!).getTime() <= ts) {
+          currentCount++;
+          voteIdx++;
+        }
+        dataPoints.push({ x: ts, y: currentCount });
+      });
+
+      // Actual data dataset
+      datasets.push({
+        label: cand.name,
+        data: dataPoints,
+        borderColor: color,
+        backgroundColor: color + '33',
+        borderWidth: 3,
+        pointRadius: 0,
+        tension: 0.1,
+        fill: false,
+        candidateId: cand.id
+      });
+
+      // Projection Estimation
+      const n = dataPoints.length;
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      dataPoints.forEach(p => {
+        sumX += p.x;
+        sumY += p.y;
+        sumXY += p.x * p.y;
+        sumX2 += p.x * p.x;
+      });
+
+      const denominator = (n * sumX2 - sumX * sumX);
+      let slope = 0;
+      let intercept = currentCount;
+
+      if (denominator !== 0) {
+        slope = (n * sumXY - sumX * sumY) / denominator;
+        intercept = (sumY - slope * sumX) / n;
+      }
+
+      const lastActualPoint = dataPoints[dataPoints.length - 1];
+      const projectedY = slope * projectionEnd.getTime() + intercept;
+
+      datasets.push({
+        label: cand.name + ' (Projected)',
+        data: [
+          { x: lastActualPoint.x, y: lastActualPoint.y },
+          { x: projectionEnd.getTime(), y: Math.max(lastActualPoint.y, projectedY) }
+        ],
+        borderColor: color,
+        borderWidth: 2,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        fill: false,
+        isProjection: true,
+        candidateId: cand.id
+      });
+    });
+
+    const ctx = this.voteChartCanvasRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    this.zone.runOutsideAngular(() => {
+      this.voteChart = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 0 },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'day',
+                displayFormats: { day: 'MMM d' }
+              },
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#64748b' }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#64748b' }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#94a3b8',
+                padding: 20,
+                usePointStyle: true,
+                pointStyle: 'circle',
+                filter: (item) => !item.text.includes('(Projected)')
+              },
+              onClick: () => {}
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: '#1e293b',
+              titleColor: '#f8fafc',
+              bodyColor: '#cbd5e1',
+              borderColor: '#334155',
+              borderWidth: 1
+            }
+          },
+          onHover: (event, elements) => {
+            if (!this.voteChart) return;
+
+            const isProjectionHover = elements.some(el => (this.voteChart!.data.datasets[el.datasetIndex] as any).isProjection);
+            let targetCandidateId: number | null = null;
+            if (elements.length > 0) {
+              const datasetIndex = elements[0].datasetIndex;
+              targetCandidateId = (this.voteChart.data.datasets[datasetIndex] as any).candidateId;
+            }
+
+            this.voteChart.data.datasets.forEach((ds: any) => {
+              const baseColor = ds.borderColor.length > 7 ? ds.borderColor.substring(0, 7) : ds.borderColor;
+              
+              if (isProjectionHover) {
+                if (ds.isProjection) {
+                  const isMatch = ds.candidateId === targetCandidateId;
+                  ds.borderColor = isMatch ? baseColor : baseColor + '1A';
+                  ds.borderWidth = isMatch ? 3 : 2;
+                } else {
+                  ds.borderColor = 'rgba(0,0,0,0)';
+                  ds.borderWidth = 0;
+                }
+              } else if (targetCandidateId !== null) {
+                const isMatch = ds.candidateId === targetCandidateId;
+                ds.borderColor = isMatch ? baseColor : baseColor + '33'; // Softer blur (20% opacity)
+                ds.borderWidth = isMatch ? (ds.isProjection ? 3 : 4) : 1;
+              } else {
+                ds.borderColor = baseColor;
+                ds.borderWidth = ds.isProjection ? 2 : 3;
+              }
+            });
+            this.voteChart.update('none');
+          }
+        }
+      });
+    });
+  }
+
+  private destroyVoteChart(): void {
+    if (this.voteChart) {
+      this.voteChart.destroy();
+      this.voteChart = null;
+    }
   }
 
   private resolveElectionId(entity: any): number {
@@ -839,7 +1064,7 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy {
     winnerSectionY += 30;
     winnerSectionY = this.drawWrappedText(ctx, winnerProgram, 72, winnerSectionY, width - 144, 27, '#e2e8f0', '500 20px Inter, Arial');
 
-    const podiumTop = Math.max(840, winnerSectionY + 240);
+    const podiumTop = Math.max(890, winnerSectionY + 240 + 50);
     const laneWidth = 220;
     const centers = [width / 2 - laneWidth, width / 2, width / 2 + laneWidth];
     const heights = [170, 240, 130];

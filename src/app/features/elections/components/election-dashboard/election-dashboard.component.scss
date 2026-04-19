@@ -595,6 +595,20 @@ td p {
   font-weight: 700;
 }
 
+.vote-trajectory-card {
+  margin-top: 0.5rem;
+}
+
+.vote-chart-wrap {
+  height: 340px;
+  width: 100%;
+  position: relative;
+  background: var(--e-bg-card);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--e-border);
+}
+
 .votes-table th,
 .votes-table td {
   font-size: 0.75rem;

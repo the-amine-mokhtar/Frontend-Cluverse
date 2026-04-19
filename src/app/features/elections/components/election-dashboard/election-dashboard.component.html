@@ -212,6 +212,21 @@
         </ng-template>
       </article>
 
+      <article class="focus-card focus-card--wide vote-trajectory-card">
+        <div class="focus-card__title">
+          <div>
+            <h3>Vote Trajectory</h3>
+            <p>Cumulative votes over time per candidate · dotted lines show projected trend (+3 days)</p>
+          </div>
+        </div>
+        <div class="vote-chart-wrap" *ngIf="selectedElectionVotes.length; else noChartData">
+          <canvas #voteChartCanvas></canvas>
+        </div>
+        <ng-template #noChartData>
+          <div class="empty-chip">No vote data to chart yet.</div>
+        </ng-template>
+      </article>
+
       <article class="focus-card focus-card--wide">
         <h3>Recent Vote Stream</h3>
         <table class="votes-table" *ngIf="recentVotes.length; else noVotesStream">
