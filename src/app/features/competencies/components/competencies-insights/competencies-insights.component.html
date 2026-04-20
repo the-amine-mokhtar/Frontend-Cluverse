@@ -1,316 +1,330 @@
 <section class="ins-shell">
-  <div class="ins-shell__glow ins-shell__glow--one"></div>
-  <div class="ins-shell__glow ins-shell__glow--two"></div>
-
   <header class="ins-hero">
-    <div class="ins-hero__left">
-      <p class="ins-eyebrow">
-        <span class="ins-eyebrow__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            <path d="M12 2 4 5v5c0 5.2 3.6 9.8 8 12 4.4-2.2 8-6.8 8-12V5l-8-3Z" />
-            <path d="M8 12l2.5 2.5L16 9" />
-          </svg>
-        </span>
-        Competencies Intelligence
-      </p>
-      <h2>Competencies Dashboard</h2>
-    </div>
-
-    <div class="ins-actions">
-      <a class="i-btn i-btn--ghost i-btn--icon" routerLink="../">
-        <span class="i-btn__icon" aria-hidden="true">
+    <div class="ins-hero__content">
+      <div class="ins-hero__title">
+        <h1>Competencies Intelligence</h1>
+        <p>Real-time insights into your team's skill readiness</p>
+      </div>
+      <div class="ins-actions">
+        <a class="i-btn i-btn--ghost" routerLink="/dashboard/competencies/home">
           <svg viewBox="0 0 24 24" focusable="false">
             <path d="M4 6h16v3H4zM4 11h10v3H4zM4 16h16v2H4z" />
           </svg>
-        </span>
-        Competencies
-      </a>
-      <a class="i-btn i-btn--ghost i-btn--icon" routerLink="../member-competencies">
-        <span class="i-btn__icon" aria-hidden="true">
+          Competencies
+        </a>
+        <a class="i-btn i-btn--ghost" routerLink="/dashboard/competencies/member-competencies">
           <svg viewBox="0 0 24 24" focusable="false">
             <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z" />
           </svg>
-        </span>
-        Member Competencies
-      </a>
-      <button type="button" class="i-btn i-btn--ghost i-btn--icon" (click)="refresh()" [disabled]="loading">
-        <span class="i-btn__icon" aria-hidden="true">
+          Members
+        </a>
+        <button type="button" class="i-btn i-btn--primary" (click)="refresh()" [disabled]="loading">
           <svg viewBox="0 0 24 24" focusable="false">
             <path d="M12 5v4l4-4-4-4v3a8 8 0 1 0 7.75 6H17a5 5 0 1 1-5-5Z" />
           </svg>
-        </span>
-        Refresh
-      </button>
+          <span *ngIf="!loading">Refresh</span>
+          <span *ngIf="loading">Updating...</span>
+        </button>
+      </div>
     </div>
   </header>
 
   <div *ngIf="errorMessage" class="i-alert i-alert--error">{{ errorMessage }}</div>
 
-  <section class="ins-kpis">
-    <article class="ins-kpi ins-kpi--members">
-      <span class="ins-kpi__icon" aria-hidden="true">
+  <section class="ins-metrics">
+    <article class="metric-card metric-card--primary">
+      <div class="metric-card__icon">
         <svg viewBox="0 0 24 24" focusable="false">
           <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-6 8v-1c0-2.76 3.58-5 8-5s8 2.24 8 5v1Z" />
         </svg>
-      </span>
-      <span>Members</span>
-      <strong>{{ totalMembers }}</strong>
+      </div>
+      <div class="metric-card__content">
+        <span class="metric-card__label">Team Members</span>
+        <strong class="metric-card__value">{{ totalMembers }}</strong>
+      </div>
     </article>
-    <article class="ins-kpi ins-kpi--skills">
-      <span class="ins-kpi__icon" aria-hidden="true">
+
+    <article class="metric-card metric-card--secondary">
+      <div class="metric-card__icon">
         <svg viewBox="0 0 24 24" focusable="false">
           <path d="M4 5h16v3H4zM4 10h16v3H4zM4 15h10v3H4z" />
         </svg>
-      </span>
-      <span>Competencies</span>
-      <strong>{{ totalSkills }}</strong>
+      </div>
+      <div class="metric-card__content">
+        <span class="metric-card__label">Competencies</span>
+        <strong class="metric-card__value">{{ totalSkills }}</strong>
+      </div>
     </article>
-    <article class="ins-kpi ins-kpi--accent">
-      <span class="ins-kpi__icon" aria-hidden="true">
+
+    <article class="metric-card metric-card--accent">
+      <div class="metric-card__icon">
         <svg viewBox="0 0 24 24" focusable="false">
           <path d="M12 2 2 7l10 5 10-5-10-5Zm-8 8v6l8 4 8-4v-6l-8 4-8-4Z" />
         </svg>
-      </span>
-      <span>Assignments</span>
-      <strong>{{ totalAssignments }}</strong>
+      </div>
+      <div class="metric-card__content">
+        <span class="metric-card__label">Total Assignments</span>
+        <strong class="metric-card__value">{{ totalAssignments }}</strong>
+      </div>
     </article>
-    <article class="ins-kpi ins-kpi--success">
-      <span class="ins-kpi__icon" aria-hidden="true">
+
+    <article class="metric-card metric-card--success">
+      <div class="metric-card__icon">
         <svg viewBox="0 0 24 24" focusable="false">
           <path d="M9 12.8 6.8 10.6 5.4 12l3.6 3.6L19 5.6 17.6 4.2 9 12.8Z" />
         </svg>
-      </span>
-      <span>Ready</span>
-      <strong>{{ readyAssignments }}</strong>
+      </div>
+      <div class="metric-card__content">
+        <span class="metric-card__label">Ready</span>
+        <strong class="metric-card__value">{{ readyAssignments }}</strong>
+      </div>
     </article>
-    <article class="ins-kpi ins-kpi--warning">
-      <span class="ins-kpi__icon" aria-hidden="true">
+
+    <article class="metric-card metric-card--warning">
+      <div class="metric-card__icon">
         <svg viewBox="0 0 24 24" focusable="false">
-          <path d="M11 3h2v11h-2z" />
-          <path d="M11 16h2v2h-2z" />
+          <path d="M11 3h2v11h-2z" /><path d="M11 16h2v2h-2z" />
         </svg>
-      </span>
-      <span>Average Gap</span>
-      <strong>{{ averageGap }}</strong>
+      </div>
+      <div class="metric-card__content">
+        <span class="metric-card__label">Avg Gap</span>
+        <strong class="metric-card__value">{{ averageGap }}</strong>
+      </div>
     </article>
-    <article class="ins-kpi ins-kpi--danger">
-      <span class="ins-kpi__icon" aria-hidden="true">
+
+    <article class="metric-card metric-card--danger">
+      <div class="metric-card__icon">
         <svg viewBox="0 0 24 24" focusable="false">
           <path d="M12 2 2 22h20L12 2Zm0 6 1 7h-2l1-7Zm0 10h.01v2H12z" />
         </svg>
-      </span>
-      <span>Critical</span>
-      <strong>{{ criticalAssignments }}</strong>
+      </div>
+      <div class="metric-card__content">
+        <span class="metric-card__label">Critical</span>
+        <strong class="metric-card__value">{{ criticalAssignments }}</strong>
+      </div>
     </article>
   </section>
 
-  <div *ngIf="loading" class="i-state">Loading dashboard...</div>
 
-  <div *ngIf="!loading" class="ins-grid">
-    <article class="i-card i-card--full">
-      <div class="i-card__head">
-        <div>
-          <h3>
-            <span class="i-title-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M3 19h18v2H3zM6 14h3v5H6zm5-4h3v9h-3zm5-7h3v16h-3z" />
-              </svg>
-            </span>
-            Portfolio Graph
-          </h3>
-          <p>See how your competencies and assignments are distributed.</p>
-        </div>
+  <div *ngIf="loading" class="i-state">
+    <div class="loading-spinner"></div>
+    Loading dashboard...
+  </div>
+
+  <div *ngIf="!loading" class="ins-content">
+    <!-- Graphical Insights Section -->
+    <section class="insight-section">
+      <div class="section-header">
+        <h2>Portfolio Overview</h2>
+        <p>Distribution of competencies and member readiness</p>
       </div>
 
-      <div class="ins-graphs">
-        <div class="ins-graph">
-          <div class="ins-graph__head">
-            <strong>Competency mix</strong>
-            <span>{{ totalSkills }} total skills</span>
+      <div class="charts-grid">
+        <article class="chart-card">
+          <div class="chart-card__head">
+            <h3>Competency Mix</h3>
+            <span class="meta">{{ totalSkills }} total skills</span>
           </div>
-          <div class="ins-graph__rows">
-            <div *ngFor="let item of competencyBreakdown" class="ins-graph__row">
-              <div class="ins-graph__label">
-                <span class="ins-graph__badge" [ngClass]="'ins-graph__badge--' + item.tone">{{ item.label }}</span>
-                <small>{{ item.count }} · {{ item.percent }}%</small>
+          <div class="chart-bars">
+            <div *ngFor="let item of competencyBreakdown" class="bar-row">
+              <div class="bar-label">
+                <span class="badge" [ngClass]="'badge--' + item.tone">{{ item.label }}</span>
+                <span class="count">{{ item.count }}</span>
               </div>
-              <div class="ins-graph__track">
-                <div class="ins-graph__fill" [ngClass]="'ins-graph__fill--' + item.tone" [style.width.%]="item.percent"></div>
+              <div class="bar-track">
+                <div class="bar-fill" [ngClass]="'bar-fill--' + item.tone" [style.width.%]="item.percent"></div>
+              </div>
+              <span class="percent">{{ item.percent }}%</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-card__head">
+            <h3>Assignment Readiness</h3>
+            <span class="meta">{{ totalAssignments }} assignments</span>
+          </div>
+          <div class="chart-bars">
+            <div *ngFor="let item of readinessBreakdown" class="bar-row">
+              <div class="bar-label">
+                <span class="badge" [ngClass]="'badge--' + item.tone">{{ item.label }}</span>
+                <span class="count">{{ item.count }}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" [ngClass]="'bar-fill--' + item.tone" [style.width.%]="item.percent"></div>
+              </div>
+              <span class="percent">{{ item.percent }}%</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Member Statistics Section -->
+    <section class="insight-section">
+      <div class="section-header">
+        <h2>Member Insights</h2>
+        <p>Top performers and members needing support</p>
+      </div>
+
+      <div class="stats-grid">
+        <!-- Top Members -->
+        <article class="stat-card">
+          <div class="stat-card__head">
+            <h3>Strongest Members</h3>
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+          </div>
+          <div class="stat-list">
+            <div *ngIf="strongestMembers.length === 0" class="empty-state">
+              <p>No data available</p>
+            </div>
+            <div *ngFor="let member of strongestMembers.slice(0, 3)" class="stat-item">
+              <div class="stat-item__info">
+                <strong class="stat-item__name">{{ member.memberName }}</strong>
+                <small class="stat-item__meta">{{ member.readyCount }}/{{ member.assignedCount }} ready</small>
+              </div>
+              <div class="stat-item__badge stat-item__badge--success">
+                {{ ((member.readyCount / member.assignedCount) * 100 | number:'1.0-0') }}%
               </div>
             </div>
           </div>
-        </div>
+        </article>
 
-        <div class="ins-graph">
-          <div class="ins-graph__head">
-            <strong>Readiness spectrum</strong>
-            <span>{{ totalAssignments }} assignments</span>
+        <!-- Members to Prioritize -->
+        <article class="stat-card">
+          <div class="stat-card__head">
+            <h3>Members to Prioritize</h3>
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+            </svg>
           </div>
-          <div class="ins-graph__rows">
-            <div *ngFor="let item of readinessBreakdown" class="ins-graph__row">
-              <div class="ins-graph__label">
-                <span class="ins-graph__badge" [ngClass]="'ins-graph__badge--' + item.tone">{{ item.label }}</span>
-                <small>{{ item.count }} · {{ item.percent }}%</small>
+          <div class="stat-list">
+            <div *ngIf="topMemberGaps.length === 0" class="empty-state">
+              <p>No data available</p>
+            </div>
+            <div *ngFor="let member of topMemberGaps.slice(0, 3)" class="stat-item">
+              <div class="stat-item__info">
+                <strong class="stat-item__name">{{ member.memberName }}</strong>
+                <small class="stat-item__meta">{{ member.assignedCount }} competencies</small>
               </div>
-              <div class="ins-graph__track">
-                <div class="ins-graph__fill" [ngClass]="'ins-graph__fill--' + item.tone" [style.width.%]="item.percent"></div>
+              <div [class]="levelClass(member.averageGap)">
+                Gap: {{ member.averageGap }}
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </article>
+        </article>
 
-    <article class="i-card i-card--full">
-      <div class="i-card__head">
-        <div>
-          <h3>
-            <span class="i-title-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
-              </svg>
-            </span>
-            Smart Matching Engine
-          </h3>
-          <p>Generate ranked recommendations from selected required competencies.</p>
-        </div>
-      </div>
-
-      <div class="matching-controls">
-        <label>
-          Context
-          <select [(ngModel)]="matchingContextType">
-            <option *ngFor="let context of matchingContexts" [value]="context">{{ context }}</option>
-          </select>
-        </label>
-
-        <label>
-          Context Title
-          <input type="text" [(ngModel)]="matchingContextTitle" placeholder="Ex: Lead Event Sponsoring" />
-        </label>
-
-        <label>
-          Top N
-          <input type="number" min="1" max="20" [(ngModel)]="topN" />
-        </label>
-      </div>
-
-      <div class="skills-picker">
-        <button
-          type="button"
-          *ngFor="let skill of competencies"
-          class="skill-chip"
-          [class.skill-chip--active]="isSkillSelected(skill.id)"
-          (click)="toggleSkillSelection(skill.id)"
-        >
-          {{ skill.name }}
-          <span class="skill-chip__meta">{{ skill.category }}</span>
-        </button>
-      </div>
-
-      <div class="matching-actions">
-        <button type="button" class="i-btn i-btn--primary" (click)="runMatching()" [disabled]="matchingLoading">
-          {{ matchingLoading ? 'Analyzing...' : 'Run Matching' }}
-        </button>
-        <button type="button" class="i-btn i-btn--ghost" (click)="resetMatching()">Reset</button>
-      </div>
-
-      <div *ngIf="matchingError" class="i-alert i-alert--error">{{ matchingError }}</div>
-
-      <div *ngIf="matchingResult" class="matching-result">
-        <div class="matching-result__summary">
-          <span class="badge">{{ matchingResult.contextType }}</span>
-          <span class="i-muted">{{ matchingResult.contextTitle || 'Untitled Context' }}</span>
-          <span class="i-muted">{{ matchingResult.requestedSkills }} required skills · {{ matchingResult.candidatesEvaluated }} candidates evaluated</span>
-        </div>
-
-        <div *ngIf="matchingResult.recommendations.length === 0" class="i-state">No candidate found.</div>
-
-        <div *ngFor="let candidate of matchingResult.recommendations" class="recommendation-row">
-          <div class="recommendation-row__main">
-            <div class="insight-row__title">
-              <strong>{{ candidate.memberName }}</strong>
-              <span class="i-muted" *ngIf="candidate.memberEmail">{{ candidate.memberEmail }}</span>
+        <!-- Most Delayed Competencies -->
+        <article class="stat-card">
+          <div class="stat-card__head">
+            <h3>Delayed Competencies</h3>
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M3 13h2v8H3zm4-8h2v16H7zm4-2h2v18h-2zm4-2h2v20h-2zm4 4h2v16h-2z" />
+            </svg>
+          </div>
+          <div class="stat-list">
+            <div *ngIf="topSkillGaps.length === 0" class="empty-state">
+              <p>No data available</p>
             </div>
-            <small class="i-muted">
-              {{ candidate.matchedSkills }}/{{ candidate.totalRequiredSkills }} matched skills · Avg gap {{ candidate.averageGap }}
-            </small>
-            <small class="i-muted" *ngIf="candidate.missingSkills.length > 0">
-              Missing: {{ candidate.missingSkills.join(', ') }}
-            </small>
+            <div *ngFor="let skill of topSkillGaps.slice(0, 3)" class="stat-item">
+              <div class="stat-item__info">
+                <strong class="stat-item__name">{{ skill.skillName }}</strong>
+                <small class="stat-item__meta">{{ skill.assignedCount }} members, max gap {{ skill.maxGap }}</small>
+              </div>
+              <div class="stat-item__badge stat-item__badge--warning">
+                {{ skill.averageGap }}
+              </div>
+            </div>
           </div>
-          <div [class]="candidateScoreClass(candidate)">{{ candidate.score }} · {{ candidate.readiness }}</div>
-        </div>
+        </article>
       </div>
-    </article>
+    </section>
 
-    <article class="i-card">
-      <h3>
-        <span class="i-title-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            <path d="M3 19h18v2H3zM6 16h2V8H6zm5 0h2V5h-2zm5 0h2v-6h-2z" />
-          </svg>
-        </span>
-        Most Delayed Competencies
-      </h3>
-      <div *ngIf="topSkillGaps.length === 0" class="i-state">No data available.</div>
-      <div *ngFor="let skill of topSkillGaps" class="insight-row">
-        <div class="insight-row__main">
-          <div class="insight-row__title">
-            <strong>{{ skill.skillName }}</strong>
-            <span class="badge">{{ skill.category }}</span>
-          </div>
-          <div class="meter">
-            <div class="meter__bar" [style.width.%]="progressWidth(skill.averageGap)"></div>
-          </div>
-          <small class="i-muted">Assigned to {{ skill.assignedCount }} member(s) · Max gap {{ skill.maxGap }}</small>
-        </div>
-        <div class="insight-row__score">{{ skill.averageGap }}</div>
+    <!-- Smart Matching Section -->
+    <section class="insight-section">
+      <div class="section-header">
+        <h2>Smart Matching Engine</h2>
+        <p>Generate ranked recommendations from required competencies</p>
       </div>
-    </article>
 
-    <article class="i-card">
-      <h3>
-        <span class="i-title-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-6 8v-1c0-2.76 3.58-5 8-5s8 2.24 8 5v1Z" />
-          </svg>
-        </span>
-        Members To Prioritize
-      </h3>
-      <div *ngIf="topMemberGaps.length === 0" class="i-state">No data available.</div>
-      <div *ngFor="let member of topMemberGaps" class="insight-row">
-        <div class="insight-row__main">
-          <div class="insight-row__title">
-            <strong>{{ member.memberName }}</strong>
-            <span class="badge">{{ member.assignedCount }} competencies</span>
+      <article class="matching-card">
+        <div class="matching-controls">
+          <div class="control-group">
+            <label>Context Type</label>
+            <select [(ngModel)]="matchingContextType" class="control-input">
+              <option *ngFor="let context of matchingContexts" [value]="context">{{ context }}</option>
+            </select>
           </div>
-          <div class="meter">
-            <div class="meter__bar meter__bar--member" [style.width.%]="progressWidth(member.averageGap)"></div>
-          </div>
-          <small class="i-muted">Ready on {{ member.readyCount }} competencies · Max gap {{ member.maxGap }}</small>
-        </div>
-        <div [class]="levelClass(member.averageGap)">{{ member.averageGap }}</div>
-      </div>
-    </article>
 
-    <article class="i-card">
-      <h3>
-        <span class="i-title-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            <path d="M5 20h14v2H5zM7 10l3 3 7-8 2 2-9 10-5-5z" />
-          </svg>
-        </span>
-        Strongest Members
-      </h3>
-      <div *ngIf="strongestMembers.length === 0" class="i-state">No data available.</div>
-      <div *ngFor="let member of strongestMembers" class="insight-row">
-        <div class="insight-row__main">
-          <strong>{{ member.memberName }}</strong>
-          <small class="i-muted">Ready {{ member.readyCount }} · Avg gap {{ member.averageGap }}</small>
+          <div class="control-group">
+            <label>Context Title</label>
+            <input type="text" [(ngModel)]="matchingContextTitle" placeholder="e.g., Lead Developer" class="control-input" />
+          </div>
+
+          <div class="control-group">
+            <label>Top N Results</label>
+            <input type="number" min="1" max="20" [(ngModel)]="topN" class="control-input" />
+          </div>
         </div>
-        <div class="badge badge--success">Top ready</div>
-      </div>
-    </article>
+
+        <div class="skills-section">
+          <label class="section-label">Select Required Competencies</label>
+          <div class="skills-grid">
+            <button
+              type="button"
+              *ngFor="let skill of competencies"
+              class="skill-chip"
+              [class.skill-chip--active]="isSkillSelected(skill.id)"
+              (click)="toggleSkillSelection(skill.id)"
+            >
+              <span class="skill-chip__name">{{ skill.name }}</span>
+              <span class="skill-chip__category">{{ skill.category }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="matching-actions">
+          <button type="button" class="i-btn i-btn--primary" (click)="runMatching()" [disabled]="matchingLoading || selectedSkillIds.length === 0">
+            {{ matchingLoading ? 'Analyzing...' : 'Run Matching' }}
+          </button>
+          <button type="button" class="i-btn i-btn--ghost" (click)="resetMatching()">Reset</button>
+        </div>
+
+        <div *ngIf="matchingError" class="i-alert i-alert--error">{{ matchingError }}</div>
+
+        <div *ngIf="matchingResult" class="matching-results">
+          <div class="results-header">
+            <span class="badge badge--accent">{{ matchingResult.contextType }}</span>
+            <div class="results-info">
+              <strong>{{ matchingResult.contextTitle || 'Untitled Context' }}</strong>
+              <small>{{ matchingResult.requestedSkills }} required · {{ matchingResult.candidatesEvaluated }} evaluated</small>
+            </div>
+          </div>
+
+          <div *ngIf="matchingResult.recommendations.length === 0" class="empty-state">
+            No candidates found matching your criteria
+          </div>
+
+          <div *ngFor="let candidate of matchingResult.recommendations" class="candidate-row">
+            <div class="candidate-main">
+              <strong class="candidate-name">{{ candidate.memberName }}</strong>
+              <small class="candidate-email" *ngIf="candidate.memberEmail">{{ candidate.memberEmail }}</small>
+              <small class="candidate-meta">
+                {{ candidate.matchedSkills }}/{{ candidate.totalRequiredSkills }} matched · Avg gap {{ candidate.averageGap }}
+              </small>
+              <small class="candidate-missing" *ngIf="candidate.missingSkills.length > 0">
+                Missing: {{ candidate.missingSkills.join(', ') }}
+              </small>
+            </div>
+            <div class="candidate-score" [class]="candidateScoreClass(candidate)">
+              <div class="score-value">{{ candidate.score }}</div>
+              <div class="score-label">{{ candidate.readiness }}</div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
   </div>
 </section>

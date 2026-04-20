@@ -27,6 +27,62 @@ export interface CompetencyResponse {
   clubId: number;
 }
 
+export interface CompetencyBulkImportErrorResponse {
+  rowNumber: number;
+  name: string;
+  message: string;
+}
+
+export interface CompetencyBulkImportResponse {
+  clubId: number;
+  totalRows: number;
+  createdCount: number;
+  skippedCount: number;
+  createdCompetencies: CompetencyResponse[];
+  errors: CompetencyBulkImportErrorResponse[];
+}
+
+export interface CompetencyCloneRequest {
+  targetClubId: number;
+}
+
+export interface CompetencyStatsCompetencyResponse {
+  competencyId: number;
+  competencyName: string;
+  memberCount: number;
+  averageCurrentLevel: number;
+  averageTargetLevel: number;
+  averageGap: number;
+}
+
+export interface CompetencyStatsCategoryResponse {
+  category: CompetencyCategory;
+  competencyCount: number;
+  memberCount: number;
+  averageCurrentLevel: number;
+  averageTargetLevel: number;
+  averageGap: number;
+}
+
+export interface CompetencyStatsWeakCompetencyResponse {
+  competencyId: number;
+  competencyName: string;
+  category: CompetencyCategory;
+  memberCount: number;
+  averageCurrentLevel: number;
+  averageTargetLevel: number;
+  averageGap: number;
+}
+
+export interface CompetencyStatsResponse {
+  clubId: number;
+  totalCompetencies: number;
+  totalAssignments: number;
+  membersPerCompetency: CompetencyStatsCompetencyResponse[];
+  averageLevelByCategory: CompetencyStatsCategoryResponse[];
+  weakestCompetencies: CompetencyStatsWeakCompetencyResponse[];
+}
+
 export interface MemberCompetencyRequest {
   userId: number;
   skillId: number;
@@ -411,6 +467,27 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
 
   getCompetencies(clubId: number): Observable<CompetencyResponse[]> {
     return this.http.get<CompetencyResponse[]>(`${this.baseUrl}/api/competencies?clubId=${clubId}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  uploadCompetencyBulkImport(clubId: number, file: File): Observable<CompetencyBulkImportResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<CompetencyBulkImportResponse>(`${this.baseUrl}/api/competencies/bulk?clubId=${clubId}`, formData, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  cloneCompetency(id: number, payload: CompetencyCloneRequest): Observable<CompetencyResponse> {
+    return this.http.post<CompetencyResponse>(`${this.baseUrl}/api/competencies/${id}/clone`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getCompetencyStats(clubId: number): Observable<CompetencyStatsResponse> {
+    return this.http.get<CompetencyStatsResponse>(`${this.baseUrl}/api/competencies/stats?clubId=${clubId}`, {
       headers: this.authHeaders()
     }).pipe(catchError(this.handleError));
   }

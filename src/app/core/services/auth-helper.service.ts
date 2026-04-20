@@ -45,7 +45,13 @@ export class AuthHelperService {
   }
 
   getRole(): string {
-    return this.getPayload()?.role ?? '';
+    const rawRole = this.getPayload()?.role;
+    if (typeof rawRole !== 'string') {
+      return '';
+    }
+
+    const normalized = rawRole.trim().toUpperCase();
+    return normalized.startsWith('ROLE_') ? normalized.substring(5) : normalized;
   }
 
   getUserId(): number {
@@ -55,6 +61,10 @@ export class AuthHelperService {
 
   isPresident(): boolean {
     return this.getRole() === 'PRESIDENT';
+  }
+
+  isSuperAdmin(): boolean {
+    return !!this.getPayload()?.isSuperAdmin;
   }
 
   isLoggedIn(): boolean {

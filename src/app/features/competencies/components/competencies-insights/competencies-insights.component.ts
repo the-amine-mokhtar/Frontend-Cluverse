@@ -187,9 +187,9 @@ export class CompetenciesInsightsComponent implements OnInit {
   }
 
   candidateScoreClass(candidate: CompetencyMatchCandidateResponse): string {
-    if (candidate.score >= 75) return 'badge badge--success';
-    if (candidate.score >= 50) return 'badge badge--warning';
-    return 'badge badge--danger';
+    if (candidate.score >= 75) return 'candidate-score--success';
+    if (candidate.score >= 50) return 'candidate-score--warning';
+    return 'candidate-score--danger';
   }
 
   getMemberLabel(userId: number): string {
@@ -203,9 +203,9 @@ export class CompetenciesInsightsComponent implements OnInit {
   }
 
   levelClass(gap: number): string {
-    if (gap <= 0) return 'badge badge--success';
-    if (gap <= 15) return 'badge badge--warning';
-    return 'badge badge--danger';
+    if (gap <= 0) return 'stat-item__badge stat-item__badge--success';
+    if (gap <= 15) return 'stat-item__badge stat-item__badge--warning';
+    return 'stat-item__badge stat-item__badge--danger';
   }
 
   progressWidth(gap: number): number {

@@ -3,8 +3,11 @@ import { FormBuilder, Validators } from '@angular/forms';
 import {
   ApiService,
   CompetencyCategory,
+  CompetencyBulkImportResponse,
+  CompetencyCloneRequest,
   CompetencyRequest,
-  CompetencyResponse
+  CompetencyResponse,
+  CompetencyStatsResponse
 } from '../../../../core/services/api.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 
@@ -18,14 +21,20 @@ export class CompetenciesHomeComponent implements OnInit {
   readonly categoryFilters: Array<'ALL' | CompetencyCategory> = ['ALL', 'TECHNICAL', 'HARD', 'SOFT'];
 
   competencies: CompetencyResponse[] = [];
+  stats: CompetencyStatsResponse | null = null;
   selectedCategory: 'ALL' | CompetencyCategory = 'ALL';
   searchTerm = '';
   clubId = 0;
+  targetClubId = 0;
   loading = false;
   submitting = false;
+  importing = false;
+  cloningId: number | null = null;
   editingId: number | null = null;
+  isSuperAdmin = false;
   errorMessage = '';
   successMessage = '';
+  bulkImportFileName = '';
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],
@@ -40,6 +49,7 @@ export class CompetenciesHomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.isSuperAdmin = this.authHelperService.isSuperAdmin();
     this.clubId = this.authHelperService.getClubId();
     if (!this.clubId) {
       this.errorMessage = 'Club introuvable. Reconnecte-toi puis reessaie.';
@@ -111,11 +121,83 @@ export class CompetenciesHomeComponent implements OnInit {
     this.apiService.getCompetencies(this.clubId).subscribe({
       next: (items) => {
         this.competencies = items;
+        this.loadStats();
         this.loading = false;
       },
       error: () => {
         this.errorMessage = 'Impossible de charger les competencies.';
         this.loading = false;
+      }
+    });
+  }
+
+  loadStats(): void {
+    this.apiService.getCompetencyStats(this.clubId).subscribe({
+      next: (stats) => {
+        this.stats = stats;
+      },
+      error: () => {
+        this.stats = null;
+      }
+    });
+  }
+
+  handleBulkImport(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+
+    if (!file || !this.clubId) {
+      return;
+    }
+
+    this.importing = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.bulkImportFileName = file.name;
+
+    this.apiService.uploadCompetencyBulkImport(this.clubId, file).subscribe({
+      next: (response: CompetencyBulkImportResponse) => {
+        this.importing = false;
+        this.bulkImportFileName = '';
+        this.successMessage = `Import terminé: ${response.createdCount} créées, ${response.skippedCount} ignorées.`;
+        this.loadCompetencies();
+      },
+      error: () => {
+        this.importing = false;
+        this.bulkImportFileName = '';
+        this.errorMessage = 'Import CSV impossible.';
+      }
+    });
+  }
+
+  cloneCompetency(item: CompetencyResponse): void {
+    if (!this.isSuperAdmin) {
+      return;
+    }
+
+    if (!this.targetClubId || this.targetClubId <= 0) {
+      this.errorMessage = 'Renseigne un club cible valide avant de cloner.';
+      return;
+    }
+
+    this.cloningId = item.id;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const payload: CompetencyCloneRequest = {
+      targetClubId: this.targetClubId
+    };
+
+    this.apiService.cloneCompetency(item.id, payload).subscribe({
+      next: () => {
+        this.cloningId = null;
+        this.successMessage = `Competency clonée vers le club ${this.targetClubId}.`;
+        this.loadCompetencies();
+      },
+      error: () => {
+        this.cloningId = null;
+        this.errorMessage = 'Clonage impossible.';
       }
     });
   }
@@ -189,6 +271,7 @@ export class CompetenciesHomeComponent implements OnInit {
       next: () => {
         this.successMessage = 'Competency supprimee.';
         this.competencies = this.competencies.filter(c => c.id !== item.id);
+        this.loadStats();
       },
       error: () => {
         this.errorMessage = 'Suppression impossible.';
@@ -212,5 +295,9 @@ export class CompetenciesHomeComponent implements OnInit {
 
   trackById(_: number, item: CompetencyResponse): number {
     return item.id;
+  }
+
+  trackByStatCategory(_: number, item: { category: CompetencyCategory }): CompetencyCategory {
+    return item.category;
   }
 }

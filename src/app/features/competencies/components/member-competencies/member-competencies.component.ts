@@ -10,6 +10,43 @@ import {
 } from '../../../../core/services/api.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 
+type LearningState = 'done' | 'active' | 'locked';
+
+interface SkillTip {
+  id: number;
+  skillName: string;
+  current: number;
+  target: number;
+  progress: number;
+  tip: string;
+}
+
+interface LearningStep {
+  id: number;
+  title: string;
+  progress: number;
+  state: LearningState;
+  summary: string;
+}
+
+interface MemberBadge {
+  id: string;
+  title: string;
+  icon: string;
+  unlocked: boolean;
+  hint: string;
+}
+
+interface SpeechSessionSummary {
+  status: string;
+  score: number;
+  level: string;
+  confidence: number;
+  pace: number;
+  feedback: string;
+  updatedAt: string;
+}
+
 @Component({
   selector: 'app-member-competencies',
   templateUrl: './member-competencies.component.html',
@@ -35,6 +72,10 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   loading = false;
   saving = false;
   selectedMemberUserId = 0;
+  currentUserId = 0;
+  currentUserFullName = '';
+  userRole = '';
+  isMemberRole = false;
 
   members: Array<{ userId: number; firstName?: string; lastName?: string; email?: string }> = [];
   competencies: CompetencyResponse[] = [];
@@ -92,14 +133,231 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.userRole = this.authHelperService.getRole();
+    this.isMemberRole = this.userRole === 'MEMBER';
+    this.currentUserId = this.authHelperService.getUserId();
+    this.currentUserFullName = this.authHelperService.getFullName();
+
     this.clubId = this.authHelperService.getClubId();
     if (!this.clubId) {
       this.errorMessage = 'Club introuvable. Reconnecte-toi puis reessaie.';
       return;
     }
 
+    if (this.isMemberRole) {
+      this.selectedMemberUserId = this.currentUserId;
+    }
+
     this.loadInitialData();
     this.loadSpeechAnalyzerHealth();
+  }
+
+  get personalCompetencies(): MemberCompetencyResponse[] {
+    return this.memberCompetencies
+      .filter(item => item.userId === this.currentUserId)
+      .sort((a, b) => b.targetLevel - a.targetLevel);
+  }
+
+  get totalSkillsCount(): number {
+    return this.personalCompetencies.length;
+  }
+
+  get averageCurrentLevel(): number {
+    if (!this.personalCompetencies.length) {
+      return 0;
+    }
+
+    const total = this.personalCompetencies.reduce((sum, item) => sum + item.currentLevel, 0);
+    return Math.round(total / this.personalCompetencies.length);
+  }
+
+  get averageTargetLevel(): number {
+    if (!this.personalCompetencies.length) {
+      return 0;
+    }
+
+    const total = this.personalCompetencies.reduce((sum, item) => sum + item.targetLevel, 0);
+    return Math.round(total / this.personalCompetencies.length);
+  }
+
+  get averageGapLevel(): number {
+    if (!this.personalCompetencies.length) {
+      return 0;
+    }
+
+    const total = this.personalCompetencies.reduce((sum, item) => sum + Math.max(0, item.gap), 0);
+    return Math.round(total / this.personalCompetencies.length);
+  }
+
+  get readinessScore(): number {
+    if (!this.personalCompetencies.length) {
+      return 0;
+    }
+
+    const completedBonus = this.personalCompetencies.filter(item => item.gap <= 0).length * 6;
+    const baseline = 100 - (this.averageGapLevel * 2.2) + completedBonus;
+    return Math.max(0, Math.min(100, Math.round(baseline)));
+  }
+
+  get radarSkills(): Array<{ name: string; current: number; target: number }> {
+    return this.personalCompetencies
+      .slice(0, 6)
+      .map(item => ({
+        name: item.skillName,
+        current: item.currentLevel,
+        target: item.targetLevel
+      }));
+  }
+
+  get radarCurrentPoints(): string {
+    const values = this.radarSkills.map(item => item.current);
+    return this.buildRadarPoints(values);
+  }
+
+  get radarTargetPoints(): string {
+    const values = this.radarSkills.map(item => item.target);
+    return this.buildRadarPoints(values);
+  }
+
+  get skillTips(): SkillTip[] {
+    return this.personalCompetencies.slice(0, 8).map(item => {
+      const target = Math.max(1, item.targetLevel);
+      const progress = Math.max(0, Math.min(100, Math.round((item.currentLevel / target) * 100)));
+      const tip = this.getPersonalizedTip(item);
+
+      return {
+        id: item.id,
+        skillName: item.skillName,
+        current: item.currentLevel,
+        target: item.targetLevel,
+        progress,
+        tip
+      };
+    });
+  }
+
+  get learningPath(): LearningStep[] {
+    const ordered = [...this.personalCompetencies]
+      .sort((a, b) => {
+        const aDone = a.gap <= 0 ? 1 : 0;
+        const bDone = b.gap <= 0 ? 1 : 0;
+        if (aDone !== bDone) {
+          return aDone - bDone;
+        }
+        return b.gap - a.gap;
+      })
+      .slice(0, 6);
+
+    const firstPendingIndex = ordered.findIndex(item => item.gap > 0);
+
+    return ordered.map((item, index) => {
+      let state: LearningState = 'locked';
+      if (item.gap <= 0) {
+        state = 'done';
+      } else if (firstPendingIndex === index) {
+        state = 'active';
+      }
+
+      const target = Math.max(1, item.targetLevel);
+      const progress = Math.max(0, Math.min(100, Math.round((item.currentLevel / target) * 100)));
+
+      return {
+        id: item.id,
+        title: item.skillName,
+        progress,
+        state,
+        summary: state === 'done'
+          ? 'Objectif atteint. Consolider le niveau.'
+          : state === 'active'
+            ? 'Priorite actuelle pour gagner en impact rapidement.'
+            : 'Etape suivante apres la skill active.'
+      };
+    });
+  }
+
+  get memberBadges(): MemberBadge[] {
+    const sessionsWithSpeech = this.personalCompetencies.filter(item => item.lastUpdatedBy === 'SPEECH_ANALYZER').length;
+
+    return [
+      {
+        id: 'starter',
+        title: 'Starter',
+        icon: 'S',
+        unlocked: this.totalSkillsCount > 0,
+        hint: 'Avoir au moins une competence suivie.'
+      },
+      {
+        id: 'steady',
+        title: 'Steady Builder',
+        icon: 'B',
+        unlocked: this.totalSkillsCount >= 4,
+        hint: 'Suivre au moins 4 competences.'
+      },
+      {
+        id: 'crusher',
+        title: 'Gap Crusher',
+        icon: 'G',
+        unlocked: this.averageGapLevel <= 10 && this.totalSkillsCount > 0,
+        hint: 'Maintenir un gap moyen <= 10.'
+      },
+      {
+        id: 'speaker',
+        title: 'Voice Performer',
+        icon: 'V',
+        unlocked: sessionsWithSpeech >= 1 || this.liveScore >= 70,
+        hint: 'Synchroniser au moins une session Speech Analyzer.'
+      },
+      {
+        id: 'elite',
+        title: 'Elite Ready',
+        icon: 'E',
+        unlocked: this.readinessScore >= 80,
+        hint: 'Atteindre un readiness score >= 80.'
+      }
+    ];
+  }
+
+  get latestSpeechSummary(): SpeechSessionSummary {
+    const speechEntries = this.personalCompetencies
+      .filter(item => item.lastUpdatedBy === 'SPEECH_ANALYZER')
+      .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
+
+    const latest = speechEntries[0];
+    const hasLiveData = this.liveScore > 0 || this.liveConfidence > 0 || !!this.speechTestFeedback;
+
+    if (hasLiveData) {
+      return {
+        status: this.liveSocketState || 'ready',
+        score: this.liveScore,
+        level: this.liveLevel,
+        confidence: this.liveConfidence,
+        pace: this.liveSpeechRate,
+        feedback: this.speechTestFeedback || 'Session en cours. Continue pour obtenir plus de feedback.',
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    if (!latest) {
+      return {
+        status: 'not-started',
+        score: 0,
+        level: 'BEGINNER',
+        confidence: 0,
+        pace: 0,
+        feedback: 'Aucune session Speech Analyzer synchronisee pour le moment.',
+        updatedAt: ''
+      };
+    }
+
+    return {
+      status: 'synced',
+      score: latest.currentLevel,
+      level: latest.currentLevel >= 75 ? 'ADVANCED' : latest.currentLevel >= 50 ? 'INTERMEDIATE' : 'BEGINNER',
+      confidence: this.liveConfidence,
+      pace: this.liveSpeechRate,
+      feedback: this.speechTestFeedback || 'Derniere session synchronisee avec succes.',
+      updatedAt: latest.lastUpdated
+    };
   }
 
   get isEditing(): boolean {
@@ -115,14 +373,29 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   }
 
   get filteredMemberCompetencies(): MemberCompetencyResponse[] {
-    return this.selectedMemberUserId > 0
-      ? this.memberCompetencies.filter(item => item.userId === this.selectedMemberUserId)
+    const targetUserId = this.isMemberRole ? this.currentUserId : this.selectedMemberUserId;
+    return targetUserId > 0
+      ? this.memberCompetencies.filter(item => item.userId === targetUserId)
       : this.memberCompetencies;
+  }
+
+  get visibleMemberCompetenciesForSpeech(): MemberCompetencyResponse[] {
+    if (this.isMemberRole) {
+      return this.memberCompetencies.filter(item => item.userId === this.currentUserId);
+    }
+
+    return this.memberCompetencies;
   }
 
   loadInitialData(): void {
     this.loading = true;
     this.errorMessage = '';
+
+    if (this.isMemberRole) {
+      this.members = [];
+      this.loadCompetencies();
+      return;
+    }
 
     this.apiService.getClubMembers(this.clubId).subscribe({
       next: (members) => {
@@ -163,11 +436,15 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   }
 
   loadMemberCompetencies(): void {
-    this.apiService.getMemberCompetenciesByClub(this.clubId).subscribe({
+    const request$ = this.isMemberRole
+      ? this.apiService.getMemberCompetenciesByUser(this.currentUserId)
+      : this.apiService.getMemberCompetenciesByClub(this.clubId);
+
+    request$.subscribe({
       next: (items) => {
         this.memberCompetencies = items;
-        if (this.selectedSpeechMemberCompetencyId === 0 && this.memberCompetencies.length > 0) {
-          this.selectedSpeechMemberCompetencyId = this.memberCompetencies[0].id;
+        if (this.selectedSpeechMemberCompetencyId === 0 && this.visibleMemberCompetenciesForSpeech.length > 0) {
+          this.selectedSpeechMemberCompetencyId = this.visibleMemberCompetenciesForSpeech[0].id;
         }
         this.loading = false;
       },
@@ -855,6 +1132,42 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
     return '';
   }
 
+  private buildRadarPoints(values: number[]): string {
+    if (!values.length) {
+      return '';
+    }
+
+    const size = 220;
+    const center = size / 2;
+    const maxRadius = 85;
+    const angleStep = (Math.PI * 2) / values.length;
+
+    return values.map((value, index) => {
+      const ratio = Math.max(0, Math.min(100, value)) / 100;
+      const radius = ratio * maxRadius;
+      const angle = (-Math.PI / 2) + (index * angleStep);
+      const x = center + (Math.cos(angle) * radius);
+      const y = center + (Math.sin(angle) * radius);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(' ');
+  }
+
+  private getPersonalizedTip(item: MemberCompetencyResponse): string {
+    if (item.gap <= 0) {
+      return 'Niveau atteint. Passe en mode mentoring pour aider un autre membre.';
+    }
+    if (item.gap <= 10) {
+      return 'Tu es proche de l objectif: fais 1 session pratique ciblee cette semaine.';
+    }
+    if (item.lastUpdatedBy === 'SPEECH_ANALYZER') {
+      return 'Refais une session vocale avec plan: intro, 2 arguments, conclusion.';
+    }
+    if (item.lastUpdatedBy === 'PEER_ENDORSEMENT') {
+      return 'Demande un feedback concret apres chaque collaboration pour accelerer.';
+    }
+    return 'Coupe l objectif en 2 micro-etapes et planifie une action avant 48h.';
+  }
+
   get improvementTips(): string[] {
     const tips: string[] = [];
     const reliablePace = this.liveConfidence >= 82;
@@ -891,6 +1204,10 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   }
 
   getMemberLabel(userId: number): string {
+    if (this.isMemberRole && userId === this.currentUserId) {
+      return this.currentUserFullName || 'Mon profil';
+    }
+
     const member = this.members.find(item => item.userId === userId);
     if (!member) {
       return `User #${userId}`;
