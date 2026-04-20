@@ -59,6 +59,11 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   toastVisible = false;
   private toastTimer?: ReturnType<typeof setTimeout>;
 
+  showCompareReport = false;
+  compareLoading = false;
+  compareError = '';
+  reportSections: { type: string; title: string; content: string }[] = [];
+
   constructor(
     private voteService: VoteService,
     private electionService: ElectionService,
@@ -77,7 +82,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  
+
 
   loadElections(): void {
     const clubId = this.authHelper.getClubId();
@@ -144,7 +149,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  
+
 
   buildElectionSlices(): void {
     const items = this.elections;
@@ -194,7 +199,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     }
 
     const slices: PieSlice[] = [];
-    let currentAngle = -90; 
+    let currentAngle = -90;
 
     for (let i = 0; i < count; i++) {
       const pct = percentages[i];
@@ -226,7 +231,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     return slices;
   }
 
-  
+
 
   private describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
     const isFullCircle = (endAngle - startAngle) >= 360;
@@ -256,7 +261,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     return `${value.slice(0, Math.max(1, maxChars - 1)).trim()}…`;
   }
 
-  
+
 
   onSliceHover(index: number): void {
     this.hoveredIndex = index;
@@ -290,7 +295,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     this.hoveredIndex = -1;
     this.errorMessage = '';
 
-    
+
     this.animState = 'fading-out';
     setTimeout(() => {
       this.view = 'candidates';
@@ -321,7 +326,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
   }
 
-  
+
 
   get voteButtonLabel(): string {
     if (!this.userVote) return 'Vote';
@@ -342,20 +347,20 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     if (!this.userVote) {
-      
+
       const payload = { electionId: this.selectedElection.id, candidateId: this.selectedCandidate.id };
       this.voteService.castVote(payload).subscribe({
         next: () => this.afterVoteAction(),
         error: (err) => this.handleVoteError(err)
       });
     } else if (this.userVote.candidate?.id === this.selectedCandidate.id) {
-      
+
       this.voteService.delete(this.userVote.id).subscribe({
         next: () => this.afterVoteAction(),
         error: (err) => this.handleVoteError(err)
       });
     } else {
-      
+
       const payload = { electionId: this.selectedElection.id, candidateId: this.selectedCandidate.id };
       this.voteService.update(this.userVote.id, payload).subscribe({
         next: () => this.afterVoteAction(),
@@ -395,7 +400,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     }, 3200);
   }
 
-  
+
 
   getInitials(name: string): string {
     if (!name) return '?';
@@ -407,5 +412,116 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   getCandidateStatusLabel(status: string): string {
     if (!status) return 'Unknown';
     return status.charAt(0) + status.slice(1).toLowerCase();
+  }
+
+  onCompare(): void {
+    if (this.candidates.length < 2 || this.compareLoading) return;
+
+    this.compareLoading = true;
+    this.compareError = '';
+    this.reportSections = [];
+    this.showCompareReport = true;
+
+    const payload = {
+      candidates: this.candidates.map((c: any) => ({
+        name: c.userName || 'Unknown',
+        bio: c.bio || '',
+        program: c.program || '',
+        status: c.status || '',
+        voteCount: c.voteCount || 0,
+        percentage: c.percentage || 0
+      })),
+      electionTitle: this.selectedElection?.title || '',
+      positionName: this.selectedElection?.position?.name || ''
+    };
+
+    this.candidateService.compareCandidates(payload).subscribe({
+      next: (res) => {
+        this.compareLoading = false;
+        this.reportSections = this.parseReport(res.report);
+      },
+      error: (err) => {
+        this.compareLoading = false;
+        this.compareError = err.error?.detail || 'AI comparison failed. Try again.';
+      }
+    });
+  }
+
+  parseReport(raw: string): { type: string; title: string; content: string }[] {
+    const sections: { type: string; title: string; content: string }[] = [];
+
+    let splitRegex = /\[([A-Z][A-Z_ ]*)\]/g;
+    let parts = raw.split(splitRegex);
+
+    if (parts.length < 3) {
+      splitRegex = /§§([^§]+)§§/g;
+      parts = raw.split(splitRegex);
+    }
+
+    if (parts.length < 3) {
+      splitRegex = /###?\s+(.+)/gm;
+      const lines = raw.split('\n');
+      const rebuilt: string[] = [''];
+      const headers: string[] = [];
+      for (const line of lines) {
+        const m = line.match(/^###?\s+(.+)/);
+        if (m) {
+          headers.push(m[1].replace(/\*\*/g, '').trim());
+          rebuilt.push('');
+        } else {
+          rebuilt[rebuilt.length - 1] += (rebuilt[rebuilt.length - 1] ? '\n' : '') + line;
+        }
+      }
+      if (headers.length > 0) {
+        parts = [rebuilt[0]];
+        for (let i = 0; i < headers.length; i++) {
+          parts.push(headers[i]);
+          parts.push(rebuilt[i + 1] || '');
+        }
+      }
+    }
+
+    for (let i = 1; i < parts.length; i += 2) {
+      const header = parts[i].trim().toUpperCase().replace(/[^A-Z ]/g, '').trim();
+      const content = (parts[i + 1] || '').replace(/\*\*/g, '').replace(/^[-•]\s*/gm, '').trim();
+      if (!content) continue;
+
+      let type = 'info';
+      let title = parts[i].replace(/\*\*/g, '').trim();
+
+      if (header.includes('OVERVIEW')) {
+        type = 'overview';
+        title = 'Race Overview';
+      } else if (header.includes('COMPARISON') || header.includes('STRENGTHS') || header.includes('STRENGTH')) {
+        type = 'strengths';
+        title = 'Candidate Comparison';
+      } else if (header.includes('VERDICT') || header.includes('CONCLUSION') || header.includes('ASSESSMENT')) {
+        type = 'verdict';
+        title = 'Final Assessment';
+      } else if (header.includes('CANDIDATE')) {
+        type = 'candidate';
+        title = title.replace(/CANDIDATE:?\s*/i, '').trim();
+      }
+
+      sections.push({ type, title, content });
+    }
+
+    if (sections.length === 0 && raw.trim()) {
+      const cleaned = raw.replace(/\*\*/g, '').replace(/^#+\s*/gm, '').trim();
+      sections.push({ type: 'overview', title: 'AI Analysis', content: cleaned });
+    }
+
+    return sections;
+  }
+
+  closeReport(): void {
+    this.showCompareReport = false;
+    this.reportSections = [];
+    this.compareError = '';
+  }
+
+  getCandidateColor(name: string): string {
+    const idx = this.candidates.findIndex((c: any) => (c.userName || '').toLowerCase() === name.toLowerCase());
+    return this.palette[(idx >= 0 ? idx : 0) % this.palette.length];
   }
 }

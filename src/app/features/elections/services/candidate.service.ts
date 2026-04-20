@@ -42,4 +42,12 @@ export class CandidateService {
     return this.http.post<{ bio: string; prompt: string }>(`${this.bioGeneratorApiUrl}/generate-bio`, payload);
   }
 
+  compareCandidates(payload: {
+    candidates: { name: string; bio: string; program: string; status: string; voteCount: number; percentage: number }[];
+    electionTitle?: string;
+    positionName?: string;
+  }): Observable<{ report: string; prompt: string }> {
+    return this.http.post<{ report: string; prompt: string }>(`${this.bioGeneratorApiUrl}/compare-candidates`, payload);
+  }
+
 }
