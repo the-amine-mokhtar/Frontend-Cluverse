@@ -478,6 +478,16 @@ td p {
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  &--blue {
+    background: #3b82f6;
+    border-color: #60a5fa;
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+      background: #2563eb;
+    }
+  }
 }
 
 .manual-close-btn__spinner {

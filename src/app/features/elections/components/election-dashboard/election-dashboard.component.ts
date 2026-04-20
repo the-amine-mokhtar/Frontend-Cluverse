@@ -405,6 +405,49 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
     });
   }
 
+  viewResultsPoster(): void {
+    if (!this.selectedElection || !this.electionStatusIs(this.selectedElection, 'CLOSED')) {
+      return;
+    }
+
+    if (this.selectedLeaderboard.length === 0) {
+      this.showCloseToast('No candidates available to show results.', 'error');
+      return;
+    }
+
+    const winner = this.selectedLeaderboard[0];
+    const nameParts = winner.name.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ');
+
+    const closeResult: ElectionCloseResult = {
+      electionId: this.selectedElection.id,
+      electionTitle: this.selectedElection.title,
+      positionName: this.selectedElection.position?.name || '',
+      clubName: this.clubName,
+      startDate: this.selectedElection.startDate,
+      closedAt: this.selectedElection.endDate || new Date().toISOString(),
+      winnerCandidateId: winner.id,
+      winnerFirstName: firstName,
+      winnerLastName: lastName,
+      candidates: this.selectedLeaderboard.map(c => {
+        const parts = c.name.split(' ');
+        return {
+          candidateId: c.id,
+          firstName: parts[0],
+          lastName: parts.slice(1).join(' '),
+          fullName: c.name,
+          votes: c.voteCount
+        };
+      })
+    };
+
+    this.closeResult = closeResult;
+    this.generateResultGraphic(closeResult).then(() => {
+      this.showResultModal = true;
+    });
+  }
+
   closeResultModal(): void {
     this.showResultModal = false;
     if (this.resultImageUrl) {
@@ -1109,38 +1152,62 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
       ctx.textAlign = 'left';
     });
 
-    let listY = podiumTop + 70;
+    let listY = podiumTop + 80;
     ctx.strokeStyle = 'rgba(148,163,184,0.4)';
     ctx.lineWidth = 1;
-const marginTop = 2;
-const marginBottom = 2;
+    const marginTop = 2;
+    const marginBottom = 2;
 
-for (let i = 3; i < result.candidates.length; i += 1) {
-  const candidate = result.candidates[i];
+    for (let i = 3; i < result.candidates.length; i += 1) {
+      const candidate = result.candidates[i];
 
-  ctx.beginPath();
-  ctx.moveTo(72, listY - 26);
-  ctx.lineTo(width - 72, listY - 26);
-  ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(72, listY - 26);
+      ctx.lineTo(width - 72, listY - 26);
+      ctx.stroke();
 
-  ctx.fillStyle = '#cbd5e1';
-  ctx.font = '600 24px Inter, Arial';
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '600 24px Inter, Arial';
 
-  ctx.fillText(
-    `${i + 1}. ${candidate.fullName} (${candidate.votes} votes)`,
-    72,
-    listY + marginTop
-  );
+      ctx.fillText(
+        `${i + 1}. ${candidate.fullName} (${candidate.votes} votes)`,
+        72,
+        listY + marginTop
+      );
 
-  listY += 46 + marginTop + marginBottom;
-}
+      listY += 46 + marginTop + marginBottom;
+    }
 
     const logo = await this.loadImage('assets/logos/Logo+Nom+Slogan.png');
     if (logo) {
       const logoWidth = 360;
       const scale = logoWidth / logo.width;
       const logoHeight = logo.height * scale;
-      ctx.drawImage(logo, 42, height - logoHeight - 28, logoWidth, logoHeight);
+      ctx.drawImage(logo, 42, listY + 40, logoWidth, logoHeight);
+      
+      const minimumTotalHeight = listY + 40 + logoHeight + 40;
+      if (minimumTotalHeight > height) {
+         
+         const safeCanvas = document.createElement('canvas');
+         safeCanvas.width = width;
+         safeCanvas.height = minimumTotalHeight;
+         const safeCtx = safeCanvas.getContext('2d');
+         if (safeCtx) {
+           const safeGradient = safeCtx.createLinearGradient(0, 0, width, minimumTotalHeight);
+           safeGradient.addColorStop(0, '#0f172a');
+           safeGradient.addColorStop(1, '#1e293b');
+           safeCtx.fillStyle = safeGradient;
+           safeCtx.fillRect(0, 0, width, minimumTotalHeight);
+           safeCtx.drawImage(canvas, 0, 0);
+           safeCtx.drawImage(logo, 42, listY + 40, logoWidth, logoHeight);
+           
+           canvas.height = minimumTotalHeight;
+           const finalCtx = canvas.getContext('2d');
+           if (finalCtx) {
+              finalCtx.drawImage(safeCanvas, 0, 0);
+           }
+         }
+      }
     }
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));

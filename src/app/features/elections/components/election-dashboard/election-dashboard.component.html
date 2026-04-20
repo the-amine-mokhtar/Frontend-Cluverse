@@ -180,15 +180,26 @@
             <h3>Real-Time Candidate Vote Viewer</h3>
             <p>Each dot is one vote in motion inside the candidate sphere.</p>
           </div>
-          <button
-            class="manual-close-btn"
-            type="button"
-            [disabled]="isClosingElection || !electionStatusIs(selectedElection, 'OPEN')"
-            (click)="closeElectionManually()"
-          >
-            <span class="manual-close-btn__spinner" *ngIf="isClosingElection"></span>
-            {{ isClosingElection ? 'Closing election…' : 'Manually close' }}
-          </button>
+          <ng-container *ngIf="electionStatusIs(selectedElection, 'CLOSED'); else defaultCloseBtn">
+            <button
+              class="manual-close-btn manual-close-btn--blue"
+              type="button"
+              (click)="viewResultsPoster()"
+            >
+              Download results poster
+            </button>
+          </ng-container>
+          <ng-template #defaultCloseBtn>
+            <button
+              class="manual-close-btn"
+              type="button"
+              [disabled]="isClosingElection || !electionStatusIs(selectedElection, 'OPEN')"
+              (click)="closeElectionManually()"
+            >
+              <span class="manual-close-btn__spinner" *ngIf="isClosingElection"></span>
+              {{ isClosingElection ? 'Closing election…' : 'Manually close' }}
+            </button>
+          </ng-template>
         </div>
         <div class="close-error" *ngIf="closeError">{{ closeError }}</div>
 
