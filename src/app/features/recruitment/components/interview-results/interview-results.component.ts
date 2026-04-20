@@ -13,6 +13,9 @@ export class InterviewResultsComponent implements OnInit {
   loadError = '';
   applications: any[] = [];
   selectedResult: any = null;
+  showConversation = false;
+  conversationMessages: any[] = [];
+  isLoadingConversation = false;
 
   constructor(private route: ActivatedRoute, private api: ApiService) {}
 
@@ -68,5 +71,22 @@ export class InterviewResultsComponent implements OnInit {
     if (score >= 80) return 'score-high';
     if (score >= 50) return 'score-mid';
     return 'score-low';
+  }
+
+  loadConversation(applicationId: number): void {
+    this.isLoadingConversation = true;
+    this.showConversation = true;
+    this.api.getInterviewMessages(applicationId).subscribe({
+      next: (messages) => {
+        this.conversationMessages = messages;
+        this.isLoadingConversation = false;
+      },
+      error: () => { this.isLoadingConversation = false; }
+    });
+  }
+
+  closeConversation(): void {
+    this.showConversation = false;
+    this.conversationMessages = [];
   }
 }

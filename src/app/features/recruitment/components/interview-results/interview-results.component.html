@@ -124,6 +124,35 @@
               </ul>
             </section>
           </div>
+
+          <!-- Bouton voir conversation -->
+          <div style="margin-top: 1.5rem; text-align: center;" *ngIf="selectedResult?.interviewResult?.status === 'TERMINE'">
+            <button class="btn btn--outline" (click)="loadConversation(selectedResult.id)">
+              💬 Voir la conversation complète
+            </button>
+          </div>
+
+          <!-- Conversation -->
+          <div *ngIf="showConversation" style="margin-top: 1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h4 style="color: var(--heading);">Conversation</h4>
+              <button class="btn btn--text" (click)="closeConversation()">Fermer ✕</button>
+            </div>
+            <div *ngIf="isLoadingConversation" style="text-align:center; padding:1rem; color:var(--body);">
+              <div class="spinner"></div>
+            </div>
+            <div *ngFor="let msg of conversationMessages" style="margin-bottom: 0.75rem;">
+              <div [style.padding]="'0.75rem 1rem'"
+                   [style.border-radius]="'10px'"
+                   [style.background]="msg.role === 'recruiter' ? 'rgba(45,212,191,0.08)' : 'rgba(255,255,255,0.04)'"
+                   [style.border-left]="msg.role === 'recruiter' ? '3px solid #2dd4bf' : '3px solid rgba(255,255,255,0.2)'">
+                <div style="font-size:0.75rem; font-weight:600; color:rgba(255,255,255,0.4); margin-bottom:0.3rem;">
+                  {{ msg.role === 'recruiter' ? '🤖 Recruteur IA' : '👤 Candidat' }}
+                </div>
+                <p style="color:rgba(255,255,255,0.85); margin:0; line-height:1.6; font-size:0.9rem;">{{ msg.text }}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

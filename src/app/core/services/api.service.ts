@@ -325,6 +325,14 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
       { headers: this.authHeaders() }
     ).pipe(catchError(this.handleError));
   }
+
+  getInterviewMessages(applicationId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.baseUrl}/api/interview-configs/application/${applicationId}/messages`,
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
 }
+
 
 
