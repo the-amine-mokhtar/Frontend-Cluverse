@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment.development';
@@ -9,6 +9,18 @@ import { environment } from '../../../../../environments/environment.development
   styleUrl: './interview-room.component.scss'
 })
 export class InterviewRoomComponent implements OnInit, OnDestroy {
+  @ViewChild('avatarVideo') avatarVideo!: ElementRef<HTMLVideoElement>;
+  
+  private _videoRef!: ElementRef<HTMLVideoElement>;
+  @ViewChild('videoRef') set videoRefSetter(el: ElementRef<HTMLVideoElement>) {
+    if (el) {
+      this._videoRef = el;
+      this.initWebcam();
+    }
+  }
+
+  avatarSrc = 'assets/animations/avatar-idle.mp4';
+
   uniqueLink!: string;
   config: any = null;
   sessionId: string = '';
@@ -40,6 +52,35 @@ export class InterviewRoomComponent implements OnInit, OnDestroy {
     } else {
       this.startInterview();
     }
+  }
+
+  initWebcam(): void {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          if (this._videoRef && this._videoRef.nativeElement) {
+            this._videoRef.nativeElement.srcObject = stream;
+          }
+        })
+        .catch(err => console.error("Webcam error:", err));
+    }
+  }
+
+  switchAvatar(talking: boolean): void {
+    this.avatarSrc = talking
+      ? 'assets/animations/avatar-talking.mp4'
+      : 'assets/animations/avatar-idle.mp4';
+    if (this.avatarVideo && this.avatarVideo.nativeElement) {
+      setTimeout(() => {
+        this.avatarVideo.nativeElement.load();
+        this.avatarVideo.nativeElement.play().catch(e => console.error("Avatar playback error", e));
+      }, 50);
+    }
+  }
+
+  get lastRecruiterMessage(): string {
+    const recruiterMsgs = this.messages.filter(m => m.role === 'recruiter');
+    return recruiterMsgs.length > 0 ? recruiterMsgs[recruiterMsgs.length - 1].text : '';
   }
 
   startInterview(): void {
@@ -74,6 +115,7 @@ export class InterviewRoomComponent implements OnInit, OnDestroy {
   speak(text: string): void {
     this.synth.cancel();
     this.isRecruiterSpeaking = true;
+    this.switchAvatar(true);
     this.stopListening();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'fr-FR';
@@ -83,6 +125,7 @@ export class InterviewRoomComponent implements OnInit, OnDestroy {
     utterance.onend = () => {
       this.zone.run(() => {
         this.isRecruiterSpeaking = false;
+        this.switchAvatar(false);
         this.startListening();
       });
     };
@@ -207,5 +250,9 @@ export class InterviewRoomComponent implements OnInit, OnDestroy {
     this.synth.cancel();
     clearInterval(this.timerInterval);
     if (this.silenceTimer) clearTimeout(this.silenceTimer);
+    if (this._videoRef && this._videoRef.nativeElement && this._videoRef.nativeElement.srcObject) {
+      const stream = this._videoRef.nativeElement.srcObject as MediaStream;
+      stream.getTracks().forEach(t => t.stop());
+    }
   }
 }
