@@ -102,6 +102,8 @@ body.light-mode .layout {
 
 body.light-mode .layout__content {
   background-color: #f0f4f8;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* ─── Sidebar ───────────────────────────────────────────── */

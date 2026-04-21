@@ -21,6 +21,7 @@ import {
   CreateSponsorshipRequest,
   UpdateSponsorshipRequest
 } from '../../../../core/services/sponsorship.service';
+import { environment } from '../../../../../environments/environment.development';
 
 interface CountryCodeOption {
   code: string;
@@ -46,6 +47,45 @@ interface SponsorshipMoveGuide {
   note: string;
 }
 
+interface CurvePoint {
+  x: number;
+  y: number;
+  value: number;
+  label: string;
+}
+
+interface SponsorCurveSeries {
+  sponsorId: number;
+  sponsorName: string;
+  color: string;
+  points: CurvePoint[];
+  path: string;
+}
+
+interface SponsorCurveXAxisLabel {
+  x: number;
+  label: string;
+  show: boolean;
+}
+
+interface SponsorCurveModel {
+  series: SponsorCurveSeries[];
+  yTicks: number[];
+  xLabels: SponsorCurveXAxisLabel[];
+  maxValue: number;
+}
+
+interface LifecyclePieSlice {
+  label: string;
+  value: number;
+  percent: number;
+  color: string;
+  path: string;
+  labelX: number;
+  labelY: number;
+  textColor: string;
+}
+
 @Component({
   selector: 'app-sponsorship-home',
   templateUrl: './sponsorship-home.component.html',
@@ -53,6 +93,14 @@ interface SponsorshipMoveGuide {
 })
 export class SponsorshipHomeComponent implements OnInit, OnDestroy {
   sectionTab: 'SPONSORS' | 'SPONSORSHIPS' = 'SPONSORS';
+  showSponsorsCurve = false;
+  selectedCurveSponsorId: number | 'ALL' = 'ALL';
+  selectedCurveMonthKey: string | 'ALL' = 'ALL';
+  readonly curveViewBoxWidth = 860;
+  readonly curveViewBoxHeight = 460;
+  readonly curvePadding = { top: 24, right: 16, bottom: 56, left: 44 };
+  readonly curvePalette = ['#f7b91c', '#60a5fa', '#34d399', '#fb7185', '#a78bfa', '#22d3ee', '#f97316', '#84cc16'];
+  lifecyclePieHoverLabel = '';
 
   readonly sponsorshipColumns: SponsorshipColumn[] = [
     { status: 'PROSPECTING', label: 'Prospecting' },
@@ -66,8 +114,10 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
   sponsorshipsLoading = false;
   sponsorshipsError = '';
   sponsorshipSaving = false;
+  sponsorshipSearchQuery = '';
   showAddSponsorshipForm = false;
   showEditSponsorshipForm = false;
+  showSponsorshipDetails = false;
   sponsorshipEditStatus: SponsorshipStatus = 'PROSPECTING';
   private sponsorshipRefreshTimer?: ReturnType<typeof setInterval>;
 
@@ -80,6 +130,15 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
   };
 
   sponsorshipEditId: number | null = null;
+  selectedSponsorshipDetails: Sponsorship | null = null;
+  showSponsorHistoryModal = false;
+  selectedHistorySponsor: Sponsor | null = null;
+  selectedHistorySponsorship: Sponsorship | null = null;
+  historyEmailsLoading = false;
+  historyEmailsError = '';
+  historyEmails: SponsorEmail[] = [];
+  historyCurrentPage = 1;
+  readonly historyPageSize = 6;
   sponsorshipEditForm: UpdateSponsorshipRequest = {
     eventName: '',
     expectedAmount: null,
@@ -184,7 +243,7 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
   editLogoPreview = '';
 
   currentPage = 1;
-  readonly pageSize = 5;
+  readonly pageSize = 7;
 
   form: CreateSponsorRequest = {
     name: '',
@@ -214,6 +273,9 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
         this.startSponsorshipAutoRefresh();
       } else {
         this.stopSponsorshipAutoRefresh();
+        if (this.sponsorships.length === 0) {
+          this.loadSponsorships();
+        }
       }
     });
   }
@@ -230,6 +292,7 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.sponsors = [...data].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
         this.currentPage = 1;
+        this.ensureCurveMonthSelection();
         this.isLoading = false;
       },
       error: () => {
@@ -339,6 +402,585 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
 
   get totalPages(): number {
     return Math.max(1, Math.ceil(this.filteredSponsors.length / this.pageSize));
+  }
+
+  get totalSponsorsCount(): number {
+    return this.sponsors.length;
+  }
+
+  get pendingSponsorsCount(): number {
+    return this.sponsors.filter(s => (s.status || 'PENDING').toUpperCase() === 'PENDING').length;
+  }
+
+  get confirmedSponsorsCount(): number {
+    return this.sponsors.filter(s => (s.status || '').toUpperCase() === 'CONFIRMED').length;
+  }
+
+  get deniedSponsorsCount(): number {
+    return this.sponsors.filter(s => (s.status || '').toUpperCase() === 'DENIED').length;
+  }
+
+  get sponsorConfirmationRate(): number {
+    if (this.totalSponsorsCount === 0) {
+      return 0;
+    }
+    return Math.round((this.confirmedSponsorsCount / this.totalSponsorsCount) * 100);
+  }
+
+  get prospectingSponsorshipPercent(): number {
+    return this.sponsorshipStatusShare('PROSPECTING');
+  }
+
+  get outreachSponsorshipPercent(): number {
+    return this.sponsorshipStatusShare('OUTREACH_SENT');
+  }
+
+  get contractSponsorshipPercent(): number {
+    return this.sponsorshipStatusShare('CONTRACT_SENT');
+  }
+
+  get signedSponsorshipPercent(): number {
+    return this.sponsorshipStatusShare('SIGNED');
+  }
+
+  get paidSponsorshipPercent(): number {
+    return this.sponsorshipStatusShare('PAID');
+  }
+
+  get sponsorshipStagePieStyle(): Record<string, string> {
+    const total = this.totalSponsorshipCount;
+    if (total <= 0) {
+      return {
+        background: 'conic-gradient(#334155 0deg 360deg)'
+      };
+    }
+
+    const slices = [
+      { value: this.sponsorshipStatusCount('PROSPECTING'), color: '#64748b' },
+      { value: this.sponsorshipStatusCount('OUTREACH_SENT'), color: '#38bdf8' },
+      { value: this.sponsorshipStatusCount('CONTRACT_SENT'), color: '#f7b91c' },
+      { value: this.sponsorshipStatusCount('SIGNED'), color: '#22c55e' },
+      { value: this.sponsorshipStatusCount('PAID'), color: '#e05c5c' }
+    ];
+
+    let currentDeg = 0;
+    const segments = slices.map((slice) => {
+      const start = currentDeg;
+      const sweep = (slice.value / total) * 360;
+      currentDeg += sweep;
+      const end = Math.min(360, currentDeg);
+      return `${slice.color} ${start}deg ${end}deg`;
+    });
+
+    return {
+      background: `conic-gradient(${segments.join(', ')})`
+    };
+  }
+
+  get sponsorsCurveFilterOptions(): Array<{ sponsorId: number; sponsorName: string }> {
+    const grouped = new Map<number, string>();
+    for (const sponsor of this.sponsors) {
+      if (!sponsor.id) {
+        continue;
+      }
+      grouped.set(sponsor.id, sponsor.name || `Sponsor #${sponsor.id}`);
+    }
+    for (const item of this.sponsorships) {
+      if (item.sponsorId && !grouped.has(item.sponsorId)) {
+        grouped.set(item.sponsorId, item.sponsorName || `Sponsor #${item.sponsorId}`);
+      }
+    }
+    return Array.from(grouped.entries())
+      .map(([sponsorId, sponsorName]) => ({ sponsorId, sponsorName }))
+      .sort((a, b) => a.sponsorName.localeCompare(b.sponsorName));
+  }
+
+  get curveMonthOptions(): Array<{ key: string; label: string }> {
+    const monthKeys = new Set<string>();
+
+    for (const sponsor of this.sponsors) {
+      const key = this.toMonthKey(sponsor.joinDate);
+      if (key) {
+        monthKeys.add(key);
+      }
+    }
+
+    for (const item of this.sponsorships) {
+      const key = this.toMonthKey(item.createdAt);
+      if (key) {
+        monthKeys.add(key);
+      }
+    }
+
+    return Array.from(monthKeys)
+      .sort((a, b) => b.localeCompare(a))
+      .map(key => ({ key, label: this.monthKeyToLongLabel(key) }));
+  }
+
+  get sponsorsCurveModel(): SponsorCurveModel {
+    const sourceSeries = this.buildCurveSourceSeries();
+    if (sourceSeries.length === 0) {
+      return {
+        series: [],
+        yTicks: [1, 0],
+        xLabels: [],
+        maxValue: 1
+      };
+    }
+
+    const window = this.resolveCurveWindow(sourceSeries);
+    if (!window) {
+      return {
+        series: [],
+        yTicks: [1, 0],
+        xLabels: [],
+        maxValue: 1
+      };
+    }
+
+    const plotWidth = this.curveViewBoxWidth - this.curvePadding.left - this.curvePadding.right;
+    const plotHeight = this.curveViewBoxHeight - this.curvePadding.top - this.curvePadding.bottom;
+    const startTs = window.start.getTime();
+    const endTs = window.end.getTime();
+    const span = Math.max(1, endTs - startTs);
+
+    const chartSeries: SponsorCurveSeries[] = [];
+    let maxValue = 1;
+
+    for (const row of sourceSeries) {
+      const dailyCounts = new Map<string, { date: Date; count: number }>();
+      for (const date of row.sponsorshipDates) {
+        const dateKey = this.toIsoDate(date);
+        const existing = dailyCounts.get(dateKey);
+        if (existing) {
+          existing.count += 1;
+          continue;
+        }
+        dailyCounts.set(dateKey, { date, count: 1 });
+      }
+
+      const points: CurvePoint[] = Array.from(dailyCounts.values())
+        .sort((a, b) => a.date.getTime() - b.date.getTime())
+        .map((entry) => ({
+          x: this.curvePadding.left + ((entry.date.getTime() - startTs) / span) * plotWidth,
+          y: 0,
+          value: entry.count,
+          label: entry.date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
+        }));
+
+      if (points.length === 0) {
+        continue;
+      }
+
+      maxValue = Math.max(maxValue, ...points.map(point => point.value));
+
+      chartSeries.push({
+        sponsorId: row.sponsorId,
+        sponsorName: row.sponsorName,
+        color: this.curveColorForSponsor(row.sponsorId),
+        points,
+        path: ''
+      });
+    }
+
+    if (chartSeries.length === 0) {
+      return {
+        series: [],
+        yTicks: [1, 0],
+        xLabels: [],
+        maxValue: 1
+      };
+    }
+
+    for (const series of chartSeries) {
+      const normalized = series.points.map(point => ({
+        ...point,
+        y: this.curvePadding.top + ((maxValue - point.value) / maxValue) * plotHeight
+      }));
+      series.points = normalized;
+      series.path = this.buildLinearPath(normalized);
+    }
+
+    const yTicks = this.buildCurveTicks(maxValue);
+    const xLabels = this.buildCurveXLabels(window.start, window.end, 7);
+
+    chartSeries.sort((a, b) => a.sponsorName.localeCompare(b.sponsorName));
+
+    return {
+      series: chartSeries,
+      yTicks,
+      xLabels,
+      maxValue
+    };
+  }
+
+  get sponsorsCurveEmptyState(): boolean {
+    return this.sponsorsCurveModel.series.length === 0;
+  }
+
+  get curveLegendSeries(): SponsorCurveSeries[] {
+    return this.sponsorsCurveModel.series;
+  }
+
+  toggleSponsorsCurveView(): void {
+    this.showSponsorsCurve = !this.showSponsorsCurve;
+  }
+
+  curveY(value: number, maxValue: number): number {
+    const normalizedMax = Math.max(1, maxValue);
+    const plotHeight = this.curveViewBoxHeight - this.curvePadding.top - this.curvePadding.bottom;
+    return this.curvePadding.top + ((normalizedMax - value) / normalizedMax) * plotHeight;
+  }
+
+  private buildCurveSourceSeries(): Array<{ sponsorId: number; sponsorName: string; sponsorshipDates: Date[] }> {
+    const sponsorshipBySponsor = new Map<number, Date[]>();
+    for (const item of this.sponsorships) {
+      if (!item.sponsorId) {
+        continue;
+      }
+      const created = this.toDateOnly(item.createdAt);
+      if (!created) {
+        continue;
+      }
+      const bucket = sponsorshipBySponsor.get(item.sponsorId) || [];
+      bucket.push(created);
+      sponsorshipBySponsor.set(item.sponsorId, bucket);
+    }
+
+    const result: Array<{ sponsorId: number; sponsorName: string; sponsorshipDates: Date[] }> = [];
+    for (const option of this.sponsorsCurveFilterOptions) {
+      if (this.selectedCurveSponsorId !== 'ALL' && option.sponsorId !== this.selectedCurveSponsorId) {
+        continue;
+      }
+
+      const sponsorshipDates = (sponsorshipBySponsor.get(option.sponsorId) || [])
+        .filter(date => this.selectedCurveMonthKey === 'ALL' || this.toMonthKey(this.toIsoDate(date)) === this.selectedCurveMonthKey)
+        .sort((a, b) => a.getTime() - b.getTime());
+      if (sponsorshipDates.length === 0) {
+        continue;
+      }
+
+      result.push({
+        sponsorId: option.sponsorId,
+        sponsorName: option.sponsorName,
+        sponsorshipDates
+      });
+    }
+
+    return result;
+  }
+
+  private resolveCurveWindow(sourceSeries: Array<{ sponsorshipDates: Date[] }>): { start: Date; end: Date } | null {
+    if (sourceSeries.length === 0) {
+      return null;
+    }
+
+    const allDates: Date[] = [];
+    for (const row of sourceSeries) {
+      allDates.push(...row.sponsorshipDates);
+    }
+    if (allDates.length === 0) {
+      return null;
+    }
+
+    const minDate = allDates.reduce((min, date) => date < min ? date : min, allDates[0]);
+    const maxDate = allDates.reduce((max, date) => date > max ? date : max, allDates[0]);
+
+    return { start: minDate, end: maxDate };
+  }
+
+  private toMonthKey(value?: string | null): string | null {
+    const date = this.toDateOnly(value);
+    if (!date) {
+      return null;
+    }
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  private monthKeyToLongLabel(key: string): string {
+    const [year, month] = key.split('-').map(value => Number(value));
+    if (!Number.isFinite(year) || !Number.isFinite(month)) {
+      return key;
+    }
+    const date = new Date(year, month - 1, 1);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  private toDateOnly(value?: string | null): Date | null {
+    if (!value) {
+      return null;
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private toIsoDate(value: Date): string {
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+  }
+
+  private curveColorForSponsor(sponsorId: number): string {
+    const index = Math.abs(sponsorId) % this.curvePalette.length;
+    return this.curvePalette[index];
+  }
+
+  private buildCurveTicks(maxValue: number): number[] {
+    const safeMax = Math.max(1, Math.ceil(maxValue));
+    if (safeMax <= 4) {
+      return Array.from({ length: safeMax + 1 }, (_, index) => safeMax - index);
+    }
+    const step = Math.ceil(safeMax / 4);
+    const top = step * 4;
+    return [top, top - step, top - 2 * step, top - 3 * step, 0];
+  }
+
+  private buildLinearPath(points: CurvePoint[]): string {
+    if (points.length === 0) {
+      return '';
+    }
+
+    let path = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i += 1) {
+      path += ` L ${points[i].x} ${points[i].y}`;
+    }
+    return path;
+  }
+
+  private buildSlightlySmoothedPoints(points: CurvePoint[]): CurvePoint[] {
+    if (points.length < 3) {
+      return points;
+    }
+
+    return points.map((point, index) => {
+      if (index === 0 || index === points.length - 1) {
+        return point;
+      }
+      const prev = points[index - 1];
+      const next = points[index + 1];
+      // Low-intensity smoothing to soften sharp angles without overshooting axes.
+      const y = (prev.y + (point.y * 6) + next.y) / 8;
+      return { ...point, y };
+    });
+  }
+
+  private buildCurveXLabels(start: Date, end: Date, slots: number): SponsorCurveXAxisLabel[] {
+    const startTs = start.getTime();
+    const endTs = end.getTime();
+    const span = Math.max(1, endTs - startTs);
+    const plotWidth = this.curveViewBoxWidth - this.curvePadding.left - this.curvePadding.right;
+
+    if (span === 1) {
+      return [{
+        x: this.curvePadding.left,
+        label: start.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
+        show: true
+      }];
+    }
+
+    const count = Math.max(2, slots);
+    const labels: SponsorCurveXAxisLabel[] = [];
+    for (let i = 0; i < count; i += 1) {
+      const ratio = i / (count - 1);
+      const ts = startTs + span * ratio;
+      const date = new Date(ts);
+      labels.push({
+        x: this.curvePadding.left + plotWidth * ratio,
+        label: date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
+        show: true
+      });
+    }
+    return labels;
+  }
+
+  private ensureCurveMonthSelection(): void {
+    const options = this.curveMonthOptions;
+    if (options.length === 0) {
+      this.selectedCurveMonthKey = 'ALL';
+      return;
+    }
+
+    if (this.selectedCurveMonthKey === 'ALL') {
+      this.selectedCurveMonthKey = options[0].key;
+      return;
+    }
+
+    const exists = options.some(option => option.key === this.selectedCurveMonthKey);
+    if (!exists) {
+      this.selectedCurveMonthKey = options[0].key;
+    }
+  }
+
+  get sponsorshipLifecycleSlices(): LifecyclePieSlice[] {
+    const total = this.totalSponsorshipCount;
+    if (total <= 0) {
+      return [];
+    }
+
+    const entries = [
+      { label: 'Prospecting', value: this.sponsorshipStatusCount('PROSPECTING'), color: '#64748b' },
+      { label: 'Outreach Sent', value: this.sponsorshipStatusCount('OUTREACH_SENT'), color: '#38bdf8' },
+      { label: 'Contract Sent', value: this.sponsorshipStatusCount('CONTRACT_SENT'), color: '#f7b91c' },
+      { label: 'Signed', value: this.sponsorshipStatusCount('SIGNED'), color: '#22c55e' },
+      { label: 'Paid', value: this.sponsorshipStatusCount('PAID'), color: '#e05c5c' }
+    ];
+
+    const slices: LifecyclePieSlice[] = [];
+    let startPct = 0;
+    for (const entry of entries) {
+      if (entry.value <= 0) {
+        continue;
+      }
+
+      const percent = Math.round((entry.value / total) * 100);
+      const endPct = startPct + (entry.value / total) * 100;
+      const middleAngle = this.pctToAngle((startPct + endPct) / 2);
+      const labelPoint = this.polarToCartesian(80, 80, 43, middleAngle);
+      slices.push({
+        label: entry.label,
+        value: entry.value,
+        percent,
+        color: entry.color,
+        path: this.describePieSlice(startPct, endPct, 80, 80, 68),
+        labelX: labelPoint.x,
+        labelY: labelPoint.y,
+        textColor: '#0f172a'
+      });
+      startPct = endPct;
+    }
+
+    return slices;
+  }
+
+  setLifecyclePieHover(label: string): void {
+    this.lifecyclePieHoverLabel = label;
+  }
+
+  clearLifecyclePieHover(): void {
+    this.lifecyclePieHoverLabel = '';
+  }
+
+  private describePieSlice(startPct: number, endPct: number, cx: number, cy: number, radius: number): string {
+    const startAngle = this.pctToAngle(startPct);
+    const endAngle = this.pctToAngle(endPct);
+    const largeArc = endPct - startPct > 50 ? 1 : 0;
+
+    const pieStart = this.polarToCartesian(cx, cy, radius, startAngle);
+    const pieEnd = this.polarToCartesian(cx, cy, radius, endAngle);
+
+    return [
+      `M ${cx} ${cy}`,
+      `L ${pieStart.x} ${pieStart.y}`,
+      `A ${radius} ${radius} 0 ${largeArc} 1 ${pieEnd.x} ${pieEnd.y}`,
+      'Z'
+    ].join(' ');
+  }
+
+  private pctToAngle(percent: number): number {
+    return -90 + (percent / 100) * 360;
+  }
+
+  private polarToCartesian(cx: number, cy: number, radius: number, angleDeg: number): { x: number; y: number } {
+    const angleRad = (Math.PI / 180) * angleDeg;
+    return {
+      x: cx + radius * Math.cos(angleRad),
+      y: cy + radius * Math.sin(angleRad)
+    };
+  }
+
+  get totalSponsorshipCount(): number {
+    return this.sponsorships.length;
+  }
+
+  get activeSponsorshipCount(): number {
+    return this.sponsorships.filter(item => !this.isSponsorshipFinished(item)).length;
+  }
+
+  get finishedSponsorshipCount(): number {
+    return this.sponsorships.filter(item => this.isSponsorshipFinished(item)).length;
+  }
+
+  get totalExpectedAmount(): number {
+    return this.sponsorships.reduce((sum, item) => sum + Number(item.expectedAmount || 0), 0);
+  }
+
+  get totalAgreedAmount(): number {
+    return this.sponsorships.reduce((sum, item) => sum + Number(item.agreedAmount || 0), 0);
+  }
+
+  get totalPaidAmount(): number {
+    return this.sponsorships.reduce((sum, item) => sum + Number(item.paidAmount || 0), 0);
+  }
+
+  get paidCollectionRate(): number {
+    const agreed = this.totalAgreedAmount;
+    if (agreed <= 0) {
+      return 0;
+    }
+    return Math.min(100, Math.round((this.totalPaidAmount / agreed) * 100));
+  }
+
+  get topPaidSponsors(): Array<{ sponsorId: number; sponsorName: string; sponsorLogoUrl?: string | null; paidAmount: number; sponsorshipCount: number }> {
+    const map = new Map<number, { sponsorName: string; sponsorLogoUrl?: string | null; paidAmount: number; sponsorshipCount: number }>();
+    for (const item of this.sponsorships) {
+      const id = item.sponsorId || 0;
+      const current = map.get(id) || {
+        sponsorName: item.sponsorName || 'Unknown Sponsor',
+        sponsorLogoUrl: item.sponsorLogoUrl || null,
+        paidAmount: 0,
+        sponsorshipCount: 0
+      };
+      if (!current.sponsorLogoUrl && item.sponsorLogoUrl) {
+        current.sponsorLogoUrl = item.sponsorLogoUrl;
+      }
+      current.paidAmount += Number(item.paidAmount || 0);
+      current.sponsorshipCount += 1;
+      map.set(id, current);
+    }
+
+    return Array.from(map.entries())
+      .map(([sponsorId, value]) => ({ sponsorId, ...value }))
+      .sort((a, b) => b.paidAmount - a.paidAmount)
+      .slice(0, 3);
+  }
+
+  topRankMedal(index: number): string {
+    if (index === 0) {
+      return '/assets/logos/gold-medal.png';
+    }
+    if (index === 1) {
+      return '/assets/logos/silver-medal.png';
+    }
+    return '/assets/logos/bronze-medal.png';
+  }
+
+  rankLabel(index: number): string {
+    if (index === 0) {
+      return 'Gold';
+    }
+    if (index === 1) {
+      return 'Silver';
+    }
+    return 'Bronze';
+  }
+
+  sponsorshipStatusCount(status: SponsorshipStatus): number {
+    return this.sponsorships.filter(item => item.status === status).length;
+  }
+
+  sponsorshipStatusShare(status: SponsorshipStatus): number {
+    if (this.totalSponsorshipCount === 0) {
+      return 0;
+    }
+    return Math.round((this.sponsorshipStatusCount(status) / this.totalSponsorshipCount) * 100);
+  }
+
+  formatAmount(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Number(value || 0));
   }
 
   get pinnedEmails(): SponsorEmail[] {
@@ -558,6 +1200,10 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
     this.sponsorshipService.getAll().subscribe({
       next: (data) => {
         this.sponsorships = data;
+        this.ensureCurveMonthSelection();
+        if (this.showSponsorHistoryModal && !this.selectedHistorySponsorship) {
+          this.selectedHistorySponsorship = this.sponsorSponsorshipHistory[0] || null;
+        }
         this.sponsorshipsLoading = false;
       },
       error: (err: unknown) => {
@@ -568,7 +1214,40 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
   }
 
   sponsorshipCards(status: SponsorshipStatus): Sponsorship[] {
-    return this.sponsorships.filter(item => item.status === status);
+    const cards = this.sponsorships.filter(item => item.status === status);
+    const query = this.sponsorshipSearchQuery.trim().toLowerCase();
+    if (!query) {
+      return cards;
+    }
+
+    return [...cards].sort((a, b) => {
+      const aMatch = this.matchesSponsorshipSearch(a, query) ? 1 : 0;
+      const bMatch = this.matchesSponsorshipSearch(b, query) ? 1 : 0;
+      return bMatch - aMatch;
+    });
+  }
+
+  private matchesSponsorshipSearch(item: Sponsorship, query: string): boolean {
+    const haystack = [
+      item.sponsorName,
+      item.eventName,
+      item.ownerName,
+      item.proposalSummary,
+      item.notes,
+      item.contractReference,
+      item.proposalDocumentName,
+      item.contractDocumentName,
+      item.signedDocumentName,
+      item.status,
+      item.outreachDecision,
+      item.expectedAmount,
+      item.agreedAmount,
+      item.paidAmount
+    ]
+      .map(value => (value ?? '').toString().toLowerCase())
+      .join(' ');
+
+    return haystack.includes(query);
   }
 
   openAddSponsorshipForm(): void {
@@ -638,6 +1317,32 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
     this.showEditSponsorshipForm = false;
     this.sponsorshipEditId = null;
     this.sponsorshipEditStatus = 'PROSPECTING';
+  }
+
+  openSponsorshipDetails(item: Sponsorship): void {
+    this.selectedSponsorshipDetails = item;
+    this.showSponsorshipDetails = true;
+  }
+
+  closeSponsorshipDetails(): void {
+    this.showSponsorshipDetails = false;
+    this.selectedSponsorshipDetails = null;
+  }
+
+  openSponsorshipDoc(folder: 'Proposals' | 'Contracts' | 'Signed', fileName?: string | null): void {
+    const url = this.getSponsorshipDocUrl(folder, fileName);
+    if (!url) {
+      return;
+    }
+    window.open(url, '_blank', 'noopener');
+  }
+
+  private getSponsorshipDocUrl(folder: 'Proposals' | 'Contracts' | 'Signed', fileName?: string | null): string | null {
+    const normalized = (fileName || '').trim();
+    if (!normalized) {
+      return null;
+    }
+    return `${environment.apiUrl}/assets/sponsorfiles/${folder}/${encodeURIComponent(normalized)}`;
   }
 
   saveSponsorshipEdit(): void {
@@ -845,6 +1550,115 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
       return;
     }
     this.activeActionMenuSponsorId = null;
+    this.selectedHistorySponsor = sponsor;
+    this.showSponsorHistoryModal = true;
+    this.historyCurrentPage = 1;
+    this.selectedHistorySponsorship = this.sponsorSponsorshipHistory[0] || null;
+    this.loadHistoryEmails(sponsor.id);
+    if (!this.sponsorshipsLoading) {
+      this.loadSponsorships();
+    }
+  }
+
+  closeSponsorHistoryModal(): void {
+    this.showSponsorHistoryModal = false;
+    this.selectedHistorySponsor = null;
+    this.selectedHistorySponsorship = null;
+    this.historyEmails = [];
+    this.historyEmailsLoading = false;
+    this.historyEmailsError = '';
+    this.historyCurrentPage = 1;
+  }
+
+  get historyTrackedEmailsPreview(): SponsorEmail[] {
+    return this.historyEmails.slice(0, 10);
+  }
+
+  private loadHistoryEmails(sponsorId: number): void {
+    this.historyEmailsLoading = true;
+    this.historyEmailsError = '';
+    this.historyEmails = [];
+
+    this.sponsorService.getEmails(sponsorId).subscribe({
+      next: (emails) => {
+        this.historyEmails = emails;
+        this.historyEmailsLoading = false;
+      },
+      error: (err: unknown) => {
+        this.historyEmailsLoading = false;
+        this.historyEmailsError = this.resolveError(err, 'Failed to load tracked emails.');
+      }
+    });
+  }
+
+  get sponsorSponsorshipHistory(): Sponsorship[] {
+    const sponsorId = this.selectedHistorySponsor?.id;
+    if (!sponsorId) {
+      return [];
+    }
+
+    return this.sponsorships
+      .filter(item => item.sponsorId === sponsorId)
+      .sort((a, b) => {
+        const aTime = this.resolveSponsorshipSortTime(a);
+        const bTime = this.resolveSponsorshipSortTime(b);
+        return bTime - aTime;
+      });
+  }
+
+  get pagedSponsorSponsorshipHistory(): Sponsorship[] {
+    const start = (this.historyCurrentPage - 1) * this.historyPageSize;
+    return this.sponsorSponsorshipHistory.slice(start, start + this.historyPageSize);
+  }
+
+  get sponsorHistoryTotalPages(): number {
+    return Math.max(1, Math.ceil(this.sponsorSponsorshipHistory.length / this.historyPageSize));
+  }
+
+  goToSponsorHistoryPage(page: number): void {
+    if (page < 1 || page > this.sponsorHistoryTotalPages) {
+      return;
+    }
+    this.historyCurrentPage = page;
+    const pageItems = this.pagedSponsorSponsorshipHistory;
+    if (!pageItems.some(item => item.id === this.selectedHistorySponsorship?.id)) {
+      this.selectedHistorySponsorship = pageItems[0] || null;
+    }
+  }
+
+  selectSponsorHistoryItem(item: Sponsorship): void {
+    this.selectedHistorySponsorship = item;
+  }
+
+  isSponsorshipRunning(item: Sponsorship): boolean {
+    if ((item.outreachDecision || '').toUpperCase() === 'DECLINED') {
+      return false;
+    }
+    return item.status !== 'PAID';
+  }
+
+  sponsorshipRunningLabel(item: Sponsorship): 'Running' | 'Finished' {
+    return this.isSponsorshipRunning(item) ? 'Running' : 'Finished';
+  }
+
+  private isSponsorshipFinished(item: Sponsorship): boolean {
+    if (!item) {
+      return false;
+    }
+    const outreachDeclined = (item.outreachDecision || '').toUpperCase() === 'DECLINED';
+    return item.status === 'PAID' || outreachDeclined;
+  }
+
+  exportSponsorHistoryPdf(): void {
+    const sponsorName = this.selectedHistorySponsor?.name || 'Sponsor';
+    const rows = this.sponsorSponsorshipHistory.map(item => ({
+      eventName: item.eventName || 'No event yet',
+      statusLabel: this.statusLabel(item.status),
+      runningLabel: this.sponsorshipRunningLabel(item),
+      createdAtLabel: this.formatDateTime(item.createdAt)
+    }));
+    this.sponsorshipPdfService.generateSponsorshipHistoryPdf(sponsorName, rows);
+    this.showToast('Sponsorship history PDF exported.', 'success');
   }
 
   closeEmailsModal(): void {
@@ -928,38 +1742,6 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
         this.emailsError = this.resolveError(err, 'Failed to send email.');
       }
     });
-  }
-
-  async generateProposalPdfAttachment(): Promise<void> {
-    if (!this.selectedEmailSponsor) {
-      this.showToast('Select a sponsor first to generate a proposal PDF.', 'error');
-      return;
-    }
-
-    try {
-      const file = await this.sponsorshipPdfService.generateProposalPdf({
-        sponsorName: this.selectedEmailSponsor.name,
-        sponsorEmail: this.selectedEmailSponsor.contactEmail,
-        proposalSummary: this.composeForm.body,
-        contactName: 'Cluverse Sponsorship Team',
-        contactRole: 'Business Development',
-        contactEmail: 'contact@cluverse.tn'
-      });
-
-      this.composeFiles = this.mergeFiles(this.composeFiles, [file]);
-
-      if (!this.composeForm.subject.trim()) {
-        this.composeForm.subject = `Sponsorship Proposal - ${this.selectedEmailSponsor.name}`;
-      }
-
-      if (!this.composeForm.body.trim()) {
-        this.composeForm.body = `Dear ${this.selectedEmailSponsor.name},\n\nPlease find attached our sponsorship partnership proposal for the upcoming event. We would be delighted to collaborate with your team and discuss a package aligned with your goals.\n\nBest regards,\nCluverse Sponsorship Team`;
-      }
-
-      this.showToast('Proposal PDF generated and attached.', 'success');
-    } catch {
-      this.showToast('Failed to generate proposal PDF. Please try again.', 'error');
-    }
   }
 
   sendReply(): void {
@@ -1143,6 +1925,22 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
       return 'Reply';
     }
     return 'Outbound';
+  }
+
+  formatDateTime(value?: string | null): string {
+    if (!value) {
+      return '--';
+    }
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  }
+
+  private resolveSponsorshipSortTime(item: Sponsorship): number {
+    const created = item.createdAt ? new Date(item.createdAt).getTime() : Number.NaN;
+    if (!Number.isNaN(created)) {
+      return created;
+    }
+    return item.id || 0;
   }
 
   private loadSponsorEmails(sponsorId: number): void {
