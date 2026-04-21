@@ -279,6 +279,7 @@
           <article
             class="sponsors__kanban-card"
             [class.sponsors__kanban-card--declined]="isDeclinedOutreach(item)"
+            [class.sponsors__kanban-card--paid]="column.status === 'PAID'"
             *ngFor="let item of sponsorshipCards(column.status)"
             cdkDrag
             [cdkDragDisabled]="isSponsorshipDragDisabled(item)"

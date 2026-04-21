@@ -207,6 +207,20 @@
         color: #fecdd3;
       }
     }
+
+    &--paid {
+      border-color: #166534;
+      background: #0f2a14;
+
+      .sponsors__kanban-card-head h4 {
+        color: #bbf7d0;
+      }
+
+      .sponsors__kanban-card-head p,
+      .sponsors__kanban-created {
+        color: #86efac;
+      }
+    }
   }
 
   &__declined-pill {
