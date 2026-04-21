@@ -1,0 +1,137 @@
+<section class="finance-page">
+  <header class="finance-page__header">
+    <div>
+      <h1 class="finance-page__title">Transactions</h1>
+      <p class="finance-page__subtitle">Track all income and expenses</p>
+    </div>
+
+    <div class="finance-page__actions">
+      <a class="btn btn--secondary" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
+      <button type="button" class="btn btn--secondary" (click)="exportTransactionsToExcel()">Export Excel</button>
+      <button type="button" class="btn btn--primary" (click)="openCreateTransactionForm()">Add Transaction</button>
+    </div>
+  </header>
+
+  <nav class="finance-nav" aria-label="Finance sections">
+    <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
+    <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/transactions">Transactions</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
+  </nav>
+
+  <section class="form-panel" *ngIf="showCreateTransactionForm">
+    <h2 class="form-panel__title">{{ editingTransactionId !== null ? 'Edit Transaction' : 'Create New Transaction' }}</h2>
+
+    <div class="form-grid">
+      <label class="field">
+        <span class="field__label">Type</span>
+        <select class="field__control" [(ngModel)]="newTransaction.type" name="transactionType">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </label>
+
+      <label class="field field--wide">
+        <span class="field__label">Description</span>
+        <input class="field__control" type="text" placeholder="Describe the transaction" [(ngModel)]="newTransaction.description" name="transactionDescription" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Amount (TND)</span>
+        <input class="field__control" type="number" min="1" placeholder="0" [(ngModel)]="newTransaction.amount" name="transactionAmount" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Date</span>
+        <input class="field__control" type="date" [(ngModel)]="newTransaction.date" name="transactionDate" />
+      </label>
+    </div>
+
+    <p class="form-error" *ngIf="formErrorMessage">{{ formErrorMessage }}</p>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn--secondary" (click)="closeCreateTransactionForm()">Cancel</button>
+      <button type="button" class="btn btn--primary" [disabled]="isSubmitting" (click)="createTransaction()">
+        {{ editingTransactionId !== null ? 'Update Transaction' : 'Save Transaction' }}
+      </button>
+    </div>
+  </section>
+
+  <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="empty-state" *ngIf="isLoading">Loading transactions...</p>
+
+  <section class="transactions-panel">
+    <div class="transactions-toolbar">
+      <input
+        type="search"
+        class="transactions-toolbar__search"
+        placeholder="Search transactions..."
+        [(ngModel)]="searchTerm"
+      />
+
+      <div class="transactions-toolbar__filters" role="tablist" aria-label="Transaction filters">
+        <button
+          type="button"
+          class="filter-btn"
+          [class.filter-btn--active]="activeFilter === 'all'"
+          (click)="setFilter('all')"
+        >
+          All
+        </button>
+        <button
+          type="button"
+          class="filter-btn"
+          [class.filter-btn--active]="activeFilter === 'income'"
+          (click)="setFilter('income')"
+        >
+          Income
+        </button>
+        <button
+          type="button"
+          class="filter-btn"
+          [class.filter-btn--active]="activeFilter === 'expense'"
+          (click)="setFilter('expense')"
+        >
+          Expenses
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="transactions-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th class="align-right">Amount</th>
+            <th class="align-right">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let transaction of filteredTransactions">
+            <td>
+              <span class="pill" [class.pill--income]="transaction.type === 'income'" [class.pill--expense]="transaction.type === 'expense'">
+                {{ transaction.type }}
+              </span>
+            </td>
+            <td class="description">{{ transaction.description }}</td>
+            <td>{{ transaction.date }}</td>
+            <td class="align-right amount" [class.amount--income]="transaction.type === 'income'" [class.amount--expense]="transaction.type === 'expense'">
+              {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+            </td>
+            <td class="align-right actions">
+              <button type="button" class="icon-btn" aria-label="Edit transaction" (click)="editTransaction(transaction)">Edit</button>
+              <button type="button" class="icon-btn icon-btn--danger" aria-label="Delete transaction" (click)="deleteTransaction(transaction.id)">Delete</button>
+            </td>
+          </tr>
+
+          <tr *ngIf="!isLoading && filteredTransactions.length === 0">
+            <td colspan="5" class="empty-state">No transactions found for the selected filter.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

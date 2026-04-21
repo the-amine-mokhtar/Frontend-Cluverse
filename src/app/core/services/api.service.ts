@@ -281,9 +281,35 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
   return this.http.get<any>(`${this.baseUrl}/api/recruitment/campaigns/public/${encodeURIComponent(publicLink)}`);
 }
 
-applyToCampaign(campaignId: number, submission: any): Observable<any> {
-  return this.http.post(`${this.baseUrl}/api/recruitment/campaigns/${campaignId}/apply`, submission, { responseType: 'text' });
-}
+  applyToCampaign(campaignId: number, submission: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/api/recruitment/campaigns/${campaignId}/apply`, submission, { responseType: 'text' });
+  }
+
+  // ─── Elections Voice Interview ─── //
+
+  getVacantPositions(clubId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/api/elections/positions?clubId=${clubId}`, { headers: this.authHeaders() });
+  }
+
+  getVacantPosition(id: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/api/elections/positions/${id}`, { headers: this.authHeaders() });
+  }
+
+  createVacantPosition(clubId: number, position: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/api/elections/positions?clubId=${clubId}`, position, { headers: this.authHeaders() });
+  }
+
+  startInterview(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/api/elections/interview/start`, data, { headers: this.authHeaders() });
+  }
+
+  endInterview(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/api/elections/interview/end`, data, { headers: this.authHeaders() });
+  }
+
+  getInterviewReport(sessionId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/api/elections/interview/report/${sessionId}`, { headers: this.authHeaders() });
+  }
 }
 
 
