@@ -226,6 +226,14 @@ updateQuestion(id: number, question: any): Observable<any> {
   return this.http.put<any>(`${this.baseUrl}/api/recruitment/questions/${id}`, question, { headers });
 }
 
+generateQuestions(campaignId: number, body: any): Observable<any[]> {
+  return this.http.post<any[]>(
+    `${this.baseUrl}/api/recruitment/campaigns/${campaignId}/generate-questions`,
+    body,
+    { headers: this.authHeaders() }
+  ).pipe(catchError(this.handleError));
+}
+
 deleteQuestion(id: number): Observable<any> {
   const headers = new HttpHeaders({
     'Authorization': `Bearer ${localStorage.getItem('token')}`
