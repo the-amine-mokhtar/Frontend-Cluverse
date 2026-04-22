@@ -30,6 +30,7 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
   selectedSponsorshipId: number | null = null;
   sponsorName = '';
   sponsorEmail = '';
+  cardDigits = '';
   sponsorPhone = '';
   amountEur: number | null = null;
   conversionRate = 3.4;
@@ -180,7 +181,7 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
             sponsorName: this.sponsorName.trim(),
             sponsorEmail: this.sponsorEmail.trim(),
             sponsorPhone: this.sponsorPhone.trim(),
-            cardLast4: 'N/A',
+            cardLast4: this.onlyDigits(this.cardDigits).slice(-4),
             amountEur,
             amountTnd,
             conversionRate: this.conversionRate,
@@ -499,6 +500,10 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
 
   private isValidEmail(value: string): boolean {
     return /^\S+@\S+\.\S+$/.test(value.trim());
+  }
+
+  private onlyDigits(value: string): string {
+    return value.replace(/\D/g, '');
   }
 
   private formatHttpError(error: unknown): string {
