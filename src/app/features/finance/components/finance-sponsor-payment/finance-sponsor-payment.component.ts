@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Stripe, StripeCardElement, StripeElements, loadStripe } from '@stripe/stripe-js';
+import { Stripe, StripeCardElement, StripeCardElementChangeEvent, StripeElements, loadStripe } from '@stripe/stripe-js';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 import { FinanceService } from '../../../../core/services/finance.service';
 
@@ -26,7 +26,6 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
 
   sponsorName = '';
   sponsorEmail = '';
-  cardDigits = '';
   sponsorPhone = '';
   amountEur: number | null = null;
   conversionRate = 3.4;
@@ -36,6 +35,11 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
   stripeInfoMessage = 'Loading secure Stripe card form...';
   errorMessage = '';
   successMessage = '';
+  cardPreviewBrand = 'CARD';
+  cardPreviewNumber = '---- ---- ---- ----';
+  cardPreviewStatus = 'SECURE FIELD';
+  isCardInputActive = false;
+  isCardInputComplete = false;
 
   private stripe: Stripe | null = null;
   private elements: StripeElements | null = null;
@@ -69,12 +73,6 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
     }
 
     return this.roundCurrency(this.amountEur * this.conversionRate);
-  }
-
-  get formattedCardNumber(): string {
-    const digits = this.onlyDigits(this.cardDigits).slice(0, 16);
-    const padded = (digits + '•'.repeat(16)).slice(0, 16);
-    return (padded.match(/.{1,4}/g) ?? ['••••', '••••', '••••', '••••']).join(' ');
   }
 
   payWithStripeEmbedded(): void {
@@ -135,7 +133,7 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
             sponsorName: this.sponsorName.trim(),
             sponsorEmail: this.sponsorEmail.trim(),
             sponsorPhone: this.sponsorPhone.trim(),
-            cardLast4: this.onlyDigits(this.cardDigits).slice(-4),
+            cardLast4: 'N/A',
             amountEur,
             amountTnd,
             conversionRate: this.conversionRate,
@@ -361,9 +359,49 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
       }
     });
 
+    this.cardElement.on('focus', () => {
+      this.isCardInputActive = true;
+      this.cardPreviewStatus = 'ENTERING SECURE DETAILS';
+    });
+
+    this.cardElement.on('blur', () => {
+      this.isCardInputActive = false;
+      this.cardPreviewStatus = this.isCardInputComplete ? 'VERIFIED BY STRIPE' : 'SECURE FIELD';
+    });
+
+    this.cardElement.on('change', (event: StripeCardElementChangeEvent) => {
+      this.handleStripeCardChange(event);
+    });
+
     this.cardElement.mount(this.stripeCardElementRef.nativeElement);
     this.isStripeReady = true;
     this.stripeInfoMessage = 'Secure Stripe card form is ready.';
+  }
+
+  private handleStripeCardChange(event: StripeCardElementChangeEvent): void {
+    this.cardPreviewBrand = (event.brand && event.brand !== 'unknown') ? event.brand.toUpperCase() : 'CARD';
+    this.isCardInputComplete = !!event.complete;
+
+    // Stripe does not expose raw PAN digits in the browser; keep a masked preview only.
+    if (event.empty) {
+      this.cardPreviewNumber = '---- ---- ---- ----';
+    } else if (event.complete) {
+      this.cardPreviewNumber = '**** **** **** ****';
+    } else {
+      this.cardPreviewNumber = '**** **** **** ----';
+    }
+
+    if (event.error?.message) {
+      this.cardPreviewStatus = 'CHECK CARD DETAILS';
+      return;
+    }
+
+    if (event.complete) {
+      this.cardPreviewStatus = 'VERIFIED BY STRIPE';
+      return;
+    }
+
+    this.cardPreviewStatus = event.empty ? 'SECURE FIELD' : 'ENTERING SECURE DETAILS';
   }
 
   private roundCurrency(value: number): number {
@@ -376,10 +414,6 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
 
   private isValidEmail(value: string): boolean {
     return /^\S+@\S+\.\S+$/.test(value.trim());
-  }
-
-  private onlyDigits(value: string): string {
-    return value.replace(/\D/g, '');
   }
 
   private formatHttpError(error: unknown): string {

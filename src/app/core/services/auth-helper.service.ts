@@ -40,6 +40,10 @@ export class AuthHelperService {
     return `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
   }
 
+  getEmail(): string {
+    return this.getPayload()?.email ?? '';
+  }
+
   getClubId(): number {
     return this.getPayload()?.clubid ?? 0;
   }

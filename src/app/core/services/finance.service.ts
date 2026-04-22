@@ -24,6 +24,68 @@ export interface TransactionDto {
   type: TransactionType;
 }
 
+export type ForecastHorizon = 1 | 3 | 6;
+
+export interface ForecastFactor {
+  label: string;
+  impact: 'positive' | 'negative' | 'neutral';
+  weight: number;
+}
+
+export interface MonthlyForecastPoint {
+  monthLabel: string;
+  projectedInflow: number;
+  projectedOutflow: number;
+  projectedNet: number;
+  eventOutflowShare: number;
+}
+
+export interface AiCashFlowProjection {
+  horizonMonths: ForecastHorizon;
+  projectedInflow: number;
+  projectedOutflow: number;
+  projectedNet: number;
+  confidenceScore: number;
+  confidenceLevel?: 'Low' | 'Medium' | 'High';
+  riskLevel?: 'Low' | 'Moderate' | 'High';
+  dataQualityScore?: number;
+  errorBandRatio: number;
+  netLowerBound: number;
+  netUpperBound: number;
+  expectedClosingBalance?: number;
+  closingLowerBound?: number;
+  closingUpperBound?: number;
+  backtestMape: number;
+  backtestHitRate: number;
+  backtestSampleSize: number;
+  summary?: string;
+  actionItems?: string[];
+  factors: ForecastFactor[];
+  monthlyBreakdown: MonthlyForecastPoint[];
+}
+
+export interface AiInsights {
+  personalizedSummary: string;
+  recommendations: string[];
+  keyRisks: string[];
+  opportunity: string;
+}
+
+export interface AiCashFlowForecastResult {
+  modelVersion?: string;
+  asOfDate: string;
+  projections: AiCashFlowProjection[];
+  aiInsights?: AiInsights;
+}
+
+export interface CashflowForecastRequest {
+  asOfDate: string;
+  horizons: ForecastHorizon[];
+  transactions: TransactionDto[];
+  budgets: BudgetDto[];
+  currentCashBalance?: number | null;
+}
+
 export interface SponsorDto {
   id: number;
   name: string;
@@ -94,11 +156,29 @@ export interface StripePublicConfigResponse {
   publishableKey: string;
 }
 
+export interface BudgetAlertEmailItemPayload {
+  title: string;
+  department: string;
+  utilization: number;
+  reachedThreshold: number;
+  level: 'warning' | 'critical' | 'limit';
+}
+
+export interface BudgetAlertEmailPayload {
+  recipientEmail?: string;
+  recipientName?: string;
+  clubName?: string;
+  exerciseYear?: number;
+  alerts: BudgetAlertEmailItemPayload[];
+  triggeredAt: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class FinanceService {
   private readonly baseUrl = environment.apiUrl;
+  private readonly forecastApiUrl = environment.forecastApiUrl;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -213,6 +293,19 @@ export class FinanceService {
   getStripePublicConfig(): Observable<StripePublicConfigResponse> {
     return this.http.get<StripePublicConfigResponse>(`${this.baseUrl}/api/stripe/public-config`, {
       headers: this.authHeaders()
+    });
+  }
+
+  getCashflowForecast(payload: CashflowForecastRequest): Observable<AiCashFlowForecastResult> {
+    return this.http.post<AiCashFlowForecastResult>(`${this.forecastApiUrl}/v1/forecast/cashflow`, payload, {
+      headers: this.authHeaders()
+    });
+  }
+
+  sendBudgetAlertEmail(payload: BudgetAlertEmailPayload): Observable<string> {
+    return this.http.post(`${this.baseUrl}/api/notifications/budget-alert-email`, payload, {
+      headers: this.authHeaders(),
+      responseType: 'text'
     });
   }
 
