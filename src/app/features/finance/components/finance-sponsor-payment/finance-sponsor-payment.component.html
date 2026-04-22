@@ -40,6 +40,16 @@
 
       <div class="form-grid">
         <label class="field field--full">
+          <span class="field__label">Linked Signed Sponsorship</span>
+          <select class="field__control" [(ngModel)]="selectedSponsorshipId" (change)="onLinkedSponsorshipChange()">
+            <option [ngValue]="null">Select signed sponsorship</option>
+            <option *ngFor="let sponsorship of signedSponsorships" [ngValue]="sponsorship.id">
+              #{{ sponsorship.id }} - {{ sponsorship.sponsorName || sponsorship.sponsor?.name || 'Sponsor' }} - {{ sponsorship.eventName || 'Event' }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field field--full">
           <span class="field__label">Sponsor Full Name</span>
           <input class="field__control" type="text" placeholder="John Doe" [(ngModel)]="sponsorName" />
         </label>
@@ -84,6 +94,10 @@
 
       <p class="payment-note">
         {{ stripeInfoMessage }}
+      </p>
+
+      <p class="status status--error" *ngIf="signedSponsorships.length === 0">
+        No signed sponsorship is available to receive payment yet.
       </p>
 
       <div class="form-actions">

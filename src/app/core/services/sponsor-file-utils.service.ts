@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class SponsorFileUtilsService {
-  readonly maxFileSizeBytes = 10 * 1024 * 1024;
+  readonly maxFileSizeBytes = 50 * 1024 * 1024;
   readonly acceptedMimeTypes = ['application/pdf', 'text/plain'];
 
   isAllowedType(file: File): boolean {
@@ -16,7 +16,7 @@ export class SponsorFileUtilsService {
       return `Unsupported file type: ${file.type || 'unknown'}`;
     }
     if (file.size > this.maxFileSizeBytes) {
-      return `${file.name} exceeds 10MB limit.`;
+      return `${file.name} exceeds 50MB limit.`;
     }
     return null;
   }
