@@ -37,7 +37,8 @@
     <!-- Nav Items -->
     <nav class="sidebar__nav">
       <!-- Home -->
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/home"
          routerLinkActive="sidebar__item--active"
          [routerLinkActiveOptions]="{ exact: true }">
@@ -49,7 +50,8 @@
       </a>
 
       <!-- Elections -->
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/elections"
          routerLinkActive="sidebar__item--active"
          [routerLinkActiveOptions]="{ exact: true }">
@@ -61,7 +63,8 @@
       </a>
 
       <!-- Postes Vacants -->
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/elections/vacant-positions"
          routerLinkActive="sidebar__item--active">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -71,7 +74,8 @@
       </a>
 
       <!-- Events -->
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/events"
          routerLinkActive="sidebar__item--active">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -81,7 +85,8 @@
       </a>
 
       <!-- Recruitment -->
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/recruitment"
          routerLinkActive="sidebar__item--active">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -92,19 +97,20 @@
         <span class="sidebar__item-label">Recruitment</span>
       </a>
 
-      <!-- Skills -->
+      <!-- Competencies -->
       <a class="sidebar__item"
-         routerLink="/dashboard/skills"
+        routerLink="/dashboard/competencies"
          routerLinkActive="sidebar__item--active">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 3C8.686 3 6 5.686 6 9C6 11.22 7.21 13.15 9 14.19V17C9 17.55 9.45 18 10 18H14C14.55 18 15 17.55 15 17V14.19C16.79 13.15 18 11.22 18 9C18 5.686 15.314 3 12 3ZM13 16H11V15H13V16ZM13.85 12.85L13 13.28V13H11V13.28L10.15 12.85C8.87 12.19 8 10.68 8 9C8 6.79 9.79 5 12 5C14.21 5 16 6.79 16 9C16 10.68 15.13 12.19 13.85 12.85Z"/>
           <path d="M9 21H15V19H9V21Z"/>
         </svg>
-        <span class="sidebar__item-label">Skills</span>
+        <span class="sidebar__item-label">Competencies</span>
       </a>
 
       <!-- Logistics -->
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/logistics"
          routerLinkActive="sidebar__item--active">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -114,7 +120,8 @@
       </a>
 
       <!-- Finance -->
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/finance"
          routerLinkActive="sidebar__item--active">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -124,7 +131,8 @@
       </a>
 
       <!-- Sponsorship -->
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/sponsorship"
          routerLinkActive="sidebar__item--active">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -133,7 +141,8 @@
         <span class="sidebar__item-label">Sponsorship</span>
       </a>
 
-      <a class="sidebar__item"
+      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+        class="sidebar__item"
          routerLink="/dashboard/members"
          routerLinkActive="sidebar__item--active">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -142,6 +151,7 @@
         </svg>
         <span class="sidebar__item-label">Members</span>
       </a>
+
     </nav>
   </div>
 

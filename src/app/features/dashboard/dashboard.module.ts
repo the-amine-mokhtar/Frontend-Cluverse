@@ -20,7 +20,7 @@ import { MembersComponent } from './components/members/members.component';
     HomeComponent,
     ThemeToggleComponent,
     ProfileComponent,
-    MembersComponent
+    MembersComponent,
   ],
   imports: [
     SharedModule,

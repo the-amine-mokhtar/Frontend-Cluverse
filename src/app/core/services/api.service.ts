@@ -9,6 +9,269 @@ export interface HttpOptions {
   params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean> };
 }
 
+export type CompetencyCategory = 'SOFT' | 'HARD' | 'TECHNICAL';
+export type UpdateSource = 'SPEECH_ANALYZER' | 'PEER_ENDORSEMENT' | 'LIVE_SESSION' | 'AI_COACH' | 'MANUAL';
+
+export interface CompetencyRequest {
+  name: string;
+  description: string;
+  category: CompetencyCategory;
+  clubId: number;
+}
+
+export interface CompetencyResponse {
+  id: number;
+  name: string;
+  description: string;
+  category: CompetencyCategory;
+  clubId: number;
+}
+
+export interface CompetencyBulkImportErrorResponse {
+  rowNumber: number;
+  name: string;
+  message: string;
+}
+
+export interface CompetencyBulkImportResponse {
+  clubId: number;
+  totalRows: number;
+  createdCount: number;
+  skippedCount: number;
+  createdCompetencies: CompetencyResponse[];
+  errors: CompetencyBulkImportErrorResponse[];
+}
+
+export interface CompetencyCloneRequest {
+  targetClubId: number;
+}
+
+export interface CompetencyStatsCompetencyResponse {
+  competencyId: number;
+  competencyName: string;
+  memberCount: number;
+  averageCurrentLevel: number;
+  averageTargetLevel: number;
+  averageGap: number;
+}
+
+export interface CompetencyStatsCategoryResponse {
+  category: CompetencyCategory;
+  competencyCount: number;
+  memberCount: number;
+  averageCurrentLevel: number;
+  averageTargetLevel: number;
+  averageGap: number;
+}
+
+export interface CompetencyStatsWeakCompetencyResponse {
+  competencyId: number;
+  competencyName: string;
+  category: CompetencyCategory;
+  memberCount: number;
+  averageCurrentLevel: number;
+  averageTargetLevel: number;
+  averageGap: number;
+}
+
+export interface CompetencyStatsResponse {
+  clubId: number;
+  totalCompetencies: number;
+  totalAssignments: number;
+  membersPerCompetency: CompetencyStatsCompetencyResponse[];
+  averageLevelByCategory: CompetencyStatsCategoryResponse[];
+  weakestCompetencies: CompetencyStatsWeakCompetencyResponse[];
+}
+
+export interface MemberCompetencyRequest {
+  userId: number;
+  skillId?: number;
+  competencyId?: number;
+  currentLevel: number;
+  targetLevel: number;
+  lastUpdatedBy?: UpdateSource;
+}
+
+export interface MemberCompetencyUpdateRequest {
+  currentLevel: number;
+  targetLevel: number;
+  lastUpdatedBy?: UpdateSource;
+}
+
+export interface MemberCompetencyResponse {
+  id: number;
+  userId: number;
+  userName?: string;
+  skillId: number;
+  competencyId?: number;
+  skillName: string;
+  competencyName?: string;
+  category: CompetencyCategory;
+  competencyCategory?: string;
+  currentLevel: number;
+  targetLevel: number;
+  previousLevel: number;
+  endorsementCount: number;
+  gap: number;
+  gapLevel?: number;
+  lastUpdatedBy: UpdateSource;
+  lastUpdated: string;
+}
+
+export interface LevelUpdateRequest {
+  newLevel: number;
+  source?: UpdateSource;
+}
+
+export interface BulkTargetRequest {
+  userIds: number[];
+  skillId?: number;
+  competencyId?: number;
+  targetLevel: number;
+}
+
+export interface ClubCompetencyStats {
+  totalMembers: number;
+  avgLevelAcrossAll: number;
+  totalGaps: number;
+  criticalGaps: number;
+}
+
+export interface MemberCompetencyGapResponse {
+  id: number;
+  currentLevel: number;
+  targetLevel: number;
+  gap: number;
+}
+
+export interface CompetencyMatchingRequest {
+  clubId: number;
+  contextType: 'MISSION' | 'EVENT' | 'POSITION';
+  contextTitle?: string;
+  requiredSkillIds: number[];
+  topN?: number;
+}
+
+export interface CompetencyMatchCandidateResponse {
+  userId: number;
+  memberName: string;
+  memberEmail: string;
+  score: number;
+  readiness: 'HIGH' | 'MEDIUM' | 'LOW';
+  matchedSkills: number;
+  totalRequiredSkills: number;
+  averageGap: number;
+  missingSkills: string[];
+}
+
+export interface CompetencyMatchingResponse {
+  contextType: string;
+  contextTitle: string;
+  requestedSkills: number;
+  candidatesEvaluated: number;
+  recommendations: CompetencyMatchCandidateResponse[];
+}
+
+export interface SpeechAnalyzerHealthResponse {
+  status: 'ok' | 'degraded' | string;
+  whisperLoaded: boolean;
+  modelVersion: string;
+}
+
+export interface SpeechAnalyzerSyncResponse {
+  sessionId: string;
+  speechScore: number;
+  speechLevel: string;
+  feedback: string;
+  memberCompetency: MemberCompetencyResponse;
+}
+
+export type SessionStatus = 'SCHEDULED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+
+export interface CompetencySessionParticipantResponse {
+  userId: number;
+  fullName: string;
+  email: string;
+  attended?: boolean | null;
+}
+
+export interface CompetencySessionResponse {
+  id: number;
+  clubId: number;
+  competencyId: number;
+  competencyName: string;
+  title: string;
+  coachUserId: number;
+  coachName: string;
+  meetLink?: string;
+  startsAt: string;
+  endsAt?: string;
+  status: SessionStatus;
+  participantCount: number;
+  reportSummary?: string;
+  cancellationReason?: string;
+  attended?: boolean | null;
+  participants?: CompetencySessionParticipantResponse[];
+}
+
+export interface AdminSessionMetricsResponse {
+  totalSessions: number;
+  upcomingSessions: number;
+  completedThisMonth: number;
+  cancelledSessions: number;
+}
+
+export interface AdminCompetencySessionsResponse {
+  metrics: AdminSessionMetricsResponse;
+  sessions: CompetencySessionResponse[];
+}
+
+export interface MemberSessionMetricsResponse {
+  upcomingSessions: number;
+  completedSessions: number;
+  competenciesWorked: number;
+}
+
+export interface MemberCompetencySessionsResponse {
+  metrics: MemberSessionMetricsResponse;
+  upcoming: CompetencySessionResponse[];
+  past: CompetencySessionResponse[];
+}
+
+export interface CompetencySessionScheduleRequest {
+  clubId: number;
+  competencyId: number;
+  title: string;
+  coachUserId: number;
+  startsAt: string;
+  meetLink?: string;
+  participantUserIds: number[];
+}
+
+export interface SessionAttendanceUpdate {
+  userId: number;
+  attended: boolean;
+}
+
+export interface CompetencySessionCloseRequest {
+  reportSummary?: string;
+  autoGenerateReport?: boolean;
+  speechSessionId?: string;
+  attendance: SessionAttendanceUpdate[];
+}
+
+export interface SessionParticipantInviteRequest {
+  participantUserIds: number[];
+}
+
+export interface CompetencySessionCancelRequest {
+  reason?: string;
+}
+
+export interface CompetencySessionRescheduleRequest {
+  startsAt: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -59,13 +322,21 @@ export class ApiService {
    */
   private handleError(error: any) {
     let errorMessage = 'An unknown error occurred!';
-    if (error.error instanceof ErrorEvent) {
-      // Client-side errors
+
+    if (error?.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
-    } else {
-      // Server-side errors
-      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+    } else if (typeof error?.error === 'string' && error.error.trim()) {
+      errorMessage = error.error.trim();
+    } else if (typeof error?.error?.message === 'string' && error.error.message.trim()) {
+      errorMessage = error.error.message.trim();
+    } else if (typeof error?.error?.error === 'string' && error.error.error.trim()) {
+      errorMessage = error.error.error.trim();
+    } else if (typeof error?.message === 'string' && error.message.trim()) {
+      errorMessage = error.message.trim();
+    } else if (error?.status) {
+      errorMessage = `Error Code: ${error.status}`;
     }
+
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
@@ -317,6 +588,224 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
 
   getInterviewReport(sessionId: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/api/elections/interview/report/${sessionId}`, { headers: this.authHeaders() });
+  }
+
+  // ─── Competencies ──────────────────────────────────────────────────────────
+
+  getCompetencies(clubId: number): Observable<CompetencyResponse[]> {
+    return this.http.get<CompetencyResponse[]>(`${this.baseUrl}/api/competencies?clubId=${clubId}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  uploadCompetencyBulkImport(clubId: number, file: File): Observable<CompetencyBulkImportResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<CompetencyBulkImportResponse>(`${this.baseUrl}/api/competencies/bulk?clubId=${clubId}`, formData, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  cloneCompetency(id: number, payload: CompetencyCloneRequest): Observable<CompetencyResponse> {
+    return this.http.post<CompetencyResponse>(`${this.baseUrl}/api/competencies/${id}/clone`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getCompetencyStats(clubId: number): Observable<CompetencyStatsResponse> {
+    return this.http.get<CompetencyStatsResponse>(`${this.baseUrl}/api/competencies/stats?clubId=${clubId}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  createCompetency(payload: CompetencyRequest): Observable<CompetencyResponse> {
+    return this.http.post<CompetencyResponse>(`${this.baseUrl}/api/competencies`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  updateCompetency(id: number, payload: CompetencyRequest): Observable<CompetencyResponse> {
+    return this.http.put<CompetencyResponse>(`${this.baseUrl}/api/competencies/${id}`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  deleteCompetency(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/competencies/${id}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getMemberCompetenciesByClub(clubId: number): Observable<MemberCompetencyResponse[]> {
+    return this.http.get<MemberCompetencyResponse[]>(`${this.baseUrl}/api/member-competencies/club/${clubId}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getMemberCompetenciesByUser(userId: number): Observable<MemberCompetencyResponse[]> {
+    return this.http.get<MemberCompetencyResponse[]>(`${this.baseUrl}/api/member-competencies/user/${userId}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getMemberCompetencyClubStats(clubId: number): Observable<ClubCompetencyStats> {
+    return this.http.get<ClubCompetencyStats>(`${this.baseUrl}/api/member-competencies/club/${clubId}/stats`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  createMemberCompetency(payload: MemberCompetencyRequest): Observable<MemberCompetencyResponse> {
+    return this.http.post<MemberCompetencyResponse>(`${this.baseUrl}/api/member-competencies`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  updateMemberCompetency(id: number, payload: MemberCompetencyUpdateRequest): Observable<MemberCompetencyResponse> {
+    return this.http.put<MemberCompetencyResponse>(`${this.baseUrl}/api/member-competencies/${id}`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  deleteMemberCompetency(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/member-competencies/${id}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  endorseMemberCompetency(id: number): Observable<MemberCompetencyResponse> {
+    return this.http.post<MemberCompetencyResponse>(`${this.baseUrl}/api/member-competencies/${id}/endorse`, {}, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  endorseMemberCompetencyByCompetency(userId: number, competencyId: number): Observable<MemberCompetencyResponse> {
+    return this.http.patch<MemberCompetencyResponse>(
+      `${this.baseUrl}/api/member-competencies/${userId}/competency/${competencyId}/endorse`,
+      {},
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  patchMemberCompetencyLevel(userId: number, competencyId: number, payload: LevelUpdateRequest): Observable<MemberCompetencyResponse> {
+    return this.http.patch<MemberCompetencyResponse>(
+      `${this.baseUrl}/api/member-competencies/${userId}/competency/${competencyId}/level`,
+      payload,
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  bulkSetMemberCompetencyTarget(payload: BulkTargetRequest): Observable<{ updated: number }> {
+    return this.http.patch<{ updated: number }>(`${this.baseUrl}/api/member-competencies/bulk-target`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getMemberCompetencyGap(id: number): Observable<MemberCompetencyGapResponse> {
+    return this.http.get<MemberCompetencyGapResponse>(`${this.baseUrl}/api/member-competencies/${id}/gap`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getCompetencyMatching(payload: CompetencyMatchingRequest): Observable<CompetencyMatchingResponse> {
+    return this.http.post<CompetencyMatchingResponse>(`${this.baseUrl}/api/member-competencies/matching`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getSpeechAnalyzerHealth(): Observable<SpeechAnalyzerHealthResponse> {
+    return this.http.get<SpeechAnalyzerHealthResponse>(`${this.baseUrl}/api/member-competencies/speech-analyzer/health`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  syncSpeechAnalyzerReport(memberCompetencyId: number, sessionId: string): Observable<SpeechAnalyzerSyncResponse> {
+    return this.http.post<SpeechAnalyzerSyncResponse>(
+      `${this.baseUrl}/api/member-competencies/${memberCompetencyId}/speech-analyzer/sync/${encodeURIComponent(sessionId)}`,
+      {},
+      {
+        headers: this.authHeaders()
+      }
+    ).pipe(catchError(this.handleError));
+  }
+
+  getAdminCompetencySessions(clubId: number, params?: { status?: string; competencyId?: number; coachUserId?: number; search?: string }): Observable<AdminCompetencySessionsResponse> {
+    let httpParams = new HttpParams().set('clubId', String(clubId));
+    if (params?.status) {
+      httpParams = httpParams.set('status', params.status);
+    }
+    if (params?.competencyId) {
+      httpParams = httpParams.set('competencyId', String(params.competencyId));
+    }
+    if (params?.coachUserId) {
+      httpParams = httpParams.set('coachUserId', String(params.coachUserId));
+    }
+    if (params?.search) {
+      httpParams = httpParams.set('search', params.search);
+    }
+
+    return this.http.get<AdminCompetencySessionsResponse>(`${this.baseUrl}/api/competency-sessions/admin`, {
+      headers: this.authHeaders(),
+      params: httpParams
+    }).pipe(catchError(this.handleError));
+  }
+
+  getMemberCompetencySessions(clubId: number, userId: number): Observable<MemberCompetencySessionsResponse> {
+    const params = new HttpParams()
+      .set('clubId', String(clubId))
+      .set('userId', String(userId));
+
+    return this.http.get<MemberCompetencySessionsResponse>(`${this.baseUrl}/api/competency-sessions/member`, {
+      headers: this.authHeaders(),
+      params
+    }).pipe(catchError(this.handleError));
+  }
+
+  scheduleCompetencySession(payload: CompetencySessionScheduleRequest): Observable<CompetencySessionResponse> {
+    return this.http.post<CompetencySessionResponse>(`${this.baseUrl}/api/competency-sessions/schedule`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  closeCompetencySession(sessionId: number, payload: CompetencySessionCloseRequest): Observable<CompetencySessionResponse> {
+    return this.http.post<CompetencySessionResponse>(`${this.baseUrl}/api/competency-sessions/${sessionId}/close`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  cancelCompetencySession(sessionId: number, payload?: CompetencySessionCancelRequest): Observable<CompetencySessionResponse> {
+    return this.http.patch<CompetencySessionResponse>(`${this.baseUrl}/api/competency-sessions/${sessionId}/cancel`, payload ?? {}, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  rescheduleCompetencySession(sessionId: number, payload: CompetencySessionRescheduleRequest): Observable<CompetencySessionResponse> {
+    return this.http.patch<CompetencySessionResponse>(`${this.baseUrl}/api/competency-sessions/${sessionId}/reschedule`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getCompetencySessionParticipants(sessionId: number): Observable<CompetencySessionParticipantResponse[]> {
+    return this.http.get<CompetencySessionParticipantResponse[]>(`${this.baseUrl}/api/competency-sessions/${sessionId}/participants`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  inviteCompetencySessionParticipants(sessionId: number, payload: SessionParticipantInviteRequest): Observable<CompetencySessionParticipantResponse[]> {
+    return this.http.post<CompetencySessionParticipantResponse[]>(`${this.baseUrl}/api/competency-sessions/${sessionId}/participants/invite`, payload, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getCompetencySessionReport(sessionId: number, userId?: number): Observable<CompetencySessionResponse> {
+    let params = new HttpParams();
+    if (userId) {
+      params = params.set('userId', String(userId));
+    }
+    return this.http.get<CompetencySessionResponse>(`${this.baseUrl}/api/competency-sessions/${sessionId}/report`, {
+      headers: this.authHeaders(),
+      params
+    }).pipe(catchError(this.handleError));
   }
 
   passToInterview(applicationId: number, config: any): Observable<any> {

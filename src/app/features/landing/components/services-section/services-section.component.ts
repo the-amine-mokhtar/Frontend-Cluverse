@@ -94,7 +94,7 @@ export class ServicesSectionComponent implements AfterViewInit, OnDestroy {
       ]
     },
     {
-      title: 'Skills Managing',
+      title: 'Competencies Managing',
       description: 'Map member competencies, identify skill gaps, and match the right people to the right tasks for maximum impact.',
       icon: 'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4 12 14.01l-3-3',
       details: [
