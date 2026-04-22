@@ -1,0 +1,84 @@
+<div class="elections animate-fade-in" style="max-width: 800px;">
+  <div class="elections__header">
+    <div>
+      <h2 class="elections__title">
+        {{ isEditMode ? 'Edit Position' : 'Create New Position' }}
+      </h2>
+      <p class="elections__subtitle">Define roles that candidates can run for.</p>
+    </div>
+  </div>
+
+  <div class="elections__card">
+    <form [formGroup]="positionForm" (ngSubmit)="onSubmit()" class="elections__form">
+
+      <div *ngIf="errorMessage" class="elections__error-alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="elections__form-field">
+        <label>Role Name <span style="color: var(--e-danger);">*</span></label>
+        <input type="text" formControlName="name" placeholder="President, Treasurer, etc.">
+        <div *ngIf="positionForm.get('name')?.invalid && positionForm.get('name')?.touched" class="e-error-text">
+          Name is required.
+        </div>
+      </div>
+
+      <div class="elections__form-field">
+        <label>Description</label>
+        <textarea formControlName="description" rows="3" style="resize: none;" placeholder="Responsibilities and details..."></textarea>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; background: var(--e-primary-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--e-primary-border); margin-bottom: 1.5rem;">
+        <div>
+          <h4 style="margin: 0; font-size: 0.875rem; font-weight: 700; color: var(--e-primary); text-transform: uppercase;">Decide with election</h4>
+          <p style="margin: 0; margin-top: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--e-secondary);">Toggle this if members can run for this position.</p>
+        </div>
+        <label class="elections__toggle-switch">
+          <input type="checkbox" formControlName="isElectable">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="elections__animated-box elections__form-grid"
+           [class.hidden-box]="!positionForm.get('isElectable')?.value"
+           style="background: var(--e-bg-input); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--e-border); margin-bottom: 1.5rem;">
+        
+        <div class="elections__form-field" style="margin-bottom: 0;">
+          <label>Term Length (Days)</label>
+          <input type="number" formControlName="termLength" min="1">
+        </div>
+        
+        <div class="elections__form-field" style="margin-bottom: 0;">
+          <label>Max Candidates</label>
+          <input type="number" formControlName="maxCandidates" min="1">
+        </div>
+
+        <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+          <input type="checkbox" formControlName="isAutoRenew" id="isAutoRenew" style="width: auto; margin: 0; cursor: pointer;">
+          <label for="isAutoRenew" style="margin: 0; cursor: pointer; text-transform: none; letter-spacing: normal;">Auto Renew Term?</label>
+        </div>
+      </div>
+
+      <div class="elections__form-field">
+        <label>Current Holder</label>
+        <select formControlName="currentHolderId">
+          <option [ngValue]="null">No current holder</option>
+          <option *ngFor="let member of members" [ngValue]="member.userId">{{ member.firstName }} {{ member.lastName }}</option>
+        </select>
+      </div>
+
+      <div class="elections__form-actions">
+        <a routerLink="/dashboard/elections/positions-list" class="elections__btn elections__btn--secondary">
+          Cancel
+        </a>
+        <button type="submit" [disabled]="isSubmitting || positionForm.invalid" class="elections__btn elections__btn--primary">
+          {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Position' : 'Create Position') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

@@ -48,3 +48,5 @@ client_secret*.json
 /src/assets/sponsorfiles/**
 !/src/assets/sponsorfiles/.gitkeep
 
+
+.early.coverage

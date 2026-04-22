@@ -1,4 +1,5 @@
 import { Component, EventEmitter, HostListener, OnInit, OnDestroy, Output } from '@angular/core';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthHelperService } from '../../../../../core/services/auth-helper.service';
 import { ApiService } from '../../../../../core/services/api.service';
@@ -30,6 +31,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private location: Location,
     private authHelper: AuthHelperService,
     private api: ApiService
   ) {}
@@ -64,6 +66,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   onMenuToggle(): void {
     this.menuToggle.emit();
+  }
+
+  goBack(): void {
+    const url = this.router.url ?? '';
+    const fallback = url.startsWith('/logistics') ? ['/logistics/dashboard'] : ['/dashboard'];
+
+    // If there is a real navigation history, go back; otherwise fallback.
+    if (window.history.length > 1) {
+      this.location.back();
+      return;
+    }
+
+    this.router.navigate(fallback);
   }
 
   toggleNotifDropdown(event: Event): void {
