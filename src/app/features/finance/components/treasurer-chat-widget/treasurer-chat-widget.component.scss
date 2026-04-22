@@ -1,0 +1,100 @@
+:host {
+  display: block;
+}
+
+.treasurer-chat {
+  border: 1px solid #2e2e2e;
+  border-radius: 12px;
+  background: #171717;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.treasurer-chat__header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #ffffff;
+}
+
+.treasurer-chat__header p {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: #9aa0aa;
+}
+
+.treasurer-chat__messages {
+  max-height: 280px;
+  overflow: auto;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.treasurer-chat__message {
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.treasurer-chat__message--assistant {
+  background: #1f1f1f;
+  color: #f2f2f2;
+}
+
+.treasurer-chat__message--user {
+  background: #17366f;
+  color: #eef4ff;
+  justify-self: end;
+}
+
+.treasurer-chat__message--system {
+  background: #3f2f08;
+  color: #fdebb5;
+}
+
+.treasurer-chat__pending {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.treasurer-chat__pending h4 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.treasurer-chat__approval {
+  border: 1px solid #3b3b3b;
+  border-radius: 10px;
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.55rem;
+  background: #121212;
+}
+
+.treasurer-chat__approval p {
+  margin: 0.2rem 0 0;
+  color: #b7bdc9;
+  font-size: 0.82rem;
+}
+
+.treasurer-chat__approval-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.treasurer-chat__composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.treasurer-chat__composer input {
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+  background: #101010;
+  color: #ffffff;
+  min-height: 2.4rem;
+  padding: 0 0.75rem;
+}
