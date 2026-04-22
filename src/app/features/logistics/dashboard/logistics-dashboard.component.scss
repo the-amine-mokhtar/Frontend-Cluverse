@@ -1,0 +1,46 @@
+/* Scrollbar styling for low stock carousel */
+.overflow-x-auto {
+  /* For Chrome, Safari, Edge */
+  &::-webkit-scrollbar {
+    height: 12px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #ef4444;
+    border-radius: 10px;
+
+    &:hover {
+      background: #dc2626;
+    }
+  }
+
+  /* For Firefox */
+  scrollbar-color: #ef4444 #f3f4f6;
+  scrollbar-width: thin;
+}
+
+.voice-assistant-card {
+  backdrop-filter: blur(2px);
+}
+
+.voice-chip {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 9999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f766e;
+  transition: all 0.2s ease;
+}
+
+.voice-chip:hover {
+  border-color: #14b8a6;
+  color: #115e59;
+  transform: translateY(-1px);
+}

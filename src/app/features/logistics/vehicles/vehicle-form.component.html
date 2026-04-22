@@ -1,0 +1,125 @@
+<div class="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-white">
+  <!-- Header -->
+  <div class="flex-shrink-0 px-8 py-5 border-b border-gray-200">
+    <button
+      type="button"
+      class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition cursor-pointer bg-none border-none p-0 mb-4"
+      (click)="goBack()"
+    >
+      ← Retour
+    </button>
+    <h1 class="text-3xl font-bold text-gray-900">🚗 {{ pageTitle }}</h1>
+  </div>
+
+  <div *ngIf="loading" class="flex-1 flex items-center justify-center text-inherit opacity-80">
+    <div class="text-center">
+      <div class="text-4xl mb-2">⏳</div>
+      <p>Chargement...</p>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div *ngIf="!loading" class="flex-1 overflow-hidden px-8 py-6">
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm mb-4 whitespace-pre-line font-medium">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-2xl mx-auto space-y-4">
+      <!-- 🚗 REGISTRATION SECTION -->
+      <div class="bg-white rounded-lg shadow border-l-4 border-l-blue-500 p-4">
+        <div class="flex items-center gap-3 mb-3 pb-2 border-b-2 border-blue-100">
+          <span class="text-2xl">🚗</span>
+          <h2 class="text-base font-bold text-gray-900">Informations du véhicule</h2>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">📋 Immatriculation</label>
+            <input
+              class="w-full border-2 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 transition"
+              [class.border-red-500]="form.get('plateNumber')?.invalid && form.get('plateNumber')?.touched"
+              [class.border-gray-300]="!form.get('plateNumber')?.invalid || !form.get('plateNumber')?.touched"
+              [class.focus:ring-red-500]="form.get('plateNumber')?.invalid"
+              [class.focus:ring-blue-500]="!form.get('plateNumber')?.invalid"
+              type="text"
+              formControlName="plateNumber"
+              placeholder="Ex: 123 TU 1234"
+            />
+            <div class="text-sm text-gray-500 mt-1">Format: XXX TU XXXX</div>
+            <div *ngIf="getFieldError('plateNumber')" class="text-sm text-red-600 mt-1 font-medium bg-red-50 px-3 py-1 rounded">
+              ⚠️ {{ getFieldError('plateNumber') }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">🏷️ Modèle</label>
+            <input
+              class="w-full border-2 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 transition"
+              [class.border-red-500]="form.get('model')?.invalid && form.get('model')?.touched"
+              [class.border-gray-300]="!form.get('model')?.invalid || !form.get('model')?.touched"
+              [class.focus:ring-red-500]="form.get('model')?.invalid"
+              [class.focus:ring-blue-500]="!form.get('model')?.invalid"
+              type="text"
+              formControlName="model"
+              placeholder="Ex: Renault Kangoo"
+            />
+            <div class="text-sm text-gray-500 mt-1">Marque et modèle (min. 3 caractères)</div>
+            <div *ngIf="getFieldError('model')" class="text-sm text-red-600 mt-1 font-medium bg-red-50 px-3 py-1 rounded">
+              ⚠️ {{ getFieldError('model') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ AVAILABILITY SECTION -->
+      <div class="bg-white rounded-lg shadow border-l-4 border-l-green-500 p-4">
+        <div class="flex items-center gap-3 mb-3 pb-2 border-b-2 border-green-100">
+          <span class="text-2xl">✅</span>
+          <h2 class="text-base font-bold text-gray-900">Disponibilité</h2>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <button
+            type="button"
+            class="relative inline-flex h-9 w-16 items-center rounded-full transition"
+            [ngClass]="availableValue ? 'bg-green-500' : 'bg-gray-300'"
+            (click)="toggleAvailable()"
+            [attr.aria-pressed]="availableValue"
+          >
+            <span
+              class="inline-block h-7 w-7 transform rounded-full bg-white transition"
+              [ngClass]="availableValue ? 'translate-x-8' : 'translate-x-1'"
+            ></span>
+          </button>
+
+          <span
+            class="text-sm font-semibold"
+            [ngClass]="availableValue ? 'text-green-700' : 'text-gray-500'"
+          >
+            {{ availableValue ? '✓ Disponible' : '✗ Indisponible' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Footer with action buttons (INSIDE FORM) -->
+      <div class="border-t border-gray-200 bg-white px-0 py-3 flex justify-end gap-3">
+        <button
+          type="button"
+          class="bg-gray-100 text-gray-700 px-5 py-2 rounded text-sm hover:bg-gray-200 transition font-semibold disabled:opacity-50 border-2 border-gray-300"
+          (click)="cancel()"
+          [disabled]="isSubmitting"
+        >
+          ✕ Annuler
+        </button>
+
+        <button
+          type="submit"
+          class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded text-sm hover:from-blue-700 hover:to-blue-800 transition shadow hover:shadow-lg font-semibold disabled:opacity-50"
+          [disabled]="isSubmitting || form.invalid"
+        >
+          {{ isSubmitting ? '⏳ Création...' : (isEditMode ? '✔️ Enregistrer' : '➕ Créer le véhicule') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

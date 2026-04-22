@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Nominatim Geocoding</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .container { background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: 0 auto; }
+        .result { background: #f9f9f9; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        input { padding: 8px; width: 300px; margin-right: 10px; }
+        .loading { color: orange; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Nominatim Geocoding</h1>
+        
+        <div class="form-group">
+            <input type="text" id="address" placeholder="Enter location name (e.g., Tunis, Gafsa)" value="Tunis, Tunisie">
+            <button onclick="testGeocode()">Test Geocoding</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function testGeocode() {
+            const address = document.getElementById('address').value;
+            const resultsDiv = document.getElementById('results');
+            
+            if (!address) {
+                alert('Please enter a location name');
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="result loading">🔄 Geocoding "' + address + '"...</div>';
+
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=5`;
+                console.log('Request URL:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+
+                console.log('Response:', data);
+
+                if (data && data.length > 0) {
+                    let html = '<div class="result success"><h3>✅ Geocoding Success!</h3>';
+                    data.forEach((item, idx) => {
+                        html += `
+                            <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 4px;">
+                                <strong>Result ${idx + 1}:</strong><br/>
+                                <strong>Name:</strong> ${item.name || 'N/A'}<br/>
+                                <strong>Type:</strong> ${item.type || 'N/A'}<br/>
+                                <strong>Lat:</strong> ${item.lat}<br/>
+                                <strong>Lng:</strong> ${item.lon}<br/>
+                                <strong>Display Name:</strong> ${item.display_name.substring(0, 60)}...<br/>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="result error"><h3>❌ No results found</h3><p>The location "' + address + '" could not be found</p></div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = '<div class="result error"><h3>❌ Error</h3><pre>' + error.message + '</pre></div>';
+            }
+        }
+
+        // Test on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded. Click button to test geocoding.');
+        });
+    </script>
+</body>
+</html>
