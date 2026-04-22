@@ -1,0 +1,330 @@
+<div class="page-wrapper">
+
+  <div class="reservation-form-container">
+
+    <!-- ── EXISTING RESERVATIONS ──────────────────────────────── -->
+    <div
+      class="existing-reservations-section"
+      *ngIf="existingReservations.length > 0 || !isLoadingReservations"
+    >
+      <div class="section-title">
+        <span>Current Reservations</span>
+      </div>
+
+      <div class="reservation-search-bar">
+        <input
+          #reservationSearchInput
+          type="text"
+          class="form-control"
+          placeholder="Search by resource name..."
+          [value]="reservationSearch"
+          (input)="reservationSearch = reservationSearchInput.value"
+        />
+      </div>
+
+      <div *ngIf="isLoadingReservations" class="loading-indicator">
+        <span>Loading reservations…</span>
+      </div>
+
+      <div
+        *ngIf="!isLoadingReservations && existingReservations.length > 0"
+        class="existing-reservations-list"
+      >
+        <div class="reservation-item" *ngFor="let res of filteredReservations">
+          <div class="reservation-header">
+            <div class="resource-name">{{ res.resourceName || getResourceName(res.resourceId) }}</div>
+            <div class="reservation-actions">
+              <span
+                class="status-badge"
+                [ngClass]="'status-' + (res.status | lowercase)"
+              >
+                {{ res.status | uppercase }}
+              </span>
+              <button
+                type="button"
+                class="btn btn-sm btn-danger"
+                (click)="deleteConfirmedReservation(res.id)"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+          <div class="reservation-info">
+            <span>{{ res.quantityReserved }} unit(s)</span>
+            <span>From {{ res.startDate | date:'short' }}</span>
+            <span>Until {{ res.endDate | date:'short' }}</span>
+            <span *ngIf="res.notes">{{ res.notes }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        *ngIf="!isLoadingReservations && existingReservations.length === 0"
+        class="empty-reservations"
+      >
+        <p>No reservations yet for this event — you're first!</p>
+      </div>
+    </div>
+
+    <!-- ── INTRO CARDS ─────────────────────────────────────────── -->
+    <div class="reservation-intro">
+      <div class="intro-card">
+        <span class="badge">Resource Booking</span>
+        <h2>Reserve Resources</h2>
+        <p>
+          Add multiple resources to your cart with individual dates and quantities,
+          then confirm everything in a single action.
+        </p>
+      </div>
+      <div class="hint-card">
+        <h3>Pro tip</h3>
+        <p>
+          You can add different resources with different date ranges.
+          All of them will be reserved simultaneously when you confirm.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── MAIN GRID: FORM + CART ──────────────────────────────── -->
+    <div class="main-grid">
+
+      <!-- LEFT — ADD RESOURCE FORM ──────────────────────────── -->
+      <div>
+        <div class="subsection-heading">Add a resource</div>
+
+        <form [formGroup]="reservationForm" (ngSubmit)="addToCart()" class="reservation-form">
+
+          <!-- Resource selection -->
+          <div class="form-group">
+            <label for="resourceId">Resource *</label>
+            <select
+              id="resourceId"
+              formControlName="resourceId"
+              (change)="onResourceChange()"
+              class="form-control"
+            >
+              <option value="">Select a resource…</option>
+              <option *ngFor="let resource of availableResources" [value]="resource.id">
+                {{ resource.name }} — {{ resource.availableQuantity }} available
+              </option>
+            </select>
+            <div
+              *ngIf="reservationForm.get('resourceId')?.invalid && reservationForm.get('resourceId')?.touched"
+              class="error"
+            >
+              Please select a resource
+            </div>
+          </div>
+
+          <!-- Selected resource info -->
+          <div *ngIf="getSelectedResource()" class="resource-info">
+            <h4>{{ getSelectedResource()?.name }}</h4>
+            <p class="desc">{{ getSelectedResource()?.description }}</p>
+            <p class="availability">
+              <strong>Available:</strong>
+              {{ getSelectedResource()?.availableQuantity }} / {{ getSelectedResource()?.quantityTotal }}
+            </p>
+          </div>
+
+          <!-- Quantity -->
+          <div class="form-group">
+            <label for="quantityReserved">Quantity *</label>
+            <input
+              type="number"
+              id="quantityReserved"
+              formControlName="quantityReserved"
+              class="form-control"
+              min="1"
+              [max]="getSelectedResource()?.availableQuantity ?? 1"
+            />
+            <div
+              *ngIf="reservationForm.get('quantityReserved')?.invalid && reservationForm.get('quantityReserved')?.touched"
+              class="error"
+            >
+              {{ getErrorMessage('quantityReserved') || 'Invalid quantity' }}
+            </div>
+          </div>
+
+          <!-- Start date -->
+          <div class="form-group">
+            <label for="startDate">Start date *</label>
+            <input
+              type="datetime-local"
+              id="startDate"
+              formControlName="startDate"
+              [min]="minDateTime"
+              class="form-control"
+            />
+            <div
+              *ngIf="reservationForm.get('startDate')?.invalid && reservationForm.get('startDate')?.touched"
+              class="error"
+            >
+              {{ getErrorMessage('startDate') || 'Required' }}
+            </div>
+          </div>
+
+          <!-- End date -->
+          <div class="form-group">
+            <label for="endDate">End date *</label>
+            <input
+              type="datetime-local"
+              id="endDate"
+              formControlName="endDate"
+              [min]="minDateTime"
+              class="form-control"
+            />
+            <div
+              *ngIf="reservationForm.get('endDate')?.invalid && reservationForm.get('endDate')?.touched"
+              class="error"
+            >
+              {{ getErrorMessage('endDate') || 'Required' }}
+            </div>
+            <div
+              *ngIf="reservationForm.errors?.['dateRangeMismatch'] && reservationForm.get('endDate')?.touched"
+              class="error"
+            >
+              {{ getFormLevelError() }}
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group">
+            <label for="notes">
+              Notes
+              <span style="font-weight:400; text-transform:none; letter-spacing:0">(optional)</span>
+            </label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              class="form-control"
+              rows="2"
+              placeholder="Any additional information…"
+            ></textarea>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="reservationForm.invalid"
+            >
+              Add to cart
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- RIGHT — CART ──────────────────────────────────────── -->
+      <div>
+        <div class="subsection-heading">
+          Reservation cart
+          <span style="font-weight:400; text-transform:none; letter-spacing:0; margin-left:6px;">
+            {{ cartItems.length }} item{{ cartItems.length !== 1 ? 's' : '' }}
+          </span>
+        </div>
+
+        <!-- Cart items -->
+        <div *ngIf="cartItems.length > 0" class="cart-items">
+          <div class="cart-item" *ngFor="let item of cartItems; let i = index">
+            <div class="cart-header">
+              <div class="cart-title">{{ item.resourceName }}</div>
+              <button
+                type="button"
+                class="btn btn-sm btn-danger"
+                (click)="removeFromCart(i)"
+              >
+                Remove
+              </button>
+            </div>
+            <div class="cart-details">
+              <span>Qty: <strong>{{ item.quantityReserved }}</strong></span>
+              <span>From {{ item.startDate | date:'short' }}</span>
+              <span>Until {{ item.endDate | date:'short' }}</span>
+              <span *ngIf="item.notes" style="font-style:italic; font-size:0.8rem;">
+                {{ item.notes }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div *ngIf="cartItems.length === 0" class="empty-state small">
+          <div class="empty-icon">🛒</div>
+          <p>Your cart is empty.<br/>Add resources using the form on the left.</p>
+        </div>
+
+        <!-- Cart footer -->
+        <div *ngIf="cartItems.length > 0" class="cart-footer">
+          <div class="cart-summary">Confirming reservation for</div>
+          <div class="cart-total">
+            <span>{{ cartItems.length }}</span>
+            resource{{ cartItems.length !== 1 ? 's' : '' }}
+          </div>
+          <div class="cart-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="cancel()"
+              [disabled]="isSubmitting"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-blue"
+              (click)="submit()"
+              [disabled]="isSubmitting"
+            >
+              {{ isSubmitting ? 'Reserving…' : 'Confirm all' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── CONFIRMATION MODAL ──────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="showConfirmationModal">
+    <div class="modal-dialog">
+
+      <div class="modal-header">
+        <h3>Confirm Reservation</h3>
+        <button
+          type="button"
+          class="modal-close"
+          (click)="closeConfirmationModal()"
+          aria-label="Close modal"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="confirmation-message">{{ confirmationMessage }}</p>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeConfirmationModal()"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="confirmAddToCart()"
+        >
+          Confirm
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

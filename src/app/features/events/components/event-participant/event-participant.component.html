@@ -1,0 +1,461 @@
+<div class="page-wrapper">
+
+  <!-- ── HEADER ─────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Events</h1>
+      <p class="subtitle">Browse and join upcoming club events</p>
+    </div>
+  </div>
+
+  <!-- ── ALL EVENTS ─────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">All Events</h2>
+      <div class="search-and-filters">
+        <div class="search-wrap">
+          <svg class="search-icon" width="13" height="13" fill="none" stroke="currentColor"
+               stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input class="search-input" placeholder="Search events…"
+                 [(ngModel)]="searchQuery" (input)="applyFilters()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="events-grid">
+      <div class="event-card" *ngFor="let event of filteredEvents">
+
+        <!-- Image -->
+        <div class="card-img">
+          <img *ngIf="event.imageUrl" [src]="event.imageUrl"
+               [alt]="event.title" (error)="onImgError($event)" />
+          <div class="no-img" *ngIf="!event.imageUrl">
+            <svg width="26" height="26" fill="none" stroke="currentColor"
+                 stroke-width="1.4" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            <span>No image</span>
+          </div>
+          <span class="img-badge">{{ event.category || 'General' }}</span>
+          <span class="reg-badge" *ngIf="isParticipating(event.id)">
+            <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Registered
+          </span>
+
+          <!-- FIX #5: event.status === 'ONGOING' — valide car EventStatus inclut 'ONGOING' -->
+          <span class="pulse-dot" *ngIf="event.status === 'ONGOING'"></span>
+
+          <span class="status-badge-top"
+                [ngClass]="event.status === 'COMPLETED' ? 'completed' : (event.isFull ? 'full' : 'available')">
+            <!-- FIX #5: event.status === 'COMPLETED' — valide car EventStatus inclut 'COMPLETED' -->
+            {{ event.status === 'COMPLETED' ? '⛔ Completed' : (event.isFull ? '❌ Full' : '✅ Available') }}
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+          <div class="card-title">{{ event.title }}</div>
+          <div class="card-desc">{{ event.description }}</div>
+          <div class="meta">
+            <span class="mt" *ngIf="event.locationName">
+              <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                <circle cx="12" cy="9" r="2.5"/>
+              </svg>
+              {{ event.locationName }}
+            </span>
+            <span class="mt" *ngIf="event.startDate">📅 Start: {{ event.startDate | date:'mediumDate' }}</span>
+            <span class="mt" *ngIf="event.endDate">⏳ End: {{ event.endDate | date:'mediumDate' }}</span>
+            <span class="mt"
+                  [class.c-green]="!event.isFull"
+                  [class.c-danger]="event.isFull"
+                  *ngIf="event.capacity">
+              👥 {{ event.participantsCount || 0 }} / {{ event.capacity || 0 }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-foot">
+          <button class="btn btn-blue"
+                  *ngIf="!isParticipating(event.id) && !event.isFull && !isEventCompleted(event)"
+                  (click)="openJoin(event)">
+            {{ event.isPaid ? 'Pay & Participate' : 'Participate' }}
+          </button>
+          <button class="btn btn-disabled" disabled
+                  *ngIf="event.isFull && !isParticipating(event.id)">
+            Full
+          </button>
+          <button class="btn btn-ghost" (click)="openDetail(event)">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Details
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="filteredEvents.length === 0 && !isLoadingEvents">
+      <p>No events found.</p>
+    </div>
+    <div class="empty-state" *ngIf="isLoadingEvents"><p>Loading…</p></div>
+  </section>
+
+  <!-- ══ PARTICIPATIONS ═══════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">My Participations</h2>
+      <div class="participation-tabs">
+        <span class="tab-badge active">Active ({{ activeParticipations.length }})</span>
+        <span class="tab-badge">History ({{ cancelledParticipations.length + completedParticipations.length }})</span>
+      </div>
+    </div>
+
+    <!-- ── ACTIVE ─────────────────────────────────────────────────────────── -->
+    <div class="participation-subsection">
+      <h3 class="subsection-title">✅ Active Participations</h3>
+      <div class="participations-list" *ngIf="activeParticipations.length > 0">
+        <div class="participation-card active-card" *ngFor="let p of activeParticipations">
+          <div class="p-top">
+            <div class="p-status-indicator registered"></div>
+            <span class="status-badge sb-reg"><span class="dot"></span>{{ p.status | titlecase }}</span>
+            <app-reminder-status [participation]="p"></app-reminder-status>
+          </div>
+          <div class="p-main">
+            <div class="p-event">
+              <div class="p-name">{{ p.event?.title || '—' }}</div>
+              <div class="p-meta-compact">
+                <span *ngIf="p.event?.locationName" class="meta-item">📍 {{ p.event?.locationName }}</span>
+                <span *ngIf="p.event?.startDate" class="meta-item">📅 {{ p.event?.startDate | date:'short' }}</span>
+                <span *ngIf="p.reservedSeats" class="meta-item">👥 {{ p.reservedSeats }} seat(s)</span>
+              </div>
+            </div>
+            <div class="p-details" *ngIf="p.comment || p.contactInfo">
+              <span *ngIf="p.contactInfo" class="detail-item">📧 {{ p.contactInfo }}</span>
+              <span *ngIf="p.comment" class="detail-item italic">"{{ p.comment }}"</span>
+            </div>
+          </div>
+          <div class="p-actions">
+            <!-- FIX #5: p.status !== 'REGISTERED' — valide car ParticipationStatus inclut 'REGISTERED' -->
+            <button class="btn btn-sm btn-primary"
+                    [disabled]="p.status !== 'REGISTERED'"
+                    (click)="openEdit(p.event!.id)">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7
+                         M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Edit
+            </button>
+            <button class="btn btn-sm btn-danger"
+                    [disabled]="p.status !== 'REGISTERED'"
+                    (click)="cancelParticipation(p.id)">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state compact" *ngIf="activeParticipations.length === 0 && !isLoadingParticipations">
+        <p>No active participations.</p>
+      </div>
+    </div>
+
+    <!-- ── COMPLETED ──────────────────────────────────────────────────────── -->
+    <div class="participation-subsection" *ngIf="completedParticipations.length > 0">
+      <h3 class="subsection-title">🕑 Completed / Attended History</h3>
+      <div class="participations-list">
+        <div class="participation-card completed-card" *ngFor="let p of completedParticipations">
+          <div class="p-top">
+            <div class="p-status-indicator completed"></div>
+            <span class="status-badge sb-completed">
+              <span class="dot"></span>
+              <!-- FIX #5: p.event?.status === 'COMPLETED' — valide car EventStatus inclut 'COMPLETED' -->
+              {{ p.event?.status === 'COMPLETED' ? 'Completed' : (p.status | titlecase) }}
+            </span>
+            <app-reminder-status [participation]="p"></app-reminder-status>
+          </div>
+          <div class="p-main">
+            <div class="p-event">
+              <div class="p-name">{{ p.event?.title || '—' }}</div>
+              <div class="p-meta-compact">
+                <span *ngIf="p.event?.locationName" class="meta-item">📍 {{ p.event?.locationName }}</span>
+                <span *ngIf="p.event?.startDate" class="meta-item">📅 {{ p.event?.startDate | date:'short' }}</span>
+                <span *ngIf="p.reservedSeats" class="meta-item">👥 {{ p.reservedSeats }} seat(s)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CANCELLED ──────────────────────────────────────────────────────── -->
+    <div class="participation-subsection" *ngIf="cancelledParticipations.length > 0">
+      <h3 class="subsection-title">📝 Cancelled History</h3>
+      <div class="participations-list">
+        <div class="participation-card cancelled-card" *ngFor="let p of cancelledParticipations">
+          <div class="p-top">
+            <div class="p-status-indicator cancelled"></div>
+            <span class="status-badge sb-can"><span class="dot"></span>{{ p.status | titlecase }}</span>
+            <app-reminder-status [participation]="p"></app-reminder-status>
+          </div>
+          <div class="p-main">
+            <div class="p-event">
+              <div class="p-name">{{ p.event?.title || '—' }}</div>
+              <div class="p-meta-compact">
+                <span *ngIf="p.event?.locationName" class="meta-item">📍 {{ p.event?.locationName }}</span>
+                <span *ngIf="p.cancelledAt" class="meta-item cancelled-date">
+                  ⏱️ Cancelled {{ p.cancelledAt | date:'short' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="p-actions">
+            <button class="btn btn-sm btn-success" (click)="reactivateParticipation(p.id)">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Reactivate
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="myParticipations.length === 0 && !isLoadingParticipations">
+      <p>No participations yet.</p>
+    </div>
+  </section>
+
+</div>
+
+
+<!-- ══ MODAL — JOIN / EDIT ════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="selectedEvent" (click)="closeModalOnOverlay($event)">
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">{{ editId ? 'Edit Participation' : 'Join Event' }}</div>
+        <div class="modal-sub">
+          {{ selectedEvent.title }}
+          <span *ngIf="selectedEvent.locationName"> · {{ selectedEvent.locationName }}</span>
+        </div>
+      </div>
+      <button class="btn-close" (click)="closeModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <form [formGroup]="participationForm" (ngSubmit)="submitParticipation()" novalidate>
+      <div class="form-header">
+        <div class="form-title">Participant details</div>
+        <div class="form-caption">Fill in the required fields below.</div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Full Name *</label>
+          <input type="text" formControlName="fullName" placeholder="Your full name" />
+          <span class="f-err" *ngIf="participationForm.get('fullName')?.invalid && participationForm.get('fullName')?.touched">
+            Full name is required.
+          </span>
+        </div>
+        <div class="form-field">
+          <label>Email *</label>
+          <input type="email" formControlName="email" placeholder="you@example.com" />
+          <span class="f-err" *ngIf="participationForm.get('email')?.invalid && participationForm.get('email')?.touched">
+            <span *ngIf="participationForm.get('email')?.errors?.['required']">Email is required.</span>
+            <span *ngIf="participationForm.get('email')?.errors?.['email']">Invalid email.</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Phone *</label>
+          <input type="tel" formControlName="phone" placeholder="+216 …" />
+          <span class="f-err" *ngIf="participationForm.get('phone')?.invalid && participationForm.get('phone')?.touched">
+            Phone is required.
+          </span>
+        </div>
+        <div class="form-field">
+          <label>Reserved Seats *</label>
+          <input type="number" formControlName="reservedSeats" min="1" />
+          <span class="f-err" *ngIf="participationForm.get('reservedSeats')?.invalid && participationForm.get('reservedSeats')?.touched">
+            Minimum 1 seat.
+          </span>
+        </div>
+      </div>
+
+      <div class="form-divider"><span>Optional info</span></div>
+
+      <div class="form-field wide-field">
+        <label>Additional Contact Info</label>
+        <input type="text" formControlName="contactInfo" placeholder="Alternative contact…" />
+      </div>
+      <div class="form-field wide-field">
+        <label>Comment</label>
+        <textarea formControlName="comment" rows="2" placeholder="Note for the organizer…"></textarea>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Emergency Contact</label>
+          <input type="text" formControlName="emergencyContact" placeholder="+216 …" />
+        </div>
+        <div class="form-field">
+          <label>Team Name</label>
+          <input type="text" formControlName="teamName" placeholder="Your team…" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Dietary Requirements</label>
+        <input type="text" formControlName="dietaryRequirements" placeholder="Vegetarian, halal…" />
+      </div>
+      <div class="form-check">
+        <input type="checkbox" formControlName="wantsReminder" id="reminder" />
+        <label for="reminder">Receive a reminder before the event</label>
+      </div>
+
+      <button type="submit" class="btn btn-submit" [disabled]="isSubmitting">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        {{ isSubmitting ? 'Sending…' : (editId ? 'Save Changes' : 'Confirm Participation') }}
+      </button>
+    </form>
+  </div>
+</div>
+
+
+<!-- ══ MODAL — EVENT DETAILS ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="detailEvent" (click)="closeModalOnOverlay($event)">
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Event Details</div>
+        <div class="modal-sub">{{ detailEvent.title }}</div>
+      </div>
+      <button class="btn-close" (click)="closeModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="detail-img" *ngIf="detailEvent.imageUrl">
+      <img [src]="detailEvent.imageUrl" [alt]="detailEvent.title" (error)="onImgError($event)" />
+    </div>
+
+    <div class="detail-body">
+      <p class="detail-desc" *ngIf="detailEvent.description">{{ detailEvent.description }}</p>
+      <div class="detail-rows">
+        <div class="detail-row" *ngIf="detailEvent.locationName">
+          <span class="dr-label">Location</span>
+          <span class="dr-val">{{ detailEvent.locationName }}</span>
+        </div>
+        <div class="detail-row" *ngIf="detailEvent.startDate || detailEvent.date">
+          <span class="dr-label">Date</span>
+          <span class="dr-val">{{ (detailEvent.startDate || detailEvent.date) | date:'fullDate' }}</span>
+        </div>
+        <div class="detail-row" *ngIf="detailEvent.endDate">
+          <span class="dr-label">End Date</span>
+          <span class="dr-val">{{ detailEvent.endDate | date:'fullDate' }}</span>
+        </div>
+        <div class="detail-row" *ngIf="detailEvent.capacity">
+          <span class="dr-label">Capacity</span>
+          <span class="dr-val">{{ detailEvent.participantsCount || 0 }} / {{ detailEvent.capacity }}</span>
+        </div>
+        <div class="detail-row" *ngIf="detailEvent.category">
+          <span class="dr-label">Category</span>
+          <span class="dr-val">{{ detailEvent.category }}</span>
+        </div>
+        <div class="detail-row" *ngIf="detailEvent.status">
+          <span class="dr-label">Status</span>
+          <span class="dr-val">{{ detailEvent.status }}</span>
+        </div>
+      </div>
+
+      <!-- Admin: Participants -->
+      <div class="detail-participants-section" *ngIf="isAdmin">
+        <h4 class="map-title">👥 Participants</h4>
+        <div class="participant-row" *ngFor="let p of detailParticipants">
+          <div class="participant-info">
+            <div class="participant-name">{{ p.userName || 'Participant' }}</div>
+            <div class="participant-details">
+              <span *ngIf="p.userEmail">✉️ {{ p.userEmail }}</span>
+              <span *ngIf="p.userPhone">📞 {{ p.userPhone }}</span>
+              <span *ngIf="p.reservedSeats">• Seats: {{ p.reservedSeats }}</span>
+              <span>• {{ p.status | titlecase }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state small" *ngIf="detailParticipants.length === 0">
+          <p>No participants yet.</p>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div class="detail-map-section">
+        <h4 class="map-title">📍 Event Location</h4>
+        <app-event-map-3d [events]="[detailEvent]" [zoom]="15"></app-event-map-3d>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeModal()">Close</button>
+      <button class="btn btn-blue"
+              *ngIf="!isParticipating(detailEvent.id) && !detailEvent.isFull && !isEventCompleted(detailEvent)"
+              (click)="openJoin(detailEvent)">
+        Participate
+      </button>
+      <button class="btn btn-outline-green"
+              *ngIf="isParticipating(detailEvent.id)"
+              (click)="openEdit(detailEvent.id)">
+        Edit Participation
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ MODAL — CONFIRM DELETE ═════════════════════════════════════════════════ -->
+<div class="modal-overlay confirm-overlay"
+     *ngIf="confirmDeleteParticipationId"
+     (click)="cancelDeleteParticipation()">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="confirm-header">
+      <div>
+        <div class="confirm-title">Confirm deletion</div>
+        <div class="confirm-sub">Remove this participation?</div>
+      </div>
+      <button class="btn-close" (click)="cancelDeleteParticipation()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="confirm-body">
+      <p>This will cancel your registration and remove the record.</p>
+    </div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" (click)="cancelDeleteParticipation()">No, keep it</button>
+      <button class="btn btn-red" (click)="confirmDeleteParticipation()">Yes, delete</button>
+    </div>
+  </div>
+</div>

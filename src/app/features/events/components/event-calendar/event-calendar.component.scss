@@ -1,0 +1,489 @@
+// ─── Shared tokens (import from your shared variables or copy) ─
+$bg-page:  #080d18;
+$bg-card:  #0f1626;
+$bg-inner: #161f33;
+$bg-hover: #1c2a44;
+$border:     rgba(255,255,255,0.07);
+$border-md:  rgba(255,255,255,0.12);
+$text-main:  #f0f4ff;
+$text-muted: #5a6a8a;
+$text-sub:   #8899bb;
+
+$green:   #00e5a0;
+$green-2: #00b87d;
+$green-dim:  rgba(0,229,160,0.08);
+$green-bdr:  rgba(0,229,160,0.22);
+$green-glow: rgba(0,229,160,0.18);
+
+$blue:    #4d9cff;
+$blue-2:  #2563eb;
+$blue-dim:  rgba(77,156,255,0.08);
+$blue-bdr:  rgba(77,156,255,0.22);
+
+$teal:    #00d4c8;
+$amber:   #ffb547;
+$red:     #ff5470;
+$purple:  #a78bfa;
+
+// Category colors
+$cat-conference: #4d9cff;
+$cat-workshop:   #00e5a0;
+$cat-meeting:    #a78bfa;
+$cat-training:   #ffb547;
+$cat-hackathon:  #ff5470;
+$cat-social:     #00d4c8;
+$cat-custom:     #f472b6;
+
+// Category dot mixin
+@mixin cat-colors($color) {
+  .chip-dot, .pec-accent { background: $color; }
+  color: $color;
+  border-color: rgba($color, 0.3);
+  background: rgba($color, 0.07);
+}
+
+// ─── Container ─────────────────────────────────────────────────
+.calendar-container {
+  font-family: 'Space Grotesk', sans-serif;
+  color: $text-main;
+  background: $bg-card;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+
+// ─── Top Bar ───────────────────────────────────────────────────
+.cal-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.75rem;
+  border-bottom: 1px solid $border;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &__left { display: flex; align-items: center; gap: 14px; }
+  &__right { display: flex; align-items: center; gap: 16px; }
+}
+
+.cal-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal-nav-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: 1px solid $border-md;
+  background: $bg-inner;
+  color: $text-sub;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s;
+
+  &:hover {
+    border-color: $green-bdr;
+    color: $green;
+    background: $green-dim;
+  }
+}
+
+.cal-month-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 160px;
+  text-align: center;
+  letter-spacing: -0.3px;
+}
+
+.cal-today-btn {
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: 1px solid $border-md;
+  background: transparent;
+  color: $text-sub;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+
+  &:hover {
+    border-color: $blue-bdr;
+    color: $blue;
+    background: $blue-dim;
+  }
+}
+
+// Legend
+.cal-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: $text-muted;
+
+  .legend-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+}
+
+.legend-conference .legend-dot { background: $cat-conference; }
+.legend-workshop   .legend-dot { background: $cat-workshop; }
+.legend-hackathon  .legend-dot { background: $cat-hackathon; }
+.legend-other      .legend-dot { background: $cat-custom; }
+
+// ─── Body Layout ───────────────────────────────────────────────
+.cal-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ─── Grid Panel ────────────────────────────────────────────────
+.cal-grid-panel {
+  padding: 1.25rem 1.5rem;
+  border-right: 1px solid $border;
+}
+
+.cal-day-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 8px;
+}
+
+.cal-day-hdr {
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 6px 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.cal-cell {
+  min-height: 88px;
+  border-radius: 10px;
+  padding: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+
+  &:hover:not(.other-month) {
+    background: $bg-inner;
+    border-color: $border;
+  }
+
+  &.other-month {
+    opacity: 0.28;
+    cursor: default;
+    .cal-cell__num { color: $text-muted; }
+  }
+
+  &.today {
+    border-color: $green-bdr;
+    background: $green-dim;
+
+    .cal-cell__num {
+      color: $green;
+      font-weight: 800;
+    }
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, rgba(0,229,160,0.12), rgba(77,156,255,0.12));
+    border-color: $green-bdr;
+    box-shadow: 0 0 0 1px rgba(0,229,160,0.12) inset;
+  }
+}
+
+.cal-cell__num {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $text-sub;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.cal-cell__events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.cal-event-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.8; }
+
+  .chip-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .chip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  &[data-cat="CONFERENCE"] { background: rgba(77,156,255,0.12); color: $cat-conference; border-color: rgba(77,156,255,0.2); .chip-dot { background: $cat-conference; } }
+  &[data-cat="WORKSHOP"]   { background: rgba(0,229,160,0.1);   color: $cat-workshop;   border-color: rgba(0,229,160,0.2);  .chip-dot { background: $cat-workshop; }   }
+  &[data-cat="MEETING"]    { background: rgba(167,139,250,0.1); color: $cat-meeting;    border-color: rgba(167,139,250,0.2);.chip-dot { background: $cat-meeting; }    }
+  &[data-cat="TRAINING"]   { background: rgba(255,181,71,0.1);  color: $cat-training;   border-color: rgba(255,181,71,0.2); .chip-dot { background: $cat-training; }   }
+  &[data-cat="HACKATHON"]  { background: rgba(255,84,112,0.1);  color: $cat-hackathon;  border-color: rgba(255,84,112,0.2); .chip-dot { background: $cat-hackathon; }  }
+  &[data-cat="SOCIAL"]     { background: rgba(0,212,200,0.1);   color: $cat-social;     border-color: rgba(0,212,200,0.2);  .chip-dot { background: $cat-social; }     }
+  // fallback custom
+  &:not([data-cat]) {
+    background: rgba(244,114,182,0.1);
+    color: $cat-custom;
+    border-color: rgba(244,114,182,0.2);
+    .chip-dot { background: $cat-custom; }
+  }
+}
+
+.cal-more-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: $text-muted;
+  padding: 1px 5px;
+  background: $bg-hover;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+// ─── Events Panel ──────────────────────────────────────────────
+.cal-events-panel {
+  display: flex;
+  flex-direction: column;
+  background: $bg-inner;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 1.4rem 1.5rem 1rem;
+  border-bottom: 1px solid $border;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-date {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-day-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1;
+  background: linear-gradient(135deg, $green, $blue);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.panel-date-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.panel-weekday {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $text-main;
+}
+
+.panel-month {
+  font-size: 0.72rem;
+  color: $text-muted;
+}
+
+.panel-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: $green-dim;
+  color: $green;
+  border: 1px solid $green-bdr;
+}
+
+.panel-no-select {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: 1;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: $text-muted;
+  font-size: 0.82rem;
+
+  svg { opacity: 0.35; }
+}
+
+.panel-events-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 480px;
+
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $green-bdr; border-radius: 4px; }
+}
+
+.panel-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 2.5rem; gap: 8px;
+  color: $text-muted; text-align: center;
+
+  svg { opacity: 0.3; }
+  p { font-size: 0.82rem; }
+}
+
+// Panel event card
+.panel-event-card {
+  display: flex;
+  gap: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid $border;
+  background: $bg-card;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateX(3px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  }
+
+  &[data-cat="CONFERENCE"] { border-color: rgba(77,156,255,0.25); &:hover { border-color: rgba(77,156,255,0.45); } .pec-accent { background: $cat-conference; } }
+  &[data-cat="WORKSHOP"]   { border-color: rgba(0,229,160,0.25);  &:hover { border-color: rgba(0,229,160,0.45); }  .pec-accent { background: $cat-workshop; } }
+  &[data-cat="MEETING"]    { border-color: rgba(167,139,250,0.25);&:hover { border-color: rgba(167,139,250,0.45); }.pec-accent { background: $cat-meeting; } }
+  &[data-cat="TRAINING"]   { border-color: rgba(255,181,71,0.25); &:hover { border-color: rgba(255,181,71,0.45); } .pec-accent { background: $cat-training; } }
+  &[data-cat="HACKATHON"]  { border-color: rgba(255,84,112,0.25); &:hover { border-color: rgba(255,84,112,0.45); } .pec-accent { background: $cat-hackathon; } }
+  &[data-cat="SOCIAL"]     { border-color: rgba(0,212,200,0.25);  &:hover { border-color: rgba(0,212,200,0.45); }  .pec-accent { background: $cat-social; } }
+}
+
+.pec-accent {
+  width: 3px;
+  flex-shrink: 0;
+  background: $cat-custom;
+}
+
+.pec-body {
+  padding: 12px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pec-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.pec-category {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 7px;
+  border-radius: 5px;
+
+  &[data-cat="CONFERENCE"] { background: rgba(77,156,255,0.1);  color: $cat-conference; }
+  &[data-cat="WORKSHOP"]   { background: rgba(0,229,160,0.08);  color: $cat-workshop; }
+  &[data-cat="MEETING"]    { background: rgba(167,139,250,0.1); color: $cat-meeting; }
+  &[data-cat="TRAINING"]   { background: rgba(255,181,71,0.1);  color: $cat-training; }
+  &[data-cat="HACKATHON"]  { background: rgba(255,84,112,0.1);  color: $cat-hackathon; }
+  &[data-cat="SOCIAL"]     { background: rgba(0,212,200,0.1);   color: $cat-social; }
+  &:not([data-cat])        { background: rgba(244,114,182,0.1); color: $cat-custom; }
+}
+
+.pec-status {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+
+  &[data-status="PLANNED"]   { background: rgba(255,181,71,0.1); color: $amber; border: 1px solid rgba(255,181,71,0.25); }
+  &[data-status="ONGOING"]   { background: $green-dim; color: $green; border: 1px solid $green-bdr; }
+  &[data-status="COMPLETED"] { background: $blue-dim;  color: $blue;  border: 1px solid $blue-bdr; }
+}
+
+.pec-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $text-main;
+  line-height: 1.3;
+}
+
+.pec-desc {
+  font-size: 0.73rem;
+  color: $text-muted;
+  line-height: 1.5;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pec-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 2px;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: $text-muted;
+
+    svg { flex-shrink: 0; stroke: $text-muted; }
+  }
+}

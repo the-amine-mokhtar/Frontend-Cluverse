@@ -1,0 +1,863 @@
+// ── Google Fonts ──────────────────────────────────────────────
+// Dans angular.json > styles ou dans le global styles.scss :
+// @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+// ── Design Tokens ─────────────────────────────────────────────
+$bg-page:        #06111f;
+$bg-card:        #0a1929;
+$bg-inner:       #0d2035;
+$bg-hover:       #102540;
+
+$border:         #132d47;
+$border-light:   #1a3d5c;
+
+$text-main:      #e2f0ff;
+$text-muted:     #254a6a;
+$text-secondary: #5c8fb5;
+
+// Brand
+$blue:           #3b9eff;
+$blue2:          #00c6e0;
+$blue-light:     rgba(59, 158, 255, 0.12);
+$blue-glow:      rgba(59, 158, 255, 0.25);
+
+$green:          #00e5a0;
+$green2:         #00cfb4;
+$green-light:    rgba(0, 229, 160, 0.10);
+$green-glow:     rgba(0, 229, 160, 0.22);
+
+$yellow:         #f5c542;
+$yellow-light:   rgba(245, 197, 66, 0.12);
+
+$danger:         #ff5c7a;
+$danger-light:   rgba(255, 92, 122, 0.12);
+
+// Radii
+$r-sm:  6px;
+$r-md:  10px;
+$r-lg:  14px;
+$r-xl:  20px;
+$r-2xl: 28px;
+
+// Fonts
+$font-head: 'Space Grotesk', sans-serif;
+$font-body: 'DM Sans', sans-serif;
+
+// ── Mixins ────────────────────────────────────────────────────
+@mixin glass-card {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: $r-2xl;
+}
+
+@mixin surface {
+  background: $bg-inner;
+  border: 1px solid $border;
+  border-radius: $r-lg;
+}
+
+@mixin section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: $text-secondary;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: $border;
+  }
+}
+
+// ── Scrollbar ─────────────────────────────────────────────────
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: $border-light; border-radius: 99px; }
+
+// ── Page wrapper ──────────────────────────────────────────────
+.page-wrapper {
+  background: $bg-page;
+  color: $text-main;
+  font-family: $font-body;
+  font-size: 15px;
+  min-height: 100vh;
+}
+
+// ── Page header ───────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+
+  h1 {
+    font-family: $font-head;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    background: linear-gradient(120deg, $green 0%, $blue 55%, $blue2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  p {
+    font-size: 0.88rem;
+    color: $text-secondary;
+    margin-top: 0.3rem;
+    max-width: 420px;
+    line-height: 1.6;
+  }
+}
+
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 99px;
+  border: 1px solid rgba(0, 229, 160, 0.22);
+  background: $green-light;
+  color: $green;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $green;
+    animation: pulse 2s infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.7); }
+}
+
+// ── Container ─────────────────────────────────────────────────
+.reservation-form-container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+// ── Existing Reservations ─────────────────────────────────────
+.existing-reservations-section {
+  @include glass-card;
+  border-color: rgba(0, 229, 160, 0.18);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 229, 160, 0.05) 0%,
+    rgba(59, 158, 255, 0.06) 100%
+  );
+  padding: 1.6rem 1.8rem;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  @include section-label;
+  color: $green;
+  margin-bottom: 1.1rem;
+
+  &::after { background: rgba(0, 229, 160, 0.2); }
+}
+
+.existing-reservations-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.9rem;
+}
+
+.reservation-item {
+  @include surface;
+  padding: 1rem 1.1rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: $bg-hover;
+    border-color: $border-light;
+  }
+}
+
+.reservation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+  gap: 0.5rem;
+}
+
+.reservation-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.resource-name {
+  font-family: $font-head;
+  font-weight: 600;
+  color: $text-main;
+  font-size: 0.93rem;
+}
+
+// ── Status Badge ──────────────────────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.6rem;
+  border-radius: $r-sm;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  &.status-confirmed {
+    background: rgba(0, 229, 160, 0.12);
+    color: $green;
+    border: 1px solid rgba(0, 229, 160, 0.2);
+  }
+  &.status-pending {
+    background: $yellow-light;
+    color: $yellow;
+    border: 1px solid rgba(245, 197, 66, 0.22);
+  }
+  &.status-cancelled {
+    background: $danger-light;
+    color: $danger;
+    border: 1px solid rgba(255, 92, 122, 0.22);
+  }
+  &.status-completed {
+    background: $blue-light;
+    color: $blue;
+    border: 1px solid rgba(59, 158, 255, 0.22);
+  }
+}
+
+.reservation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: $text-secondary;
+  font-size: 0.83rem;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+}
+
+.empty-reservations {
+  text-align: center;
+  padding: 1.2rem;
+  color: $green;
+  background: $green-light;
+  border: 1px dashed rgba(0, 229, 160, 0.25);
+  border-radius: $r-md;
+  font-size: 0.87rem;
+
+  p { margin: 0; }
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  color: $text-muted;
+  font-size: 0.875rem;
+}
+
+// ── Intro cards ───────────────────────────────────────────────
+.reservation-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.intro-card {
+  @include glass-card;
+  padding: 2rem 2.2rem;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 160, 0.09), transparent 60%);
+    pointer-events: none;
+  }
+
+  h2 {
+    font-family: $font-head;
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.65rem;
+    color: $text-main;
+    line-height: 1.25;
+  }
+
+  p {
+    color: $text-secondary;
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+}
+
+// Badge pill inside intro card
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.85rem;
+  border-radius: 99px;
+  background: $green-light;
+  color: $green;
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.hint-card {
+  @include glass-card;
+  padding: 1.8rem 2rem;
+  min-height: 200px;
+  border-color: rgba(59, 158, 255, 0.2);
+  background: linear-gradient(145deg, $bg-card 0%, rgba(59, 158, 255, 0.05) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  h3 {
+    font-family: $font-head;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: $blue;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+
+    &::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: $blue;
+      flex-shrink: 0;
+    }
+  }
+
+  p {
+    color: $text-secondary;
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+}
+
+// ── Main grid ─────────────────────────────────────────────────
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.95fr;
+  gap: 1.75rem;
+  margin-bottom: 2rem;
+  align-items: start;
+}
+
+// ── Subsection headings ───────────────────────────────────────
+.subsection-heading {
+  @include section-label;
+  margin-bottom: 1rem;
+}
+
+// ── Reservation form ──────────────────────────────────────────
+.reservation-form {
+  @include glass-card;
+  padding: 2rem 2.2rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.2);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, $blue-glow, transparent 60%);
+    pointer-events: none;
+    filter: blur(20px);
+  }
+}
+
+.form-group {
+  margin-bottom: 1.4rem;
+  position: relative;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.065em;
+  font-size: 0.71rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.82rem 1rem;
+  border: 1px solid $border;
+  border-radius: $r-md;
+  font-size: 0.93rem;
+  color: $text-main;
+  background: $bg-page;
+  font-family: $font-body;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  appearance: none;
+  -webkit-appearance: none;
+
+  &::placeholder { color: $text-muted; }
+  &:hover        { border-color: $border-light; }
+
+  &:focus {
+    outline: none;
+    border-color: $blue;
+    box-shadow: 0 0 0 4px $blue-light;
+  }
+}
+
+select.form-control {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235c8fb5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.4rem;
+}
+
+textarea.form-control {
+  min-height: 90px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.error {
+  color: $danger;
+  font-size: 0.78rem;
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+
+  &::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: $danger-light;
+    font-size: 0.65rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+}
+
+// ── Resource info panel ───────────────────────────────────────
+.resource-info {
+  background: linear-gradient(135deg, $green-light, $blue-light);
+  border: 1px solid rgba(0, 229, 160, 0.16);
+  border-radius: $r-lg;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.4rem;
+
+  h4 {
+    font-family: $font-head;
+    color: $text-main;
+    font-size: 0.93rem;
+    font-weight: 600;
+    margin: 0 0 0.3rem;
+  }
+
+  .desc {
+    color: $text-secondary;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    margin: 0.3rem 0 0.4rem;
+  }
+
+  .availability {
+    font-size: 0.82rem;
+    color: $text-secondary;
+    margin: 0;
+
+    strong { color: $green; }
+  }
+}
+
+// ── Form actions ──────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid $border;
+}
+
+// ── Cart ──────────────────────────────────────────────────────
+.cart-items {
+  @include surface;
+  border-radius: $r-2xl;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  max-height: 460px;
+  overflow-y: auto;
+  border-style: dashed;
+  border-color: rgba(148, 163, 184, 0.15);
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: $bg-inner; }
+  &::-webkit-scrollbar-thumb { background: $border-light; border-radius: 99px; }
+}
+
+.cart-item {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: $r-lg;
+  padding: 0.95rem 1.05rem;
+  transition: border-color 0.15s ease;
+
+  &:hover { border-color: rgba(0, 229, 160, 0.2); }
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.cart-title {
+  font-family: $font-head;
+  font-weight: 600;
+  color: $text-main;
+  font-size: 0.9rem;
+}
+
+.cart-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  color: $text-secondary;
+  font-size: 0.82rem;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  strong { color: $text-main; }
+}
+
+// ── Cart footer ───────────────────────────────────────────────
+.cart-footer {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 229, 160, 0.08) 0%,
+    rgba(59, 158, 255, 0.08) 100%
+  );
+  border: 1px solid rgba(0, 229, 160, 0.18);
+  border-radius: $r-xl;
+  padding: 1.25rem 1.4rem;
+}
+
+.cart-summary {
+  color: $text-secondary;
+  font-size: 0.83rem;
+  margin-bottom: 0.2rem;
+}
+
+.cart-total {
+  font-family: $font-head;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: $text-main;
+  margin-bottom: 0.8rem;
+
+  span {
+    background: linear-gradient(90deg, $green, $blue);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+.cart-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+// ── Buttons ───────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.78rem 1.4rem;
+  border-radius: $r-md;
+  border: 1px solid transparent;
+  font-family: $font-body;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+
+  &:hover:not(:disabled)  { transform: translateY(-1px); }
+  &:active:not(:disabled) { transform: translateY(0); }
+  &:disabled              { opacity: 0.4; cursor: not-allowed; }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, $green 0%, $blue2 100%);
+  color: #002a1c;
+  box-shadow: 0 6px 22px $green-glow;
+
+  &:hover:not(:disabled) { box-shadow: 0 10px 30px $green-glow; }
+}
+
+.btn-blue {
+  background: linear-gradient(135deg, $blue 0%, $blue2 100%);
+  color: #001630;
+  box-shadow: 0 6px 22px $blue-glow;
+
+  &:hover:not(:disabled) { box-shadow: 0 10px 30px $blue-glow; }
+}
+
+.btn-secondary {
+  background: $bg-inner;
+  color: $text-secondary;
+  border-color: $border;
+
+  &:hover:not(:disabled) {
+    background: $bg-hover;
+    border-color: $border-light;
+    color: $text-main;
+  }
+}
+
+.btn-danger {
+  background: $danger-light;
+  color: $danger;
+  border-color: rgba(255, 92, 122, 0.2);
+
+  &:hover:not(:disabled) { background: rgba(255, 92, 122, 0.2); }
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  border-radius: $r-sm;
+  min-width: auto;
+}
+
+// ── Empty state ───────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed rgba(148, 163, 184, 0.15);
+  border-radius: $r-xl;
+  min-height: 240px;
+  color: $text-secondary;
+  font-size: 0.87rem;
+  text-align: center;
+
+  &.small {
+    padding: 1.75rem 1.25rem;
+    font-size: 0.87rem;
+  }
+
+  p { margin: 0; line-height: 1.65; }
+}
+
+.empty-icon {
+  font-size: 1.8rem;
+  opacity: 0.45;
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-dialog {
+  width: 100%;
+  max-width: 480px;
+  background: $bg-card;
+  border: 1px solid $border-light;
+  border-radius: $r-2xl;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.8rem;
+  border-bottom: 1px solid $border;
+
+  h3 {
+    margin: 0;
+    font-family: $font-head;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $text-main;
+  }
+
+  .modal-close {
+    background: $bg-inner;
+    border: 1px solid $border;
+    color: $text-secondary;
+    width: 30px;
+    height: 30px;
+    border-radius: $r-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: $bg-hover;
+      color: $text-main;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem 1.8rem;
+  color: $text-secondary;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  max-height: 55vh;
+  overflow-y: auto;
+
+  .confirmation-message {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+}
+
+.modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1.25rem 1.8rem;
+  border-top: 1px solid $border;
+
+  .btn { min-width: 100px; }
+}
+
+// ── Responsive ────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .reservation-intro,
+  .main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .reservation-form-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .reservation-form {
+    padding: 1.25rem 1.3rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.1rem;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+    .btn { flex: 1; }
+  }
+
+  .cart-actions {
+    flex-direction: column;
+    .btn { width: 100%; }
+  }
+
+  .existing-reservations-list {
+    grid-template-columns: 1fr;
+  }
+}
