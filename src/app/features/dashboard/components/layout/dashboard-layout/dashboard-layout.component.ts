@@ -22,6 +22,20 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.dashState.loadDashboardData();
 
+    const role = this.authHelper.getRole();
+    const currentUrl = this.router.url;
+    if (role === 'MEMBER') {
+      const allowedMemberRoutes = [
+        '/dashboard/competencies',
+        '/dashboard/profile'
+      ];
+
+      const isAllowedMemberRoute = allowedMemberRoutes.some(route => currentUrl.startsWith(route));
+      if (!isAllowedMemberRoute) {
+        this.router.navigate(['/dashboard/competencies/member-competencies'], { replaceUrl: true });
+      }
+    }
+
     // Auto-logout: check every 60 seconds if the token has expired
     this.tokenCheckInterval = setInterval(() => {
       if (!this.authHelper.isLoggedIn()) {

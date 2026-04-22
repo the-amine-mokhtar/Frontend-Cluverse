@@ -52,16 +52,28 @@ export class AuthHelperService {
   }
 
   getRole(): string {
-    return this.getPayload()?.role ?? '';
+    const rawRole = this.getPayload()?.role;
+    if (typeof rawRole !== 'string') {
+      return '';
+    }
+
+    const normalized = rawRole.trim().toUpperCase();
+    return normalized.startsWith('ROLE_') ? normalized.substring(5) : normalized;
   }
 
   getUserId(): number {
     const p = this.getPayload();
-    return p?.sub ?? p?.id ?? 0;
+    const rawUserId = p?.sub ?? p?.id;
+    const userId = Number(rawUserId);
+    return Number.isFinite(userId) ? userId : 0;
   }
 
   isPresident(): boolean {
     return this.getRole() === 'PRESIDENT';
+  }
+
+  isSuperAdmin(): boolean {
+    return !!this.getPayload()?.isSuperAdmin;
   }
 
   isLoggedIn(): boolean {

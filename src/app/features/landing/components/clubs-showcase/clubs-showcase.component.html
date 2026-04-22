@@ -1,0 +1,77 @@
+<!-- ═══════════════════════════════════════════════════════════
+     CLUBS SHOWCASE SECTION
+     ═══════════════════════════════════════════════════════════ -->
+<section class="clubs-section" id="clubs">
+  <div class="container">
+    
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Chargement des clubs partenaires...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading">
+      
+      <!-- ─── Section 1: Nos Clubs ─── -->
+      <div class="row">
+        <div class="section-header">
+          <h2 class="beat-title">Nos Clubs</h2>
+          <p class="section-subtitle">Découvrez les organisations étudiantes officielles, certifiées par Cluverse pour dynamiser votre vie universitaire.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="empty-state" *ngIf="clubs.length === 0">
+          Aucun club partenaire actif pour le moment.
+        </div>
+
+        <div class="showcase-container" *ngIf="clubs.length > 0">
+          <div class="card-wrap"
+            *ngFor="let club of clubs"
+            (mousemove)="handleMouseMove($event, club)"
+            (mouseenter)="handleMouseEnter(club)"
+            (mouseleave)="handleMouseLeave(club)">
+            <div class="card" [ngStyle]="getCardStyle(club)">
+              <div class="card-bg"
+                   [style.backgroundImage]="club.logoUrl ? 'url(' + club.logoUrl + ')' : 'none'"
+                   [style.backgroundColor]="club.logoUrl ? 'transparent' : 'rgba(255, 255, 255, 0.05)'"
+                   [ngStyle]="getCardBgTransform(club)"></div>
+              <div class="card-info">
+                <h1 class="card-info__title">{{ club.name }}</h1>
+                <p class="card-info__desc">{{ club.description || 'Une organisation dynamique contribuant activement à la vie du campus universitaire.' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Section 2: Campagnes de recrutement ─── -->
+      <div class="row" id="open-campaigns" style="margin-top: 60px;">
+        <div class="section-header">
+          <h2 class="beat-title">Campagnes Actives</h2>
+          <p class="section-subtitle">N'attendez plus, consultez les campagnes actives et postulez pour développer vos compétences.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="empty-state" *ngIf="activeCampaigns.length === 0">
+          Aucune campagne de recrutement ouverte actuellement.
+        </div>
+
+        <div class="campaigns-list" *ngIf="activeCampaigns.length > 0">
+          <div class="campaign-item" *ngFor="let campaign of activeCampaigns">
+            <div class="campaign-item__left">
+              <h4 class="campaign-item__club-name">{{ campaign.club.name }}</h4>
+              <h3 class="campaign-item__title">{{ campaign.title }}</h3>
+            </div>
+            <div class="campaign-item__right">
+              <a [routerLink]="['/apply', campaign.publicLink]" class="campaign-item__apply-link">Postuler</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>

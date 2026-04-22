@@ -15,7 +15,7 @@ import { MembersComponent } from './components/members/members.component';
     DashboardLayoutComponent,
     HomeComponent,
     ProfileComponent,
-    MembersComponent
+    MembersComponent,
   ],
   imports: [
     SharedModule,
