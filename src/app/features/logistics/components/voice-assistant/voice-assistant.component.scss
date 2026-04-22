@@ -1,0 +1,111 @@
+.voice-fab {
+  position: fixed;
+  right: 2.7rem;
+  bottom: 1.25rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #0f766e, #0ea5e9);
+  color: #fff;
+  border: none;
+  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.35);
+  font-size: 1.05rem;
+  z-index: 1200;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.voice-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.42);
+}
+
+.voice-popup {
+  position: fixed;
+  right: 2.7rem;
+  bottom: 5.1rem;
+  width: min(22rem, calc(100vw - 2rem));
+  background: #fff;
+  border: 1px solid #dbeafe;
+  border-radius: 0.9rem;
+  box-shadow: 0 18px 36px rgba(2, 6, 23, 0.22);
+  padding: 0.8rem;
+  z-index: 1200;
+}
+
+.voice-popup__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.voice-popup__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.voice-popup__subtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.voice-listen {
+  border: none;
+  border-radius: 0.6rem;
+  padding: 0.35rem 0.65rem;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.voice-listen.is-on {
+  background: #dc2626;
+}
+
+.voice-listen.is-off {
+  background: #0f766e;
+}
+
+.voice-listen:disabled {
+  background: #9ca3af;
+}
+
+.voice-popup__block {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  padding: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.voice-popup__label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.voice-popup__value {
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: #1f2937;
+}
+
+.voice-popup__help {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.65rem;
+  padding: 0.55rem;
+  font-size: 0.72rem;
+  color: #475569;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.voice-popup__error {
+  margin-top: 0.5rem;
+  color: #dc2626;
+  font-size: 0.74rem;
+}

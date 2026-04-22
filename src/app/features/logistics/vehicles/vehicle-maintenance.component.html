@@ -1,0 +1,385 @@
+<div class="min-h-screen bg-gray-50 p-4">
+  <button
+    type="button"
+    class="flex items-center gap-2 text-xs font-semibold text-gray-600 hover:text-gray-900 mb-4 transition cursor-pointer bg-white px-3 py-1 rounded shadow hover:shadow-md border border-gray-200"
+    (click)="goBack()"
+  >
+    ← Retour
+  </button>
+
+  <div class="max-w-6xl mx-auto">
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-300 text-red-700 rounded-lg p-3 text-xs mb-4">
+      ⚠️ {{ errorMessage }}
+    </div>
+
+    <!-- Header -->
+    <div class="mb-6 bg-gray-900 rounded-lg shadow p-4 text-white">
+      <h1 class="text-2xl font-bold mb-1">🔧 Maintenance IA</h1>
+      <p class="text-gray-300 text-sm">{{ vehicle?.model || '...' }} <span class="font-semibold">• {{ vehicle?.plateNumber || '...' }}</span></p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Main Form -->
+      <div class="lg:col-span-2 space-y-4">
+        
+        <!-- Date Card -->
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+          <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center gap-2">
+            <span>📅</span> Date
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="recordDate"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 text-sm font-semibold"
+          />
+        </div>
+
+
+        <!-- Condition Cards Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          
+          <!-- Fuel Card -->
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <p class="text-xs text-gray-600">⛽ Carburant</p>
+                <h3 class="text-2xl font-bold text-gray-900">{{ fuelLevel }}%</h3>
+              </div>
+              <div class="text-lg">⛽</div>
+            </div>
+            <div class="bg-gray-200 rounded-full h-1.5 mb-2">
+              <div class="bg-gray-800 h-1.5 rounded-full transition-all" [style.width.%]="fuelLevel"></div>
+            </div>
+            <p class="text-xs text-gray-500">{{ fuelLevel < 30 ? 'Critique' : fuelLevel < 60 ? 'Faible' : 'Bon' }}</p>
+          </div>
+
+          <!-- Engine Card -->
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <p class="text-xs text-gray-600">🔧 Moteur</p>
+                <h3 class="text-xl font-bold text-gray-900">{{ engineCondition }}</h3>
+              </div>
+              <div class="text-lg">🔧</div>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              [(ngModel)]="engineCondition"
+              class="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+            />
+            <div class="bg-gray-200 rounded-full h-1 mt-2">
+              <div 
+                class="h-1 rounded-full transition-all" 
+                [ngClass]="engineCondition >= 70 ? 'bg-green-500' : engineCondition >= 50 ? 'bg-amber-500' : 'bg-red-500'"
+                [style.width.%]="engineCondition"
+              ></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">{{ engineCondition < 50 ? 'Action' : 'OK' }}</p>
+            <button 
+              *ngIf="engineCondition < 50"
+              type="button"
+              (click)="repairEngine()"
+              class="mt-2 w-full px-2 py-1 bg-gray-800 text-white text-xs font-bold rounded hover:bg-gray-900 transition">
+              🔧 Réparer
+            </button>
+          </div>
+
+          <!-- Tires Card -->
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <p class="text-xs text-gray-600">🔄 Pneus</p>
+                <h3 class="text-xl font-bold text-gray-900">{{ tireCondition }}</h3>
+              </div>
+              <div class="text-lg">🔄</div>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              [(ngModel)]="tireCondition"
+              class="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+            />
+            <div class="bg-gray-200 rounded-full h-1 mt-2">
+              <div 
+                class="h-1 rounded-full transition-all" 
+                [ngClass]="tireCondition >= 70 ? 'bg-green-500' : tireCondition >= 50 ? 'bg-amber-500' : 'bg-red-500'"
+                [style.width.%]="tireCondition"
+              ></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">{{ tireCondition < 50 ? 'Remplacer' : 'OK' }}</p>
+            <button 
+              *ngIf="tireCondition < 50"
+              type="button"
+              (click)="replaceTires()"
+              class="mt-2 w-full px-2 py-1 bg-gray-800 text-white text-xs font-bold rounded hover:bg-gray-900 transition">
+              🔄 Remplacer
+            </button>
+          </div>
+
+          <!-- Brakes Card -->
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <p class="text-xs text-gray-600">🛑 Freins</p>
+                <h3 class="text-xl font-bold text-gray-900">{{ brakeCondition }}</h3>
+              </div>
+              <div class="text-lg">🛑</div>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              [(ngModel)]="brakeCondition"
+              class="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+            />
+            <div class="bg-gray-200 rounded-full h-1 mt-2">
+              <div 
+                class="h-1 rounded-full transition-all" 
+                [ngClass]="brakeCondition >= 70 ? 'bg-green-500' : brakeCondition >= 50 ? 'bg-amber-500' : 'bg-red-500'"
+                [style.width.%]="brakeCondition"
+              ></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">{{ brakeCondition < 50 ? 'Critique' : 'OK' }}</p>
+            <button 
+              *ngIf="brakeCondition < 50"
+              type="button"
+              (click)="repairBrakes()"
+              class="mt-2 w-full px-2 py-1 bg-gray-800 text-white text-xs font-bold rounded hover:bg-gray-900 transition">
+              🛑 Réparer
+            </button>
+          </div>
+
+          <!-- Oil Card -->
+          <div class="bg-white rounded-lg shadow border border-gray-200 p-4 col-span-2">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <p class="text-xs text-gray-600">🛢️ Huile</p>
+                <h3 class="text-xl font-bold text-gray-900">{{ oilLevel }}%</h3>
+              </div>
+              <div class="text-lg">🛢️</div>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              [(ngModel)]="oilLevel"
+              class="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+            />
+            <div class="bg-gray-200 rounded-full h-1 mt-2">
+              <div 
+                class="h-1 rounded-full transition-all" 
+                [ngClass]="oilLevel >= 70 ? 'bg-green-500' : oilLevel >= 50 ? 'bg-amber-500' : 'bg-red-500'"
+                [style.width.%]="oilLevel"
+              ></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">{{ oilLevel < 50 ? 'Urgence' : oilLevel < 70 ? 'Bientôt' : 'OK' }}</p>
+            <button 
+              *ngIf="oilLevel < 50"
+              type="button"
+              (click)="changeOil()"
+              class="mt-2 w-full px-2 py-1 bg-gray-800 text-white text-xs font-bold rounded hover:bg-gray-900 transition">
+              🛢️ Changer
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Indicators & Notes Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <!-- Numeric Indicators Card -->
+          <div class="lg:col-span-2 bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <span>📊</span> Indicateurs
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <!-- Mileage -->
+              <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <label class="block text-xs font-semibold text-gray-700 mb-1">🗺️ Km</label>
+                <input
+                  type="number"
+                  [(ngModel)]="mileage"
+                  class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold bg-white"
+                  placeholder="km"
+                />
+              </div>
+              <!-- Km Since -->
+              <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <label class="block text-xs font-semibold text-gray-700 mb-1">⏱️ Km depuis service</label>
+                <input
+                  type="number"
+                  [(ngModel)]="kmSinceLastService"
+                  class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold bg-white"
+                  placeholder="km"
+                  disabled
+                />
+              </div>
+              <!-- Days Since -->
+              <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <label class="block text-xs font-semibold text-gray-700 mb-1">📅 Jours depuis service</label>
+                <input
+                  type="number"
+                  [(ngModel)]="daysSinceLastService"
+                  class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold bg-white"
+                  placeholder="jours"
+                  disabled
+                />
+              </div>
+              <!-- Transports -->
+              <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <label class="block text-xs font-semibold text-gray-700 mb-1">🚗 Transports</label>
+                <input
+                  type="number"
+                  [(ngModel)]="totalTransports"
+                  class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold bg-white"
+                  placeholder="transports"
+                  disabled
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes Card -->
+          <div class="lg:col-span-2 bg-white rounded-lg shadow border border-gray-200 p-4">
+            <label class="block text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <span>📝</span> Notes
+            </label>
+            <textarea
+              [(ngModel)]="notes"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg font-medium text-xs text-gray-700"
+              rows="2"
+              placeholder="Notes..."
+            ></textarea>
+          </div>
+
+          <!-- Analysis Button -->
+          <div class="lg:col-span-2">
+            <button
+              type="button"
+              class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition font-bold text-sm shadow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="analyzeMaintenance()"
+              [disabled]="predictingRisk || !vehicle"
+            >
+              <span>{{ predictingRisk ? '⏳' : '🤖' }}</span>
+              {{ predictingRisk ? 'Analyse...' : 'Analyser' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar - Predictions & History -->
+      <div class="lg:col-span-1">
+        <!-- Prediction Result -->
+        <div
+          *ngIf="showPredictionResult && predictionResult"
+          class="bg-white rounded-lg shadow-lg border-2 p-4 sticky top-4 border-gray-300"
+        >
+          <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            🔮 Analyse
+          </h3>
+
+          <!-- Risk Level Badge -->
+          <div class="mb-3">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border border-gray-300 bg-gray-100 text-gray-800">
+              {{ predictionResult.riskLevel === 'GOOD' ? '✅ BON' : predictionResult.riskLevel === 'WARNING' ? '⚠️ ALERTE' : '🔴 CRITIQUE' }}
+            </span>
+          </div>
+
+          <!-- Risk Percentage -->
+          <div class="mb-3 p-3 bg-gray-100 rounded-lg border border-gray-200">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-semibold text-gray-700">Risque Panne</span>
+              <span class="text-xl font-bold text-gray-900">
+                {{ predictionResult.breakdownRisk }}%
+              </span>
+            </div>
+            <div class="w-full bg-gray-300 rounded-full h-2 mt-2 overflow-hidden">
+              <div
+                class="h-2 rounded-full transition-all duration-500"
+                [ngClass]="predictionResult.breakdownRisk < 30 ? 'bg-green-500' : predictionResult.breakdownRisk < 70 ? 'bg-amber-500' : 'bg-red-500'"
+                [style.width.%]="predictionResult.breakdownRisk"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Urgency -->
+          <div class="mb-2 p-2 bg-gray-100 rounded border border-gray-200">
+            <p class="text-xs font-bold text-gray-800">⏰ {{ predictionResult.urgency }}</p>
+          </div>
+
+          <!-- Overall Advice -->
+          <div class="mb-2 p-2 bg-gray-50 border-l-2 border-gray-400 rounded text-xs">
+            <p class="text-gray-800 font-medium">{{ predictionResult.overallAdvice }}</p>
+          </div>
+
+          <!-- Km Before Service -->
+          <div class="mb-3 p-2 bg-gray-100 rounded border border-gray-200">
+            <p class="text-xs font-semibold text-gray-700">🛣️ Avant entretien</p>
+            <p class="text-lg font-bold text-gray-900">{{ predictionResult.estimatedKmBeforeService }} km</p>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="button"
+            class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg hover:bg-gray-800 transition font-bold text-xs shadow flex items-center justify-center gap-1"
+            (click)="submitMaintenance()"
+            [disabled]="submitting || !vehicle"
+          >
+            <span>{{ submitting ? '⏳' : '✅' }}</span>
+            {{ submitting ? 'En cours...' : 'Enregistrer' }}
+          </button>
+        </div>
+
+        <!-- History Section -->
+        <div
+          *ngIf="!showPredictionResult || maintenanceHistory.length > 0"
+          class="bg-white rounded-lg shadow border border-gray-200 p-4 mt-3"
+        >
+          <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+            📋 Historique
+          </h3>
+
+          <div *ngIf="loadingHistory" class="text-center py-4">
+            <p class="text-gray-500 text-xs">⏳ Chargement...</p>
+          </div>
+
+          <div *ngIf="!loadingHistory && maintenanceHistory.length === 0" class="text-center py-4">
+            <p class="text-gray-400 text-xs">Aucun enregistrement</p>
+          </div>
+
+          <div *ngIf="!loadingHistory && maintenanceHistory.length > 0" class="space-y-2 max-h-48 overflow-y-auto">
+            <div
+              *ngFor="let record of maintenanceHistory.slice(0, 5)"
+              class="border-l-2 border-gray-400 rounded p-2 text-xs bg-gray-50 hover:bg-gray-100 transition"
+            >
+              <div class="flex justify-between items-start mb-1">
+                <span class="font-bold text-gray-900">{{ record.recordDate | slice:0:10 }}</span>
+                <span class="text-xs px-1.5 py-0.5 rounded font-bold bg-gray-200 text-gray-800"
+                >
+                  {{ record.status }}
+                </span>
+              </div>
+              <div class="text-xs text-gray-600">
+                ⛽ {{ record.fuelLevel }}% | 🔧 {{ record.engineCondition }}/100
+              </div>
+              <div *ngIf="!record.resolved && (record.status === 'WARNING' || record.status === 'CRITICAL')" class="mt-1">
+                <button
+                  type="button"
+                  class="text-xs bg-gray-700 text-white px-2 py-0.5 rounded hover:bg-gray-800 transition"
+                  (click)="resolveAlert(record.id)"
+                >
+                  ✓ Résoudre
+                </button>
+              </div>
+              <div *ngIf="record.resolved" class="text-xs text-gray-600 font-bold mt-1">
+                ✓ Résolu
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

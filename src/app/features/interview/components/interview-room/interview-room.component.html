@@ -1,0 +1,47 @@
+<!-- Loading -->
+<div *ngIf="isLoading" class="room-loading">
+  <div class="spinner"></div>
+  <p>Démarrage de l'entretien...</p>
+</div>
+
+<!-- Room Page -->
+<div class="room-page" [hidden]="isLoading">
+  <!-- Avatar background layer -->
+  <video #avatarVideo class="avatar-video" [src]="avatarSrc" autoplay loop muted playsinline></video>
+
+  <!-- Caméra candidat -->
+  <div class="candidate-cam">
+    <video #videoRef autoplay playsinline muted></video>
+  </div>
+
+  <!-- Bulle de dialogue -->
+  <div class="dialogue-bubble" *ngIf="lastRecruiterMessage">
+    <p>{{ lastRecruiterMessage }}</p>
+    
+    <!-- Transcription live du candidat -->
+    <div class="candidate-live" *ngIf="(utteranceBuffer || currentInterim) && !isRecruiterSpeaking">
+      <div class="candidate-live__label">Vous :</div>
+      <div class="candidate-live__text">{{ utteranceBuffer }}{{ currentInterim }}</div>
+    </div>
+
+    <div class="recording-badge" *ngIf="isListening && !isRecruiterSpeaking">
+      <div class="recording-dot"></div>
+      Recording...
+    </div>
+  </div>
+
+  <!-- Timer -->
+  <div class="timer-badge">
+    ⏱ {{ formattedTime }}
+  </div>
+
+  <!-- Bouton Terminer -->
+  <button class="btn-terminate" (click)="endInterview()">
+    Terminer
+  </button>
+
+  <!-- Note bas de page -->
+  <div class="footer-note">
+    Ne pas rafraîchir la page — vos données d'entretien seront perdues.
+  </div>
+</div>

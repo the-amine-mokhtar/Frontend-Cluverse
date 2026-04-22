@@ -1,43 +1,49 @@
-<div class="vacant-positions-container">
-  <div class="header-actions">
-    <h1 class="page-title">Postes Vacants</h1>
-    <button *ngIf="isPresident" class="btn-create" (click)="onCreatePosition()">
-      + Créer un poste
-    </button>
+<div class="elections animate-fade-in text-gray-800" style="max-width: 1200px;">
+  <div class="elections__header">
+    <div>
+      <h2 class="elections__title">Postes Vacants</h2>
+      <p class="elections__subtitle">Découvrez et postulez aux postes ouverts.</p>
+    </div>
+    <div class="elections__actions">
+      <button *ngIf="isPresident" class="elections__btn elections__btn--primary" (click)="onCreatePosition()">
+        + Créer un poste
+      </button>
+    </div>
   </div>
 
-  <div class="loading-state" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Chargement des postes...</p>
+  <div style="text-align: center; margin-top: 5rem;" *ngIf="isLoading">
+    <div style="border: 4px solid var(--e-border); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--e-primary); animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+    <p style="color: var(--e-muted); font-weight: 600;">Chargement des postes...</p>
   </div>
 
-  <div class="empty-state" *ngIf="!isLoading && positions.length === 0">
-    <div class="empty-icon">📁</div>
-    <h3>Aucun poste vacant</h3>
+  <div class="elections__empty" *ngIf="!isLoading && positions.length === 0">
+    <p style="font-weight: 600; font-size: 1.1rem; color: var(--e-text); margin-bottom: 0.5rem;">Aucun poste vacant</p>
     <p>Il n'y a actuellement aucun poste ouvert pour les élections.</p>
   </div>
 
-  <div class="positions-grid" *ngIf="!isLoading && positions.length > 0">
-    <div class="position-card" *ngFor="let pos of positions">
-      <div class="card-header">
-        <h3 class="card-title">{{ pos.title }}</h3>
-        <span class="status-badge" [ngClass]="pos.status === 'OPEN' ? 'status-open' : 'status-closed'">
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;" *ngIf="!isLoading && positions.length > 0">
+    <div class="elections__card" *ngFor="let pos of positions" style="display: flex; flex-direction: column; padding: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--e-text);">{{ pos.title }}</h3>
+        <span class="elections__badge" [ngClass]="pos.status === 'OPEN' ? 'elections__badge--success' : 'elections__badge--gray'">
           {{ pos.status === 'OPEN' ? 'OUVERT' : 'FERMÉ' }}
         </span>
       </div>
       
-      <div class="card-body">
-        <p class="description">{{ pos.description }}</p>
+      <div style="flex: 1;">
+        <p style="color: var(--e-secondary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;">{{ pos.description }}</p>
         
-        <div class="president-comment" *ngIf="pos.presidentComment">
-          <strong>Note du président :</strong>
-          <p><i>{{ pos.presidentComment }}</i></p>
+        <div *ngIf="pos.presidentComment" style="background: var(--e-primary-bg); padding: 0.75rem; border-radius: 8px; border-left: 3px solid var(--e-primary); margin-top: 1rem;">
+          <strong style="display: block; font-size: 0.8rem; color: var(--e-muted); margin-bottom: 0.25rem;">Note du président :</strong>
+          <p style="margin: 0; font-size: 0.9rem; color: var(--e-text); font-style: italic;">{{ pos.presidentComment }}</p>
         </div>
       </div>
 
-      <div class="card-footer">
+      <div style="margin-top: 1.5rem;">
         <button 
-          class="btn-simulate" 
+          class="elections__btn"
+          [ngClass]="pos.status === 'CLOSED' ? 'elections__btn--secondary' : 'elections__btn--primary'"
+          style="width: 100%; display: block;"
           [disabled]="pos.status === 'CLOSED'"
           (click)="onSimulateInterview(pos.id)">
           Simuler l'entretien

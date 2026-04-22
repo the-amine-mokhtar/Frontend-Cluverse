@@ -2,9 +2,11 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } fr
 import { HttpErrorResponse } from '@angular/common/http';
 import { Stripe, StripeCardElement, StripeCardElementChangeEvent, StripeElements, loadStripe } from '@stripe/stripe-js';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
-import { FinanceService } from '../../../../core/services/finance.service';
+import { FinanceService, SponsorDto, SponsorshipDto } from '../../../../core/services/finance.service';
 
 interface PendingSponsorPayment {
+  sponsorId: number;
+  sponsorshipId: number;
   sponsorName: string;
   sponsorEmail: string;
   cardLast4: string;
@@ -24,6 +26,8 @@ interface PendingSponsorPayment {
 export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('stripeCardElement') private stripeCardElementRef?: ElementRef<HTMLDivElement>;
 
+  signedSponsorships: SponsorshipDto[] = [];
+  selectedSponsorshipId: number | null = null;
   sponsorName = '';
   sponsorEmail = '';
   sponsorPhone = '';
@@ -45,6 +49,7 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
   private elements: StripeElements | null = null;
   private cardElement: StripeCardElement | null = null;
   private stripePublishableKey = '';
+  private sponsorEmailById = new Map<number, string>();
 
   constructor(
     private readonly financeService: FinanceService,
@@ -52,6 +57,7 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
   ) {}
 
   ngOnInit(): void {
+    this.loadSignedSponsorships();
     this.loadStripeConfigAndMountCard();
   }
 
@@ -75,6 +81,33 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
     return this.roundCurrency(this.amountEur * this.conversionRate);
   }
 
+  get formattedCardNumber(): string {
+    const digits = this.onlyDigits(this.cardDigits).slice(0, 16);
+    const padded = (digits + '•'.repeat(16)).slice(0, 16);
+    return (padded.match(/.{1,4}/g) ?? ['••••', '••••', '••••', '••••']).join(' ');
+  }
+
+  onLinkedSponsorshipChange(): void {
+    const selected = this.getSelectedSponsorship();
+    if (!selected) {
+      this.sponsorName = '';
+      this.sponsorEmail = '';
+      return;
+    }
+
+    this.sponsorName = selected.sponsorName?.trim() || selected.sponsor?.name?.trim() || this.sponsorName;
+
+    const sponsorId = selected.sponsorId ?? selected.sponsor?.id;
+    if (sponsorId) {
+      const email = this.sponsorEmailById.get(sponsorId);
+      if (email) {
+        this.sponsorEmail = email;
+      }
+    } else if (selected.sponsor?.contactEmail) {
+      this.sponsorEmail = selected.sponsor.contactEmail;
+    }
+  }
+
   payWithStripeEmbedded(): void {
     this.errorMessage = '';
     this.successMessage = '';
@@ -87,6 +120,18 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
 
     if (!this.stripe || !this.cardElement) {
       this.errorMessage = 'Stripe secure card form is not ready yet. Please wait a second and try again.';
+      return;
+    }
+
+    const linkedSponsorship = this.getSelectedSponsorship();
+    if (!linkedSponsorship) {
+      this.errorMessage = 'Please select a signed sponsorship to link this payment.';
+      return;
+    }
+
+    const linkedSponsorId = linkedSponsorship.sponsorId ?? linkedSponsorship.sponsor?.id;
+    if (!linkedSponsorId || !linkedSponsorship.id) {
+      this.errorMessage = 'Selected sponsorship is missing sponsor linkage.';
       return;
     }
 
@@ -130,6 +175,8 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
           }
 
           this.createIncomeTransactionAndExportReceipt({
+            sponsorId: linkedSponsorId,
+            sponsorshipId: linkedSponsorship.id,
             sponsorName: this.sponsorName.trim(),
             sponsorEmail: this.sponsorEmail.trim(),
             sponsorPhone: this.sponsorPhone.trim(),
@@ -170,17 +217,7 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
     }).format(amount);
   }
 
-  private createIncomeTransactionAndExportReceipt(payment: {
-    sponsorName: string;
-    sponsorEmail: string;
-    sponsorPhone: string;
-    cardLast4: string;
-    amountEur: number;
-    amountTnd: number;
-    conversionRate: number;
-    reference: string;
-    paymentIntentId: string;
-  }): void {
+  private createIncomeTransactionAndExportReceipt(payment: PendingSponsorPayment): void {
 
     const clubId = this.authHelperService.getClubId();
     if (!clubId) {
@@ -194,11 +231,13 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
       type: 'INCOME',
       amount: payment.amountTnd,
       date: this.getTodayDate(),
-      description: this.buildTransactionDescription(payment)
+      description: this.buildTransactionDescription(payment),
+      sponsor: { id: payment.sponsorId },
+      sponsorship: { id: payment.sponsorshipId }
     }).subscribe({
       next: (createdTransaction) => {
         this.exportSponsorReceipt(payment, createdTransaction.id);
-        this.successMessage = 'Stripe payment succeeded. INCOME transaction created in TND and receipt exported.';
+        this.successMessage = 'Stripe payment succeeded. Linked sponsorship was marked as paid and receipt exported.';
         this.errorMessage = '';
         this.isSubmitting = false;
       },
@@ -209,17 +248,7 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
     });
   }
 
-  private exportSponsorReceipt(payment: {
-    sponsorName: string;
-    sponsorEmail: string;
-    sponsorPhone: string;
-    cardLast4: string;
-    amountEur: number;
-    amountTnd: number;
-    conversionRate: number;
-    reference: string;
-    paymentIntentId: string;
-  }, transactionId: number): void {
+  private exportSponsorReceipt(payment: PendingSponsorPayment, transactionId: number): void {
     const generatedAt = new Date();
     const safeSponsorName = this.escapeHtml(payment.sponsorName);
     const safeSponsorEmail = this.escapeHtml(payment.sponsorEmail);
@@ -291,6 +320,10 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
   }
 
   private validateFormBeforeStripe(): string {
+    if (!this.selectedSponsorshipId) {
+      return 'Please select a signed sponsorship before charging payment.';
+    }
+
     if (!this.sponsorName.trim()) {
       return 'Sponsor full name is required.';
     }
@@ -311,7 +344,59 @@ export class FinanceSponsorPaymentComponent implements OnInit, AfterViewInit, On
   }
 
   private buildTransactionDescription(pending: PendingSponsorPayment): string {
-    return `Sponsor payment ${pending.reference} | ${pending.sponsorName} | ${pending.amountEur.toFixed(2)} EUR via Stripe (${pending.paymentIntentId})`;
+    return `Sponsor payment ${pending.reference} | Sponsorship #${pending.sponsorshipId} | ${pending.sponsorName} | ${pending.amountEur.toFixed(2)} EUR via Stripe (${pending.paymentIntentId})`;
+  }
+
+  private loadSignedSponsorships(): void {
+    const clubId = this.authHelperService.getClubId();
+    if (!clubId) {
+      this.errorMessage = 'Unable to detect your club. Please login again.';
+      return;
+    }
+
+    this.financeService.getSponsors().subscribe({
+      next: (sponsors: SponsorDto[]) => {
+        this.sponsorEmailById = new Map(
+          sponsors
+            .filter((sponsor) => !!sponsor.id)
+            .map((sponsor) => [sponsor.id as number, sponsor.contactEmail || ''])
+        );
+        if (this.selectedSponsorshipId) {
+          this.onLinkedSponsorshipChange();
+        }
+      },
+      error: () => {
+        this.sponsorEmailById = new Map();
+      }
+    });
+
+    this.financeService.getSponsorships(clubId).subscribe({
+      next: (sponsorships) => {
+        this.signedSponsorships = sponsorships.filter((item) => (item.status || '').toUpperCase() === 'SIGNED');
+
+        if (this.signedSponsorships.length === 0) {
+          this.selectedSponsorshipId = null;
+          return;
+        }
+
+        const hasExistingSelection = this.signedSponsorships.some((item) => item.id === this.selectedSponsorshipId);
+        if (!hasExistingSelection) {
+          this.selectedSponsorshipId = this.signedSponsorships[0].id;
+          this.onLinkedSponsorshipChange();
+        }
+      },
+      error: (error: unknown) => {
+        this.errorMessage = `Failed to load signed sponsorships. ${this.formatHttpError(error)}`;
+      }
+    });
+  }
+
+  private getSelectedSponsorship(): SponsorshipDto | null {
+    if (!this.selectedSponsorshipId) {
+      return null;
+    }
+
+    return this.signedSponsorships.find((item) => item.id === this.selectedSponsorshipId) || null;
   }
 
   private loadStripeConfigAndMountCard(): void {

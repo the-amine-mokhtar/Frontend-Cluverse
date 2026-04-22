@@ -1,0 +1,88 @@
+<div class="elections animate-fade-in" style="max-width: 800px;">
+  <div class="elections__header">
+    <div>
+      <h2 class="elections__title">
+        {{ isEditMode ? 'Edit Candidacy' : 'Submit Candidacy' }}
+      </h2>
+      <p class="elections__subtitle">Register for a role and outline your campaign program.</p>
+    </div>
+  </div>
+
+  <div class="elections__card">
+    <form [formGroup]="candidateForm" (ngSubmit)="onSubmit()" class="elections__form">
+
+      <div *ngIf="errorMessage" class="elections__error-alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem; border-bottom: 1px solid var(--e-border); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="elections__form-field" *ngIf="!isEditMode">
+          <label>Target Election <span style="color: var(--e-danger);">*</span></label>
+          <select formControlName="electionId">
+            <option [ngValue]="null">Select the election</option>
+            <option *ngFor="let election of elections" [ngValue]="election.id">{{ election.title || 'Election ' + election.id }}</option>
+          </select>
+          <div *ngIf="candidateForm.get('electionId')?.invalid && candidateForm.get('electionId')?.touched" class="e-error-text">
+            Valid Election is required.
+          </div>
+        </div>
+
+        <div *ngIf="isEditMode" style="background: var(--e-bg-input); padding: 1rem; border-radius: 8px; border: 1px solid var(--e-border);">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--e-muted); text-transform: uppercase;">Target Election</label>
+          <p style="color: var(--e-text); font-weight: 700; font-size: 1.02rem; margin: 0; margin-top: 0.25rem;">
+            {{ lockedElectionTitle || selectedElection?.title || ('Election #' + candidateForm.get('electionId')?.value) }}
+          </p>
+        </div>
+
+        <div *ngIf="selectedElection" style="background: var(--e-primary-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--e-primary-border);">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--e-muted); text-transform: uppercase;">Position</label>
+          <p style="color: var(--e-text); font-weight: 700; font-size: 1.125rem; margin: 0; margin-top: 0.25rem;">
+            {{ selectedElection.position?.name || 'Unassigned' }}
+            <span style="font-size: 0.875rem; font-weight: 500; color: var(--e-muted); margin-left: 0.5rem;">({{ candidateCount }} candidate{{ candidateCount !== 1 ? 's' : '' }})</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="elections__form-field">
+        <label>Candidate Program <span style="color: var(--e-danger);">*</span></label>
+        <textarea formControlName="program" rows="4" style="resize: none;" placeholder="Outline your vision and planned tasks..."></textarea>
+        <div *ngIf="candidateForm.get('program')?.invalid && candidateForm.get('program')?.touched" class="e-error-text">
+          Program is required.
+        </div>
+      </div>
+
+      <div class="elections__form-field">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.5rem;">
+          <label style="margin-bottom: 0;">Short Biography</label>
+          <button
+            type="button"
+            class="elections__btn elections__btn--secondary"
+            style="padding: 0.45rem 0.85rem; font-size: 0.85rem;"
+            (click)="openPdfPicker()"
+            [disabled]="isExtractingPdf"
+          >
+            {{ isExtractingPdf ? (extractionStatus || 'Extracting PDF...') : 'Generate from PDF' }}
+          </button>
+        </div>
+        <input #pdfInput type="file" accept=".pdf,application/pdf" style="display: none;" (change)="onPdfSelected($event)" />
+        <div *ngIf="pdfGenerationError" class="e-error-text" style="margin-bottom: 0.5rem;">
+          {{ pdfGenerationError }}
+        </div>
+        <textarea formControlName="bio" rows="10" style="resize: none;" placeholder="A little bit about yourself..."></textarea>
+      </div>
+
+      <div class="elections__form-actions">
+        <a routerLink="/dashboard/elections/candidates" class="elections__btn elections__btn--secondary">
+          Cancel
+        </a>
+        <button type="submit" [disabled]="isSubmitting || candidateForm.invalid" class="elections__btn elections__btn--primary">
+          {{ isSubmitting ? 'Submitting...' : (isEditMode ? 'Update Candidate' : 'Submit Application') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
