@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import {
   ApiService,
+  ClubCompetencyStats,
   CompetencyResponse,
   MemberCompetencyRequest,
   MemberCompetencyResponse,
@@ -80,6 +81,7 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   members: Array<{ userId: number; firstName?: string; lastName?: string; email?: string }> = [];
   competencies: CompetencyResponse[] = [];
   memberCompetencies: MemberCompetencyResponse[] = [];
+  clubStats: ClubCompetencyStats | null = null;
 
   editingId: number | null = null;
   speechSyncingId: number | null = null;
@@ -113,13 +115,13 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   readonly form = this.fb.nonNullable.group({
     userId: [0, [Validators.required, Validators.min(1)]],
     skillId: [0, [Validators.required, Validators.min(1)]],
-    currentLevel: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
-    targetLevel: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
+    currentLevel: [0, [Validators.required, Validators.min(0), Validators.max(5)]],
+    targetLevel: [0, [Validators.required, Validators.min(0), Validators.max(5)]]
   });
 
   readonly editForm = this.fb.nonNullable.group({
-    currentLevel: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
-    targetLevel: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
+    currentLevel: [0, [Validators.required, Validators.min(0), Validators.max(5)]],
+    targetLevel: [0, [Validators.required, Validators.min(0), Validators.max(5)]]
   });
 
   constructor(
@@ -185,7 +187,7 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
       return 0;
     }
 
-    const total = this.personalCompetencies.reduce((sum, item) => sum + Math.max(0, item.gap), 0);
+    const total = this.personalCompetencies.reduce((sum, item) => sum + Math.max(0, this.getGapValue(item)), 0);
     return Math.round(total / this.personalCompetencies.length);
   }
 
@@ -194,8 +196,8 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
       return 0;
     }
 
-    const completedBonus = this.personalCompetencies.filter(item => item.gap <= 0).length * 6;
-    const baseline = 100 - (this.averageGapLevel * 2.2) + completedBonus;
+    const completedBonus = this.personalCompetencies.filter(item => this.getGapValue(item) <= 0).length * 8;
+    const baseline = 100 - (this.averageGapLevel * 12) + completedBonus;
     return Math.max(0, Math.min(100, Math.round(baseline)));
   }
 
@@ -239,20 +241,20 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   get learningPath(): LearningStep[] {
     const ordered = [...this.personalCompetencies]
       .sort((a, b) => {
-        const aDone = a.gap <= 0 ? 1 : 0;
-        const bDone = b.gap <= 0 ? 1 : 0;
+        const aDone = this.getGapValue(a) <= 0 ? 1 : 0;
+        const bDone = this.getGapValue(b) <= 0 ? 1 : 0;
         if (aDone !== bDone) {
           return aDone - bDone;
         }
-        return b.gap - a.gap;
+        return this.getGapValue(b) - this.getGapValue(a);
       })
       .slice(0, 6);
 
-    const firstPendingIndex = ordered.findIndex(item => item.gap > 0);
+    const firstPendingIndex = ordered.findIndex(item => this.getGapValue(item) > 0);
 
     return ordered.map((item, index) => {
       let state: LearningState = 'locked';
-      if (item.gap <= 0) {
+      if (this.getGapValue(item) <= 0) {
         state = 'done';
       } else if (firstPendingIndex === index) {
         state = 'active';
@@ -297,8 +299,8 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
         id: 'crusher',
         title: 'Gap Crusher',
         icon: 'G',
-        unlocked: this.averageGapLevel <= 10 && this.totalSkillsCount > 0,
-        hint: 'Maintenir un gap moyen <= 10.'
+        unlocked: this.averageGapLevel <= 1 && this.totalSkillsCount > 0,
+        hint: 'Maintenir un gap moyen <= 1.'
       },
       {
         id: 'speaker',
@@ -351,8 +353,8 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
 
     return {
       status: 'synced',
-      score: latest.currentLevel,
-      level: latest.currentLevel >= 75 ? 'ADVANCED' : latest.currentLevel >= 50 ? 'INTERMEDIATE' : 'BEGINNER',
+      score: latest.currentLevel * 20,
+      level: latest.currentLevel >= 4 ? 'ADVANCED' : latest.currentLevel >= 3 ? 'INTERMEDIATE' : 'BEGINNER',
       confidence: this.liveConfidence,
       pace: this.liveSpeechRate,
       feedback: this.speechTestFeedback || 'Derniere session synchronisee avec succes.',
@@ -443,6 +445,7 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
     request$.subscribe({
       next: (items) => {
         this.memberCompetencies = items;
+        this.loadClubStats();
         if (this.selectedSpeechMemberCompetencyId === 0 && this.visibleMemberCompetenciesForSpeech.length > 0) {
           this.selectedSpeechMemberCompetencyId = this.visibleMemberCompetenciesForSpeech[0].id;
         }
@@ -570,7 +573,7 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   }
 
   endorse(item: MemberCompetencyResponse): void {
-    this.apiService.endorseMemberCompetency(item.id).subscribe({
+    this.apiService.endorseMemberCompetencyByCompetency(item.userId, this.resolveCompetencyId(item)).subscribe({
       next: (updated) => {
         this.successMessage = 'Endorsement ajoute.';
         this.memberCompetencies = this.memberCompetencies.map(entry => entry.id === updated.id ? updated : entry);
@@ -585,10 +588,63 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
     this.apiService.getMemberCompetencyGap(item.id).subscribe({
       next: (gap) => {
         this.memberCompetencies = this.memberCompetencies.map(entry =>
-          entry.id === gap.id ? { ...entry, gap: gap.gap, currentLevel: gap.currentLevel, targetLevel: gap.targetLevel } : entry
+          entry.id === gap.id
+            ? { ...entry, gap: gap.gap, gapLevel: gap.gap, currentLevel: gap.currentLevel, targetLevel: gap.targetLevel }
+            : entry
         );
       }
     });
+  }
+
+  gapSeverity(item: MemberCompetencyResponse): 'critical' | 'warning' | 'ok' {
+    const gap = this.getGapValue(item);
+    if (gap >= 2) {
+      return 'critical';
+    }
+    if (gap === 1) {
+      return 'warning';
+    }
+    return 'ok';
+  }
+
+  competencyById(id: number): MemberCompetencyResponse | undefined {
+    return this.personalCompetencies.find(item => item.id === id);
+  }
+
+  gapDisplay(item: MemberCompetencyResponse): number {
+    return this.getGapValue(item);
+  }
+
+  gapSeverityById(id: number): 'critical' | 'warning' | 'ok' {
+    const competency = this.competencyById(id);
+    if (!competency) {
+      return 'ok';
+    }
+    return this.gapSeverity(competency);
+  }
+
+  gapDisplayById(id: number): number {
+    const competency = this.competencyById(id);
+    return competency ? this.gapDisplay(competency) : 0;
+  }
+
+  private loadClubStats(): void {
+    this.apiService.getMemberCompetencyClubStats(this.clubId).subscribe({
+      next: (stats) => {
+        this.clubStats = stats;
+      }
+    });
+  }
+
+  private getGapValue(item: MemberCompetencyResponse): number {
+    if (typeof item.gapLevel === 'number') {
+      return item.gapLevel;
+    }
+    return item.gap;
+  }
+
+  private resolveCompetencyId(item: MemberCompetencyResponse): number {
+    return item.competencyId ?? item.skillId;
   }
 
   syncSpeechReport(item: MemberCompetencyResponse): void {
@@ -1143,7 +1199,7 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
     const angleStep = (Math.PI * 2) / values.length;
 
     return values.map((value, index) => {
-      const ratio = Math.max(0, Math.min(100, value)) / 100;
+      const ratio = Math.max(0, Math.min(5, value)) / 5;
       const radius = ratio * maxRadius;
       const angle = (-Math.PI / 2) + (index * angleStep);
       const x = center + (Math.cos(angle) * radius);
@@ -1153,10 +1209,11 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   }
 
   private getPersonalizedTip(item: MemberCompetencyResponse): string {
-    if (item.gap <= 0) {
+    const gap = this.getGapValue(item);
+    if (gap <= 0) {
       return 'Niveau atteint. Passe en mode mentoring pour aider un autre membre.';
     }
-    if (item.gap <= 10) {
+    if (gap === 1) {
       return 'Tu es proche de l objectif: fais 1 session pratique ciblee cette semaine.';
     }
     if (item.lastUpdatedBy === 'SPEECH_ANALYZER') {

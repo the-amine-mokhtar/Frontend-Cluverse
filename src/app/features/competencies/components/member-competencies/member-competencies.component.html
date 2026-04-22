@@ -5,7 +5,10 @@
       <h2>{{ currentUserFullName || 'Member' }} profile</h2>
       <p>Personal overview of progression, AI priorities, badges, and the latest Speech Analyzer signal.</p>
     </div>
-    <button type="button" class="m-btn m-btn--ghost" (click)="loadInitialData()" [disabled]="loading">Refresh</button>
+    <div class="member-hero-actions">
+      <a class="m-btn m-btn--ghost" routerLink="/dashboard/competencies/sessions">Sessions</a>
+      <button type="button" class="m-btn m-btn--ghost" (click)="loadInitialData()" [disabled]="loading">Refresh</button>
+    </div>
   </header>
 
   <div *ngIf="errorMessage" class="m-alert m-alert--error">{{ errorMessage }}</div>
@@ -20,17 +23,40 @@
     <article class="metric-card">
       <span>Current level</span>
       <strong>{{ averageCurrentLevel }}</strong>
-      <small>Average current score /100</small>
+      <small>Average current level /5</small>
     </article>
     <article class="metric-card">
       <span>Target level</span>
       <strong>{{ averageTargetLevel }}</strong>
-      <small>Average target score /100</small>
+      <small>Average target level /5</small>
     </article>
     <article class="metric-card metric-card--accent">
       <span>Readiness score</span>
       <strong>{{ readinessScore }}</strong>
       <small>Average gap: {{ averageGapLevel }}</small>
+    </article>
+  </section>
+
+  <section *ngIf="clubStats" class="metric-grid">
+    <article class="metric-card">
+      <span>Club members</span>
+      <strong>{{ clubStats.totalMembers }}</strong>
+      <small>Members with competency tracking</small>
+    </article>
+    <article class="metric-card">
+      <span>Club avg level</span>
+      <strong>{{ clubStats.avgLevelAcrossAll }}</strong>
+      <small>Across all member competencies</small>
+    </article>
+    <article class="metric-card">
+      <span>Total gaps</span>
+      <strong>{{ clubStats.totalGaps }}</strong>
+      <small>Current level below target</small>
+    </article>
+    <article class="metric-card metric-card--accent">
+      <span>Critical gaps</span>
+      <strong>{{ clubStats.criticalGaps }}</strong>
+      <small>Gap >= 2 levels</small>
     </article>
   </section>
 
@@ -64,7 +90,7 @@
       <h3>Skill progress and AI tips</h3>
       <div *ngIf="skillTips.length === 0" class="m-state">No progress data available.</div>
       <ul *ngIf="skillTips.length > 0" class="skill-list">
-        <li *ngFor="let skill of skillTips">
+        <li *ngFor="let skill of skillTips" [ngClass]="'gap-' + gapSeverityById(skill.id)">
           <div class="skill-head">
             <strong>{{ skill.skillName }}</strong>
             <span>{{ skill.current }}/{{ skill.target }}</span>
@@ -72,6 +98,7 @@
           <div class="bar-track">
             <div class="bar-fill" [style.width.%]="skill.progress"></div>
           </div>
+          <p class="skill-gap">Gap: {{ gapDisplayById(skill.id) }}</p>
           <p class="skill-tip">{{ skill.tip }}</p>
         </li>
       </ul>

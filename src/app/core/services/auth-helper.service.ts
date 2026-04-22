@@ -41,7 +41,9 @@ export class AuthHelperService {
   }
 
   getClubId(): number {
-    return this.getPayload()?.clubid ?? 0;
+    const rawClubId = this.getPayload()?.clubid;
+    const clubId = Number(rawClubId);
+    return Number.isFinite(clubId) ? clubId : 0;
   }
 
   getRole(): string {
@@ -56,7 +58,9 @@ export class AuthHelperService {
 
   getUserId(): number {
     const p = this.getPayload();
-    return p?.sub ?? p?.id ?? 0;
+    const rawUserId = p?.sub ?? p?.id;
+    const userId = Number(rawUserId);
+    return Number.isFinite(userId) ? userId : 0;
   }
 
   isPresident(): boolean {

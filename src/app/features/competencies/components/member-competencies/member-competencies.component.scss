@@ -70,6 +70,11 @@
   color: #2563eb;
 }
 
+.member-hero-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
 .m-alert {
   display: flex;
   align-items: center;
@@ -278,6 +283,21 @@
   background: rgba(248, 250, 252, 0.88);
 }
 
+.skill-list li.gap-critical {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(254, 242, 242, 0.88);
+}
+
+.skill-list li.gap-warning {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(255, 251, 235, 0.9);
+}
+
+.skill-list li.gap-ok {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(236, 253, 245, 0.9);
+}
+
 .skill-head,
 .path-title-row {
   display: flex;
@@ -317,6 +337,13 @@
   margin: 0;
   color: #64748b;
   font-size: 0.84rem;
+}
+
+.skill-gap {
+  margin: 0.2rem 0 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
 }
 
 .step-done {

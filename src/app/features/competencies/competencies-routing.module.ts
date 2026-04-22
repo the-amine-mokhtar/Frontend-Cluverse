@@ -4,6 +4,7 @@ import { CompetenciesEntryComponent } from './components/competencies-entry/comp
 import { CompetenciesHomeComponent } from './components/competencies-home/competencies-home.component';
 import { MemberCompetenciesComponent } from './components/member-competencies/member-competencies.component';
 import { CompetenciesInsightsComponent } from './components/competencies-insights/competencies-insights.component';
+import { SessionsDashboardComponent } from './components/sessions-dashboard/sessions-dashboard.component';
 import { RoleRouteGuard } from '../../core/guards/role-route.guard';
 
 const routes: Routes = [
@@ -25,6 +26,12 @@ const routes: Routes = [
     canActivate: [RoleRouteGuard],
     data: { allowedRoles: ['PRESIDENT', 'TREASURER', 'HR_MANAGER', 'EVENT_MANAGER'], redirectTo: '/dashboard/competencies/member-competencies' },
     component: CompetenciesInsightsComponent
+  },
+  {
+    path: 'sessions',
+    canActivate: [RoleRouteGuard],
+    data: { allowedRoles: ['PRESIDENT', 'TREASURER', 'HR_MANAGER', 'EVENT_MANAGER', 'MEMBER'], redirectTo: '/dashboard/competencies' },
+    component: SessionsDashboardComponent
   }
 ];
 
