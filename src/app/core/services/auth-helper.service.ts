@@ -40,6 +40,10 @@ export class AuthHelperService {
     return `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
   }
 
+  getEmail(): string {
+    return this.getPayload()?.email ?? '';
+  }
+
   getClubId(): number {
     const payload = this.getPayload();
     const fromToken = Number(payload?.clubid ?? payload?.clubId ?? 0);
