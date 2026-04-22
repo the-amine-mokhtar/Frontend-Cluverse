@@ -60,13 +60,17 @@ export class EventFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    
+    // ✅ Charger les campagnes d'abord, puis gérer les route params
     this.loadCampaigns();
 
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.isEditMode = true;
         this.eventId = +params['id'];
-        this.loadEvent(this.eventId);
+        // Attendre un peu que les campagnes se chargent
+        const id = this.eventId; // ✅ Capturer la valeur pour éviter undefined
+        setTimeout(() => this.loadEvent(id), 100);
       }
     });
 
@@ -128,13 +132,16 @@ export class EventFormComponent implements OnInit {
   // Le backend filtre déjà : expirées exclues, PRIVATE non autorisées exclues,
   // SHARED sans permission exclues → on affiche tout ce qu'on reçoit
   loadCampaigns(): void {
-    this.campaignService.getAllCampaigns().subscribe({
+    // ✅ Utiliser la nouvelle méthode qui filtre correctement selon visibilité et permissions
+    this.campaignService.getCampaignsForEventForm().subscribe({
       next: (campaigns) => {
         this.campaigns = campaigns;
+        console.log('[EventForm] Campaigns loaded for event form:', this.campaigns.length);
       },
       error: (err) => {
         console.error('Error loading campaigns:', err);
         this.hasError = true;
+        this.errorMessage = 'Failed to load campaigns. Please try again.';
       }
     });
   }
@@ -268,6 +275,14 @@ export class EventFormComponent implements OnInit {
           this.eventStatusChangeService.notifyStatusChange(event.id, event.status || 'PLANNED');
         }
         
+        // ✅ AJOUT: Notifier le rechargement des events (nouveau event créé)
+        if (!this.isEditMode) {
+          setTimeout(() => {
+            this.eventStatusChangeService.notifyReloadEvents();
+            console.log('✅ [EventForm] Notified to reload events');
+          }, 300);
+        }
+        
         this.isSubmitting = false;
         this.errorMessage = '';
         
@@ -388,6 +403,10 @@ export class EventFormComponent implements OnInit {
           campaignId:  event.campaignId ?? null
         });
 
+        // ✅ Marquer le formulaire comme untouched et non-dirty après le chargement
+        this.eventForm.markAsUntouched({ onlySelf: false });
+        this.eventForm.markAsPristine({ onlySelf: false });
+
         // Trouver la campagne dans la liste chargée
         this.selectedCampaign = this.campaigns.find(c => c.id === event.campaignId) || null;
 
@@ -401,10 +420,13 @@ export class EventFormComponent implements OnInit {
             this.eventForm.patchValue({ campaignId: null });
           }
         }
+
+        console.log('✅ Event loaded for editing:', event);
       },
       error: (err) => {
         console.error('Error loading event:', err);
         this.hasError = true;
+        this.errorMessage = err.error?.message || 'Failed to load event. Please try again.';
       }
     });
   }

@@ -1,70 +1,185 @@
-// ── Google Fonts ──────────────────────────────────────────────
-// Dans angular.json > styles ou dans le global styles.scss :
-// @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+// ── Fonts ──────────────────────────────────────────────────────
+// @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap');
 
-// ── Design Tokens ─────────────────────────────────────────────
-$bg-page:        #06111f;
-$bg-card:        #0a1929;
-$bg-inner:       #0d2035;
-$bg-hover:       #102540;
+// ── Design Tokens ──────────────────────────────────────────────
+$white:        #ffffff;
+$bg:           #f7f8fa;
+$bg-hover:     #f0f2f5;
+$surface:      #ffffff;
 
-$border:         #132d47;
-$border-light:   #1a3d5c;
+$border:       #e4e7ed;
+$border-md:    #d1d5db;
+$border-focus: #2563eb;
 
-$text-main:      #e2f0ff;
-$text-muted:     #254a6a;
-$text-secondary: #5c8fb5;
+$text-900:     #0f172a;
+$text-700:     #374151;
+$text-500:     #6b7280;
+$text-400:     #9ca3af;
 
-// Brand
-$blue:           #3b9eff;
-$blue2:          #00c6e0;
-$blue-light:     rgba(59, 158, 255, 0.12);
-$blue-glow:      rgba(59, 158, 255, 0.25);
+$blue:         #2563eb;
+$blue-50:      #eff6ff;
+$blue-100:     #dbeafe;
+$blue-600:     #1d4ed8;
 
-$green:          #00e5a0;
-$green2:         #00cfb4;
-$green-light:    rgba(0, 229, 160, 0.10);
-$green-glow:     rgba(0, 229, 160, 0.22);
+$emerald:      #059669;
+$emerald-50:   #ecfdf5;
+$emerald-100:  #d1fae5;
 
-$yellow:         #f5c542;
-$yellow-light:   rgba(245, 197, 66, 0.12);
+$amber:        #d97706;
+$amber-50:     #fffbeb;
+$amber-100:    #fef3c7;
 
-$danger:         #ff5c7a;
-$danger-light:   rgba(255, 92, 122, 0.12);
+$rose:         #e11d48;
+$rose-50:      #fff1f2;
+$rose-100:     #ffe4e6;
 
-// Radii
-$r-sm:  6px;
-$r-md:  10px;
-$r-lg:  14px;
-$r-xl:  20px;
-$r-2xl: 28px;
+$violet:       #7c3aed;
+$violet-50:    #f5f3ff;
+$violet-100:   #ede9fe;
 
-// Fonts
-$font-head: 'Space Grotesk', sans-serif;
-$font-body: 'DM Sans', sans-serif;
+$r-sm:   5px;
+$r-md:   8px;
+$r-lg:   12px;
+$r-xl:   16px;
+$r-2xl:  22px;
 
-// ── Mixins ────────────────────────────────────────────────────
-@mixin glass-card {
-  background: $bg-card;
+$font-display: 'Instrument Serif', Georgia, serif;
+$font-body:    'Geist', 'Inter', system-ui, sans-serif;
+
+$shadow-sm:  0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+$shadow-md:  0 4px 12px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
+$shadow-lg:  0 12px 32px rgba(15,23,42,0.10), 0 4px 8px rgba(15,23,42,0.05);
+$shadow-xl:  0 24px 64px rgba(15,23,42,0.14), 0 8px 16px rgba(15,23,42,0.06);
+
+// ── Mixins ─────────────────────────────────────────────────────
+@mixin card {
+  background: $surface;
   border: 1px solid $border;
   border-radius: $r-2xl;
+  box-shadow: $shadow-sm;
 }
 
-@mixin surface {
-  background: $bg-inner;
-  border: 1px solid $border;
-  border-radius: $r-lg;
-}
-
-@mixin section-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+@mixin label-sm {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: $text-secondary;
+  color: $text-400;
+}
+
+
+// ── Back / Close button ───────────────────────────────────────
+.btn-back {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 200;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid $border-md;
+  background: $white;
+  color: $text-500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: $shadow-md;
+  transition: all 0.18s ease;
+
+  &:hover {
+    background: $rose-50;
+    border-color: $rose-100;
+    color: $rose;
+    transform: scale(1.08) rotate(90deg);
+    box-shadow: $shadow-lg;
+  }
+
+  &:active {
+    transform: scale(0.95) rotate(90deg);
+  }
+}
+
+// ── Page wrapper ───────────────────────────────────────────────
+.page-wrapper {
+  background: $bg;
+  min-height: 100vh;
+  font-family: $font-body;
+  color: $text-900;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+// ── Container ──────────────────────────────────────────────────
+.reservation-form-container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 5rem;
+}
+
+// ── Page header ─────────────────────────────────────────────── (optional)
+.page-header {
+  margin-bottom: 2.5rem;
+
+  .eyebrow {
+    @include label-sm;
+    color: $blue;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-family: $font-display;
+    font-size: 2.2rem;
+    font-weight: 400;
+    color: $text-900;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 0 0 0.5rem;
+
+    em {
+      font-style: italic;
+      color: $blue;
+    }
+  }
+
+  p {
+    color: $text-500;
+    font-size: 0.93rem;
+    margin: 0;
+  }
+}
+
+// ── Top bar: existing reservations ────────────────────────────
+.existing-reservations-section {
+  @include card;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  border-left: 3px solid $emerald;
+}
+
+.section-title {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  margin-bottom: 1.25rem;
+
+  span {
+    font-family: $font-body;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $text-500;
+  }
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $emerald;
+    flex-shrink: 0;
+  }
 
   &::after {
     content: '';
@@ -74,451 +189,432 @@ $font-body: 'DM Sans', sans-serif;
   }
 }
 
-// ── Scrollbar ─────────────────────────────────────────────────
-::-webkit-scrollbar       { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: $border-light; border-radius: 99px; }
+.reservation-search-bar {
+  margin-bottom: 1.25rem;
 
-// ── Page wrapper ──────────────────────────────────────────────
-.page-wrapper {
-  background: $bg-page;
-  color: $text-main;
-  font-family: $font-body;
-  font-size: 15px;
-  min-height: 100vh;
-}
-
-// ── Page header ───────────────────────────────────────────────
-.page-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 2.5rem;
-
-  h1 {
-    font-family: $font-head;
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    background: linear-gradient(120deg, $green 0%, $blue 55%, $blue2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  p {
+  input {
+    width: 100%;
+    max-width: 340px;
+    padding: 0.6rem 1rem;
+    border: 1px solid $border-md;
+    border-radius: $r-lg;
+    font-family: $font-body;
     font-size: 0.88rem;
-    color: $text-secondary;
-    margin-top: 0.3rem;
-    max-width: 420px;
-    line-height: 1.6;
+    color: $text-900;
+    background: $bg;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &::placeholder { color: $text-400; }
+
+    &:focus {
+      outline: none;
+      border-color: $blue;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+      background: $white;
+    }
   }
-}
-
-.header-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.9rem;
-  border-radius: 99px;
-  border: 1px solid rgba(0, 229, 160, 0.22);
-  background: $green-light;
-  color: $green;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-
-  &::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: $green;
-    animation: pulse 2s infinite;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.7); }
-}
-
-// ── Container ─────────────────────────────────────────────────
-.reservation-form-container {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem 4rem;
-}
-
-// ── Existing Reservations ─────────────────────────────────────
-.existing-reservations-section {
-  @include glass-card;
-  border-color: rgba(0, 229, 160, 0.18);
-  background: linear-gradient(
-    135deg,
-    rgba(0, 229, 160, 0.05) 0%,
-    rgba(59, 158, 255, 0.06) 100%
-  );
-  padding: 1.6rem 1.8rem;
-  margin-bottom: 2rem;
-}
-
-.section-title {
-  @include section-label;
-  color: $green;
-  margin-bottom: 1.1rem;
-
-  &::after { background: rgba(0, 229, 160, 0.2); }
-}
-
-.existing-reservations-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 0.9rem;
-}
-
-.reservation-item {
-  @include surface;
-  padding: 1rem 1.1rem;
-  transition: border-color 0.2s ease, background 0.2s ease;
-
-  &:hover {
-    background: $bg-hover;
-    border-color: $border-light;
-  }
-}
-
-.reservation-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.65rem;
-  gap: 0.5rem;
-}
-
-.reservation-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.resource-name {
-  font-family: $font-head;
-  font-weight: 600;
-  color: $text-main;
-  font-size: 0.93rem;
-}
-
-// ── Status Badge ──────────────────────────────────────────────
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.22rem 0.6rem;
-  border-radius: $r-sm;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-
-  &.status-confirmed {
-    background: rgba(0, 229, 160, 0.12);
-    color: $green;
-    border: 1px solid rgba(0, 229, 160, 0.2);
-  }
-  &.status-pending {
-    background: $yellow-light;
-    color: $yellow;
-    border: 1px solid rgba(245, 197, 66, 0.22);
-  }
-  &.status-cancelled {
-    background: $danger-light;
-    color: $danger;
-    border: 1px solid rgba(255, 92, 122, 0.22);
-  }
-  &.status-completed {
-    background: $blue-light;
-    color: $blue;
-    border: 1px solid rgba(59, 158, 255, 0.22);
-  }
-}
-
-.reservation-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  color: $text-secondary;
-  font-size: 0.83rem;
-
-  span {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-}
-
-.empty-reservations {
-  text-align: center;
-  padding: 1.2rem;
-  color: $green;
-  background: $green-light;
-  border: 1px dashed rgba(0, 229, 160, 0.25);
-  border-radius: $r-md;
-  font-size: 0.87rem;
-
-  p { margin: 0; }
 }
 
 .loading-indicator {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1.25rem;
-  color: $text-muted;
-  font-size: 0.875rem;
+  gap: 0.6rem;
+  color: $text-400;
+  font-size: 0.85rem;
+  padding: 1rem 0;
+
+  &::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border: 2px solid $border-md;
+    border-top-color: $blue;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    flex-shrink: 0;
+  }
 }
 
-// ── Intro cards ───────────────────────────────────────────────
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.existing-reservations-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.875rem;
+}
+
+.reservation-item {
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: $r-lg;
+  padding: 1rem 1.125rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: $border-md;
+    box-shadow: $shadow-sm;
+  }
+}
+
+.reservation-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.reservation-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.resource-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: $text-900;
+  line-height: 1.3;
+}
+
+.reservation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.81rem;
+  color: $text-500;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+}
+
+.empty-reservations {
+  background: $emerald-50;
+  border: 1px dashed rgba($emerald, 0.3);
+  border-radius: $r-lg;
+  padding: 1.25rem;
+  text-align: center;
+  color: $emerald;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  p { margin: 0; }
+}
+
+// ── Status badge ───────────────────────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+
+  &.status-confirmed, &.status-approved {
+    background: $emerald-100;
+    color: darken($emerald, 5%);
+  }
+  &.status-pending {
+    background: $amber-100;
+    color: $amber;
+  }
+  &.status-cancelled {
+    background: $rose-100;
+    color: $rose;
+  }
+  &.status-completed {
+    background: $blue-100;
+    color: $blue-600;
+  }
+}
+
+// ── Intro cards ────────────────────────────────────────────────
 .reservation-intro {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  grid-template-columns: 1.6fr 1fr;
   gap: 1.25rem;
   margin-bottom: 2rem;
 }
 
 .intro-card {
-  @include glass-card;
-  padding: 2rem 2.2rem;
-  min-height: 200px;
+  @include card;
+  padding: 2rem 2.25rem;
   position: relative;
   overflow: hidden;
 
-  &::before {
+  // Geometric accent
+  &::after {
     content: '';
     position: absolute;
-    top: -80px;
-    right: -80px;
-    width: 280px;
-    height: 280px;
+    top: -60px;
+    right: -60px;
+    width: 220px;
+    height: 220px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 229, 160, 0.09), transparent 60%);
+    background: radial-gradient(circle, $blue-50 0%, transparent 70%);
     pointer-events: none;
   }
 
-  h2 {
-    font-family: $font-head;
-    font-size: 1.55rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.65rem;
-    color: $text-main;
-    line-height: 1.25;
-  }
-
-  p {
-    color: $text-secondary;
-    font-size: 0.9rem;
-    line-height: 1.7;
-  }
-}
-
-// Badge pill inside intro card
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.28rem 0.85rem;
-  border-radius: 99px;
-  background: $green-light;
-  color: $green;
-  border: 1px solid rgba(0, 229, 160, 0.2);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-}
-
-.hint-card {
-  @include glass-card;
-  padding: 1.8rem 2rem;
-  min-height: 200px;
-  border-color: rgba(59, 158, 255, 0.2);
-  background: linear-gradient(145deg, $bg-card 0%, rgba(59, 158, 255, 0.05) 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  h3 {
-    font-family: $font-head;
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: $blue;
-    margin-bottom: 0.6rem;
-    display: flex;
+  .badge {
+    display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.35rem;
+    padding: 0.25rem 0.75rem;
+    background: $blue-50;
+    color: $blue;
+    border: 1px solid $blue-100;
+    border-radius: 99px;
+    font-size: 0.67rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
 
     &::before {
       content: '';
-      width: 8px;
-      height: 8px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: $blue;
-      flex-shrink: 0;
+    }
+  }
+
+  h2 {
+    font-family: $font-display;
+    font-size: 1.7rem;
+    font-weight: 400;
+    color: $text-900;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0 0 0.65rem;
+
+    em {
+      font-style: italic;
+      color: $blue;
     }
   }
 
   p {
-    color: $text-secondary;
-    font-size: 0.88rem;
+    color: $text-500;
+    font-size: 0.9rem;
     line-height: 1.7;
+    margin: 0;
+    max-width: 380px;
   }
 }
 
-// ── Main grid ─────────────────────────────────────────────────
+.hint-card {
+  @include card;
+  padding: 1.75rem 2rem;
+  background: linear-gradient(145deg, $blue-50 0%, #fafbff 100%);
+  border-color: $blue-100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+
+  .hint-icon {
+    width: 36px;
+    height: 36px;
+    background: $blue-100;
+    border-radius: $r-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $blue;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: $blue-600;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  p {
+    color: $text-700;
+    font-size: 0.87rem;
+    line-height: 1.7;
+    margin: 0;
+  }
+}
+
+// ── Main grid ──────────────────────────────────────────────────
 .main-grid {
   display: grid;
-  grid-template-columns: 1.35fr 0.95fr;
+  grid-template-columns: 1.3fr 1fr;
   gap: 1.75rem;
-  margin-bottom: 2rem;
   align-items: start;
 }
 
-// ── Subsection headings ───────────────────────────────────────
+// ── Subsection heading ─────────────────────────────────────────
 .subsection-heading {
-  @include section-label;
-  margin-bottom: 1rem;
-}
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: $text-400;
+  margin-bottom: 0.875rem;
 
-// ── Reservation form ──────────────────────────────────────────
-.reservation-form {
-  @include glass-card;
-  padding: 2rem 2.2rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.2);
-
-  &::before {
+  &::after {
     content: '';
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, $blue-glow, transparent 60%);
-    pointer-events: none;
-    filter: blur(20px);
+    flex: 1;
+    height: 1px;
+    background: $border;
   }
 }
 
+// ── Form card ──────────────────────────────────────────────────
+.reservation-form {
+  @include card;
+  padding: 2rem 2.25rem;
+  box-shadow: $shadow-md;
+}
+
 .form-group {
-  margin-bottom: 1.4rem;
-  position: relative;
+  margin-bottom: 1.25rem;
 }
 
 label {
   display: block;
-  margin-bottom: 0.45rem;
+  font-size: 0.77rem;
   font-weight: 600;
-  color: $text-secondary;
-  text-transform: uppercase;
-  letter-spacing: 0.065em;
-  font-size: 0.71rem;
+  letter-spacing: 0.04em;
+  color: $text-700;
+  margin-bottom: 0.4rem;
+  text-transform: none;
 }
 
 .form-control {
   width: 100%;
-  padding: 0.82rem 1rem;
-  border: 1px solid $border;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid $border-md;
   border-radius: $r-md;
-  font-size: 0.93rem;
-  color: $text-main;
-  background: $bg-page;
   font-family: $font-body;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  font-size: 0.9rem;
+  color: $text-900;
+  background: $white;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   appearance: none;
   -webkit-appearance: none;
+  box-sizing: border-box;
 
-  &::placeholder { color: $text-muted; }
-  &:hover        { border-color: $border-light; }
+  &::placeholder { color: $text-400; }
+
+  &:hover:not(:disabled) {
+    border-color: darken($border-md, 8%);
+    background: $white;
+  }
 
   &:focus {
     outline: none;
     border-color: $blue;
-    box-shadow: 0 0 0 4px $blue-light;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    background: $white;
+  }
+
+  &:disabled {
+    background: $bg;
+    color: $text-400;
+    cursor: not-allowed;
   }
 }
 
 select.form-control {
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235c8fb5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 1rem center;
+  background-position: right 0.9rem center;
   padding-right: 2.4rem;
 }
 
 textarea.form-control {
-  min-height: 90px;
+  min-height: 80px;
   resize: vertical;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 .error {
-  color: $danger;
-  font-size: 0.78rem;
-  margin-top: 0.3rem;
   display: flex;
-  align-items: center;
-  gap: 0.3rem;
+  align-items: flex-start;
+  gap: 0.35rem;
+  color: $rose;
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-top: 0.35rem;
+  line-height: 1.4;
 
   &::before {
     content: '!';
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
-    background: $danger-light;
-    font-size: 0.65rem;
-    font-weight: 700;
+    background: $rose-100;
+    font-size: 0.6rem;
+    font-weight: 800;
     flex-shrink: 0;
+    margin-top: 1px;
   }
 }
 
 // ── Resource info panel ───────────────────────────────────────
 .resource-info {
-  background: linear-gradient(135deg, $green-light, $blue-light);
-  border: 1px solid rgba(0, 229, 160, 0.16);
+  background: linear-gradient(135deg, $emerald-50, #f0fdf8);
+  border: 1px solid $emerald-100;
   border-radius: $r-lg;
-  padding: 1.1rem 1.25rem;
-  margin-bottom: 1.4rem;
+  padding: 1rem 1.125rem;
+  margin-bottom: 1.25rem;
 
   h4 {
-    font-family: $font-head;
-    color: $text-main;
-    font-size: 0.93rem;
-    font-weight: 600;
-    margin: 0 0 0.3rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $text-900;
+    margin: 0 0 0.25rem;
   }
 
   .desc {
-    color: $text-secondary;
-    font-size: 0.84rem;
-    line-height: 1.6;
-    margin: 0.3rem 0 0.4rem;
+    font-size: 0.83rem;
+    color: $text-500;
+    line-height: 1.55;
+    margin: 0 0 0.5rem;
   }
 
   .availability {
-    font-size: 0.82rem;
-    color: $text-secondary;
+    font-size: 0.81rem;
+    color: $text-700;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
 
-    strong { color: $green; }
+    &::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: $emerald;
+      flex-shrink: 0;
+    }
+
+    strong { color: $emerald; font-weight: 700; }
   }
 }
 
@@ -528,60 +624,69 @@ textarea.form-control {
   flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: flex-end;
-  margin-top: 1.75rem;
+  margin-top: 1.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid $border;
 }
 
-// ── Cart ──────────────────────────────────────────────────────
+// ── Cart panel ────────────────────────────────────────────────
 .cart-items {
-  @include surface;
-  border-radius: $r-2xl;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $r-xl;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-  padding: 1.2rem;
-  margin-bottom: 1rem;
+  gap: 0.625rem;
+  padding: 1rem;
+  margin-bottom: 0.875rem;
   max-height: 460px;
   overflow-y: auto;
-  border-style: dashed;
-  border-color: rgba(148, 163, 184, 0.15);
+  box-shadow: inset 0 1px 3px rgba(15,23,42,0.04);
 
-  &::-webkit-scrollbar       { width: 4px; }
-  &::-webkit-scrollbar-track { background: $bg-inner; }
-  &::-webkit-scrollbar-thumb { background: $border-light; border-radius: 99px; }
+  &::-webkit-scrollbar        { width: 4px; }
+  &::-webkit-scrollbar-track  { background: $bg; border-radius: 99px; }
+  &::-webkit-scrollbar-thumb  { background: $border-md; border-radius: 99px; }
 }
 
 .cart-item {
-  background: $bg-card;
+  background: $bg;
   border: 1px solid $border;
   border-radius: $r-lg;
-  padding: 0.95rem 1.05rem;
-  transition: border-color 0.15s ease;
+  padding: 0.875rem 1rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  animation: slideDown 0.2s ease;
 
-  &:hover { border-color: rgba(0, 229, 160, 0.2); }
+  &:hover {
+    border-color: $border-md;
+    box-shadow: $shadow-sm;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .cart-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
 }
 
 .cart-title {
-  font-family: $font-head;
-  font-weight: 600;
-  color: $text-main;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $text-900;
 }
 
 .cart-details {
   display: flex;
   flex-direction: column;
-  gap: 0.28rem;
-  color: $text-secondary;
-  font-size: 0.82rem;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: $text-500;
 
   span {
     display: flex;
@@ -589,45 +694,43 @@ textarea.form-control {
     gap: 0.35rem;
   }
 
-  strong { color: $text-main; }
+  strong { color: $text-900; }
 }
 
 // ── Cart footer ───────────────────────────────────────────────
 .cart-footer {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 229, 160, 0.08) 0%,
-    rgba(59, 158, 255, 0.08) 100%
-  );
-  border: 1px solid rgba(0, 229, 160, 0.18);
+  background: linear-gradient(145deg, $blue-50 0%, #fafbff 100%);
+  border: 1px solid $blue-100;
   border-radius: $r-xl;
-  padding: 1.25rem 1.4rem;
+  padding: 1.25rem 1.5rem;
 }
 
 .cart-summary {
-  color: $text-secondary;
-  font-size: 0.83rem;
-  margin-bottom: 0.2rem;
+  font-size: 0.77rem;
+  color: $text-400;
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .cart-total {
-  font-family: $font-head;
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: $text-main;
-  margin-bottom: 0.8rem;
+  font-family: $font-display;
+  font-size: 1.55rem;
+  color: $text-900;
+  font-weight: 400;
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
 
   span {
-    background: linear-gradient(90deg, $green, $blue);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: $blue;
+    font-style: italic;
   }
 }
 
 .cart-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.625rem;
 }
 
 // ── Buttons ───────────────────────────────────────────────────
@@ -635,64 +738,93 @@ textarea.form-control {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.78rem 1.4rem;
+  gap: 0.4rem;
+  padding: 0.68rem 1.25rem;
   border-radius: $r-md;
   border: 1px solid transparent;
   font-family: $font-body;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
   white-space: nowrap;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+  line-height: 1;
+  transition: all 0.15s ease;
 
   &:hover:not(:disabled)  { transform: translateY(-1px); }
-  &:active:not(:disabled) { transform: translateY(0); }
-  &:disabled              { opacity: 0.4; cursor: not-allowed; }
+  &:active:not(:disabled) { transform: translateY(0) scale(0.99); }
+  &:disabled              { opacity: 0.45; cursor: not-allowed; transform: none !important; }
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, $green 0%, $blue2 100%);
-  color: #002a1c;
-  box-shadow: 0 6px 22px $green-glow;
+  background: $blue;
+  color: $white;
+  border-color: $blue;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
 
-  &:hover:not(:disabled) { box-shadow: 0 10px 30px $green-glow; }
+  &:hover:not(:disabled) {
+    background: $blue-600;
+    border-color: $blue-600;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+  }
 }
 
 .btn-blue {
-  background: linear-gradient(135deg, $blue 0%, $blue2 100%);
-  color: #001630;
-  box-shadow: 0 6px 22px $blue-glow;
+  background: $text-900;
+  color: $white;
+  border-color: $text-900;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
 
-  &:hover:not(:disabled) { box-shadow: 0 10px 30px $blue-glow; }
+  &:hover:not(:disabled) {
+    background: lighten($text-900, 8%);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.22);
+  }
 }
 
 .btn-secondary {
-  background: $bg-inner;
-  color: $text-secondary;
-  border-color: $border;
+  background: $white;
+  color: $text-700;
+  border-color: $border-md;
+  box-shadow: $shadow-sm;
 
   &:hover:not(:disabled) {
     background: $bg-hover;
-    border-color: $border-light;
-    color: $text-main;
+    border-color: darken($border-md, 8%);
+    color: $text-900;
+  }
+}
+
+.btn-cancel-res {
+  background: $amber-50;
+  color: $amber;
+  border-color: $amber-100;
+
+  &:hover:not(:disabled) {
+    background: $amber-100;
+    border-color: rgba($amber, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
   }
 }
 
 .btn-danger {
-  background: $danger-light;
-  color: $danger;
-  border-color: rgba(255, 92, 122, 0.2);
+  background: $rose-50;
+  color: $rose;
+  border-color: $rose-100;
 
-  &:hover:not(:disabled) { background: rgba(255, 92, 122, 0.2); }
+  &:hover:not(:disabled) {
+    background: $rose-100;
+    border-color: rgba($rose, 0.3);
+  }
 }
 
 .btn-sm {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.78rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.76rem;
   border-radius: $r-sm;
-  min-width: auto;
 }
 
 // ── Empty state ───────────────────────────────────────────────
@@ -701,40 +833,42 @@ textarea.form-control {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.8rem;
+  gap: 0.75rem;
   padding: 2.5rem 1.5rem;
-  border: 1px dashed rgba(148, 163, 184, 0.15);
+  border: 1.5px dashed $border-md;
   border-radius: $r-xl;
-  min-height: 240px;
-  color: $text-secondary;
-  font-size: 0.87rem;
+  min-height: 220px;
+  color: $text-500;
+  font-size: 0.875rem;
   text-align: center;
+  background: $bg;
 
   &.small {
     padding: 1.75rem 1.25rem;
-    font-size: 0.87rem;
+    min-height: auto;
   }
 
-  p { margin: 0; line-height: 1.65; }
+  p { margin: 0; line-height: 1.6; }
 }
 
 .empty-icon {
-  font-size: 1.8rem;
-  opacity: 0.45;
+  font-size: 1.6rem;
+  opacity: 0.5;
 }
 
 // ── Modal ─────────────────────────────────────────────────────
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 1.5rem;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.18s ease;
 }
 
 @keyframes fadeIn {
@@ -744,68 +878,72 @@ textarea.form-control {
 
 .modal-dialog {
   width: 100%;
-  max-width: 480px;
-  background: $bg-card;
-  border: 1px solid $border-light;
+  max-width: 460px;
+  background: $white;
+  border: 1px solid $border;
   border-radius: $r-2xl;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  box-shadow: $shadow-xl;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: modalSlide 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes modalSlide {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 1.8rem;
+  padding: 1.4rem 1.75rem;
   border-bottom: 1px solid $border;
+  background: $bg;
 
   h3 {
     margin: 0;
-    font-family: $font-head;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: $text-main;
+    font-family: $font-display;
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: $text-900;
+    letter-spacing: -0.01em;
   }
 
   .modal-close {
-    background: $bg-inner;
-    border: 1px solid $border;
-    color: $text-secondary;
-    width: 30px;
-    height: 30px;
-    border-radius: $r-sm;
+    background: $white;
+    border: 1px solid $border-md;
+    color: $text-500;
+    width: 28px;
+    height: 28px;
+    border-radius: $r-md;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 0.85rem;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
 
     &:hover {
       background: $bg-hover;
-      color: $text-main;
+      border-color: $border-md;
+      color: $text-900;
     }
   }
 }
 
 .modal-body {
-  padding: 1.5rem 1.8rem;
-  color: $text-secondary;
-  font-size: 0.9rem;
-  line-height: 1.7;
+  padding: 1.5rem 1.75rem;
   max-height: 55vh;
   overflow-y: auto;
 
   .confirmation-message {
     margin: 0;
+    font-size: 0.9rem;
+    color: $text-700;
+    line-height: 1.75;
     white-space: pre-wrap;
     word-wrap: break-word;
   }
@@ -813,38 +951,33 @@ textarea.form-control {
 
 .modal-footer {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.625rem;
   justify-content: flex-end;
-  padding: 1.25rem 1.8rem;
+  padding: 1.25rem 1.75rem;
   border-top: 1px solid $border;
+  background: $bg;
 
-  .btn { min-width: 100px; }
+  .btn { min-width: 90px; }
 }
 
 // ── Responsive ────────────────────────────────────────────────
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .reservation-intro,
   .main-grid {
     grid-template-columns: 1fr !important;
   }
 
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .hint-card { min-height: auto; }
 }
 
 @media (max-width: 640px) {
   .reservation-form-container {
-    padding: 1rem 0.75rem;
+    padding: 1.25rem 1rem 3rem;
   }
 
-  .reservation-form {
-    padding: 1.25rem 1.3rem;
-  }
-
-  .form-group {
-    margin-bottom: 1.1rem;
+  .reservation-form,
+  .intro-card {
+    padding: 1.5rem 1.25rem;
   }
 
   .form-actions {
@@ -859,5 +992,9 @@ textarea.form-control {
 
   .existing-reservations-list {
     grid-template-columns: 1fr;
+  }
+
+  .modal-dialog {
+    border-radius: $r-xl;
   }
 }

@@ -26,7 +26,7 @@ export interface Campaign {
   ownerClubId?: number;
   ownerClubName?: string;
   events?: any[];
-  canAddEvent?: boolean; // ✅ calculé par le backend selon visibilité + permissions
+  canAddEvent?: boolean;
 }
 
 export interface CampaignRequest {
@@ -60,6 +60,13 @@ export interface CampaignAccess {
   permissions: CampaignPermission[];
 }
 
+export interface Club {
+  id: number;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+}
+
 export interface Event {
   id: number;
   title: string;
@@ -82,6 +89,7 @@ export interface Event {
 @Injectable({ providedIn: 'root' })
 export class CampaignApiService {
   private apiUrl = `${environment.apiUrl}/api/campaigns`;
+  private clubsUrl = `${environment.apiUrl}/api/clubs`;
 
   constructor(private http: HttpClient) {}
 
@@ -98,10 +106,10 @@ export class CampaignApiService {
     return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
   }
 
-  // ── GET ALL — le backend filtre selon les droits du club connecté
+  // ── GET ALL
   getAllCampaigns(): Observable<Campaign[]> {
     return this.http.get<Campaign[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
-      tap(r => console.log('Campaigns fetched:', r.length)),
+      tap(campaigns => console.log(`[Campaigns] Fetched: ${campaigns.length}`)),
       catchError(err => { console.error('Error fetching campaigns:', err); return throwError(() => err); })
     );
   }
@@ -114,9 +122,10 @@ export class CampaignApiService {
     );
   }
 
-  // ── RECORD VIEW
+  // ── RECORD VIEW — POST /api/campaigns/:id/views
   recordCampaignView(id: number): Observable<Campaign> {
     return this.http.post<Campaign>(`${this.apiUrl}/${id}/views`, {}, { headers: this.getHeaders() }).pipe(
+      tap(r => console.log(`[Campaign] View recorded for #${id}, total views: ${r.views}`)),
       catchError(err => { console.error('Error recording view:', err); return throwError(() => err); })
     );
   }
@@ -132,7 +141,6 @@ export class CampaignApiService {
       }
     });
     if (imageFile) formData.append('imageFile', imageFile, imageFile.name);
-
     return this.http.post<Campaign>(this.apiUrl, formData, { headers: this.getAuthHeaders() }).pipe(
       tap(r => console.log('[Campaign] Created:', r)),
       catchError(err => { console.error('[Campaign] Create error:', err); return throwError(() => err); })
@@ -150,7 +158,6 @@ export class CampaignApiService {
       }
     });
     if (imageFile) formData.append('imageFile', imageFile, imageFile.name);
-
     return this.http.put<Campaign>(`${this.apiUrl}/${id}`, formData, { headers: this.getAuthHeaders() }).pipe(
       tap(r => console.log('[Campaign] Updated:', r)),
       catchError(err => { console.error('[Campaign] Update error:', err); return throwError(() => err); })
@@ -161,13 +168,6 @@ export class CampaignApiService {
   deleteCampaign(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
       catchError(err => { console.error('Error deleting campaign:', err); return throwError(() => err); })
-    );
-  }
-
-  // ── UPDATE STATUS
-  updateCampaignStatus(id: number, status: string): Observable<Campaign> {
-    return this.http.put<Campaign>(`${this.apiUrl}/${id}`, { status }, { headers: this.getHeaders() }).pipe(
-      catchError(err => { console.error('Error updating status:', err); return throwError(() => err); })
     );
   }
 
@@ -210,13 +210,6 @@ export class CampaignApiService {
     );
   }
 
-  searchCampaigns(query: string): Observable<Campaign[]> {
-    const params = new HttpParams().set('search', query);
-    return this.http.get<Campaign[]>(this.apiUrl, { headers: this.getHeaders(), params }).pipe(
-      catchError(err => throwError(() => err))
-    );
-  }
-
   // ── PERMISSIONS
   getCampaignPermissions(campaignId: number): Observable<CampaignAccess[]> {
     return this.http.get<CampaignAccess[]>(`${this.apiUrl}/${campaignId}/permissions`, { headers: this.getHeaders() }).pipe(
@@ -226,16 +219,18 @@ export class CampaignApiService {
 
   grantPermission(campaignId: number, clubId: number, permission: CampaignPermission): Observable<CampaignAccess> {
     const params = new HttpParams().set('permission', permission);
-    return this.http.post<CampaignAccess>(`${this.apiUrl}/${campaignId}/permissions/${clubId}`, {}, { headers: this.getHeaders(), params }).pipe(
-      catchError(err => throwError(() => err))
-    );
+    return this.http.post<CampaignAccess>(
+      `${this.apiUrl}/${campaignId}/permissions/${clubId}`, {},
+      { headers: this.getHeaders(), params }
+    ).pipe(catchError(err => throwError(() => err)));
   }
 
   revokePermission(campaignId: number, clubId: number, permission: CampaignPermission): Observable<void> {
     const params = new HttpParams().set('permission', permission);
-    return this.http.delete<void>(`${this.apiUrl}/${campaignId}/permissions/${clubId}`, { headers: this.getHeaders(), params }).pipe(
-      catchError(err => throwError(() => err))
-    );
+    return this.http.delete<void>(
+      `${this.apiUrl}/${campaignId}/permissions/${clubId}`,
+      { headers: this.getHeaders(), params }
+    ).pipe(catchError(err => throwError(() => err)));
   }
 
   // ── CAMPAIGN EVENTS
@@ -255,6 +250,49 @@ export class CampaignApiService {
   removeEventFromCampaign(campaignId: number, eventId: number): Observable<Event> {
     return this.http.delete<Event>(`${this.apiUrl}/${campaignId}/events/${eventId}`, { headers: this.getHeaders() }).pipe(
       catchError(err => throwError(() => err))
+    );
+  }
+
+  // ── TOP 5 — uses backend endpoint GET /api/campaigns/top-5
+  getTop5Campaigns(): Observable<Campaign[]> {
+    return this.http.get<Campaign[]>(`${this.apiUrl}/top-5`, { headers: this.getHeaders() }).pipe(
+      tap(campaigns => console.log('[Campaigns] Top 5 from backend:', campaigns)),
+      catchError(err => {
+        console.error('[Campaigns] Error fetching top 5:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // ── CAMPAIGNS FOR EVENT FORM — GET /api/campaigns/for-event-form
+  getCampaignsForEventForm(): Observable<Campaign[]> {
+    return this.http.get<Campaign[]>(`${this.apiUrl}/for-event-form`, { headers: this.getHeaders() }).pipe(
+      tap(campaigns => console.log('[Campaigns] For event form:', campaigns.length)),
+      catchError(err => {
+        console.error('[Campaigns] Error fetching campaigns for event form:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // ── ACCESSIBLE CAMPAIGNS — GET /api/campaigns/accessible
+  getAccessibleCampaigns(): Observable<Campaign[]> {
+    return this.http.get<Campaign[]>(`${this.apiUrl}/accessible`, { headers: this.getHeaders() }).pipe(
+      catchError(err => {
+        console.error('[Campaigns] Error fetching accessible campaigns:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // ── ALL CLUBS — for permission management (to pick clubs to share with)
+  getAllClubs(): Observable<Club[]> {
+    return this.http.get<Club[]>(this.clubsUrl, { headers: this.getHeaders() }).pipe(
+      tap(clubs => console.log('[Clubs] Fetched:', clubs.length)),
+      catchError(err => {
+        console.error('[Clubs] Error fetching clubs:', err);
+        return throwError(() => err);
+      })
     );
   }
 }

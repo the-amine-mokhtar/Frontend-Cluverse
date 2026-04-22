@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { EventItem } from '../../services/event-api.service';
 import * as L from 'leaflet';
 
@@ -6,7 +6,7 @@ import * as L from 'leaflet';
   selector: 'app-event-map-3d',
   template: `
     <div class="map-container">
-      <div id="event-map" class="map"></div>
+      <div #mapContainer class="map"></div>
     </div>
   `,
   styles: [`
@@ -23,6 +23,7 @@ import * as L from 'leaflet';
   `]
 })
 export class EventMap3DComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef<HTMLDivElement>;
   @Input() events: EventItem[] = [];
   @Input() zoom: number = 15;
   @Input() mode: 'view' | 'select' = 'view';
@@ -30,11 +31,25 @@ export class EventMap3DComponent implements AfterViewInit, OnDestroy {
 
   private map: L.Map | undefined;
   private marker: L.Marker | undefined;
+  private resizeObserver?: ResizeObserver;
+  private defaultDivIcon: L.DivIcon = L.divIcon({
+    html: `<div style="background-color: #ff6f61; border-radius: 50%; width: 14px; height: 14px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.25);"></div>`,
+    className: 'default-event-marker',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
 
   constructor() {}
 
   ngAfterViewInit(): void {
+    // small delay to ensure container has size, then init map
     setTimeout(() => {
+      if (this.map) return; // already initialized
+      // ensure container has a proper positioning for Leaflet transforms
+      if (this.mapContainer && this.mapContainer.nativeElement) {
+        const el = this.mapContainer.nativeElement as HTMLElement;
+        if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+      }
       if (this.events.length > 0) {
         const hasCoordinates = this.events.some(e => e.locationLatitude && e.locationLongitude);
         if (hasCoordinates) {
@@ -45,12 +60,40 @@ export class EventMap3DComponent implements AfterViewInit, OnDestroy {
       } else if (this.mode === 'select') {
         this.initMapForSelection();
       }
+      // ensure Leaflet measures the container and center correctly
+      if (this.map) {
+        const doInvalidate = () => {
+          try { this.map!.invalidateSize({ animate: false }); } catch (e) {}
+          try {
+            const c = this.map!.getCenter();
+            this.map!.setView([c.lat, c.lng], this.zoom, { animate: false });
+          } catch (e) {}
+        };
+        // run a few times at intervals/frames to handle complex layout/animations
+        setTimeout(doInvalidate, 50);
+        requestAnimationFrame(() => doInvalidate());
+        setTimeout(doInvalidate, 250);
+        setTimeout(doInvalidate, 700);
+      }
+      // observe container resize and invalidate tiles when size changes
+      if (typeof ResizeObserver !== 'undefined' && this.mapContainer && this.mapContainer.nativeElement) {
+        this.resizeObserver = new ResizeObserver(() => {
+          if (this.map) {
+            try { this.map.invalidateSize(); } catch (e) {}
+          }
+        });
+        this.resizeObserver.observe(this.mapContainer.nativeElement);
+      }
     }, 100);
   }
 
   ngOnDestroy(): void {
     if (this.map) {
       this.map.remove();
+    }
+    if (this.resizeObserver) {
+      try { this.resizeObserver.disconnect(); } catch {}
+      this.resizeObserver = undefined;
     }
   }
 
@@ -61,7 +104,7 @@ export class EventMap3DComponent implements AfterViewInit, OnDestroy {
     const centerLng = parseFloat(eventWithCoords?.locationLongitude || '10.2');
 
     // Initialize map with terrain tiles
-    this.map = L.map('event-map', {
+    this.map = L.map(this.mapContainer.nativeElement, {
       center: [centerLat, centerLng],
       zoom: this.zoom,
       zoomControl: true,
@@ -80,7 +123,7 @@ export class EventMap3DComponent implements AfterViewInit, OnDestroy {
         this.createEventMarker(event);
       } else {
         // Event without coordinates - show default marker
-        L.marker([36.8, 10.2], { opacity: 0.7 }).addTo(this.map!)
+        L.marker([36.8, 10.2], { icon: this.defaultDivIcon, opacity: 0.7 }).addTo(this.map!)
           .bindPopup(`<b>${event.title}</b><br><i>📍 Localisation non spécifiée</i><br>${event.locationName || 'Adresse non disponible'}`);
       }
     });
@@ -88,7 +131,7 @@ export class EventMap3DComponent implements AfterViewInit, OnDestroy {
 
   private initMapWithoutCoordinates(): void {
     // Initialize map with default center (Tunisia)
-    this.map = L.map('event-map', {
+    this.map = L.map(this.mapContainer.nativeElement, {
       center: [36.8, 10.2], // Default to Tunisia
       zoom: this.zoom,
       zoomControl: true,
@@ -115,7 +158,7 @@ export class EventMap3DComponent implements AfterViewInit, OnDestroy {
 
   private initMapForSelection(): void {
     // Initialize map with default center (e.g., Tunisia)
-    this.map = L.map('event-map', {
+    this.map = L.map(this.mapContainer.nativeElement, {
       center: [36.8, 10.2], // Default to Tunisia
       zoom: 7,
       zoomControl: true,
@@ -137,7 +180,7 @@ export class EventMap3DComponent implements AfterViewInit, OnDestroy {
       if (this.marker) {
         this.marker.setLatLng([lat, lng]);
       } else {
-        this.marker = L.marker([lat, lng]).addTo(this.map!);
+        this.marker = L.marker([lat, lng], { icon: this.defaultDivIcon }).addTo(this.map!);
       }
       this.marker.bindPopup(`Selected location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`).openPopup();
     });

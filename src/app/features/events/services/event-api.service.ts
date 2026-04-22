@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -12,7 +12,8 @@ export type EventStatus = 'PLANNED'| 'CANCELLED' | 'COMPLETED' | 'ONGOING';
 export type ParticipationStatus =
   | 'REGISTERED'
   | 'ATTENDED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  | 'WAITING_LIST';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // UTILITAIRES
@@ -23,7 +24,6 @@ export function computeEventStatus(event: EventItem): EventStatus {
   const start = event.startDate ? new Date(event.startDate) : null;
   const end = event.endDate ? new Date(event.endDate) : null;
 
-  // priorité au backend
   if (event.status === 'CANCELLED') return 'CANCELLED';
 
   if (end && end < now) return 'COMPLETED';
@@ -32,11 +32,15 @@ export function computeEventStatus(event: EventItem): EventStatus {
 
   return 'PLANNED';
 }
+
 export function normalizeEvent(e: EventItem): EventItem {
   return {
     ...e,
-    status:   computeEventStatus(e),
-    isFull:   (e.participantsCount ?? 0) >= (e.capacity ?? 0),
+   status:   computeEventStatus(e),
+    // ✅ isFull seulement si capacity > 0 ET participantsCount >= capacity
+    isFull:   (e.capacity != null && e.capacity > 0)
+              ? (e.participantsCount ?? 0) >= e.capacity
+              : false,
     price:    e.price    ?? 0,
     currency: e.currency ?? 'EUR',
     date:     e.startDate,
@@ -68,6 +72,7 @@ export interface EventItem {
   createdAt?:          string;
   updatedAt?:          string;
   campaignId?:         number | null;
+  campaign?:           Campaign | null;
   locationId?:         number | null;
   locationName?:       string | null;
   locationAddress?:    string | null;
@@ -78,8 +83,7 @@ export interface EventItem {
   maxParticipants?:    number;
   featured?:           boolean;
   isCampaign?:         boolean;
-    visibility?: string;
-
+  visibility?:         string;
 }
 
 export interface Campaign {
@@ -91,6 +95,7 @@ export interface Campaign {
   visibility?:          string;
   status?:              string;
   ownerClub?:           any;
+  ownerClubId?:         number;
   canAddEvent?:         boolean;
   maxParticipants?:     number;
   currentParticipants?: number;
@@ -163,14 +168,9 @@ export interface ParticipationPayload {
   teamName?:             string;
 }
 
-/**
- * Participation retournée par le backend.
- * eventId est toujours présent (champ @Transient de l'entité).
- * event est présent grâce au JOIN FETCH dans le repository.
- */
 export interface Participation {
   id:                    number;
-  eventId?:              number;       // @Transient — fallback si event est null
+  eventId?:              number;
   status:                ParticipationStatus;
   reservedSeats?:        number;
   comment?:              string;
@@ -185,7 +185,7 @@ export interface Participation {
   userName?:             string;
   userEmail?:            string;
   userPhone?:            string;
-  event?:                EventItem;   // chargé via JOIN FETCH
+  event?:                EventItem;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -219,39 +219,31 @@ export class EventApiService {
   // EVENTS
   // ══════════════════════════════════════════════════════════════════════════
 
-// event-api.service.ts — extraits corrigés
-
-// ✅ FIX #1 — getAllEvents charge TOUS les events (sans filtre club)
-// getMyEvents charge uniquement les events du club connecté
-
-  /** Tous les événements (admin / vue publique) */
   getAllEvents(): Observable<EventItem[]> {
     return this.http.get<EventItem[]>(`${this.baseUrl}/api/events/all`, {
       headers: this.authHeaders(),
     });
   }
- 
-  /** Événements du club connecté */
+
   getMyEvents(status?: string): Observable<EventItem[]> {
     const url = status
       ? `${this.baseUrl}/api/events/my-club?status=${status}`
       : `${this.baseUrl}/api/events/my-club`;
     return this.http.get<EventItem[]>(url, { headers: this.authHeaders() });
   }
- 
+
   getEventById(id: number): Observable<EventItem> {
     return this.http.get<EventItem>(`${this.baseUrl}/api/events/${id}`, {
       headers: this.authHeaders(),
     });
   }
- 
+
   createEvent(payload: EventRequestPayload): Observable<EventItem> {
     return this.http.post<EventItem>(`${this.baseUrl}/api/events`, payload, {
       headers: this.authHeaders(),
     });
   }
- 
-  /** ✅ FIX : PUT retourne l'event mis à jour */
+
   updateEvent(id: number, payload: EventRequestPayload): Observable<EventItem> {
     return this.http.put<EventItem>(`${this.baseUrl}/api/events/${id}`, payload, {
       headers: this.authHeaders(),
@@ -263,13 +255,13 @@ export class EventApiService {
       })
     );
   }
- 
+
   deleteEvent(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/api/events/${id}`, {
       headers: this.authHeaders(),
     });
   }
- 
+
   uploadImage(formData: FormData): Observable<{ url: string }> {
     return this.http.post<{ url: string }>(
       `${this.baseUrl}/api/events/upload-image`,
@@ -277,7 +269,7 @@ export class EventApiService {
       { headers: this.authHeadersNoContentType() }
     );
   }
- 
+
   getCampaigns(): Observable<Campaign[]> {
     return this.http.get<Campaign[]>(`${this.baseUrl}/api/campaigns`, {
       headers: this.authHeaders(),
@@ -288,10 +280,6 @@ export class EventApiService {
   // PARTICIPATIONS
   // ══════════════════════════════════════════════════════════════════════════
 
-  /**
-   * Retourne mes participations.
-   * Le backend utilise JOIN FETCH → event n'est jamais null.
-   */
   getMyParticipations(): Observable<Participation[]> {
     return this.http.get<Participation[]>(`${this.baseUrl}/api/participants`, {
       headers: this.authHeaders(),
@@ -318,14 +306,16 @@ export class EventApiService {
     );
   }
 
-  /**
-   * Inscription directe (place disponible confirmée).
-   */
-  participate(payload: ParticipationPayload): Observable<Participation> {
-    return this.http.post<Participation>(
-      `${this.baseUrl}/api/participants`,
-      payload,
+  getMyWaitingList(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.baseUrl}/api/participants/me/waiting-list`,
       { headers: this.authHeaders() }
+    ).pipe(
+      tap(r => console.log('[API] My waiting list:', r)),
+      catchError(err => {
+        console.error('[API] Error fetching waiting list:', err);
+        return throwError(() => err);
+      })
     );
   }
 
@@ -339,6 +329,7 @@ export class EventApiService {
 
   /**
    * Réactivation d'une participation annulée.
+   * Le backend retourne la participation mise à jour.
    */
   reactivateParticipation(id: number): Observable<Participation> {
     return this.http.put<Participation>(
@@ -352,35 +343,6 @@ export class EventApiService {
     return this.http.delete<void>(
       `${this.baseUrl}/api/participants/${id}`,
       { headers: this.authHeaders() }
-    );
-  }
-
-  // ── Flux waiting list ─────────────────────────────────────────────────────
-
- // ✅ FIX #2 — requestParticipation : le backend retourne maintenant
-// "PLACE_AVAILABLE_CONFIRM" | "EVENT_FULL" | "ALREADY_REGISTERED"
-requestParticipation(eventId: number): Observable<string> {
-  return this.http.post(
-    `${this.baseUrl}/api/participants/request/${eventId}`,
-    {},
-    { headers: this.authHeaders(), responseType: 'text' }
-  );
-}
-
-// ✅ FIX #3 — joinWaitingList : userId envoyé dans le body
-joinWaitingList(eventId: number, accept: boolean): Observable<string> {
-  return this.http.post(
-    `${this.baseUrl}/api/participants/waiting-list/${eventId}?accept=${accept}`,
-    {},
-    { headers: this.authHeaders(), responseType: 'text' }
-  );
-}
-  /** Étape 3 — Confirmer la promotion */
-  confirmPromotion(waitingId: number): Observable<string> {
-    return this.http.post(
-      `${this.baseUrl}/api/participants/confirm/${waitingId}`,
-      {},
-      { headers: this.authHeaders(), responseType: 'text' }
     );
   }
 
@@ -404,8 +366,6 @@ joinWaitingList(eventId: number, accept: boolean): Observable<string> {
 
   // ══════════════════════════════════════════════════════════════════════════
   // RESOURCES & RESERVATIONS
-  // Réservation de ressources : uniquement pour les organisateurs (admin/club)
-  // Les participants normaux n'ont pas accès à ces endpoints.
   // ══════════════════════════════════════════════════════════════════════════
 
   getResources(): Observable<ResourceItem[]> {
@@ -433,5 +393,95 @@ joinWaitingList(eventId: number, accept: boolean): Observable<string> {
     return this.http.delete<void>(`${this.baseUrl}/api/reservations/${id}`, {
       headers: this.authHeaders(),
     });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PARTICIPATE — endpoint unifié
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * ✅ Endpoint unifié : le backend décide register OU waiting list.
+   *
+   * Retourne :
+   *   "REGISTERED"         → place disponible, inscription confirmée, SMS envoyé
+   *   "WAITING_LIST_ADDED" → event plein, ajouté en liste d'attente, SMS envoyé
+   *
+   * Lance 409 si déjà inscrit.
+   *
+   * ✅ FIX : utilise this.baseUrl (et non this.base) + import map depuis rxjs/operators
+   */
+  participate(payload: ParticipationPayload): Observable<string> {
+    return this.http
+      .post<{ status: string }>(
+        `${this.baseUrl}/api/participants/participate/${payload.eventId}`,
+        payload,
+        { headers: this.authHeaders() }
+      )
+      .pipe(map(res => res.status));
+  }
+
+  /**
+   * Vérifie la disponibilité AVANT d'afficher le formulaire.
+   * Retourne :
+   *   "PLACE_AVAILABLE_CONFIRM" → place dispo, afficher le formulaire
+   *   "ALREADY_REGISTERED"      → déjà inscrit
+   *   tout autre string         → event plein, proposer waiting list
+   */
+  requestParticipation(eventId: number): Observable<string> {
+    return this.http.post<string>(
+      `${this.baseUrl}/api/participants/request/${eventId}`,
+      {},
+      { headers: this.authHeaders(), responseType: 'text' as 'json' }
+    );
+  }
+
+  /**
+   * Rejoindre la liste d'attente manuellement (flow confirmé par l'utilisateur).
+   */
+  joinWaitingList(eventId: number, accept: boolean): Observable<string> {
+    return this.http.post<string>(
+      `${this.baseUrl}/api/participants/waiting-list/${eventId}?accept=${accept}`,
+      {},
+      { headers: this.authHeaders(), responseType: 'text' as 'json' }
+    );
+  }
+
+  /**
+   * Confirmer une promotion depuis la liste d'attente.
+   */
+  confirmPromotion(waitingId: number): Observable<string> {
+    return this.http.post<string>(
+      `${this.baseUrl}/api/participants/confirm/${waitingId}`,
+      {},
+      { headers: this.authHeaders(), responseType: 'text' as 'json' }
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SMS REMINDERS (24h before event)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Envoie un SMS de rappel aux participants 24h avant l'événement.
+   * ✅ Appel au backend pour déclencher l'envoi des SMS.
+   */
+  sendReminderSms(participationId: number): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.baseUrl}/api/participants/${participationId}/send-reminder`,
+      {},
+      { headers: this.authHeaders() }
+    );
+  }
+
+  /**
+   * Envoie des SMS de rappel à tous les participants d'un événement.
+   * ✅ Appel au backend pour déclencher l'envoi des SMS en masse.
+   */
+  sendEventReminders(eventId: number): Observable<{ success: boolean; count: number; message: string }> {
+    return this.http.post<{ success: boolean; count: number; message: string }>(
+      `${this.baseUrl}/api/events/${eventId}/send-reminders`,
+      {},
+      { headers: this.authHeaders() }
+    );
   }
 }

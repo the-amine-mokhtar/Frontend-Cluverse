@@ -46,7 +46,7 @@ $cat-custom:     #f472b6;
 .calendar-container {
   font-family: 'Space Grotesk', sans-serif;
   color: $text-main;
-  background: $bg-card;
+  background: $text-main;
   border-radius: 0 0 16px 16px;
   overflow: hidden;
 }
@@ -75,7 +75,7 @@ $cat-custom:     #f472b6;
   width: 30px; height: 30px;
   border-radius: 8px;
   border: 1px solid $border-md;
-  background: $bg-inner;
+  background: $text-sub;
   color: $text-sub;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -275,7 +275,7 @@ $cat-custom:     #f472b6;
   font-weight: 700;
   color: $text-muted;
   padding: 1px 5px;
-  background: $bg-hover;
+  background: $text-sub;
   border-radius: 4px;
   width: fit-content;
 }
