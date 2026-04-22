@@ -3,6 +3,9 @@ import { FormBuilder, Validators, AbstractControl, ValidationErrors } from '@ang
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import JsBarcode from 'jsbarcode';
 
 import { Resource, ResourceStatus } from '../models/resource.model';
 import { ResourceService } from '../services/resource.service';
@@ -22,6 +25,10 @@ export class ResourceFormComponent implements OnInit {
   errorMessage: string | null = null;
   imageErrorMessage: string | null = null;
   isUploadingImage = false;
+  
+  // Barcode de la ressource créée
+  generatedBarcode: string | null = null;
+  showBarcodeSuccess = false;
 
   @ViewChild('imageInput') imageInput?: ElementRef<HTMLInputElement>;
 
@@ -68,7 +75,45 @@ export class ResourceFormComponent implements OnInit {
     } else {
       this.pageTitle = 'Nouvelle ressource';
       this.form.patchValue({ lastUpdated: this.nowDatetimeLocal() });
+      this.prefillFromVoiceQueryParams();
     }
+  }
+
+  private prefillFromVoiceQueryParams(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    if (qp.get('voicePrefill') !== '1') {
+      return;
+    }
+
+    const toNumber = (value: string | null, fallback: number): number => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const name = String(qp.get('name') ?? '').trim();
+    const description = String(qp.get('description') ?? '').trim();
+    const notes = String(qp.get('notes') ?? '').trim();
+    const statusRaw = String(qp.get('status') ?? 'AVAILABLE').trim().toUpperCase();
+    const status: ResourceStatus = this.statusOptions.includes(statusRaw as ResourceStatus)
+      ? (statusRaw as ResourceStatus)
+      : 'AVAILABLE';
+
+    const quantityTotal = toNumber(qp.get('quantityTotal'), 1);
+    const availableQuantity = toNumber(qp.get('availableQuantity'), quantityTotal);
+    const lowStockThreshold = toNumber(qp.get('lowStockThreshold'), Math.max(1, Math.ceil(quantityTotal * 0.2)));
+    const unitCost = toNumber(qp.get('unitCost'), 0);
+
+    this.form.patchValue({
+      name: name || this.form.value.name || '',
+      description: description || this.form.value.description || '',
+      notes: notes || this.form.value.notes || '',
+      status,
+      quantityTotal,
+      availableQuantity,
+      lowStockThreshold,
+      unitCost,
+      lastUpdated: this.nowDatetimeLocal()
+    });
   }
 
   get imageUrlValue(): string {
@@ -218,11 +263,14 @@ export class ResourceFormComponent implements OnInit {
     }
 
     this.resourceService.create(payload).subscribe({
-      next: () => {
-        console.log('[ResourceFormComponent] create succeeded');
+      next: (resource: Resource) => {
+        console.log('[ResourceFormComponent] create succeeded', resource);
         this.toastService.success('Ressource créée avec succès');
         this.isSubmitting = false;
-        this.router.navigate(['/logistics/resources']);
+        // Afficher le code-barres généré
+        this.generatedBarcode = resource.barcode || null;
+        this.showBarcodeSuccess = true;
+        // Ne pas naviguer automatiquement - laisser l'utilisateur fermer la modale
       },
       error: (error) => {
         console.error('[ResourceFormComponent] create failed', error);
@@ -442,6 +490,101 @@ export class ResourceFormComponent implements OnInit {
 
   goBack(): void {
     this.location.back();
+  }
+
+  continueToDashboard(): void {
+    this.router.navigate(['/logistics/resources']);
+  }
+
+  /**
+   * Télécharge le code-barres en tant que PDF
+   */
+  async downloadBarcodeAsPDF(): Promise<void> {
+    if (!this.generatedBarcode) {
+      this.toastService.error('Aucun code-barres à télécharger');
+      return;
+    }
+
+    try {
+      // Créer un conteneur temporaire pour le code-barres
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.padding = '20px';
+      container.style.backgroundColor = 'white';
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.alignItems = 'center';
+      container.style.gap = '20px';
+      document.body.appendChild(container);
+
+      // Créer le conteneur du code-barres
+      const barcodeDiv = document.createElement('div');
+      container.appendChild(barcodeDiv);
+
+      // Générer le code-barres avec JsBarcode
+      JsBarcode(barcodeDiv, this.generatedBarcode, {
+        format: 'CODE128',
+        width: 2,
+        height: 80,
+        displayValue: false,
+        margin: 10
+      });
+
+      // Capturer le conteneur avec html2canvas
+      const canvas = await html2canvas(container, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false
+      });
+
+      // Créer le PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'A4'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 100;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pageWidth = (pdf as any).internal.pageSize.getWidth();
+      const pageHeight = (pdf as any).internal.pageSize.getHeight();
+      const x = (pageWidth - imgWidth) / 2;
+      const y = 40;
+
+      // Ajouter titre
+      pdf.setFontSize(16);
+      pdf.setTextColor(40, 40, 40);
+      pdf.text('Code-barres Ressource', pageWidth / 2, 20, { align: 'center' });
+
+      // Ajouter l'image du code-barres
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+
+      // Ajouter le numéro du code-barres
+      pdf.setFontSize(11);
+      pdf.setFont('courier');
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`${this.generatedBarcode}`, pageWidth / 2, y + imgHeight + 15, { align: 'center' });
+
+      // Ajouter la date
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Date: ${new Date().toLocaleDateString('fr-TN')} à ${new Date().toLocaleTimeString('fr-TN')}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
+
+      // Télécharger le PDF
+      pdf.save(`barcode-${this.generatedBarcode}.pdf`);
+
+      // Nettoyer
+      document.body.removeChild(container);
+      this.toastService.success('PDF téléchargé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      this.toastService.error('Erreur lors du téléchargement du PDF');
+    }
   }
 
   // Validation helpers

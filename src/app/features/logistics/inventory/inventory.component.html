@@ -48,60 +48,6 @@
 
   <div *ngIf="loadingResource" class="text-inherit opacity-80 mb-6">Chargement...</div>
 
-  <!-- Transactions table -->
-  <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-8">
-    <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-      <h2 class="text-2xl font-bold text-gray-900">📜 Historique des mouvements</h2>
-      <p class="text-gray-600 text-sm mt-1">Tous les mouvements de stock enregistrés</p>
-    </div>
-
-    <div *ngIf="loadingTransactions" class="p-8 text-center text-inherit opacity-80">Chargement...</div>
-
-    <table *ngIf="!loadingTransactions" class="w-full">
-      <thead class="bg-gray-50 border-b border-gray-200">
-        <tr>
-          <th class="text-left font-semibold px-6 py-4 text-gray-700">📋 Type</th>
-          <th class="text-left font-semibold px-6 py-4 text-gray-700">📊 Quantité</th>
-          <th class="text-left font-semibold px-6 py-4 text-gray-700">🕐 Date</th>
-          <th class="text-left font-semibold px-6 py-4 text-gray-700">💬 Raison</th>
-          <th class="text-center font-semibold px-6 py-4 text-gray-700">✓ Appliqué</th>
-        </tr>
-      </thead>
-
-      <tbody class="divide-y divide-gray-100">
-        <tr *ngIf="transactions.length === 0">
-          <td class="px-6 py-8 text-center text-gray-500 font-medium" colspan="5">
-            <div class="text-3xl mb-2">📭</div>
-            Aucune transaction enregistrée
-          </td>
-        </tr>
-
-        <tr *ngFor="let tx of transactions" class="hover:bg-gray-50 transition-colors duration-150">
-          <td class="px-6 py-4">
-            <span class="{{ getStatusBadgeClasses(inventoryTypeLabels[tx.type].color) }} inline-block text-xs font-bold px-3 py-1">
-              {{ inventoryTypeLabels[tx.type].label }}
-            </span>
-          </td>
-
-          <td class="px-6 py-4">
-            <span [class]="quantityLabel(tx).classes" class="inline-block text-sm font-bold">{{ quantityLabel(tx).text }}</span>
-          </td>
-
-          <td class="px-6 py-4 text-gray-900 font-medium text-sm">
-            {{ tx.date | date: 'dd/MM/yyyy HH:mm' }}
-          </td>
-
-          <td class="px-6 py-4 text-gray-700 text-sm">{{ tx.reason || '—' }}</td>
-
-          <td class="px-6 py-4 text-center">
-            <span *ngIf="tx.applied" class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-700 font-bold text-sm">✓</span>
-            <span *ngIf="!tx.applied" class="text-gray-300 font-bold text-2xl">—</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
   <!-- Add transaction form -->
   <div class="bg-white rounded-xl shadow-lg border border-purple-100 p-6">
     <h2 class="text-2xl font-bold text-gray-900 mb-6">➕ Enregistrer un mouvement</h2>
@@ -156,6 +102,10 @@
         {{ formError }}
       </div>
 
+      <div *ngIf="stockValidationMessage()" class="bg-orange-50 border border-orange-200 text-orange-700 rounded-lg p-4 text-sm font-medium">
+        {{ stockValidationMessage() }}
+      </div>
+
       <div class="flex justify-end pt-2">
         <button
           type="submit"
@@ -166,5 +116,61 @@
         </button>
       </div>
     </form>
+  </div>
+
+  <!-- Transactions table -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mt-8">
+    <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+      <h2 class="text-2xl font-bold text-gray-900">📜 Historique des mouvements</h2>
+      <p class="text-gray-600 text-sm mt-1">Tous les mouvements de stock enregistrés</p>
+    </div>
+
+    <div *ngIf="loadingTransactions" class="p-8 text-center text-inherit opacity-80">Chargement...</div>
+
+    <div *ngIf="!loadingTransactions" class="max-h-[360px] overflow-y-auto movement-history-scroll">
+      <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="text-left font-semibold px-6 py-4 text-gray-700">📋 Type</th>
+            <th class="text-left font-semibold px-6 py-4 text-gray-700">📊 Quantité</th>
+            <th class="text-left font-semibold px-6 py-4 text-gray-700">🕐 Date</th>
+            <th class="text-left font-semibold px-6 py-4 text-gray-700">💬 Raison</th>
+            <th class="text-center font-semibold px-6 py-4 text-gray-700">✓ Appliqué</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngIf="transactions.length === 0">
+            <td class="px-6 py-8 text-center text-gray-500 font-medium" colspan="5">
+              <div class="text-3xl mb-2">📭</div>
+              Aucune transaction enregistrée
+            </td>
+          </tr>
+
+          <tr *ngFor="let tx of transactions" class="hover:bg-gray-50 transition-colors duration-150">
+            <td class="px-6 py-4">
+              <span class="{{ getStatusBadgeClasses(inventoryTypeLabels[tx.type].color) }} inline-block text-xs font-bold px-3 py-1">
+                {{ inventoryTypeLabels[tx.type].label }}
+              </span>
+            </td>
+
+            <td class="px-6 py-4">
+              <span [class]="quantityLabel(tx).classes" class="inline-block text-sm font-bold">{{ quantityLabel(tx).text }}</span>
+            </td>
+
+            <td class="px-6 py-4 text-gray-900 font-medium text-sm">
+              {{ tx.date | date: 'dd/MM/yyyy HH:mm' }}
+            </td>
+
+            <td class="px-6 py-4 text-gray-700 text-sm">{{ tx.reason || '—' }}</td>
+
+            <td class="px-6 py-4 text-center">
+              <span *ngIf="tx.applied" class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-700 font-bold text-sm">✓</span>
+              <span *ngIf="!tx.applied" class="text-gray-300 font-bold text-2xl">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>

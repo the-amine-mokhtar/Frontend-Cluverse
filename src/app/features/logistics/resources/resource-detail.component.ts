@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import JsBarcode from 'jsbarcode';
+import jsPDF from 'jspdf';
 
 import { Resource } from '../models/resource.model';
 import { ResourceService } from '../services/resource.service';
@@ -49,6 +51,8 @@ export class ResourceDetailComponent implements OnInit {
       next: (resource) => {
         this.resource = resource;
         this.loading = false;
+        // Générer le code-barres après que la ressource soit chargée
+        setTimeout(() => this.generateBarcode(), 100);
       },
       error: (error) => {
         console.error('[ResourceDetailComponent] load failed', error);
@@ -201,5 +205,99 @@ export class ResourceDetailComponent implements OnInit {
 
   goBack(): void {
     this.location.back();
+  }
+
+  /**
+   * Génère visuellement le code-barres pour la ressource
+   */
+  private generateBarcode(): void {
+    if (!this.resource || !this.resource.barcode) {
+      return;
+    }
+
+    try {
+      const elementId = `barcode-${this.resource.id}`;
+      const element = document.getElementById(elementId);
+      
+      if (element) {
+        JsBarcode(`#${elementId}`, this.resource.barcode, {
+          format: 'CODE128',
+          width: 2,
+          height: 60,
+          displayValue: false,
+          margin: 10
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la génération du code-barres:', error);
+    }
+  }
+
+  /**
+   * Télécharge le code-barres en tant que PDF
+   */
+  downloadBarcode(): void {
+    if (!this.resource || !this.resource.barcode) {
+      return;
+    }
+
+    try {
+      const resource = this.resource;
+      const canvas = document.createElement('canvas');
+
+      // Générer un code-barres directement sur canvas
+      JsBarcode(canvas, resource.barcode, {
+        format: 'CODE128',
+        width: 2,
+        height: 60,
+        displayValue: false,
+        margin: 10,
+        background: '#ffffff'
+      });
+
+      const imgDataUrl = canvas.toDataURL('image/png');
+
+      // Créer le PDF
+      const pdf = new jsPDF('p', 'mm', 'A4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // Ajouter le titre
+      pdf.setFontSize(18);
+      pdf.setTextColor(40, 40, 40);
+      pdf.text('Code-barres Ressource', pageWidth / 2, 20, { align: 'center' });
+
+      // Ajouter le nom
+      pdf.setFontSize(12);
+      pdf.setTextColor(60, 60, 60);
+      pdf.text(`${resource.name}`, pageWidth / 2, 32, { align: 'center' });
+
+      // Ajouter le code-barres image
+      const barcodeWidth = 100;
+      const barcodeHeight = (canvas.height * barcodeWidth) / canvas.width;
+      const barcodeX = (pageWidth - barcodeWidth) / 2;
+      const barcodeY = 45;
+
+      pdf.addImage(imgDataUrl, 'PNG', barcodeX, barcodeY, barcodeWidth, barcodeHeight);
+
+      // Ajouter le numéro de code en texte
+      pdf.setFontSize(11);
+      pdf.setFont('courier');
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`${resource.barcode}`, pageWidth / 2, barcodeY + barcodeHeight + 15, { align: 'center' });
+
+      // Ajouter les infos supplémentaires
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Date: ${new Date().toLocaleDateString('fr-TN')} à ${new Date().toLocaleTimeString('fr-TN')}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
+
+      // Sauvegarder le PDF
+      const safeName = resource.name.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
+      const filename = `code-barres-${safeName}.pdf`;
+      pdf.save(filename);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du code-barres:', error);
+      alert('Erreur: impossible de générer le PDF. Vérifiez la console pour plus de détails.');
+    }
   }
 }

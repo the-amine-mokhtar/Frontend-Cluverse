@@ -1,0 +1,100 @@
+<div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-cyan-500 to-emerald-600 px-4 py-3 rounded-t-lg flex justify-between items-center flex-shrink-0">
+      <h2 class="text-white font-bold">Scanner Code-barres</h2>
+      <button 
+        (click)="closeModal()"
+        class="text-white text-xl hover:opacity-70 transition">
+        ✕
+      </button>
+    </div>
+
+    <!-- Contenu -->
+    <div class="flex-1 overflow-auto p-4">
+      <!-- Caméra: affichée sauf quand ressource trouvée -->
+      <div 
+        #scannerContainer
+        class="relative bg-black rounded-lg overflow-hidden w-full"
+        style="height: 400px;"
+        [hidden]="!!scannedResource">
+        <!-- Cadre scanning visual -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10" *ngIf="isScanning">
+          <div class="border-4 border-green-400 rounded-lg animate-pulse" style="width: 250px; height: 250px;"></div>
+        </div>
+      </div>
+
+      <!-- Initialisation: spinner -->
+      <div *ngIf="isInitializing && !scannedResource" class="flex justify-center items-center" style="height: 400px;">
+        <div class="animate-spin">
+          <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
+        </div>
+      </div>
+
+      <!-- Searching: spinner -->
+      <div *ngIf="isSearching && !scannedResource" class="flex justify-center items-center" style="height: 400px;">
+        <div class="animate-spin">
+          <div class="w-10 h-10 border-3 border-blue-200 border-t-blue-600 rounded-full"></div>
+        </div>
+      </div>
+
+      <!-- Ressource trouvée -->
+      <div *ngIf="scannedResource" class="space-y-4">
+        <!-- Succès -->
+        <div class="text-center py-2">
+          <p class="text-3xl">✓</p>
+          <p class="text-green-600 font-bold text-base">Ressource trouvée!</p>
+        </div>
+
+        <!-- Bloc Principal - Nom & Code -->
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg p-6 text-center">
+          <p class="text-gray-600 text-xs font-semibold uppercase mb-1">Ressource</p>
+          <h3 class="text-2xl font-bold text-gray-900 mb-3">{{ scannedResource.name }}</h3>
+          <div class="bg-white rounded px-3 py-2 inline-block">
+            <p class="text-xs text-gray-500 font-semibold mb-0.5">Code-barres</p>
+            <p class="font-mono text-sm font-bold text-blue-600">{{ scannedResource.barcode }}</p>
+          </div>
+        </div>
+
+        <!-- Grille Statistiques -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 text-white text-center">
+            <p class="text-xs font-semibold opacity-90 mb-1">Quantité</p>
+            <p class="text-3xl font-bold">{{ scannedResource.quantityTotal }}</p>
+          </div>
+          <div [class]="scannedResource.availableQuantity > 0 ? 'from-green-500 to-green-600' : 'from-red-500 to-red-600'" class="bg-gradient-to-br rounded-lg p-4 text-white text-center">
+            <p class="text-xs font-semibold opacity-90 mb-1">Disponible</p>
+            <p class="text-3xl font-bold">{{ scannedResource.availableQuantity }}</p>
+          </div>
+        </div>
+
+        <!-- Bouton Action -->
+        <button 
+          (click)="retryScanning()"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md">
+          Scanner autre
+        </button>
+      </div>
+
+      <!-- Erreur caméra -->
+      <div *ngIf="errorMessage && !scannedResource" class="space-y-3">
+        <p class="text-red-600 font-bold text-center text-base">⚠ {{ errorMessage }}</p>
+        <button 
+          (click)="ngOnInit()"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded transition">
+          Réessayer
+        </button>
+      </div>
+
+      <!-- Ressource non trouvée -->
+      <div *ngIf="resourceNotFound && !scannedResource && !errorMessage" class="space-y-3">
+        <p class="text-red-600 font-bold text-center text-base">❌ Non trouvée</p>
+        <button 
+          (click)="retryScanning()"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded transition">
+          Scanner autre
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

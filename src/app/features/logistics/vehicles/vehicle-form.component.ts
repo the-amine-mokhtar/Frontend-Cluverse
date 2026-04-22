@@ -6,6 +6,7 @@ import { defaultIfEmpty } from 'rxjs/operators';
 
 import { Vehicle } from '../models/vehicle.model';
 import { VehicleService } from '../services/vehicle.service';
+import { VehicleMaintenanceAutoService } from '../services/vehicle-maintenance-auto.service';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
@@ -34,6 +35,7 @@ export class VehicleFormComponent implements OnInit {
     private router: Router,
     private location: Location,
     private vehicleService: VehicleService,
+    private maintenanceAutoService: VehicleMaintenanceAutoService,
     private toastService: ToastService
   ) {}
 
@@ -156,9 +158,16 @@ export class VehicleFormComponent implements OnInit {
     let didEmit = false;
 
     this.vehicleService.create(payload).subscribe({
-      next: () => {
+      next: (vehicle: any) => {
         didEmit = true;
-        console.log('[VehicleFormComponent] create succeeded');
+        console.log('[VehicleFormComponent] create succeeded', vehicle);
+        
+        // Auto-créer une maintenance si le véhicule a un ID
+        if (vehicle && vehicle.id) {
+          console.log('[VehicleFormComponent] Creating initial maintenance for vehicle', vehicle.id);
+          this.maintenanceAutoService.createInitialMaintenanceForVehicle(vehicle.id);
+        }
+        
         this.toastService.success('Véhicule créé avec succès');
         this.isSubmitting = false;
         this.router.navigate(['/logistics/vehicles']);
@@ -256,9 +265,15 @@ export class VehicleFormComponent implements OnInit {
       const value = String(control.value ?? '').trim();
       if (!value) return null; // required validator handles this
 
-      // Format: XXX TU XXXX (3 digits, space, 2 letters, space, 4 digits)
-      const pattern = /^\d{3}\s[A-Z]{2}\s\d{4}$/;
-      return pattern.test(value) ? null : { invalidPlate: true };
+      // Accept common Tunisian plate formats:
+      // - XXX TU XXXX (3 digits, TU, 4 digits)
+      // - XX TU XXXX (2 digits, TU, 4 digits)
+      // - Or any non-empty combination with TU in the middle
+      const hasContent = value.length >= 5;
+      const hasTU = value.includes('TU');
+      
+      // Accept if it has content and contains TU
+      return (hasContent && hasTU) ? null : { invalidPlate: true };
     };
   }
 

@@ -100,26 +100,26 @@
           </span>
         </div>
       </div>
+
+      <!-- Footer with action buttons (INSIDE FORM) -->
+      <div class="border-t border-gray-200 bg-white px-0 py-3 flex justify-end gap-3">
+        <button
+          type="button"
+          class="bg-gray-100 text-gray-700 px-5 py-2 rounded text-sm hover:bg-gray-200 transition font-semibold disabled:opacity-50 border-2 border-gray-300"
+          (click)="cancel()"
+          [disabled]="isSubmitting"
+        >
+          ✕ Annuler
+        </button>
+
+        <button
+          type="submit"
+          class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded text-sm hover:from-blue-700 hover:to-blue-800 transition shadow hover:shadow-lg font-semibold disabled:opacity-50"
+          [disabled]="isSubmitting || form.invalid"
+        >
+          {{ isSubmitting ? '⏳ Création...' : (isEditMode ? '✔️ Enregistrer' : '➕ Créer le véhicule') }}
+        </button>
+      </div>
     </form>
-  </div>
-
-  <!-- Footer with action buttons -->
-  <div class="flex-shrink-0 border-t border-gray-200 bg-white px-8 py-3 flex justify-end gap-3">
-    <button
-      type="button"
-      class="bg-gray-100 text-gray-700 px-5 py-2 rounded text-sm hover:bg-gray-200 transition font-semibold disabled:opacity-50 border-2 border-gray-300"
-      (click)="cancel()"
-      [disabled]="isSubmitting"
-    >
-      ✕ Annuler
-    </button>
-
-    <button
-      type="submit"
-      class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded text-sm hover:from-blue-700 hover:to-blue-800 transition shadow hover:shadow-lg font-semibold disabled:opacity-50"
-      [disabled]="isSubmitting || form.invalid"
-    >
-      {{ isSubmitting ? '⏳ Création...' : (isEditMode ? '✔️ Enregistrer' : '➕ Créer le véhicule') }}
-    </button>
   </div>
 </div>

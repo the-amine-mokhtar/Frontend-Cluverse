@@ -11,10 +11,12 @@ import { LogisticsLayoutComponent } from './layout/logistics-layout.component';
 import { ResourceListComponent } from './resources/resource-list.component';
 import { ResourceFormComponent } from './resources/resource-form.component';
 import { ResourceDetailComponent } from './resources/resource-detail.component';
+import { BarcodeSearchComponent } from './components/barcode-search/barcode-search.component';
 import { InventoryComponent } from './inventory/inventory.component';
 import { VehicleListComponent } from './vehicles/vehicle-list.component';
 import { VehicleFormComponent } from './vehicles/vehicle-form.component';
 import { VehicleDetailComponent } from './vehicles/vehicle-detail.component';
+import { VehicleMaintenanceComponent } from './vehicles/vehicle-maintenance.component';
 import { TransportListComponent } from './transports/transport-list.component';
 import { TransportFormComponent } from './transports/transport-form.component';
 import { TransportDetailComponent } from './transports/transport-detail.component';
@@ -39,12 +41,15 @@ const routes: Routes = [
       { path: 'resources/:id', component: ResourceDetailComponent },
       { path: 'resources/:id/edit', component: ResourceFormComponent },
 
+      { path: 'barcode-search', component: BarcodeSearchComponent },
+
       { path: 'inventory/:resourceId', component: InventoryComponent },
 
       { path: 'vehicles', component: VehicleListComponent },
       { path: 'vehicles/new', component: VehicleFormComponent },
       { path: 'vehicles/:id', component: VehicleDetailComponent },
       { path: 'vehicles/:id/edit', component: VehicleFormComponent },
+      { path: 'vehicles/:id/maintenance', component: VehicleMaintenanceComponent },
 
       { path: 'transports', component: TransportListComponent },
       { path: 'transports/new', component: TransportFormComponent },

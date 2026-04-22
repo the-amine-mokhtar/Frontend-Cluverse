@@ -17,6 +17,7 @@ import { InventoryComponent } from './inventory/inventory.component';
 import { VehicleListComponent } from './vehicles/vehicle-list.component';
 import { VehicleFormComponent } from './vehicles/vehicle-form.component';
 import { VehicleDetailComponent } from './vehicles/vehicle-detail.component';
+import { VehicleMaintenanceComponent } from './vehicles/vehicle-maintenance.component';
 import { TransportListComponent } from './transports/transport-list.component';
 import { TransportFormComponent } from './transports/transport-form.component';
 import { TransportDetailComponent } from './transports/transport-detail.component';
@@ -27,6 +28,7 @@ import { ResourceListComponent } from './resources/resource-list.component';
 import { ResourceFormComponent } from './resources/resource-form.component';
 import { ResourceDetailComponent } from './resources/resource-detail.component';
 import { TransportPlannerComponent } from './components/transport-planner/transport-planner.component';
+import { VoiceAssistantComponent } from './components/voice-assistant/voice-assistant.component';
 
 @NgModule({
   declarations: [
@@ -40,11 +42,13 @@ import { TransportPlannerComponent } from './components/transport-planner/transp
     VehicleListComponent,
     VehicleFormComponent,
     VehicleDetailComponent,
+    VehicleMaintenanceComponent,
     TransportListComponent,
     TransportFormComponent,
     TransportDetailComponent,
     TransportPredictionComponent,
     TransportPlannerComponent,
+    VoiceAssistantComponent,
 
     // Legacy logistics screens
     LogisticsHomeComponent,

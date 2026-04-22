@@ -173,4 +173,35 @@ export class TransportService {
     const time = new Date(text).getTime();
     return Number.isFinite(time) ? time : Number.POSITIVE_INFINITY;
   }
+
+  /**
+   * Calculate distance between two locations in km
+   */
+  calculateDistance(departureLocationId: number, arrivalLocationId: number): Observable<any> {
+    let params = new HttpParams()
+      .set('departureLocationId', departureLocationId.toString())
+      .set('arrivalLocationId', arrivalLocationId.toString());
+
+    return this.http.get<any>(`${this.endpoint}/distance-between`, {
+      headers: this.authHeaders(),
+      params
+    }).pipe(
+      catchError((error) => {
+        console.error('[TransportService] calculateDistance failed', error);
+        return of({ distanceKm: 0 });  // Return 0 distance on error
+      })
+    );
+  }
+
+  /**
+   * Get fuel alert status for a transport
+   */
+  getFuelAlert(transportId: number): Observable<any> {
+    return this.http.get<any>(`${this.endpoint}/${transportId}/fuel-alert`, { headers: this.authHeaders() }).pipe(
+      catchError((error) => {
+        console.error('[TransportService] getFuelAlert failed', error);
+        return EMPTY;
+      })
+    );
+  }
 }

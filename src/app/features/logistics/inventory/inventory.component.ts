@@ -23,7 +23,32 @@ import {
 
 @Component({
   selector: 'app-inventory',
-  templateUrl: './inventory.component.html'
+  templateUrl: './inventory.component.html',
+  styles: [`
+    .movement-history-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #f8fafc;
+    }
+
+    .movement-history-scroll::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .movement-history-scroll::-webkit-scrollbar-track {
+      background: #f8fafc;
+      border-radius: 9999px;
+    }
+
+    .movement-history-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+      border: 2px solid #f8fafc;
+    }
+
+    .movement-history-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  `]
 })
 export class InventoryComponent implements OnInit {
   resourceId = 0;
@@ -66,6 +91,10 @@ export class InventoryComponent implements OnInit {
       return;
     }
 
+    this.form.valueChanges.subscribe(() => {
+      this.applyStockRules();
+    });
+
     this.load();
   }
 
@@ -82,6 +111,7 @@ export class InventoryComponent implements OnInit {
       next: ({ resource, transactions }) => {
         this.resource = resource;
         this.transactions = this.sortTransactions(transactions);
+        this.applyStockRules();
 
         if (!this.resource) {
           this.errorMessage = 'Impossible de charger la ressource.';
@@ -95,6 +125,7 @@ export class InventoryComponent implements OnInit {
         this.errorMessage = 'Impossible de charger l\'inventaire.';
         this.resource = null;
         this.transactions = [];
+        this.applyStockRules();
         this.loadingResource = false;
         this.loadingTransactions = false;
       }
@@ -166,11 +197,13 @@ export class InventoryComponent implements OnInit {
       next: ({ resource, transactions }) => {
         this.resource = resource;
         this.transactions = this.sortTransactions(transactions);
+        this.applyStockRules();
         this.loadingResource = false;
         this.loadingTransactions = false;
       },
       error: (error) => {
         console.error('[InventoryComponent] refresh failed', error);
+        this.applyStockRules();
         this.loadingResource = false;
         this.loadingTransactions = false;
       }
@@ -180,6 +213,19 @@ export class InventoryComponent implements OnInit {
   isInvalid(controlName: string): boolean {
     const control = this.form.get(controlName);
     return Boolean(control && control.invalid && control.touched);
+  }
+
+  stockValidationMessage(): string | null {
+    const errors = this.form.errors;
+    if (!errors) {
+      return null;
+    }
+
+    if (errors['removeExceedsAvailable']) {
+      return 'Sortie invalide: la quantité demandée dépasse la quantité disponible.';
+    }
+
+    return null;
   }
 
   private sortTransactions(items: InventoryTransaction[]): InventoryTransaction[] {
@@ -203,5 +249,26 @@ export class InventoryComponent implements OnInit {
 
   goBack(): void {
     this.location.back();
+  }
+
+  private applyStockRules(): void {
+    const existingErrors = { ...(this.form.errors ?? {}) };
+    delete existingErrors['removeExceedsAvailable'];
+
+    if (!this.resource) {
+      this.form.setErrors(Object.keys(existingErrors).length ? existingErrors : null);
+      return;
+    }
+
+    const type = this.form.get('type')?.value as InventoryTransactionType | null;
+    const quantity = Number(this.form.get('quantity')?.value ?? 0);
+    const available = Number(this.resource.availableQuantity);
+    const removeExceedsAvailable = type === 'REMOVE' && quantity > available;
+
+    if (removeExceedsAvailable) {
+      existingErrors['removeExceedsAvailable'] = true;
+    }
+
+    this.form.setErrors(Object.keys(existingErrors).length ? existingErrors : null);
   }
 }

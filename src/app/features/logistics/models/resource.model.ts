@@ -3,6 +3,7 @@ export type ResourceStatus = 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'RETIRED';
 export interface Resource {
   id: number;
   name: string;
+  barcode: string;
   description: string;
   unitCost: number;
   status: ResourceStatus;

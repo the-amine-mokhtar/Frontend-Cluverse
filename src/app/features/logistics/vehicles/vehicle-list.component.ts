@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
 import { Vehicle } from '../models/vehicle.model';
 import { VehicleService } from '../services/vehicle.service';
+import { MaintenanceService, VehicleMaintenanceRecord } from '../services/maintenance.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-vehicle-list',
@@ -13,6 +15,7 @@ export class VehicleListComponent implements OnInit {
 
   vehicles: Vehicle[] = [];
   filteredVehicles: Vehicle[] = [];
+  maintenanceAlerts: Map<number, VehicleMaintenanceRecord> = new Map();
 
   pageSize = 6;
   currentPage = 1;
@@ -26,6 +29,7 @@ export class VehicleListComponent implements OnInit {
 
   constructor(
     private vehicleService: VehicleService,
+    private maintenanceService: MaintenanceService,
     private location: Location
   ) {}
 
@@ -37,9 +41,21 @@ export class VehicleListComponent implements OnInit {
     this.loading = true;
     this.errorMessage = null;
 
-    this.vehicleService.getAll().subscribe({
-      next: (items) => {
-        this.vehicles = items;
+    forkJoin({
+      vehicles: this.vehicleService.getAll(),
+      maintenanceAlerts: this.maintenanceService.getAlerts()
+    }).subscribe({
+      next: ({ vehicles, maintenanceAlerts }) => {
+        this.vehicles = vehicles;
+        
+        // Build a map of vehicle ID to latest critical/warning maintenance alert
+        this.maintenanceAlerts.clear();
+        maintenanceAlerts.forEach(alert => {
+          if (alert.vehicleId && !alert.resolved) {
+            this.maintenanceAlerts.set(alert.vehicleId, alert);
+          }
+        });
+
         this.applyFilters();
         this.loading = false;
       },
@@ -49,6 +65,7 @@ export class VehicleListComponent implements OnInit {
         this.vehicles = [];
         this.filteredVehicles = [];
         this.pagedVehicles = [];
+        this.maintenanceAlerts.clear();
         this.totalPages = 1;
         this.currentPage = 1;
         this.pageStart = 0;
@@ -56,6 +73,14 @@ export class VehicleListComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  hasMaintenanceAlert(vehicleId: number | undefined): boolean {
+    return vehicleId ? this.maintenanceAlerts.has(vehicleId) : false;
+  }
+
+  getMaintenanceAlert(vehicleId: number | undefined): VehicleMaintenanceRecord | undefined {
+    return vehicleId ? this.maintenanceAlerts.get(vehicleId) : undefined;
   }
 
   applyFilters(): void {

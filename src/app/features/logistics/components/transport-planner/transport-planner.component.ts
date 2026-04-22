@@ -1,31 +1,43 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TransportPlannerService } from '../../services/transport-planner.service';
 import { TransportPlannerResponse, TransportSuggestion } from '../../models/transport-planner.model';
-import { throwError } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-transport-planner',
   templateUrl: './transport-planner.component.html',
   styleUrls: ['./transport-planner.component.scss']
 })
-export class TransportPlannerComponent implements OnInit {
+export class TransportPlannerComponent implements OnInit, OnDestroy {
   startDate: string;
   endDate: string;
   plan: TransportPlannerResponse | null = null;
   isLoading = false;
   errorMessage: string | null = null;
+  private routeSubscription?: Subscription;
 
   constructor(
     private plannerService: TransportPlannerService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     const today = this.getDateString(new Date());
     this.startDate = today;
     this.endDate = this.getDateString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.routeSubscription = this.route.queryParamMap.subscribe((params) => {
+      if (params.get('autoGenerate') === '1') {
+        this.generatePlan();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSubscription?.unsubscribe();
+  }
 
   private getDateString(date: Date): string {
     const year = date.getFullYear();

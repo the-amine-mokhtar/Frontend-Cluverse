@@ -88,18 +88,32 @@
             <div class="text-xl font-bold text-gray-900">{{ v.model }}</div>
             <div class="text-sm text-gray-500 mt-0.5">Modèle</div>
           </div>
-          <span
-            *ngIf="v.available"
-            class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 whitespace-nowrap shadow-sm"
-          >
-            ✓ Disponible
-          </span>
-          <span
-            *ngIf="!v.available"
-            class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-orange-100 text-red-800 whitespace-nowrap shadow-sm"
-          >
-            ✗ Indisponible
-          </span>
+          <div class="flex gap-2 flex-wrap justify-end">
+            <span
+              *ngIf="v.available"
+              class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 whitespace-nowrap shadow-sm"
+            >
+              ✓ Disponible
+            </span>
+            <span
+              *ngIf="!v.available"
+              class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-orange-100 text-red-800 whitespace-nowrap shadow-sm"
+            >
+              ✗ Indisponible
+            </span>
+            <span
+              *ngIf="hasMaintenanceAlert(v.id) && getMaintenanceAlert(v.id)?.status === 'CRITICAL'"
+              class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-100 text-red-800 whitespace-nowrap shadow-sm"
+            >
+              🚨 CRITIQUE
+            </span>
+            <span
+              *ngIf="hasMaintenanceAlert(v.id) && getMaintenanceAlert(v.id)?.status === 'WARNING'"
+              class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 whitespace-nowrap shadow-sm"
+            >
+              ⚠️ ALERTE
+            </span>
+          </div>
         </div>
 
         <div class="border-t border-gray-100 pt-4 mt-3 space-y-3">
@@ -108,6 +122,14 @@
             <div>
               <div class="text-xs text-gray-500 font-medium uppercase">Immatriculation</div>
               <div class="text-sm font-bold text-gray-900 font-mono">{{ v.plateNumber }}</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="text-lg">📏</span>
+            <div>
+              <div class="text-xs text-gray-500 font-medium uppercase">Kilométrage Total</div>
+              <div class="text-sm font-bold text-gray-900 font-mono">{{ (v.totalKilometers || 0) | number:'1.0-1' }} km</div>
             </div>
           </div>
         </div>

@@ -1,15 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { forkJoin } from 'rxjs';
-import { defaultIfEmpty } from 'rxjs/operators';
+import { defaultIfEmpty, debounceTime } from 'rxjs/operators';
 
 import { Vehicle } from '../models/vehicle.model';
 import { Transport, TransportStatus } from '../models/transport.model';
 
 import { VehicleService } from '../services/vehicle.service';
 import { TransportService } from '../services/transport.service';
+import { VehicleMaintenanceAutoService } from '../services/vehicle-maintenance-auto.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
   EventItem,
@@ -24,7 +25,7 @@ import { TRANSPORT_STATUS_LABELS } from '../utils/status-labels';
   selector: 'app-transport-form',
   templateUrl: './transport-form.component.html'
 })
-export class TransportFormComponent implements OnInit {
+export class TransportFormComponent implements OnInit, AfterViewInit {
   pageTitle = 'Planifier un transport';
 
   loading = false;
@@ -38,6 +39,13 @@ export class TransportFormComponent implements OnInit {
   users: UserItem[] = [];
   events: EventItem[] = [];
   locations: LocationItem[] = [];
+  private shouldShowAnalysis = false;
+
+  // Fuel system
+  selectedVehicleFuelStatus: any = null;
+  predictedFuelAfterTransport: number | null = null;
+  nearestFuelStations: any[] = [];
+  loadingFuelData = false;
 
   readonly statusLabels = TRANSPORT_STATUS_LABELS;
   readonly statusOptions: TransportStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'];
@@ -51,6 +59,8 @@ export class TransportFormComponent implements OnInit {
     departureLocationId: ['', [Validators.required]],
     arrivalLocationId: ['', [Validators.required]],
 
+    distance: [0, [Validators.min(0)]],  // Distance en km
+
     userId: ['', [Validators.required]],
     eventId: ['']
   });
@@ -62,6 +72,7 @@ export class TransportFormComponent implements OnInit {
     private location: Location,
     private vehicleService: VehicleService,
     private transportService: TransportService,
+    private maintenanceAutoService: VehicleMaintenanceAutoService,
     private toastService: ToastService,
     private logisticsApi: LogisticsApiService
   ) {}
@@ -92,6 +103,50 @@ export class TransportFormComponent implements OnInit {
       const formatted = qDate.substring(0, 16);
       this.form.patchValue({ scheduledDate: formatted });
     }
+
+    this.shouldShowAnalysis = String(this.route.snapshot.queryParams['showAnalysis'] ?? '') === '1';
+
+    // Listen for changes in departure/arrival locations to auto-calculate distance
+    const departureLoc = this.form.get('departureLocationId');
+    const arrivalLoc = this.form.get('arrivalLocationId');
+    
+    if (departureLoc && arrivalLoc) {
+      departureLoc.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        console.log('[TransportFormComponent] Departure location changed - recalculating distance');
+        this.autoCalculateDistance();
+      });
+      arrivalLoc.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        console.log('[TransportFormComponent] Arrival location changed - recalculating distance');
+        this.autoCalculateDistance();
+      });
+    }
+
+    // Listen for vehicle changes to load fuel status
+    const vehicleCtrl = this.form.get('vehicleId');
+    if (vehicleCtrl) {
+      vehicleCtrl.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        this.updateFuelStatus();
+      });
+    }
+
+    // Listen for distance changes to calculate predicted fuel
+    const distanceCtrl = this.form.get('distance');
+    if (distanceCtrl) {
+      distanceCtrl.valueChanges.pipe(debounceTime(500)).subscribe(() => {
+        this.calculatePredictedFuel();
+      });
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (!this.shouldShowAnalysis) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      const element = document.getElementById('transport-analysis-section');
+      element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
   }
 
   private loadLookupsForCreate(): void {
@@ -196,12 +251,130 @@ export class TransportFormComponent implements OnInit {
     });
   }
 
+  /**
+   * Auto-calculate distance between departure and arrival locations using backend API
+   */
+  private autoCalculateDistance(): void {
+    const depId = Number(this.form.get('departureLocationId')?.value ?? 0);
+    const arrId = Number(this.form.get('arrivalLocationId')?.value ?? 0);
+
+    if (!depId || !arrId) {
+      console.log('[TransportFormComponent] Cannot calculate distance: missing location IDs');
+      return; // Can't calculate without both locations
+    }
+
+    // Set default/estimated distance immediately based on ID difference
+    // This ensures distance is never empty or takes forever
+    const defaultDistance = Math.abs(depId - arrId) * 30 + 20; // Simple heuristic: 30km per location diff + 20km base
+    this.form.patchValue({ distance: defaultDistance }, { emitEvent: false });
+    console.log(`[TransportFormComponent] Set default distance: ${defaultDistance}km (based on location IDs)`);
+
+    // Call backend to calculate actual distance (in background)
+    console.log(`[TransportFormComponent] Calculating accurate distance for locations ${depId} and ${arrId}`);
+    
+    this.transportService.calculateDistance(depId, arrId).subscribe({
+      next: (response: any) => {
+        const distance = response.distanceKm || defaultDistance;
+        this.form.patchValue({ distance }, { emitEvent: false });
+        console.log(`[TransportFormComponent] ✓ Updated distance to: ${distance}km (from backend)`);
+      },
+      error: (error) => {
+        console.error('[TransportFormComponent] Failed to calculate distance from backend', error);
+        // Keep the default distance - don't fail
+      }
+    });
+  }
+
+  /**
+   * Load fuel status for the selected vehicle
+   */
+  private updateFuelStatus(): void {
+    const vehicleId = Number(this.form.get('vehicleId')?.value ?? 0);
+    if (!vehicleId) {
+      this.selectedVehicleFuelStatus = null;
+      return;
+    }
+
+    this.loadingFuelData = true;
+    this.vehicleService.getFuelStatus(vehicleId).subscribe({
+      next: (status) => {
+        this.selectedVehicleFuelStatus = status;
+        this.calculatePredictedFuel();
+        this.loadingFuelData = false;
+        console.log('[TransportFormComponent] Fuel status loaded:', status);
+      },
+      error: (error) => {
+        console.error('[TransportFormComponent] Failed to load fuel status', error);
+        this.selectedVehicleFuelStatus = null;
+        this.loadingFuelData = false;
+      }
+    });
+  }
+
+  /**
+   * Calculate predicted fuel level after the transport
+   */
+  private calculatePredictedFuel(): void {
+    if (!this.selectedVehicleFuelStatus) {
+      this.predictedFuelAfterTransport = null;
+      return;
+    }
+
+    const distance = Number(this.form.get('distance')?.value ?? 0);
+    if (distance <= 0) {
+      this.predictedFuelAfterTransport = null;
+      return;
+    }
+
+    const currentFuelLevel = this.selectedVehicleFuelStatus.fuelLevel || 100;
+    const fuelTankCapacity = this.selectedVehicleFuelStatus.fuelTankCapacity || 60;
+    
+    // Estimate consumption: 8.0 L/100km (default from backend)
+    const consumptionPercentage = (distance * 8.0) / fuelTankCapacity;
+    this.predictedFuelAfterTransport = Math.max(0, currentFuelLevel - consumptionPercentage);
+    
+    console.log(`[TransportFormComponent] Predicted fuel: ${currentFuelLevel}% → ${this.predictedFuelAfterTransport.toFixed(1)}%`);
+  }
+
+  /**
+   * Get CSS class for fuel status badge
+   */
+  getFuelStatusClass(): string {
+    if (!this.selectedVehicleFuelStatus) return '';
+    const status = this.selectedVehicleFuelStatus.status;
+    switch (status) {
+      case 'GREEN': return 'bg-green-100 border-green-300 text-green-700';
+      case 'YELLOW': return 'bg-yellow-100 border-yellow-300 text-yellow-700';
+      case 'ORANGE': return 'bg-orange-100 border-orange-300 text-orange-700';
+      case 'RED': return 'bg-red-100 border-red-300 text-red-700';
+      default: return 'bg-gray-100 border-gray-300 text-gray-700';
+    }
+  }
+
+  /**
+   * Get CSS class for predicted fuel status
+   */
+  getPredictedFuelClass(): string {
+    if (this.predictedFuelAfterTransport === null) return '';
+    if (this.predictedFuelAfterTransport > 75) return 'bg-green-100 border-green-300 text-green-700';
+    if (this.predictedFuelAfterTransport > 50) return 'bg-yellow-100 border-yellow-300 text-yellow-700';
+    if (this.predictedFuelAfterTransport > 25) return 'bg-orange-100 border-orange-300 text-orange-700';
+    return 'bg-red-100 border-red-300 text-red-700';
+  }
+
   submit(): void {
     this.errorMessage = null;
     console.log('[TransportFormComponent] submit() called', {
       formValid: this.form.valid,
       formInvalid: this.form.invalid
     });
+
+    // Check if vehicle has 0% fuel
+    if (this.selectedVehicleFuelStatus && this.selectedVehicleFuelStatus.fuelLevel === 0) {
+      this.errorMessage = '🚨 ERREUR: Le véhicule n\'a plus de carburant! Rechargez d\'abord le réservoir avant de créer un transport.';
+      console.warn('[TransportFormComponent] Vehicle has no fuel - submission blocked');
+      return;
+    }
 
     if (this.form.invalid) {
       const errors = this.buildDetailedErrorMessage();
@@ -220,6 +393,12 @@ export class TransportFormComponent implements OnInit {
     const userId = Number(raw.userId);
     const departureLocationId = Number(raw.departureLocationId);
     const arrivalLocationId = Number(raw.arrivalLocationId);
+    const distance = Number(raw.distance) || 0;
+
+    console.log('[TransportFormComponent] Form values:', {
+      vehicleId, userId, departureLocationId, arrivalLocationId, distance,
+      formDistance: raw.distance
+    });
 
     if (!vehicleId || !userId || !departureLocationId || !arrivalLocationId) {
       this.errorMessage = 'Veuillez vérifier tous les champs obligatoires.';
@@ -237,7 +416,8 @@ export class TransportFormComponent implements OnInit {
       status: raw.status as TransportStatus,
       vehicleId,
       userId,
-      eventId
+      eventId,
+      distance: Number(raw.distance) || 0  // Include distance in payload
     };
 
     console.log('[TransportFormComponent] Submitting payload:', payload);
@@ -275,9 +455,16 @@ export class TransportFormComponent implements OnInit {
     let didEmit = false;
 
     this.transportService.create(payload).subscribe({
-      next: () => {
+      next: (transport: any) => {
         didEmit = true;
-        console.log('[TransportFormComponent] create succeeded');
+        console.log('[TransportFormComponent] create succeeded', transport);
+        
+        // Auto-mettre à jour le kilométrage du véhicule
+        if (vehicleId && distance > 0) {
+          console.log('[TransportFormComponent] Updating vehicle kilometrage');
+          this.maintenanceAutoService.recordTransportAndUpdateMaintenance(vehicleId, distance);
+        }
+        
         this.toastService.success('Transport planifié avec succès');
         this.isSubmitting = false;
         this.router.navigate(['/logistics/transports']);
@@ -528,6 +715,15 @@ export class TransportFormComponent implements OnInit {
     }
 
     return '';
+  }
+
+  /**
+   * Get the selected vehicle object to display its information
+   */
+  getSelectedVehicle(): Vehicle | undefined {
+    const vehicleId = this.form.get('vehicleId')?.value;
+    if (!vehicleId) return undefined;
+    return this.vehicles.find(v => v.id === Number(vehicleId));
   }
 
   private futureValidator() {

@@ -120,4 +120,15 @@ export class ResourceService {
       })
     );
   }
+
+  getByBarcode(barcode: string): Observable<Resource> {
+    return this.http
+      .get<Resource>(`${this.endpoint}/barcode/${barcode}`, { headers: this.authHeaders() })
+      .pipe(
+        catchError((error) => {
+          console.error('[ResourceService] getByBarcode failed', error);
+          return throwError(() => error);
+        })
+      );
+  }
 }
