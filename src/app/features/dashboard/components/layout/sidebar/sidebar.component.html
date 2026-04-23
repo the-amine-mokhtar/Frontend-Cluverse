@@ -37,7 +37,7 @@
     <!-- Nav Items -->
     <nav class="sidebar__nav">
       <!-- Home -->
-      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+      <a 
         class="sidebar__item"
          routerLink="/dashboard/home"
          routerLinkActive="sidebar__item--active"
@@ -50,7 +50,7 @@
       </a>
 
       <!-- Elections -->
-      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+      <a 
         class="sidebar__item"
          routerLink="/dashboard/elections"
          routerLinkActive="sidebar__item--active"
@@ -63,7 +63,7 @@
       </a>
 
       <!-- Postes Vacants -->
-      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+      <a 
         class="sidebar__item"
          routerLink="/dashboard/elections/vacant-positions"
          routerLinkActive="sidebar__item--active">
@@ -74,7 +74,7 @@
       </a>
 
       <!-- Events -->
-      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+      <a 
         class="sidebar__item"
          routerLink="/dashboard/events"
          routerLinkActive="sidebar__item--active">
@@ -85,7 +85,7 @@
       </a>
 
       <!-- Recruitment -->
-      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+      <a 
         class="sidebar__item"
          routerLink="/dashboard/recruitment"
          routerLinkActive="sidebar__item--active">
@@ -119,7 +119,7 @@
       </a>
 
       <!-- Finance -->
-      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+      <a 
         class="sidebar__item"
          routerLink="/dashboard/finance"
          routerLinkActive="sidebar__item--active">
@@ -159,7 +159,7 @@
         </div>
       </div>
 
-      <a *ngIf="(dashState.userRole$ | async) !== 'MEMBER'"
+      <a 
         class="sidebar__item"
          routerLink="/dashboard/members"
          routerLinkActive="sidebar__item--active">
