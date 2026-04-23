@@ -1,0 +1,128 @@
+<div class="donate-page">
+
+  <header class="donate-header">
+    <div class="donate-header__brand">Cluverse</div>
+    <h1 class="donate-header__title">Donate to a Club</h1>
+    <p class="donate-header__sub">Support your favourite club with a secure Stripe payment</p>
+  </header>
+
+  <!-- Club Selection -->
+  <section class="club-selector" *ngIf="!successMessage">
+    <label class="field__label" for="clubSelect">Select a club</label>
+
+    <div *ngIf="clubsLoading" class="info-text">Loading clubs...</div>
+    <div *ngIf="clubsError" class="status status--error">{{ clubsError }}</div>
+
+    <select
+      *ngIf="!clubsLoading && !clubsError"
+      id="clubSelect"
+      class="field__control club-select"
+      [(ngModel)]="selectedClubId"
+      (change)="onClubSelected()"
+    >
+      <option [ngValue]="null" disabled>-- Choose a club --</option>
+      <option *ngFor="let club of clubs" [ngValue]="club.id">{{ club.name }}</option>
+    </select>
+  </section>
+
+  <!-- Payment Form -->
+  <section class="payment-shell" *ngIf="selectedClubId && !successMessage">
+
+    <article class="payment-card"
+      [class.payment-card--active]="isCardInputActive"
+      [class.payment-card--complete]="isCardInputComplete">
+      <div class="payment-card__visa">{{ cardPreviewBrand }}</div>
+      <div class="payment-card__chip"></div>
+      <div class="payment-card__number">{{ cardPreviewNumber }}</div>
+      <div class="payment-card__row">
+        <div>
+          <span class="payment-card__label">FULL NAME</span>
+          <strong>{{ donorName || 'Your Name' }}</strong>
+        </div>
+        <div>
+          <span class="payment-card__label">CARD STATUS</span>
+          <strong>{{ cardPreviewStatus }}</strong>
+        </div>
+      </div>
+    </article>
+
+    <article class="payment-form">
+      <h2 class="payment-form__title">Payment Information</h2>
+
+      <div class="payment-form__amount-line">
+        <span>Donating to</span>
+        <strong>{{ selectedClub?.name }}</strong>
+      </div>
+
+      <div class="payment-form__amount-line">
+        <span>Amount in Stripe</span>
+        <strong>{{ formatEur(amountEur ?? 0) }}</strong>
+      </div>
+
+      <div class="form-grid">
+        <label class="field field--full">
+          <span class="field__label">Your Full Name</span>
+          <input class="field__control" type="text" placeholder="John Doe" [(ngModel)]="donorName" />
+        </label>
+
+        <label class="field field--full">
+          <span class="field__label">Your Email</span>
+          <input class="field__control" type="email" placeholder="you@email.com" [(ngModel)]="donorEmail" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Amount (EUR)</span>
+          <input class="field__control" type="number" min="1" step="0.01" placeholder="50" [(ngModel)]="amountEur" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">EUR &rarr; TND Rate</span>
+          <input class="field__control" type="number" min="0.0001" step="0.0001" [(ngModel)]="conversionRate" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Phone (optional)</span>
+          <input class="field__control" type="text" placeholder="+216 ..." [(ngModel)]="donorPhone" />
+        </label>
+      </div>
+
+      <div class="conversion-preview">
+        <span>Converted amount (INCOME recorded in TND)</span>
+        <strong>{{ formatTnd(amountTndPreview) }}</strong>
+      </div>
+
+      <label class="field field--full" style="margin-top: 0.75rem;">
+        <span class="field__label">Secure card details (Stripe)</span>
+        <div class="stripe-card-wrap" [class.stripe-card-wrap--ready]="isStripeReady">
+          <div #stripeCardElement class="stripe-card-element"></div>
+        </div>
+      </label>
+
+      <p class="payment-note">{{ stripeInfoMessage }}</p>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn--donate"
+          [disabled]="isSubmitting || !isStripeReady"
+          (click)="donate()">
+          {{ isSubmitting ? 'Processing...' : 'Donate now (Stripe)' }}
+        </button>
+      </div>
+
+      <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <p class="hint">No redirect. Payment confirmation and transaction recording happen on this page.</p>
+    </article>
+
+  </section>
+
+  <!-- Success -->
+  <section class="success-box" *ngIf="successMessage">
+    <div class="success-box__icon">&#10003;</div>
+    <h2 class="success-box__title">Donation Successful!</h2>
+    <p class="success-box__msg">{{ successMessage }}</p>
+    <a class="btn btn--donate" href="/">Back to Home</a>
+  </section>
+
+</div>

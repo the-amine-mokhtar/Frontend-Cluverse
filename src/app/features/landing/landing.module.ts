@@ -14,7 +14,6 @@ import { PricingSectionComponent } from './components/pricing-section/pricing-se
 import { FaqSectionComponent } from './components/faq-section/faq-section.component';
 import { DevelopingTeamComponent } from './components/developing-team/developing-team.component';
 import { FooterComponent } from './components/footer/footer.component';
-import { ClubsShowcaseComponent } from './components/clubs-showcase/clubs-showcase.component';
 
 @NgModule({
   declarations: [
@@ -27,8 +26,7 @@ import { ClubsShowcaseComponent } from './components/clubs-showcase/clubs-showca
     PricingSectionComponent,
     FaqSectionComponent,
     DevelopingTeamComponent,
-    FooterComponent,
-    ClubsShowcaseComponent
+    FooterComponent
   ],
   imports: [
     CommonModule,

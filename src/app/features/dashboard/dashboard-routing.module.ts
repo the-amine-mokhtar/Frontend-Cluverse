@@ -4,8 +4,6 @@ import { DashboardLayoutComponent } from './components/layout/dashboard-layout/d
 import { HomeComponent } from './components/home/home.component';
 import { ProfileComponent } from './components/profile/profile.component';
 import { MembersComponent } from './components/members/members.component';
-import { AuthGuard } from '../../core/guards/auth.guard';
-import { RoleRouteGuard } from '../../core/guards/role-route.guard';
 
 const routes: Routes = [
   {
@@ -14,13 +12,11 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'competencies',
+        redirectTo: 'home',
         pathMatch: 'full'
       },
       {
         path: 'home',
-        canActivate: [RoleRouteGuard],
-        data: { allowedRoles: ['PRESIDENT', 'TREASURER', 'HR_MANAGER', 'EVENT_MANAGER'], redirectTo: '/dashboard/competencies' },
         component: HomeComponent
       },
       {
@@ -29,54 +25,40 @@ const routes: Routes = [
       },
       {
         path: 'members',
-        canActivate: [RoleRouteGuard],
-        data: { allowedRoles: ['PRESIDENT', 'HR_MANAGER'], redirectTo: '/dashboard/competencies' },
         component: MembersComponent
       },
       {
         path: 'elections',
-        canActivate: [RoleRouteGuard],
-        data: { allowedRoles: ['PRESIDENT', 'TREASURER', 'HR_MANAGER', 'EVENT_MANAGER'], redirectTo: '/dashboard/competencies' },
         loadChildren: () =>
           import('../elections/elections.module').then(m => m.ElectionsModule)
       },
       {
         path: 'events',
-        canActivate: [RoleRouteGuard],
-        data: { allowedRoles: ['PRESIDENT', 'EVENT_MANAGER'], redirectTo: '/dashboard/competencies' },
         loadChildren: () =>
           import('../events/events.module').then(m => m.EventsModule)
       },
       {
         path: 'recruitment',
-        canActivate: [RoleRouteGuard],
-        data: { allowedRoles: ['PRESIDENT', 'HR_MANAGER'], redirectTo: '/dashboard/competencies' },
         loadChildren: () =>
           import('../recruitment/recruitment.module').then(m => m.RecruitmentModule)
       },
       {
-        path: 'competencies',
+        path: 'skills',
         loadChildren: () =>
-          import('../competencies/competencies.module').then(m => m.CompetenciesModule)
+          import('../skills/skills.module').then(m => m.SkillsModule)
       },
       {
         path: 'logistics',
-        canActivate: [RoleRouteGuard],
-        data: { allowedRoles: ['PRESIDENT', 'EVENT_MANAGER'], redirectTo: '/dashboard/competencies' },
         loadChildren: () =>
           import('../logistics/logistics.module').then(m => m.LogisticsModule)
       },
       {
         path: 'finance',
-        canActivate: [RoleRouteGuard],
-        data: { allowedRoles: ['PRESIDENT', 'TREASURER'], redirectTo: '/dashboard/competencies' },
         loadChildren: () =>
           import('../finance/finance.module').then(m => m.FinanceModule)
       },
       {
         path: 'sponsorship',
-        canActivate: [RoleRouteGuard],
-        data: { allowedRoles: ['PRESIDENT', 'TREASURER', 'EVENT_MANAGER'], redirectTo: '/dashboard/competencies' },
         loadChildren: () =>
           import('../sponsorship/sponsorship.module').then(m => m.SponsorshipModule)
       }

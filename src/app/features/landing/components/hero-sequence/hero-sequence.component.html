@@ -37,16 +37,10 @@
         <h2 class="beat-title">{{ beat.title }}</h2>
         <img *ngIf="beat.hasLogo" [src]="beat.logoSrc" alt="Cluverse" class="intro-logo" />
         <p class="beat-subtitle">{{ beat.subtitle }}</p>
-        <div class="cta-buttons" *ngIf="beat.hasCta">
-          <a class="cta-button" routerLink="/auth/login">
-            {{ beat.ctaText }}
-            <span class="cta-glow"></span>
-          </a>
-          <a *ngIf="beat.hasSecondaryCta" class="cta-button secondary" (click)="scrollToFragment(beat.secondaryCtaLink)">
-            {{ beat.secondaryCtaText }}
-            <span class="cta-glow"></span>
-          </a>
-        </div>
+        <a *ngIf="beat.hasCta" class="cta-button" routerLink="/auth/login">
+          {{ beat.ctaText }}
+          <span class="cta-glow"></span>
+        </a>
       </div>
     </div>
 

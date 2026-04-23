@@ -273,31 +273,6 @@ $success:    #3ecf8e;
   }
 
   &__dialog-actions { display: flex; gap: 0.75rem; justify-content: center; }
-
-  // ─── AI Modal Themes ───
-  .themes-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 4px;
-  }
-  .theme-btn {
-    background: transparent;
-    border: 1px solid $border;
-    color: $text-muted;
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    &:hover { background: rgba(255,255,255,0.05); color: $text-main; }
-    &.selected {
-      background: rgba($accent, 0.15);
-      border-color: $accent;
-      color: $accent;
-      font-weight: 600;
-    }
-  }
 }
 
 // ─── Light Mode ───
@@ -321,15 +296,4 @@ body.light-mode .builder {
   &__back-btn { background: #eee !important; border-color: #ccc !important; &:hover { background: #e0e0e0 !important; color: #111!important;} }
 
   &__question-card.cdk-drag-preview { background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
-
-  .theme-btn {
-    border-color: #ccc;
-    color: #555;
-    &:hover { background: #f0f0f0; color: #111; }
-    &.selected {
-      background: rgba(247, 185, 28, 0.15);
-      border-color: #f7b91c;
-      color: #b58000;
-    }
-  }
 }

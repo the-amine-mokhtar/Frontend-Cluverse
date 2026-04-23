@@ -45,39 +45,20 @@ export class AuthHelperService {
   }
 
   getClubId(): number {
-    const payload = this.getPayload();
-    const fromToken = Number(payload?.clubid ?? payload?.clubId ?? 0);
-    if (Number.isFinite(fromToken) && fromToken > 0) {
-      return fromToken;
-    }
-
-    const fromStorage = Number(localStorage.getItem('clubId') ?? 0);
-    return Number.isFinite(fromStorage) ? fromStorage : 0;
+    return this.getPayload()?.clubid ?? 0;
   }
 
   getRole(): string {
-    const rawRole = this.getPayload()?.role;
-    if (typeof rawRole !== 'string') {
-      return '';
-    }
-
-    const normalized = rawRole.trim().toUpperCase();
-    return normalized.startsWith('ROLE_') ? normalized.substring(5) : normalized;
+    return this.getPayload()?.role ?? '';
   }
 
   getUserId(): number {
     const p = this.getPayload();
-    const rawUserId = p?.sub ?? p?.id;
-    const userId = Number(rawUserId);
-    return Number.isFinite(userId) ? userId : 0;
+    return p?.sub ?? p?.id ?? 0;
   }
 
   isPresident(): boolean {
     return this.getRole() === 'PRESIDENT';
-  }
-
-  isSuperAdmin(): boolean {
-    return !!this.getPayload()?.isSuperAdmin;
   }
 
   isLoggedIn(): boolean {

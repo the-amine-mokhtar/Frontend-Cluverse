@@ -788,63 +788,63 @@ export class FinanceHomeComponent implements OnInit {
               </div>
             </div>
             <div class="meta">
-              <strong>Exercice:</strong> ${this.selectedExerciseYear}<br/>
-              <strong>Généré le:</strong> ${generatedAt.toLocaleString('fr-FR')}
+              <strong>Period:</strong> ${this.selectedExerciseYear}<br/>
+              <strong>Generated:</strong> ${generatedAt.toLocaleString('en-GB')}
             </div>
           </div>
 
-          <h2>Bilan Financier Synthétique</h2>
+          <h2>Balance Sheet Summary</h2>
           <div class="grid">
             <div class="card">
-              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Actifs</strong></div>
-              <div class="line"><span>Trésorerie disponible</span><strong>${this.formatCurrency(this.closingCash)}</strong></div>
-              <div class="line"><span>Créances</span><strong>N/A</strong></div>
+              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Assets</strong></div>
+              <div class="line"><span>Available cash</span><strong>${this.formatCurrency(this.closingCash)}</strong></div>
+              <div class="line"><span>Receivables</span><strong>N/A</strong></div>
             </div>
             <div class="card">
-              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Passifs</strong></div>
-              <div class="line"><span>Dettes</span><strong>N/A</strong></div>
-              <div class="line"><span>Fonds propres (estimé)</span><strong>${this.formatCurrency(this.equityTotal)}</strong></div>
+              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Liabilities</strong></div>
+              <div class="line"><span>Debts</span><strong>N/A</strong></div>
+              <div class="line"><span>Equity (estimated)</span><strong>${this.formatCurrency(this.equityTotal)}</strong></div>
             </div>
           </div>
 
-          <h2>Compte de Résultat Simplifié</h2>
+          <h2>Simplified Income Statement</h2>
           <div class="card">
-            <div class="line"><span>Recettes Totales</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
-            <div class="line"><span>Dépenses Totales</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
+            <div class="line"><span>Total Revenue</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
+            <div class="line"><span>Total Expenses</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
             <div class="line" style="margin-top: 12px; padding-top: 12px; border-top: 2px dashed #cbd5e1;">
-              <span style="font-weight: 600; color: #0f172a;">Résultat Net</span>
+              <span style="font-weight: 600; color: #0f172a;">Net Result</span>
               <strong class="${this.netResult >= 0 ? 'income' : 'expense'}" style="font-size: 18px;">${netResultSign}${this.formatCurrency(this.absValue(this.netResult))}</strong>
             </div>
           </div>
 
-          <h2>Rapport de Trésorerie & Projections</h2>
+          <h2>Treasury Report & Projections</h2>
           <div class="card">
-            <div class="line"><span>Solde Initial</span><strong>${this.formatCurrency(this.openingCash)}</strong></div>
-            <div class="line"><span>Encaissements</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
-            <div class="line"><span>Décaissements</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
-            <div class="line" style="background:#f1f5f9; padding:8px 12px; border-radius:6px; margin-top:8px;"><span><strong>Solde Final Calculé</strong></span><strong style="color:${safePrimary}">${this.formatCurrency(this.closingCash)}</strong></div>
-            
-            <div class="line" style="margin-top:24px;"><span>Écart de rapprochement bancaire</span><strong>${reconciliationLabel}</strong></div>
-            <div class="line"><span>Projection Nette / Mois</span><strong class="${this.projectedNetFlow >= 0 ? 'income' : 'expense'}">${projectedNetSign}${this.formatCurrency(this.absValue(this.projectedNetFlow))}</strong></div>
-            <div class="line"><span>Solde Projeté à ${this.forecastMonths} mois</span><strong>${this.formatCurrency(this.projectedClosingCash)}</strong></div>
+            <div class="line"><span>Opening Balance</span><strong>${this.formatCurrency(this.openingCash)}</strong></div>
+            <div class="line"><span>Inflows</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
+            <div class="line"><span>Outflows</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
+            <div class="line" style="background:#f1f5f9; padding:8px 12px; border-radius:6px; margin-top:8px;"><span><strong>Calculated Closing Balance</strong></span><strong style="color:${safePrimary}">${this.formatCurrency(this.closingCash)}</strong></div>
+
+            <div class="line" style="margin-top:24px;"><span>Bank reconciliation gap</span><strong>${reconciliationLabel}</strong></div>
+            <div class="line"><span>Net Projection / Month</span><strong class="${this.projectedNetFlow >= 0 ? 'income' : 'expense'}">${projectedNetSign}${this.formatCurrency(this.absValue(this.projectedNetFlow))}</strong></div>
+            <div class="line"><span>Projected Balance in ${this.forecastMonths} months</span><strong>${this.formatCurrency(this.projectedClosingCash)}</strong></div>
           </div>
 
-          <h2>Extrait des Dernières Transactions</h2>
+          <h2>Recent Transactions</h2>
           <table>
             <thead>
               <tr>
                 <th>Date</th>
                 <th>Type</th>
                 <th>Description</th>
-                <th style="text-align:right;">Montant</th>
+                <th style="text-align:right;">Amount</th>
               </tr>
             </thead>
             <tbody>
-              ${rowsHtml || '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Aucune transaction disponible sur cet exercice.</td></tr>'}
+              ${rowsHtml || '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">No transactions available for this period.</td></tr>'}
             </tbody>
           </table>
 
-          <div class="footer">Rapport généré automatiquement depuis le module Finance - Cluverse</div>
+          <div class="footer">Report automatically generated by the Finance module – Cluverse</div>
         </div>
       </body>
       </html>

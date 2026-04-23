@@ -260,20 +260,12 @@ $body-color: rgba(255, 255, 255, 0.70);
 
 /* ─── CTA Button ──────────────────────────────────────────── */
 
-.cta-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 32px;
-  flex-wrap: wrap;
-}
-
 .cta-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  margin-top: 32px;
   padding: 16px 40px;
   font-family: 'Inter', sans-serif;
   font-size: 16px;
@@ -299,22 +291,6 @@ $body-color: rgba(255, 255, 255, 0.70);
 
   &:active {
     transform: translateY(0) scale(0.98);
-  }
-
-  &.secondary {
-    background: transparent;
-    color: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.4);
-      box-shadow: none;
-    }
-    
-    .cta-glow {
-      display: none;
-    }
   }
 }
 
