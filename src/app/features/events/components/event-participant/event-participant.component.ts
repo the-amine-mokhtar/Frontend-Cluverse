@@ -59,7 +59,6 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
   smsNotificationsByParticipation: Map<number, SmsNotification[]> = new Map();
   smsLoadingMap: Map<number, boolean> = new Map();
 
-  // ✅ Popup states
   showSuccessPopup = false;
   showWaitingPopup = false;
   showErrorPopup = false;
@@ -137,6 +136,8 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Load events ───────────────────────────────────────────────────────────
+
   loadEventsAndCampaigns(): void {
     this.isLoadingEvents = true;
     this.isLoadingCampaigns = true;
@@ -175,14 +176,15 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Load participations ───────────────────────────────────────────────────
+
   loadMyParticipations(): void {
     this.isLoadingParticipations = true;
     forkJoin({
       participations: this.eventService.getMyParticipations(),
-      waitingList: this.eventService.getMyWaitingList()
+      waitingList: this.eventService.getMyWaitingList(),
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: ({ participations, waitingList }) => {
-        // Normalize participations
         const normalizedParticipations = participations.map(p => {
           const normalizedEvent = p.event ? normalizeEvent(p.event) : undefined;
           if (normalizedEvent && !normalizedEvent.campaign && normalizedEvent.campaignId) {
@@ -192,26 +194,41 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
           return { ...p, event: normalizedEvent };
         });
 
-        // Convert waiting list items to Participation-like objects
-        const waitingListAsParticipations = (waitingList || []).map(wl => ({
-          id: wl.id,
-          status: 'WAITING_LIST' as ParticipationStatus,
-          eventId: wl.eventId,
-          event: undefined,
-          registrationDate: wl.joinedAt,
-          comment: `Position in queue: ${wl.positionInQueue || 'N/A'}`
-        } as Participation));
+        // Build synthetic EventItem for waiting list so template + notifications work
+        const waitingListAsParticipations: Participation[] = (waitingList || []).map(wl => {
+          const matchedEvent = this.events.find(e => e.id === wl.eventId);
+          const syntheticEvent: EventItem | undefined = matchedEvent
+            ? matchedEvent
+            : wl.eventId
+              ? {
+                  id: wl.eventId,
+                  title: wl.eventTitle ?? `Event #${wl.eventId}`,
+                  description: '',
+                  startDate: wl.eventStartDate ?? '',
+                  endDate: '',
+                  capacity: 0,
+                  imageUrl: this.resolveImageUrl(wl.eventImageUrl) ?? undefined,
+                  status: 'PLANNED' as const,
+                }
+              : undefined;
 
-        // Combine both lists
+          return {
+            id: wl.id,
+            status: 'WAITING_LIST' as ParticipationStatus,
+            eventId: wl.eventId,
+            event: syntheticEvent,
+            registrationDate: wl.joinedAt,
+            comment: `Position in queue: ${wl.positionInQueue || 'N/A'}`,
+          } as Participation;
+        });
+
         const allParticipations = [...normalizedParticipations, ...waitingListAsParticipations];
-        
         this.myParticipations = allParticipations;
         this.splitParticipations(allParticipations);
         this.notificationService.checkUpcomingEvents(normalizedParticipations);
         this.isLoadingParticipations = false;
       },
-      error: () => { 
-        // Fallback: try to get participations only
+      error: () => {
         this.eventService.getMyParticipations().pipe(takeUntil(this.destroy$)).subscribe({
           next: res => {
             const normalized = res.map(p => {
@@ -232,54 +249,42 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
       },
     });
   }
-  /**
-   * Load SMS notifications for a specific participation
-   */
-  loadSmsNotifications(participationId: number): void {
-    if (this.smsNotificationsByParticipation.has(participationId)) {
-      return; // Already loaded
-    }
 
+  // ── SMS ───────────────────────────────────────────────────────────────────
+
+  loadSmsNotifications(participationId: number): void {
+    if (this.smsNotificationsByParticipation.has(participationId)) return;
     this.smsLoadingMap.set(participationId, true);
     this.smsNotificationService.getSmsHistory(participationId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (result) => {
+        next: result => {
           this.smsNotificationsByParticipation.set(participationId, result.notifications || []);
           this.smsLoadingMap.set(participationId, false);
         },
-        error: (err) => {
-          console.error('Error loading SMS notifications:', err);
+        error: () => {
           this.smsNotificationsByParticipation.set(participationId, []);
           this.smsLoadingMap.set(participationId, false);
-        }
+        },
       });
   }
 
-  /**
-   * Get SMS notifications for a participation
-   */
   getSmsNotifications(participationId: number): SmsNotification[] {
     return this.smsNotificationsByParticipation.get(participationId) || [];
   }
 
-  /**
-   * Check if SMS notifications are loading
-   */
   isSmsLoading(participationId: number): boolean {
     return this.smsLoadingMap.get(participationId) || false;
   }
 
-  /**
-   * Toggle SMS notifications visibility for a participation
-   */
   toggleSmsNotifications(participationId: number): void {
     if (!this.smsNotificationsByParticipation.has(participationId)) {
       this.loadSmsNotifications(participationId);
-    } else {
-      // Toggle visibility - can be extended to show/hide
     }
   }
+
+  // ── Resources & reservations ──────────────────────────────────────────────
+
   private loadResources(): void {
     if (!this.isAdmin) { this.resources = this.availableResources = []; return; }
     this.eventService.getResources().pipe(takeUntil(this.destroy$)).subscribe({
@@ -305,6 +310,8 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
   private splitParticipations(list: Participation[]): void {
     this.activeParticipations = list.filter(p => p.status === 'REGISTERED' && p.event?.status !== 'COMPLETED');
     this.completedParticipations = list.filter(p => p.status === 'ATTENDED' || (p.status === 'REGISTERED' && p.event?.status === 'COMPLETED'));
@@ -312,16 +319,22 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
     this.waitingListParticipations = list.filter(p => p.status === 'WAITING_LIST');
   }
 
+  // ── FIX: filteredEvents — always show full events for waiting list button ─
   get filteredEvents(): EventItem[] {
     const participatedEventIds = new Set(
-      this.myParticipations.filter(p => p.status !== 'CANCELLED')
-        .map(p => p.event?.id ?? p.eventId).filter((id): id is number => id != null)
+      this.myParticipations
+        .filter(p => p.status !== 'CANCELLED')
+        .map(p => p.event?.id ?? p.eventId)
+        .filter((id): id is number => id != null)
     );
+
     const visible = this.events.filter(e => {
       if (e.status === 'CANCELLED') return false;
       if (e.status === 'COMPLETED' && !participatedEventIds.has(e.id)) return false;
+      // Always show full events so user can click "Join Waiting List"
       return true;
     });
+
     const q = this.searchQuery.trim().toLowerCase();
     if (!q) return visible;
     return visible.filter(e =>
@@ -350,15 +363,39 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
   applyFilters(): void {}
 
   getParticipation(eventId: number): Participation | undefined {
-    return this.myParticipations.find(p => (p.event?.id === eventId || p.eventId === eventId) && p.status !== 'CANCELLED');
+    return this.myParticipations.find(
+      p => (p.event?.id === eventId || p.eventId === eventId) && p.status !== 'CANCELLED'
+    );
   }
 
   isParticipating(eventId: number): boolean { return !!this.getParticipation(eventId); }
-  isEventFull(event: EventItem): boolean { return (event.participantsCount ?? 0) >= (event.capacity ?? 0); }
+
+  // FIX: capacity 0 means unlimited — only mark full if capacity > 0
+  isEventFull(event: EventItem): boolean {
+    if (!event.capacity || event.capacity <= 0) return false;
+    return (event.participantsCount ?? 0) >= event.capacity;
+  }
+
   isEventCompleted(event?: EventItem | null): boolean { return event?.status === 'COMPLETED'; }
   countByStatus(s: string): number { return this.myParticipations.filter(p => p.status === s).length; }
   setTab(tab: 'active' | 'waiting' | 'history'): void { this.activeTab = tab; }
   dismissNotification(eventId: number): void { this.notifications = this.notifications.filter(n => n.eventId !== eventId); }
+
+  // FIX: single source of truth for card button state
+  isInWaitingList(eventId: number): boolean {
+    return this.myParticipations.some(
+      p => (p.event?.id === eventId || p.eventId === eventId) && p.status === 'WAITING_LIST'
+    );
+  }
+
+  getEventButtonState(event: EventItem): 'join' | 'full' | 'waiting' | 'registered' | 'completed' {
+    if (this.isEventCompleted(event)) return 'completed';
+    const participation = this.getParticipation(event.id);
+    if (participation?.status === 'REGISTERED') return 'registered';
+    if (this.isInWaitingList(event.id)) return 'waiting';
+    if (this.isEventFull(event)) return 'full';
+    return 'join';
+  }
 
   getVisibilityLabel(visibility: string | undefined): string {
     if (!visibility) return '';
@@ -378,6 +415,7 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
   }
 
   // ── Popups ────────────────────────────────────────────────────────────────
+
   showSuccess(message: string, eventTitle = ''): void {
     this.successMessage = message;
     this.successEventTitle = eventTitle;
@@ -399,9 +437,27 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
   closeErrorPopup(): void { this.showErrorPopup = false; }
 
   // ── Modals ────────────────────────────────────────────────────────────────
-  openJoin(event: EventItem): void { this.requestParticipationFlow(event); }
 
-  private openParticipationForm(event: EventItem): void {
+  // FIX: openJoin routes to waiting list confirm when event is full
+  openJoin(event: EventItem): void {
+    if (this.isEventCompleted(event)) return;
+
+    if (this.isInWaitingList(event.id)) {
+      this.showError('You are already on the waiting list for this event.');
+      return;
+    }
+
+    if (this.isEventFull(event)) {
+      this.waitingListEvent = event;
+      this.showWaitingListConfirm = true;
+      return;
+    }
+
+    this.requestParticipationFlow(event);
+  }
+
+  private requestParticipationFlow(event: EventItem): void {
+    if (this.isEventCompleted(event)) return;
     this.selectedEvent = event;
     this.editId = null;
     this.detailEvent = null;
@@ -410,6 +466,15 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
       contactInfo: '', comment: '', wantsReminder: true,
       dietaryRequirements: '', emergencyContact: '', teamName: '',
     });
+  }
+
+  // FIX: after user confirms waiting list dialog, open form (backend auto-routes to waiting list)
+  confirmWaitingList(accept: boolean): void {
+    const event = this.waitingListEvent;
+    this.showWaitingListConfirm = false;
+    this.waitingListEvent = null;
+    if (!event || !accept) return;
+    this.requestParticipationFlow(event);
   }
 
   openEdit(eventId: number): void {
@@ -463,40 +528,9 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
   toggleReservationForm(): void { this.showReservationForm = !this.showReservationForm; }
   dismissWaitingListNotice(): void { this.showWaitingListNotice = false; }
 
-  requestParticipationFlow(event: EventItem): void {
-    if (this.isEventCompleted(event)) return;
-    this.openParticipationForm(event);
-  }
+  // ── Submit participation ──────────────────────────────────────────────────
 
-  confirmWaitingList(accept: boolean): void {
-    const event = this.waitingListEvent;
-    this.showWaitingListConfirm = false;
-    this.waitingListEvent = null;
-    if (!event || !accept) return;
-    this.eventService.joinWaitingList(event.id, true).pipe(takeUntil(this.destroy$)).subscribe({
-      next: result => {
-        if (result === 'WAITING_LIST_ADDED') {
-          this.showWaiting(event.title);
-          this.loadMyParticipations();
-        }
-      },
-      error: () => { this.showError('Error joining waiting list. Please try again.'); },
-    });
-  }
-
-  confirmPromotion(waitingId: number): void {
-    this.eventService.confirmPromotion(waitingId).pipe(takeUntil(this.destroy$)).subscribe({
-      next: result => {
-        if (result === 'CONFIRMED') {
-          this.showSuccess('Your spot is confirmed! See you at the event.', '');
-          this.loadMyParticipations();
-          this.loadEventsAndCampaigns();
-        }
-      },
-      error: () => { this.showError('Error confirming your spot.'); },
-    });
-  }
-
+  // FIX: handles both REGISTERED and WAITING_LIST_ADDED responses correctly
   submitParticipation(): void {
     if (!this.selectedEvent) return;
     if (this.participationForm.invalid || this.isSubmitting) {
@@ -520,19 +554,32 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
           },
         });
     } else {
-      const payload: ParticipationPayload = { ...this.participationForm.value, eventId: this.selectedEvent.id };
+      const payload: ParticipationPayload = {
+        ...this.participationForm.value,
+        eventId: this.selectedEvent.id,
+      };
       const eventTitle = this.selectedEvent.title;
+
       this.eventService.participate(payload).pipe(takeUntil(this.destroy$)).subscribe({
         next: (status: string) => {
           this.isSubmitting = false;
           this.closeModal();
+
           if (status === 'REGISTERED') {
             const ev = this.events.find(e => e.id === payload.eventId);
-            if (ev) { ev.participantsCount = (ev.participantsCount ?? 0) + 1; ev.isFull = ev.participantsCount >= (ev.capacity ?? 0); }
+            if (ev) {
+              ev.participantsCount = (ev.participantsCount ?? 0) + 1;
+              ev.isFull = this.isEventFull(ev);
+            }
             this.showSuccess('You are now registered for this event!', eventTitle);
             this.loadMyParticipations();
             this.loadEventsAndCampaigns();
+
           } else if (status === 'WAITING_LIST_ADDED') {
+            // Mark full locally so button flips immediately
+            const ev = this.events.find(e => e.id === payload.eventId);
+            if (ev) ev.isFull = true;
+
             this.showWaiting(eventTitle);
             this.loadMyParticipations();
             this.loadEventsAndCampaigns();
@@ -541,7 +588,12 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
         error: err => {
           this.isSubmitting = false;
           if (err?.status === 409) {
-            this.showError('You are already registered for this event.');
+            const msg = (err?.error?.message || '').toLowerCase();
+            if (msg.includes('waiting')) {
+              this.showError('You are already on the waiting list for this event.');
+            } else {
+              this.showError('You are already registered for this event.');
+            }
           } else {
             this.showError(err?.error?.message || 'Error registering for event.');
           }
@@ -549,6 +601,8 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
       });
     }
   }
+
+  // ── Cancel / delete ───────────────────────────────────────────────────────
 
   requestCancelParticipation(id: number): void { this.confirmDeleteParticipationId = id; }
   cancelDeleteParticipation(): void { this.confirmDeleteParticipationId = null; }
@@ -565,12 +619,26 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
         const ev = this.events.find(e => e.id === (participation?.event?.id ?? participation?.eventId));
         if (ev && (ev.participantsCount ?? 0) > 0) {
           ev.participantsCount = (ev.participantsCount ?? 0) - 1;
-          ev.isFull = (ev.participantsCount ?? 0) >= (ev.capacity ?? 0);
+          ev.isFull = this.isEventFull(ev);
         }
         this.showSuccess('Your participation has been cancelled.');
         this.loadMyParticipations();
+        this.loadEventsAndCampaigns();
       },
       error: () => { this.showError('Could not cancel participation.'); },
+    });
+  }
+
+  confirmPromotion(waitingId: number): void {
+    this.eventService.confirmPromotion(waitingId).pipe(takeUntil(this.destroy$)).subscribe({
+      next: result => {
+        if (result === 'CONFIRMED') {
+          this.showSuccess('Your spot is confirmed! See you at the event.', '');
+          this.loadMyParticipations();
+          this.loadEventsAndCampaigns();
+        }
+      },
+      error: () => { this.showError('Error confirming your spot.'); },
     });
   }
 
@@ -590,6 +658,8 @@ export class EventParticipantComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  // ── Reservations ──────────────────────────────────────────────────────────
 
   getSelectedResource(): ResourceItem | undefined {
     const id = this.reservationForm.value.resourceId;
