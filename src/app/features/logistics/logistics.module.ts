@@ -29,6 +29,7 @@ import { ResourceFormComponent } from './resources/resource-form.component';
 import { ResourceDetailComponent } from './resources/resource-detail.component';
 import { TransportPlannerComponent } from './components/transport-planner/transport-planner.component';
 import { VoiceAssistantComponent } from './components/voice-assistant/voice-assistant.component';
+import { BackButtonComponent } from './shared/back-button.component';
 
 @NgModule({
   declarations: [
@@ -66,7 +67,8 @@ import { VoiceAssistantComponent } from './components/voice-assistant/voice-assi
     SharedModule,
     LayoutModule,
     LogisticsRoutingModule,
-    TransportMapComponent
+    TransportMapComponent,
+    BackButtonComponent
   ]
 })
 export class LogisticsModule { }
