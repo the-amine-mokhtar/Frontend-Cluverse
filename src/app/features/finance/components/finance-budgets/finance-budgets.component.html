@@ -10,6 +10,13 @@
     </div>
   </header>
 
+  <nav class="finance-nav" aria-label="Finance sections">
+    <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
+    <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/budgets">Budgets</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/transactions">Transactions</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
+  </nav>
+
   <section class="form-panel" *ngIf="showCreateBudgetForm">
     <h2 class="form-panel__title">{{ editingBudgetId !== null ? 'Edit Budget' : 'Create New Budget' }}</h2>
     <div class="form-grid">
@@ -42,13 +49,6 @@
 
   <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
   <p class="status" *ngIf="isLoading">Loading budgets...</p>
-
-  <nav class="finance-nav" aria-label="Finance sections">
-    <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
-    <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/budgets">Budgets</a>
-    <a class="finance-nav__item" routerLink="/dashboard/finance/transactions">Transactions</a>
-    <a class="finance-nav__item" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
-  </nav>
 
   <div class="budgets-grid">
     <article class="budget-card" *ngFor="let item of budgetItems">
