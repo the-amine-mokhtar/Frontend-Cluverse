@@ -5,6 +5,7 @@ import { FinanceBudgetsComponent } from './components/finance-budgets/finance-bu
 import { FinanceTransactionsComponent } from './components/finance-transactions/finance-transactions.component';
 import { FinanceReportsComponent } from './components/finance-reports/finance-reports.component';
 import { FinanceSponsorPaymentComponent } from './components/finance-sponsor-payment/finance-sponsor-payment.component';
+import { MemberDuesComponent } from './components/member-dues/member-dues.component';
 const routes: Routes = [
   {
     path: '',
@@ -30,6 +31,10 @@ const routes: Routes = [
   {
     path: 'sponsor-payment',
     component: FinanceSponsorPaymentComponent
+  },
+  {
+    path: 'dues',
+    component: MemberDuesComponent
   }
 ];
 

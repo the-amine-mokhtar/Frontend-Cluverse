@@ -1,0 +1,93 @@
+<section class="finance-page">
+  <header class="finance-page__header">
+    <div>
+      <h1 class="finance-page__title">Member Dues</h1>
+      <p class="finance-page__subtitle">Track membership fee payments</p>
+    </div>
+    <div class="finance-page__actions">
+      <button type="button" class="btn btn--secondary" (click)="onRemind()">Send Reminders</button>
+      <button type="button" class="btn btn--primary" (click)="openAdd()">Add Payment</button>
+    </div>
+  </header>
+
+  <nav class="finance-nav" aria-label="Finance sections">
+    <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/transactions">Transactions</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/reports">Reports</a>
+    <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/dues">Member Dues</a>
+  </nav>
+
+  <div class="dues-reminder-msg" *ngIf="reminderMsg">{{ reminderMsg }}</div>
+  <div class="dues-error" *ngIf="error">{{ error }}</div>
+
+  <!-- Add/Edit Form -->
+  <section class="form-panel" *ngIf="showForm">
+    <h3 class="form-panel__title">{{ editId != null ? 'Edit' : 'Add' }} Payment</h3>
+    <div class="dues-error" *ngIf="formError">{{ formError }}</div>
+    <form (ngSubmit)="onSubmit()" novalidate>
+      <div class="form-grid">
+        <div class="form-field" *ngIf="editId == null">
+          <label class="form-field__label">Member</label>
+          <select class="form-field__input" [(ngModel)]="form.membershipId" name="membershipId">
+            <option [ngValue]="null">Select member</option>
+            <option *ngFor="let m of members" [ngValue]="m.id">{{ getMemberName(m) }}</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-field__label">Amount</label>
+          <input class="form-field__input" type="number" [(ngModel)]="form.amount" name="amount" min="0" step="0.01" />
+        </div>
+        <div class="form-field">
+          <label class="form-field__label">Due Date</label>
+          <input class="form-field__input" type="date" [(ngModel)]="form.dueDate" name="dueDate" />
+        </div>
+        <div class="form-field">
+          <label class="form-field__label">Status</label>
+          <select class="form-field__input" [(ngModel)]="form.status" name="status">
+            <option *ngFor="let s of STATUSES" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn--secondary" (click)="showForm = false" [disabled]="isSubmitting">Cancel</button>
+        <button type="submit" class="btn btn--primary" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Loading -->
+  <div class="dues-loading" *ngIf="isLoading">Loading…</div>
+
+  <!-- Table -->
+  <section class="dues-table-wrap" *ngIf="!isLoading">
+    <div class="dues-empty" *ngIf="payments.length === 0">No payments recorded yet.</div>
+    <table class="dues-table" *ngIf="payments.length > 0">
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Email</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Due Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of payments">
+          <td>{{ memberName(p) }}</td>
+          <td>{{ memberEmail(p) }}</td>
+          <td>{{ p.amount | number:'1.2-2' }}</td>
+          <td><span class="dues-badge" [ngClass]="getStatusClass(p.status)">{{ p.status }}</span></td>
+          <td>{{ p.dueDate }}</td>
+          <td class="dues-actions">
+            <button class="btn btn--sm btn--secondary" (click)="openEdit(p)">Edit</button>
+            <button class="btn btn--sm btn--danger" (click)="onDelete(p.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</section>

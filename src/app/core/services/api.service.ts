@@ -829,6 +829,42 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
       { headers: this.authHeaders() }
     ).pipe(catchError(this.handleError));
   }
+
+// ─── Member Payments ──────────────────────────────────────────────────────────
+
+  getMemberPayments(clubId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/api/member-payments?clubId=${clubId}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  createMemberPayment(membershipId: number, clubId: number, payment: { amount: number; status: string; dueDate: string }): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/api/member-payments?membershipId=${membershipId}&clubId=${clubId}`,
+      payment,
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  updateMemberPayment(id: number, payment: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/api/member-payments/${id}`, payment, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  deleteMemberPayment(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/api/member-payments/${id}`, {
+      headers: this.authHeaders(), responseType: 'text'
+    }).pipe(catchError(this.handleError));
+  }
+
+  sendPaymentReminders(clubId: number): Observable<number> {
+    return this.http.post<number>(
+      `${this.baseUrl}/api/member-payments/remind?clubId=${clubId}`,
+      {},
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
 }
 
 
