@@ -15,6 +15,7 @@
     <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
     <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
     <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/transactions">Transactions</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/reports">Reports</a>
   </nav>
 
   <section class="form-panel" *ngIf="showCreateTransactionForm">
@@ -65,6 +66,7 @@
         class="transactions-toolbar__search"
         placeholder="Search transactions..."
         [(ngModel)]="searchTerm"
+        (ngModelChange)="resetTransactionPage()"
       />
 
       <div class="transactions-toolbar__filters" role="tablist" aria-label="Transaction filters">
@@ -108,7 +110,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let transaction of filteredTransactions">
+          <tr *ngFor="let transaction of pagedTransactions">
             <td>
               <span class="pill" [class.pill--income]="transaction.type === 'income'" [class.pill--expense]="transaction.type === 'expense'">
                 {{ transaction.type }}
@@ -130,6 +132,12 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination" *ngIf="transactionTotalPages > 1">
+      <button class="pagination__btn" (click)="transactionPrev()" [disabled]="transactionPage === 0">&#8249;</button>
+      <span class="pagination__info">{{ transactionPage + 1 }} / {{ transactionTotalPages }}</span>
+      <button class="pagination__btn" (click)="transactionNext()" [disabled]="transactionPage === transactionTotalPages - 1">&#8250;</button>
     </div>
   </section>
 </section>

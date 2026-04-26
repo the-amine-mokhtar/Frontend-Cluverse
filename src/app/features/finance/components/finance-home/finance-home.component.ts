@@ -106,6 +106,12 @@ export class FinanceHomeComponent implements OnInit {
   private readonly alertEmailPreferenceStorageKey = 'finance.budgetAlert.emailPreference';
   private readonly emailedAlertDeliveryStorageKey = 'finance.budgetAlert.emailDeliveryKeys';
   private emailedBudgetAlertDeliveryKeys = new Set<string>();
+  trendPage = 0;
+  readonly trendPageSize = 4;
+  budgetPage = 0;
+  readonly budgetPageSize = 3;
+  transactionPage = 0;
+  readonly transactionPageSize = 5;
 
   constructor(
     private readonly financeService: FinanceService,
@@ -448,6 +454,49 @@ export class FinanceHomeComponent implements OnInit {
 
     return rows;
   }
+
+  get pagedTrendRows(): MonthlyTrendRow[] {
+    const start = this.trendPage * this.trendPageSize;
+    return this.monthlyTrendRows.slice(start, start + this.trendPageSize);
+  }
+
+  get trendTotalPages(): number {
+    return Math.ceil(this.monthlyTrendRows.length / this.trendPageSize);
+  }
+
+  trendPrev(): void {
+    if (this.trendPage > 0) this.trendPage--;
+  }
+
+  trendNext(): void {
+    if (this.trendPage < this.trendTotalPages - 1) this.trendPage++;
+  }
+
+  get pagedBudgetItems(): BudgetItem[] {
+    const start = this.budgetPage * this.budgetPageSize;
+    return this.filteredBudgetItems.slice(start, start + this.budgetPageSize);
+  }
+
+  get budgetTotalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredBudgetItems.length / this.budgetPageSize));
+  }
+
+  budgetPrev(): void { if (this.budgetPage > 0) this.budgetPage--; }
+  budgetNext(): void { if (this.budgetPage < this.budgetTotalPages - 1) this.budgetPage++; }
+  resetBudgetPage(): void { this.budgetPage = 0; }
+
+  get pagedRecentTransactions(): TransactionItem[] {
+    const start = this.transactionPage * this.transactionPageSize;
+    return this.filteredRecentTransactions.slice(start, start + this.transactionPageSize);
+  }
+
+  get transactionTotalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredRecentTransactions.length / this.transactionPageSize));
+  }
+
+  transactionPrev(): void { if (this.transactionPage > 0) this.transactionPage--; }
+  transactionNext(): void { if (this.transactionPage < this.transactionTotalPages - 1) this.transactionPage++; }
+  resetTransactionPage(): void { this.transactionPage = 0; }
 
   onExerciseYearChange(year: number | string): void {
     const parsed = Number(year);
