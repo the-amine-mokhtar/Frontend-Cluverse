@@ -96,6 +96,12 @@ export interface SponsorDto {
 export interface SponsorshipDto {
   id: number;
   amount: number;
+  sponsorId?: number;
+  sponsorName?: string;
+  agreedAmount?: number;
+  expectedAmount?: number;
+  paidAmount?: number;
+  eventName?: string;
   startDate?: string;
   endDate?: string;
   status?: string;
@@ -128,6 +134,8 @@ export interface CreateTransactionPayload {
   date: string;
   description: string;
   type: TransactionType;
+  sponsor?: { id: number };
+  sponsorship?: { id: number };
 }
 
 export interface UpdateTransactionPayload {
@@ -135,6 +143,8 @@ export interface UpdateTransactionPayload {
   date: string;
   description: string;
   type: TransactionType;
+  sponsor?: { id: number };
+  sponsorship?: { id: number };
 }
 
 export interface CreateStripePaymentIntentPayload {

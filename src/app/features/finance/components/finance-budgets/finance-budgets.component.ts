@@ -24,9 +24,6 @@ export class FinanceBudgetsComponent implements OnInit {
   budgetItems: BudgetItem[] = [];
   clubEvents: EventDto[] = [];
 
-  budgetPage = 0;
-  readonly budgetPageSize = 6;
-
   showCreateBudgetForm = false;
   editingBudgetId: number | null = null;
   isLoading = false;
@@ -254,18 +251,6 @@ export class FinanceBudgetsComponent implements OnInit {
     const numericYear = Number(year);
     return Number.isFinite(numericYear) ? numericYear : new Date().getFullYear();
   }
-
-  get pagedBudgetItems(): BudgetItem[] {
-    const start = this.budgetPage * this.budgetPageSize;
-    return this.budgetItems.slice(start, start + this.budgetPageSize);
-  }
-
-  get budgetTotalPages(): number {
-    return Math.max(1, Math.ceil(this.budgetItems.length / this.budgetPageSize));
-  }
-
-  budgetPrev(): void { if (this.budgetPage > 0) this.budgetPage--; }
-  budgetNext(): void { if (this.budgetPage < this.budgetTotalPages - 1) this.budgetPage++; }
 
   utilization(item: BudgetItem): number {
     if (item.total <= 0) {
