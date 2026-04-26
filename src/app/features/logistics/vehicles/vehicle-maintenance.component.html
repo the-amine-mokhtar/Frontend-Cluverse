@@ -168,7 +168,7 @@
                   'text-emerald-500': predictionResult.breakdownRisk < 30,
                   'text-amber-500': predictionResult.breakdownRisk < 70,
                   'text-rose-500': predictionResult.breakdownRisk >= 70
-                }">{{ predictionResult.breakdownRisk?.toFixed(0) }}%</div>
+                }">{{ predictionResult.breakdownRisk.toFixed(0) }}%</div>
                 <p class="text-xs font-bold text-gray-400 tracking-[0.3em] mt-[-5px]">Probabilité de défaillance</p>
               </div>
 

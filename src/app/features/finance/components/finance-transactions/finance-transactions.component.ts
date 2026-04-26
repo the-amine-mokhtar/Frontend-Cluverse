@@ -28,6 +28,8 @@ interface TransactionItem {
 export class FinanceTransactionsComponent implements OnInit {
   searchTerm = '';
   activeFilter: TransactionFilter = 'all';
+  transactionPage = 0;
+  readonly transactionPageSize = 10;
   showCreateTransactionForm = false;
   isLoading = false;
   isSubmitting = false;
@@ -55,7 +57,10 @@ export class FinanceTransactionsComponent implements OnInit {
 
   setFilter(filter: TransactionFilter): void {
     this.activeFilter = filter;
+    this.transactionPage = 0;
   }
+
+  resetTransactionPage(): void { this.transactionPage = 0; }
 
   openCreateTransactionForm(): void {
     this.showCreateTransactionForm = true;
@@ -193,6 +198,18 @@ export class FinanceTransactionsComponent implements OnInit {
       }
     });
   }
+
+  get pagedTransactions(): TransactionItem[] {
+    const start = this.transactionPage * this.transactionPageSize;
+    return this.filteredTransactions.slice(start, start + this.transactionPageSize);
+  }
+
+  get transactionTotalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredTransactions.length / this.transactionPageSize));
+  }
+
+  transactionPrev(): void { if (this.transactionPage > 0) this.transactionPage--; }
+  transactionNext(): void { if (this.transactionPage < this.transactionTotalPages - 1) this.transactionPage++; }
 
   get filteredTransactions(): TransactionItem[] {
     const normalizedSearch = this.searchTerm.trim().toLowerCase();
