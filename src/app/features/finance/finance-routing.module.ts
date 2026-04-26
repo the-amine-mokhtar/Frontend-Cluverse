@@ -3,8 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { FinanceHomeComponent } from './components/finance-home/finance-home.component';
 import { FinanceBudgetsComponent } from './components/finance-budgets/finance-budgets.component';
 import { FinanceTransactionsComponent } from './components/finance-transactions/finance-transactions.component';
-import { FinanceSponsorPaymentComponent } from './components/finance-sponsor-payment/finance-sponsor-payment.component';
-
+import { FinanceReportsComponent } from './components/finance-reports/finance-reports.component';
 const routes: Routes = [
   {
     path: '',
@@ -24,8 +23,8 @@ const routes: Routes = [
     component: FinanceTransactionsComponent
   },
   {
-    path: 'sponsor-payment',
-    component: FinanceSponsorPaymentComponent
+    path: 'reports',
+    component: FinanceReportsComponent
   }
 ];
 

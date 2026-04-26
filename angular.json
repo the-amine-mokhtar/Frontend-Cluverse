@@ -52,8 +52,7 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss",
-              "node_modules/leaflet/dist/leaflet.css"
+              "src/styles.scss"
             ],
             "scripts": []
           },
@@ -72,8 +71,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "30kb",
-                  "maximumError": "36kb"
+                  "maximumWarning": "16kb",
+                  "maximumError": "64kb"
                 }
               ],
               "outputHashing": "all"

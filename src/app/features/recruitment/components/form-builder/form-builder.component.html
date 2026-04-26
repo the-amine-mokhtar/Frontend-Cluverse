@@ -1,51 +1,5 @@
 <div class="builder">
   
-  <!-- AI Generation Modal -->
-  <div class="builder__overlay" *ngIf="showAiModal" (click)="showAiModal = false">
-    <div class="builder__dialog" (click)="$event.stopPropagation()" style="width: min(500px, 90vw);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-        <h3 style="margin:0; font-size:1.25rem;">✨ Générer avec l'IA</h3>
-        <button class="btn btn--text btn--icon" style="font-size: 1.5rem; line-height: 1;" (click)="showAiModal = false">&times;</button>
-      </div>
-      
-      <div style="text-align:left; display:flex; flex-direction:column; gap:1rem;">
-        <!-- Nombre de questions -->
-        <div class="builder__form-col builder__form-col--full">
-          <label>Nombre de questions</label>
-          <input type="number" [(ngModel)]="aiForm.questionCount" min="1" max="10" />
-        </div>
-
-        <!-- Thèmes -->
-        <div class="builder__form-col builder__form-col--full">
-          <label>Thèmes à couvrir <span style="color:var(--danger, #e05c5c)">*</span></label>
-          <div class="themes-grid">
-            <button *ngFor="let theme of availableThemes"
-              [class.selected]="isThemeSelected(theme)"
-              (click)="toggleTheme(theme)"
-              type="button" class="theme-btn">
-              {{ theme }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Instructions libres -->
-        <div class="builder__form-col builder__form-col--full">
-          <label>Instructions supplémentaires (optionnel)</label>
-          <textarea [(ngModel)]="aiForm.additionalInstructions" rows="3"
-            placeholder="Ex: Privilégier des questions ouvertes..."></textarea>
-        </div>
-      </div>
-      
-      <div class="builder__dialog-actions" style="margin-top:2rem;">
-        <button class="btn btn--outline" (click)="showAiModal = false">Annuler</button>
-        <button class="btn btn--primary" (click)="generateWithAI()"
-          [disabled]="isGenerating || aiForm.themes.length === 0">
-          {{ isGenerating ? 'Génération...' : '✨ Générer' }}
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- Delete Dialog -->
   <div class="builder__overlay" *ngIf="confirmTarget" (click)="closeConfirm()">
     <div class="builder__dialog" (click)="$event.stopPropagation()">
@@ -87,9 +41,6 @@
         </svg>
         Preview Form
       </a>
-      <button class="btn btn--outline" (click)="showAiModal = true" *ngIf="!showForm" style="color: #f7b91c; border-color: #f7b91c;">
-        ✨ Générer avec l'IA
-      </button>
       <button class="btn btn--primary" (click)="openNewForm()" *ngIf="!showForm">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>

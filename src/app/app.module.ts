@@ -5,12 +5,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { SharedModule } from './shared/shared.module';
-import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    ToastContainerComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,

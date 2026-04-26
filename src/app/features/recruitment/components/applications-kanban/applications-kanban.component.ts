@@ -28,18 +28,6 @@ export class ApplicationsKanbanComponent implements OnInit {
   toastMessage = '';
   csvError = '';
 
-  // Properties for interview modal
-  showInterviewModal = false;
-  pendingInterviewApp: any = null;
-  pendingInterviewEvent: CdkDragDrop<any[]> | null = null;
-  interviewForm = {
-    duration: 30,
-    level: 'junior',
-    interviewType: 'Motivation',
-    presidentNotes: ''
-  };
-  isSubmittingInterview = false;
-
   constructor(
     private route: ActivatedRoute,
     private api: ApiService
@@ -125,70 +113,44 @@ export class ApplicationsKanbanComponent implements OnInit {
 
   drop(event: CdkDragDrop<any[]>): void {
     if (event.previousContainer === event.container) {
+      // Reordering within the same column visually (though status hasn't changed)
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-      return;
-    }
-    const newStatusStr = event.container.id;
-    if (newStatusStr === 'INTERVIEW') {
-      // Stocker l'event et afficher le modal
-      this.pendingInterviewEvent = event;
-      this.pendingInterviewApp = event.previousContainer.data[event.previousIndex];
-      this.showInterviewModal = true;
-      return;
-    }
-    // Comportement normal pour les autres colonnes
-    transferArrayItem(
-      event.previousContainer.data,
-      event.container.data,
-      event.previousIndex,
-      event.currentIndex
-    );
-    const movedApp = event.container.data[event.currentIndex];
-    const previousStatusStr = movedApp.status;
-    movedApp.status = newStatusStr;
-    this.api.updateApplicationStatus(movedApp.id, newStatusStr).subscribe({
-      next: () => { this.showToast(); this.loadStats(); },
-      error: () => {
-        transferArrayItem(event.container.data, event.previousContainer.data, event.currentIndex, event.previousIndex);
-        movedApp.status = previousStatusStr;
-        alert('Failed to save status on the server. Change reverted.');
-      }
-    });
-  }
+    } else {
+      // Visually move across columns
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
 
-  confirmInterview(): void {
-    if (!this.pendingInterviewEvent || !this.pendingInterviewApp) return;
-    this.isSubmittingInterview = true;
-    const event = this.pendingInterviewEvent;
-    const app = this.pendingInterviewApp;
-    this.api.passToInterview(app.id, this.interviewForm).subscribe({
-      next: () => {
-        transferArrayItem(
-          event.previousContainer.data,
-          event.container.data,
-          event.previousIndex,
-          event.currentIndex
-        );
-        const movedApp = event.container.data[event.currentIndex];
-        movedApp.status = 'INTERVIEW';
-        this.showInterviewModal = false;
-        this.pendingInterviewEvent = null;
-        this.pendingInterviewApp = null;
-        this.isSubmittingInterview = false;
-        this.showToast();
-        this.loadStats();
-      },
-      error: () => {
-        this.isSubmittingInterview = false;
-        alert('Erreur lors du passage en entretien.');
-      }
-    });
-  }
+      // The dropped item
+      const movedApp = event.container.data[event.currentIndex];
+      // Get the column ID (which corresponds to Enum string)
+      const newStatusStr = event.container.id; 
+      
+      const previousStatusStr = movedApp.status;
+      movedApp.status = newStatusStr;
 
-  cancelInterview(): void {
-    this.showInterviewModal = false;
-    this.pendingInterviewEvent = null;
-    this.pendingInterviewApp = null;
+      // Persist across API
+      this.api.updateApplicationStatus(movedApp.id, newStatusStr).subscribe({
+        next: () => {
+          this.showToast();
+          this.loadStats();
+        },
+        error: () => {
+          // Rollback visually on error
+          transferArrayItem(
+            event.container.data,
+            event.previousContainer.data,
+            event.currentIndex,
+            event.previousIndex
+          );
+          movedApp.status = previousStatusStr; // restore old status prop
+          alert('Failed to save status on the server. Change reverted.');
+        }
+      });
+    }
   }
 
   // ─── Modal ────────────────────────────────────────────────

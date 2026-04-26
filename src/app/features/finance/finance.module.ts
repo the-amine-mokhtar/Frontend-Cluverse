@@ -4,16 +4,16 @@ import { FinanceRoutingModule } from './finance-routing.module';
 import { FinanceHomeComponent } from './components/finance-home/finance-home.component';
 import { FinanceBudgetsComponent } from './components/finance-budgets/finance-budgets.component';
 import { FinanceTransactionsComponent } from './components/finance-transactions/finance-transactions.component';
-import { FinanceSponsorPaymentComponent } from './components/finance-sponsor-payment/finance-sponsor-payment.component';
 import { TreasurerChatWidgetComponent } from './components/treasurer-chat-widget/treasurer-chat-widget.component';
+import { FinanceReportsComponent } from './components/finance-reports/finance-reports.component';
 
 @NgModule({
   declarations: [
     FinanceHomeComponent,
     FinanceBudgetsComponent,
     FinanceTransactionsComponent,
-    FinanceSponsorPaymentComponent,
-    TreasurerChatWidgetComponent
+    TreasurerChatWidgetComponent,
+    FinanceReportsComponent
   ],
   imports: [SharedModule, FinanceRoutingModule]
 })

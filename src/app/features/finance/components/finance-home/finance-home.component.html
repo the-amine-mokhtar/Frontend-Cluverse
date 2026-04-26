@@ -15,12 +15,8 @@
     <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/home">Dashboard</a>
     <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
     <a class="finance-nav__item" routerLink="/dashboard/finance/transactions">Transactions</a>
-    <a class="finance-nav__item" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/reports">Reports</a>
   </nav>
-
-  <section class="treasurer-chat-block">
-    <app-treasurer-chat-widget></app-treasurer-chat-widget>
-  </section>
 
   <section class="exercise-bar">
     <label class="exercise-bar__label" for="exerciseYear">Exercice</label>
@@ -402,7 +398,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let row of monthlyTrendRows">
+          <tr *ngFor="let row of pagedTrendRows">
             <td>{{ row.monthLabel }}</td>
             <td class="trend-table__income">{{ formatCurrency(row.income) }}</td>
             <td class="trend-table__expense">{{ formatCurrency(row.expense) }}</td>
@@ -412,98 +408,13 @@
           </tr>
         </tbody>
       </table>
+      <div class="trend-pagination">
+        <button class="trend-pagination__btn" (click)="trendPrev()" [disabled]="trendPage === 0">&#8249;</button>
+        <span class="trend-pagination__info">{{ trendPage + 1 }} / {{ trendTotalPages }}</span>
+        <button class="trend-pagination__btn" (click)="trendNext()" [disabled]="trendPage === trendTotalPages - 1">&#8250;</button>
+      </div>
     </div>
   </section>
-
-  <div class="finance-grid finance-grid--reports">
-    <section class="panel">
-      <header class="panel__header">
-        <div>
-          <h2 class="panel__title">Bilan financier</h2>
-          <p class="panel__subtitle">Actif vs passif a la cloture {{ selectedExerciseYear }}</p>
-        </div>
-      </header>
-
-      <div class="report-grid">
-        <div class="report-block">
-          <h3 class="report-block__title">Actif</h3>
-          <p class="report-line"><span>Tresorerie</span><strong>{{ formatCurrency(closingCash) }}</strong></p>
-          <p class="report-line"><span>Creances</span><strong>N/A</strong></p>
-        </div>
-
-        <div class="report-block">
-          <h3 class="report-block__title">Passif</h3>
-          <p class="report-line"><span>Dettes</span><strong>N/A</strong></p>
-          <p class="report-line"><span>Fonds propres (estime)</span><strong>{{ formatCurrency(equityTotal) }}</strong>
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <header class="panel__header">
-        <div>
-          <h2 class="panel__title">Compte de resultat</h2>
-          <p class="panel__subtitle">Recettes, depenses et resultat net</p>
-        </div>
-      </header>
-
-      <div class="report-block">
-        <p class="report-line"><span>Recettes</span><strong class="report-line__income">{{ formatCurrency(incomeTotal)
-            }}</strong></p>
-        <p class="report-line"><span>Depenses</span><strong class="report-line__expense">{{ formatCurrency(expenseTotal)
-            }}</strong></p>
-        <p class="report-line report-line--total">
-          <span>Resultat net</span>
-          <strong [class.report-line__income]="netResult >= 0" [class.report-line__expense]="netResult < 0">
-            {{ netResult >= 0 ? '+' : '-' }}{{ formatCurrency(absValue(netResult)) }}
-          </strong>
-        </p>
-      </div>
-    </section>
-
-    <section class="panel">
-      <header class="panel__header">
-        <div>
-          <h2 class="panel__title">Rapport de tresorerie</h2>
-          <p class="panel__subtitle">Liquidites, rapprochement et previsions</p>
-        </div>
-      </header>
-
-      <div class="report-block">
-        <p class="report-line"><span>Solde initial</span><strong>{{ formatCurrency(openingCash) }}</strong></p>
-        <p class="report-line"><span>Entrees</span><strong class="report-line__income">{{ formatCurrency(incomeTotal)
-            }}</strong></p>
-        <p class="report-line"><span>Sorties</span><strong class="report-line__expense">{{ formatCurrency(expenseTotal)
-            }}</strong></p>
-        <p class="report-line report-line--total"><span>Solde final calcule</span><strong>{{ formatCurrency(closingCash)
-            }}</strong></p>
-      </div>
-
-      <div class="report-block">
-        <label class="report-input__label" for="declaredBalance">Solde bancaire declare</label>
-        <input id="declaredBalance" class="report-input" type="number" step="0.01" [(ngModel)]="declaredBankBalance"
-          placeholder="Entrer le solde du releve" />
-        <p class="report-line">
-          <span>Ecart de rapprochement</span>
-          <strong *ngIf="reconciliationGap !== null">{{ formatCurrency(reconciliationGap) }}</strong>
-          <strong *ngIf="reconciliationGap === null">--</strong>
-        </p>
-      </div>
-
-      <div class="report-block">
-        <p class="report-line"><span>Moyenne entrees mensuelles (6m)</span><strong>{{ formatCurrency(avgMonthlyInflow)
-            }}</strong></p>
-        <p class="report-line"><span>Moyenne sorties mensuelles (6m)</span><strong>{{ formatCurrency(avgMonthlyOutflow)
-            }}</strong></p>
-        <p class="report-line"><span>Projection nette / mois</span><strong
-            [class.report-line__income]="projectedNetFlow >= 0" [class.report-line__expense]="projectedNetFlow < 0">{{
-            projectedNetFlow >= 0 ? '+' : '-' }}{{ formatCurrency(absValue(projectedNetFlow)) }}</strong></p>
-        <p class="report-line report-line--total"><span>Solde projete a {{ forecastMonths }} mois</span><strong>{{
-            formatCurrency(projectedClosingCash) }}</strong></p>
-      </div>
-    </section>
-  </div>
 
   <div class="finance-grid">
     <section class="panel">
@@ -517,8 +428,8 @@
 
       <div class="panel-tools">
         <input class="panel-tools__search" type="text" placeholder="Search budget cards..."
-          [(ngModel)]="budgetSearchTerm" />
-        <select class="panel-tools__filter" [(ngModel)]="budgetFilter">
+          [(ngModel)]="budgetSearchTerm" (ngModelChange)="resetBudgetPage()" />
+        <select class="panel-tools__filter" [(ngModel)]="budgetFilter" (ngModelChange)="resetBudgetPage()">
           <option value="all">All Utilization</option>
           <option value="healthy">Healthy (&lt;70%)</option>
           <option value="warning">Warning (70-90%)</option>
@@ -527,7 +438,7 @@
       </div>
 
       <div class="budget-list">
-        <article class="budget-card" *ngFor="let budget of filteredBudgetItems">
+        <article class="budget-card" *ngFor="let budget of pagedBudgetItems">
           <div class="budget-card__top">
             <div>
               <h3 class="budget-card__title">{{ budget.title }}</h3>
@@ -549,6 +460,11 @@
         <p class="status" *ngIf="!isLoading && filteredBudgetItems.length === 0 && !errorMessage">No budgets match your
           search/filter.</p>
       </div>
+      <div class="trend-pagination" *ngIf="budgetTotalPages > 1">
+        <button class="trend-pagination__btn" (click)="budgetPrev()" [disabled]="budgetPage === 0">&#8249;</button>
+        <span class="trend-pagination__info">{{ budgetPage + 1 }} / {{ budgetTotalPages }}</span>
+        <button class="trend-pagination__btn" (click)="budgetNext()" [disabled]="budgetPage === budgetTotalPages - 1">&#8250;</button>
+      </div>
     </section>
 
     <section class="panel">
@@ -562,8 +478,8 @@
 
       <div class="panel-tools">
         <input class="panel-tools__search" type="text" placeholder="Search transactions..."
-          [(ngModel)]="transactionSearchTerm" />
-        <select class="panel-tools__filter" [(ngModel)]="transactionFilter">
+          [(ngModel)]="transactionSearchTerm" (ngModelChange)="resetTransactionPage()" />
+        <select class="panel-tools__filter" [(ngModel)]="transactionFilter" (ngModelChange)="resetTransactionPage()">
           <option value="all">All Types</option>
           <option value="income">Income</option>
           <option value="expense">Expense</option>
@@ -571,7 +487,7 @@
       </div>
 
       <div class="transactions-list">
-        <article class="transaction-row" *ngFor="let transaction of filteredRecentTransactions">
+        <article class="transaction-row" *ngFor="let transaction of pagedRecentTransactions">
           <div>
             <h3 class="transaction-row__title">{{ transaction.description }}</h3>
             <p class="transaction-row__meta">{{ transaction.category }} . {{ transaction.date }} . {{
@@ -585,6 +501,11 @@
         </article>
         <p class="status" *ngIf="!isLoading && filteredRecentTransactions.length === 0 && !errorMessage">No transactions
           match your search/filter.</p>
+      </div>
+      <div class="trend-pagination" *ngIf="transactionTotalPages > 1">
+        <button class="trend-pagination__btn" (click)="transactionPrev()" [disabled]="transactionPage === 0">&#8249;</button>
+        <span class="trend-pagination__info">{{ transactionPage + 1 }} / {{ transactionTotalPages }}</span>
+        <button class="trend-pagination__btn" (click)="transactionNext()" [disabled]="transactionPage === transactionTotalPages - 1">&#8250;</button>
       </div>
     </section>
   </div>
