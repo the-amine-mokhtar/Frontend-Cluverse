@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 
@@ -76,38 +76,43 @@ export class SponsorService {
 
   constructor(private http: HttpClient) {}
 
+  private authHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token') ?? '';
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
   getAll(): Observable<Sponsor[]> {
-    return this.http.get<Sponsor[]>(this.baseUrl);
+    return this.http.get<Sponsor[]>(this.baseUrl, { headers: this.authHeaders() });
   }
 
   create(payload: CreateSponsorRequest): Observable<Sponsor> {
-    return this.http.post<Sponsor>(this.baseUrl, payload);
+    return this.http.post<Sponsor>(this.baseUrl, payload, { headers: this.authHeaders() });
   }
 
   update(payload: UpdateSponsorRequest): Observable<Sponsor> {
-    return this.http.put<Sponsor>(`${this.baseUrl}/${payload.id}`, payload);
+    return this.http.put<Sponsor>(`${this.baseUrl}/${payload.id}`, payload, { headers: this.authHeaders() });
   }
 
   delete(id: number, reason: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}?reason=${encodeURIComponent(reason)}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}?reason=${encodeURIComponent(reason)}`, { headers: this.authHeaders() });
   }
 
   uploadLogo(id: number, file: File): Observable<Sponsor> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<Sponsor>(`${this.baseUrl}/${id}/logo`, formData);
+    return this.http.post<Sponsor>(`${this.baseUrl}/${id}/logo`, formData, { headers: this.authHeaders() });
   }
 
   getEmails(sponsorId: number): Observable<SponsorEmail[]> {
-    return this.http.get<SponsorEmail[]>(`${this.baseUrl}/${sponsorId}/emails`);
+    return this.http.get<SponsorEmail[]>(`${this.baseUrl}/${sponsorId}/emails`, { headers: this.authHeaders() });
   }
 
   getEmail(sponsorId: number, emailId: number): Observable<SponsorEmail> {
-    return this.http.get<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}`);
+    return this.http.get<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}`, { headers: this.authHeaders() });
   }
 
   sendEmail(sponsorId: number, payload: SendSponsorEmailRequest): Observable<SponsorEmail> {
-    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails`, payload);
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails`, payload, { headers: this.authHeaders() });
   }
 
   sendEmailWithFiles(sponsorId: number, payload: SendSponsorEmailRequest, files: File[]): Observable<SponsorEmail> {
@@ -115,11 +120,11 @@ export class SponsorService {
     formData.append('subject', payload.subject);
     formData.append('body', payload.body);
     files.forEach(file => formData.append('files', file));
-    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/with-files`, formData);
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/with-files`, formData, { headers: this.authHeaders() });
   }
 
   replyEmail(sponsorId: number, emailId: number, payload: SendSponsorEmailRequest): Observable<SponsorEmail> {
-    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/reply`, payload);
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/reply`, payload, { headers: this.authHeaders() });
   }
 
   replyEmailWithFiles(sponsorId: number, emailId: number, payload: SendSponsorEmailRequest, files: File[]): Observable<SponsorEmail> {
@@ -127,18 +132,18 @@ export class SponsorService {
     formData.append('subject', payload.subject);
     formData.append('body', payload.body);
     files.forEach(file => formData.append('files', file));
-    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/reply-with-files`, formData);
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/reply-with-files`, formData, { headers: this.authHeaders() });
   }
 
   pinEmail(sponsorId: number, emailId: number): Observable<SponsorEmail> {
-    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/pin`, {});
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/pin`, {}, { headers: this.authHeaders() });
   }
 
   unpinEmail(sponsorId: number, emailId: number): Observable<SponsorEmail> {
-    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/unpin`, {});
+    return this.http.post<SponsorEmail>(`${this.baseUrl}/${sponsorId}/emails/${emailId}/unpin`, {}, { headers: this.authHeaders() });
   }
 
   syncInboundEmails(): Observable<SponsorEmail[]> {
-    return this.http.post<SponsorEmail[]>(`${this.baseUrl}/emails/sync-inbound`, {});
+    return this.http.post<SponsorEmail[]>(`${this.baseUrl}/emails/sync-inbound`, {}, { headers: this.authHeaders() });
   }
 }

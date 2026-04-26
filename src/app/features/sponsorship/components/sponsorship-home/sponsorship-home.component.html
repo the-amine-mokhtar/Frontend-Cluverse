@@ -1,64 +1,324 @@
 <div class="sponsors">
   <div class="sponsors__header">
     <div>
-      <h2 class="sponsors__title">Sponsors</h2>
-      <p class="sponsors__subtitle">Invite and track sponsor confirmations</p>
+      <h2 class="sponsors__title">{{ sectionTab === 'SPONSORSHIPS' ? 'Sponsorships' : 'Sponsors' }}</h2>
+      <p class="sponsors__subtitle">
+        {{ sectionTab === 'SPONSORSHIPS' ? 'Manage sponsorship pipeline with drag and drop' : 'Invite and track sponsor confirmations' }}
+      </p>
     </div>
 
     <div class="sponsors__header-actions">
-      <div class="sponsors__filter-wrap">
-        <button class="sponsors__filter-btn" (click)="toggleFilterMenu()">
-          Filter
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"></polyline>
+      <ng-container *ngIf="sectionTab === 'SPONSORS'">
+        <div class="sponsors__filter-wrap">
+          <button class="sponsors__filter-btn" (click)="toggleFilterMenu()">
+            Filter
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <div class="sponsors__filter-menu" *ngIf="showFilterMenu">
+            <div class="sponsors__form-field sponsors__form-field--compact">
+              <label>Status</label>
+              <select [(ngModel)]="filterStatus" (ngModelChange)="onFiltersChanged()">
+                <option value="ALL">All</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="DENIED">Denied</option>
+              </select>
+            </div>
+
+            <div class="sponsors__form-field sponsors__form-field--compact">
+              <label>Country Code</label>
+              <select [(ngModel)]="filterCountryCode" (ngModelChange)="onFiltersChanged()">
+                <option value="ALL">All Countries</option>
+                <option *ngFor="let option of countryCodeOptions" [value]="option.code">
+                  {{ option.flag }} {{ option.code }} ({{ option.label }})
+                </option>
+              </select>
+            </div>
+
+            <div class="sponsors__form-field sponsors__form-field--compact">
+              <label>Search</label>
+              <input type="text" [(ngModel)]="filterQuery" (ngModelChange)="onFiltersChanged()" placeholder="Name, email or phone" />
+            </div>
+
+            <div class="sponsors__form-field sponsors__form-field--compact">
+              <label>Sort</label>
+              <select [(ngModel)]="filterSort" (ngModelChange)="onFiltersChanged()">
+                <option value="NEWEST">Newest</option>
+                <option value="OLDEST">Oldest</option>
+                <option value="NAME_ASC">Name A-Z</option>
+                <option value="NAME_DESC">Name Z-A</option>
+              </select>
+            </div>
+
+            <button class="sponsors__clear-filter-btn" (click)="clearFilters()">Clear filters</button>
+          </div>
+        </div>
+
+        <button class="sponsors__icon-btn sponsors__icon-btn--view" (click)="toggleSponsorsCurveView()" [title]="showSponsorsCurve ? 'Show sponsors table' : 'Show statistical curves'">
+          <svg *ngIf="!showSponsorsCurve" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 17 8 12 13 15 21 7"></polyline>
+            <polyline points="16 7 21 7 21 12"></polyline>
+          </svg>
+          <svg *ngIf="showSponsorsCurve" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <line x1="9" y1="4" x2="9" y2="20"></line>
           </svg>
         </button>
 
-        <div class="sponsors__filter-menu" *ngIf="showFilterMenu">
-          <div class="sponsors__form-field sponsors__form-field--compact">
-            <label>Status</label>
-            <select [(ngModel)]="filterStatus" (ngModelChange)="onFiltersChanged()">
-              <option value="ALL">All</option>
-              <option value="PENDING">Pending</option>
-              <option value="CONFIRMED">Confirmed</option>
-              <option value="DENIED">Denied</option>
-            </select>
-          </div>
+        <button class="sponsors__add-btn" (click)="openAddForm()">
+          Add Sponsor
+        </button>
+      </ng-container>
 
-          <div class="sponsors__form-field sponsors__form-field--compact">
-            <label>Country Code</label>
-            <select [(ngModel)]="filterCountryCode" (ngModelChange)="onFiltersChanged()">
-              <option value="ALL">All Countries</option>
-              <option *ngFor="let option of countryCodeOptions" [value]="option.code">
-                {{ option.flag }} {{ option.code }} ({{ option.label }})
-              </option>
-            </select>
-          </div>
-
-          <div class="sponsors__form-field sponsors__form-field--compact">
-            <label>Search</label>
-            <input type="text" [(ngModel)]="filterQuery" (ngModelChange)="onFiltersChanged()" placeholder="Name, email or phone" />
-          </div>
-
-          <div class="sponsors__form-field sponsors__form-field--compact">
-            <label>Sort</label>
-            <select [(ngModel)]="filterSort" (ngModelChange)="onFiltersChanged()">
-              <option value="NEWEST">Newest</option>
-              <option value="OLDEST">Oldest</option>
-              <option value="NAME_ASC">Name A-Z</option>
-              <option value="NAME_DESC">Name Z-A</option>
-            </select>
-          </div>
-
-          <button class="sponsors__clear-filter-btn" (click)="clearFilters()">Clear filters</button>
-        </div>
-      </div>
-
-      <button class="sponsors__add-btn" (click)="openAddForm()">
-        Add Sponsor
-      </button>
+      <ng-container *ngIf="sectionTab === 'SPONSORSHIPS'">
+        <input
+          class="sponsors__kanban-search"
+          type="text"
+          [(ngModel)]="sponsorshipSearchQuery"
+          placeholder="Search by sponsor, event, notes, amount..."
+        />
+        <button class="sponsors__add-btn" (click)="openAddSponsorshipForm()">New Sponsorship</button>
+      </ng-container>
     </div>
   </div>
+
+  <ng-container *ngIf="sectionTab === 'SPONSORSHIPS'">
+    <div class="sponsors__error" *ngIf="sponsorshipsError">{{ sponsorshipsError }}</div>
+
+    <div class="sponsors__overlay" *ngIf="showAddSponsorshipForm" (click)="cancelAddSponsorshipForm()">
+      <div class="sponsors__dialog sponsors__dialog--sponsorship" (click)="$event.stopPropagation()">
+        <h3 class="sponsors__dialog-title">Create Sponsorship</h3>
+        <div class="sponsors__form-grid">
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Sponsor</label>
+            <select [(ngModel)]="sponsorshipForm.sponsorId">
+              <option [ngValue]="0">Select sponsor</option>
+              <option *ngFor="let sponsor of sponsors" [ngValue]="sponsor.id">{{ sponsor.name }}</option>
+            </select>
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Event Name</label>
+            <input type="text" [(ngModel)]="sponsorshipForm.eventName" placeholder="Hackathon 2026" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Expected Amount</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="sponsorshipForm.expectedAmount" />
+          </div>
+        </div>
+        <div class="sponsors__form-field">
+          <label>Proposal Summary</label>
+          <textarea rows="3" [(ngModel)]="sponsorshipForm.proposalSummary" placeholder="Persuasive summary for this opportunity"></textarea>
+        </div>
+        <div class="sponsors__form-field">
+          <label>Notes</label>
+          <textarea rows="2" [(ngModel)]="sponsorshipForm.notes" placeholder="Internal notes"></textarea>
+        </div>
+        <div class="sponsors__dialog-actions">
+          <button class="sponsors__btn sponsors__btn--secondary" (click)="cancelAddSponsorshipForm()">Cancel</button>
+          <button class="sponsors__btn sponsors__btn--primary" [disabled]="sponsorshipSaving" (click)="createSponsorship()">
+            {{ sponsorshipSaving ? 'Creating...' : 'Create Card' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sponsors__overlay" *ngIf="showEditSponsorshipForm" (click)="cancelEditSponsorshipForm()">
+      <div class="sponsors__dialog sponsors__dialog--sponsorship" (click)="$event.stopPropagation()">
+        <h3 class="sponsors__dialog-title">Edit Sponsorship</h3>
+        <div class="sponsors__form-grid">
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Event Name</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.eventName" [disabled]="!isFieldEditable('eventName')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Expected Amount</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="sponsorshipEditForm.expectedAmount" [disabled]="!isFieldEditable('expectedAmount')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Agreed Amount</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="sponsorshipEditForm.agreedAmount" [disabled]="!isFieldEditable('agreedAmount')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Paid Amount</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="sponsorshipEditForm.paidAmount" [disabled]="!isFieldEditable('paidAmount')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Proposal Document Name</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.proposalDocumentName" [disabled]="!isFieldEditable('proposalDocumentName')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Contract Document Name</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.contractDocumentName" [disabled]="!isFieldEditable('contractDocumentName')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Signed Document Name</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.signedDocumentName" [disabled]="!isFieldEditable('signedDocumentName')" />
+          </div>
+          <div class="sponsors__form-field sponsors__form-field--compact">
+            <label>Contract Reference</label>
+            <input type="text" [(ngModel)]="sponsorshipEditForm.contractReference" [disabled]="!isFieldEditable('contractReference')" />
+          </div>
+        </div>
+        <div class="sponsors__form-field">
+          <label>Proposal Summary</label>
+          <textarea rows="3" [(ngModel)]="sponsorshipEditForm.proposalSummary" [disabled]="!isFieldEditable('proposalSummary')"></textarea>
+        </div>
+        <div class="sponsors__form-field">
+          <label>Notes</label>
+          <textarea rows="2" [(ngModel)]="sponsorshipEditForm.notes" [disabled]="!isFieldEditable('notes')"></textarea>
+        </div>
+
+        <div class="sponsors__pipeline-guide" *ngIf="getEditMoveGuide() as guide">
+          <p class="sponsors__pipeline-guide-title">Drag and Drop Conditions</p>
+          <p class="sponsors__pipeline-guide-sub">{{ guide.from }} -> {{ guide.to }}</p>
+          <ul class="sponsors__pipeline-guide-list">
+            <li *ngFor="let req of guide.requirements" [class.sponsors__pipeline-guide-item--ok]="req.met" [class.sponsors__pipeline-guide-item--ko]="!req.met">
+              <span>{{ req.met ? 'OK' : 'Missing' }}</span>
+              <span>{{ req.label }}</span>
+            </li>
+          </ul>
+          <p class="sponsors__pipeline-guide-note">{{ guide.note }}</p>
+          <p class="sponsors__pipeline-guide-status" [class.sponsors__pipeline-guide-status--ok]="guide.canMove" [class.sponsors__pipeline-guide-status--ko]="!guide.canMove">
+            {{ guide.canMove ? 'This card can move to the next column.' : 'This card cannot move to the next column yet.' }}
+          </p>
+        </div>
+
+        <div class="sponsors__dialog-actions">
+          <button class="sponsors__btn sponsors__btn--secondary" (click)="cancelEditSponsorshipForm()">Cancel</button>
+          <button class="sponsors__btn sponsors__btn--primary" [disabled]="sponsorshipSaving" (click)="saveSponsorshipEdit()">
+            {{ sponsorshipSaving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sponsors__overlay" *ngIf="showSponsorshipDetails" (click)="closeSponsorshipDetails()">
+      <div class="sponsors__dialog sponsors__dialog--sponsorship" (click)="$event.stopPropagation()">
+        <h3 class="sponsors__dialog-title">Sponsorship Details</h3>
+        <div class="sponsors__details-grid" *ngIf="selectedSponsorshipDetails as item">
+          <div class="sponsors__detail-item"><span>Sponsor Name</span><strong>{{ item.sponsorName || '--' }}</strong></div>
+          <div class="sponsors__detail-item"><span>Event Name</span><strong>{{ item.eventName || '--' }}</strong></div>
+          <div class="sponsors__detail-item"><span>Status</span><strong>{{ statusLabel(item.status) }}</strong></div>
+          <div class="sponsors__detail-item"><span>Outreach Decision</span><strong>{{ item.outreachDecision || '--' }}</strong></div>
+          <div class="sponsors__detail-item"><span>Created At</span><strong>{{ item.createdAt ? (item.createdAt | date:'medium') : '--' }}</strong></div>
+
+          <div class="sponsors__detail-item sponsors__detail-item--full"><span>Proposal Summary</span><strong>{{ item.proposalSummary || '--' }}</strong></div>
+          <div class="sponsors__detail-item sponsors__detail-item--full"><span>Internal Notes</span><strong>{{ item.notes || '--' }}</strong></div>
+
+          <div class="sponsors__detail-docs sponsors__detail-item--full">
+            <p class="sponsors__detail-docs-title">Documents</p>
+            <div class="sponsors__detail-docs-grid">
+              <div class="sponsors__detail-doc">
+                <span>Proposal</span>
+                <strong>{{ item.proposalDocumentName || '--' }}</strong>
+                <button
+                  class="sponsors__doc-view"
+                  type="button"
+                  [disabled]="!item.proposalDocumentName"
+                  (click)="openSponsorshipDoc('Proposals', item.proposalDocumentName)"
+                >
+                  View
+                </button>
+              </div>
+              <div class="sponsors__detail-doc">
+                <span>Contract</span>
+                <strong>{{ item.contractDocumentName || '--' }}</strong>
+                <button
+                  class="sponsors__doc-view"
+                  type="button"
+                  [disabled]="!item.contractDocumentName"
+                  (click)="openSponsorshipDoc('Contracts', item.contractDocumentName)"
+                >
+                  View
+                </button>
+              </div>
+              <div class="sponsors__detail-doc">
+                <span>Signed</span>
+                <strong>{{ item.signedDocumentName || '--' }}</strong>
+                <button
+                  class="sponsors__doc-view"
+                  type="button"
+                  [disabled]="!item.signedDocumentName"
+                  (click)="openSponsorshipDoc('Signed', item.signedDocumentName)"
+                >
+                  View
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sponsors__dialog-actions">
+          <button class="sponsors__btn sponsors__btn--secondary" (click)="closeSponsorshipDetails()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sponsors__card sponsors__kanban-loading" *ngIf="sponsorshipsLoading">
+      Loading sponsorship pipeline...
+    </div>
+
+    <div class="sponsors__kanban-board" *ngIf="!sponsorshipsLoading">
+      <div class="sponsors__kanban-column" *ngFor="let column of sponsorshipColumns">
+        <div class="sponsors__kanban-column-head">
+          <span>{{ column.label }}</span>
+          <strong>{{ sponsorshipCards(column.status).length }}</strong>
+        </div>
+
+        <div
+          class="sponsors__kanban-column-body"
+          [id]="dropListId(column.status)"
+          cdkDropList
+          [cdkDropListData]="sponsorshipCards(column.status)"
+          [cdkDropListConnectedTo]="connectedDropLists(column.status)"
+          (cdkDropListDropped)="onSponsorshipDrop($event, column.status)"
+        >
+          <article
+            class="sponsors__kanban-card"
+            [class.sponsors__kanban-card--declined]="isDeclinedOutreach(item)"
+            [class.sponsors__kanban-card--paid]="column.status === 'PAID'"
+            *ngFor="let item of sponsorshipCards(column.status)"
+            cdkDrag
+            [cdkDragDisabled]="isSponsorshipDragDisabled(item)"
+            [cdkDragData]="item"
+          >
+            <div class="sponsors__kanban-card-head">
+              <div class="sponsors__kanban-sponsor">
+                <img *ngIf="item.sponsorLogoUrl" [src]="item.sponsorLogoUrl" alt="Sponsor logo" />
+                <span *ngIf="!item.sponsorLogoUrl">SP</span>
+              </div>
+              <div>
+                <h4>{{ item.sponsorName }}</h4>
+                <p>{{ item.eventName || 'No event yet' }}</p>
+                <span class="sponsors__declined-pill" *ngIf="isDeclinedOutreach(item)">Declined</span>
+              </div>
+            </div>
+
+            <p class="sponsors__kanban-created">Created: {{ item.createdAt ? (item.createdAt | date:'mediumDate') : '--' }}</p>
+
+            <div class="sponsors__kanban-actions">
+              <button class="sponsors__btn sponsors__btn--secondary" *ngIf="item.status === 'PROSPECTING'" [disabled]="sponsorshipSaving" (click)="openEditSponsorshipForm(item)">
+                Edit
+              </button>
+              <button class="sponsors__btn sponsors__btn--secondary" [disabled]="sponsorshipSaving" (click)="openSponsorshipDetails(item)">
+                More
+              </button>
+              <button class="sponsors__btn sponsors__btn--danger" [disabled]="sponsorshipSaving" (click)="deleteSponsorship(item)">
+                Delete
+              </button>
+            </div>
+          </article>
+
+          <div class="sponsors__kanban-empty" *ngIf="sponsorshipCards(column.status).length === 0">Drop cards here</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="sectionTab === 'SPONSORS'">
 
   <div class="sponsors__error" *ngIf="loadError">{{ loadError }}</div>
 
@@ -66,93 +326,269 @@
     <p class="sponsors__loading">Loading sponsors...</p>
   </div>
 
-  <div class="sponsors__card" *ngIf="!isLoading">
-    <div class="sponsors__table-wrap" *ngIf="filteredSponsors.length > 0; else emptyState">
-      <table class="sponsors__table">
-        <colgroup>
-          <col class="sponsors__col sponsors__col--logo" />
-          <col class="sponsors__col sponsors__col--name" />
-          <col class="sponsors__col sponsors__col--email" />
-          <col class="sponsors__col sponsors__col--phone" />
-          <col class="sponsors__col sponsors__col--join-date" />
-          <col class="sponsors__col sponsors__col--status" />
-          <col class="sponsors__col sponsors__col--actions" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th class="sponsors__th sponsors__th--center">Logo</th>
-            <th class="sponsors__th sponsors__th--center">Name</th>
-            <th class="sponsors__th sponsors__th--center">Email</th>
-            <th class="sponsors__th sponsors__th--center">Phone</th>
-            <th class="sponsors__th sponsors__th--center">Join Date</th>
-            <th class="sponsors__th sponsors__th--center">Status</th>
-            <th class="sponsors__th sponsors__th--center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            *ngFor="let sponsor of pagedSponsors"
-            [class.sponsors__row--menu-open]="activeActionMenuSponsorId === sponsor.id"
-          >
-            <td class="sponsors__td sponsors__td--center">
-              <div class="sponsors__logo-thumb" *ngIf="sponsor.logoUrl; else noLogo">
-                <img [src]="sponsor.logoUrl" alt="Sponsor logo" />
-              </div>
-              <ng-template #noLogo>
-                <div class="sponsors__logo-thumb sponsors__logo-thumb--placeholder">--</div>
-              </ng-template>
-            </td>
-            <td class="sponsors__td sponsors__td--center">{{ sponsor.name }}</td>
-            <td class="sponsors__td sponsors__td--center">{{ sponsor.contactEmail }}</td>
-            <td class="sponsors__td sponsors__td--center">{{ sponsor.phone }}</td>
-            <td class="sponsors__td sponsors__td--center">{{ formatJoinDate(sponsor) }}</td>
-            <td class="sponsors__td sponsors__td--center">
-              <span class="sponsors__status-badge" [ngClass]="statusClass(sponsor.status)">
-                {{ sponsor.status || 'PENDING' }}
-              </span>
-            </td>
-            <td class="sponsors__td sponsors__td--center sponsors__td--actions">
-              <div class="sponsors__actions-cell">
-                <button class="sponsors__icon-btn sponsors__icon-btn--edit" (click)="onEditSponsor(sponsor)" title="Modify sponsor">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-                  </svg>
-                </button>
-                <button class="sponsors__icon-btn sponsors__icon-btn--delete" (click)="onDeleteSponsor(sponsor)" title="Delete sponsor">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                  </svg>
-                </button>
-                <div class="sponsors__menu-wrap">
-                  <button class="sponsors__icon-btn sponsors__icon-btn--extra" (click)="toggleActionMenu(sponsor)" title="More actions">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
-                    </svg>
-                  </button>
-                  <div class="sponsors__menu-dropdown" *ngIf="activeActionMenuSponsorId === sponsor.id">
-                    <button (click)="onOpenEmails(sponsor)">Emails</button>
-                    <button (click)="onOpenHistory(sponsor)">History</button>
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <div class="sponsors__sponsors-layout" *ngIf="!isLoading">
+    <div class="sponsors__sponsors-main">
+      <div class="sponsors__card sponsors__card--table">
+        <ng-container *ngIf="!showSponsorsCurve; else curveView">
+          <div class="sponsors__table-wrap" *ngIf="filteredSponsors.length > 0; else emptyState">
+            <table class="sponsors__table">
+              <colgroup>
+                <col class="sponsors__col sponsors__col--logo" />
+                <col class="sponsors__col sponsors__col--name" />
+                <col class="sponsors__col sponsors__col--email" />
+                <col class="sponsors__col sponsors__col--phone" />
+                <col class="sponsors__col sponsors__col--join-date" />
+                <col class="sponsors__col sponsors__col--status" />
+                <col class="sponsors__col sponsors__col--actions" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="sponsors__th sponsors__th--center">Logo</th>
+                  <th class="sponsors__th sponsors__th--center">Name</th>
+                  <th class="sponsors__th sponsors__th--center">Email</th>
+                  <th class="sponsors__th sponsors__th--center">Phone</th>
+                  <th class="sponsors__th sponsors__th--center">Join Date</th>
+                  <th class="sponsors__th sponsors__th--center">Status</th>
+                  <th class="sponsors__th sponsors__th--center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let sponsor of pagedSponsors"
+                  [class.sponsors__row--menu-open]="activeActionMenuSponsorId === sponsor.id"
+                >
+                  <td class="sponsors__td sponsors__td--center">
+                    <div class="sponsors__logo-thumb" *ngIf="sponsor.logoUrl; else noLogo">
+                      <img [src]="sponsor.logoUrl" alt="Sponsor logo" />
+                    </div>
+                    <ng-template #noLogo>
+                      <div class="sponsors__logo-thumb sponsors__logo-thumb--placeholder">--</div>
+                    </ng-template>
+                  </td>
+                  <td class="sponsors__td sponsors__td--center">{{ sponsor.name }}</td>
+                  <td class="sponsors__td sponsors__td--center">{{ sponsor.contactEmail }}</td>
+                  <td class="sponsors__td sponsors__td--center">{{ sponsor.phone }}</td>
+                  <td class="sponsors__td sponsors__td--center">{{ formatJoinDate(sponsor) }}</td>
+                  <td class="sponsors__td sponsors__td--center">
+                    <span class="sponsors__status-badge" [ngClass]="statusClass(sponsor.status)">
+                      {{ sponsor.status || 'PENDING' }}
+                    </span>
+                  </td>
+                  <td class="sponsors__td sponsors__td--center sponsors__td--actions">
+                    <div class="sponsors__actions-cell">
+                      <button class="sponsors__icon-btn sponsors__icon-btn--edit" (click)="onEditSponsor(sponsor)" title="Modify sponsor">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                        </svg>
+                      </button>
+                      <button class="sponsors__icon-btn sponsors__icon-btn--delete" (click)="onDeleteSponsor(sponsor)" title="Delete sponsor">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                      </button>
+                      <div class="sponsors__menu-wrap">
+                        <button class="sponsors__icon-btn sponsors__icon-btn--extra" (click)="toggleActionMenu(sponsor)" title="More actions">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                          </svg>
+                        </button>
+                        <div class="sponsors__menu-dropdown" *ngIf="activeActionMenuSponsorId === sponsor.id">
+                          <button (click)="onOpenEmails(sponsor)">Emails</button>
+                          <button (click)="onOpenHistory(sponsor)">History</button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-    <ng-template #emptyState>
-      <div class="sponsors__empty">
-        <p class="sponsors__empty-title">No sponsors yet</p>
-        <p class="sponsors__empty-sub">Use Add Sponsor to send your first invitation.</p>
+          <ng-template #emptyState>
+            <div class="sponsors__empty">
+              <p class="sponsors__empty-title">No sponsors yet</p>
+              <p class="sponsors__empty-sub">Use Add Sponsor to send your first invitation.</p>
+            </div>
+          </ng-template>
+
+          <div class="sponsors__pagination" *ngIf="filteredSponsors.length > pageSize">
+            <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+            <span>Page {{ currentPage }} / {{ totalPages }}</span>
+            <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+          </div>
+        </ng-container>
+
+        <ng-template #curveView>
+          <div class="sponsors__curve-toolbar">
+            <p class="sponsors__curve-title">Sponsorship Curves Over Time</p>
+            <div class="sponsors__curve-filter">
+              <label>View</label>
+              <select [(ngModel)]="selectedCurveSponsorId">
+                <option [ngValue]="'ALL'">All Sponsors</option>
+                <option *ngFor="let option of sponsorsCurveFilterOptions" [ngValue]="option.sponsorId">{{ option.sponsorName }}</option>
+              </select>
+
+              <label>Month</label>
+              <select [(ngModel)]="selectedCurveMonthKey">
+                <option [ngValue]="'ALL'">All Months</option>
+                <option *ngFor="let month of curveMonthOptions" [ngValue]="month.key">{{ month.label }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="sponsors__curve-empty" *ngIf="sponsorsCurveEmptyState">
+            No sponsorship timeline available yet.
+          </div>
+
+          <div class="sponsors__curve-wrap" *ngIf="!sponsorsCurveEmptyState && sponsorsCurveModel as model">
+            <svg class="sponsors__curve-svg" [attr.viewBox]="'0 0 ' + curveViewBoxWidth + ' ' + curveViewBoxHeight" preserveAspectRatio="none" role="img" aria-label="Sponsorship curves over time">
+              <g>
+                <line
+                  *ngFor="let yTick of model.yTicks"
+                  [attr.x1]="curvePadding.left"
+                  [attr.x2]="curveViewBoxWidth - curvePadding.right"
+                  [attr.y1]="curveY(yTick, model.maxValue)"
+                  [attr.y2]="curveY(yTick, model.maxValue)"
+                  class="sponsors__curve-grid"
+                ></line>
+              </g>
+
+              <g>
+                <text
+                  *ngFor="let yTick of model.yTicks"
+                  [attr.x]="curvePadding.left - 10"
+                  [attr.y]="curveY(yTick, model.maxValue) + 3"
+                  class="sponsors__curve-axis-label sponsors__curve-axis-label--y"
+                >
+                  {{ yTick }}
+                </text>
+              </g>
+
+              <line
+                [attr.x1]="curvePadding.left"
+                [attr.x2]="curveViewBoxWidth - curvePadding.right"
+                [attr.y1]="curveViewBoxHeight - curvePadding.bottom"
+                [attr.y2]="curveViewBoxHeight - curvePadding.bottom"
+                class="sponsors__curve-axis"
+              ></line>
+
+              <g>
+                <text
+                  *ngFor="let xLabel of model.xLabels"
+                  [attr.x]="xLabel.x"
+                  [attr.y]="curveViewBoxHeight - curvePadding.bottom + 18"
+                  class="sponsors__curve-axis-label"
+                  [attr.opacity]="xLabel.show ? 1 : 0"
+                >
+                  {{ xLabel.label }}
+                </text>
+              </g>
+
+              <g *ngFor="let series of model.series">
+                <path [attr.d]="series.path" [attr.stroke]="series.color" class="sponsors__curve-line"></path>
+                <circle
+                  *ngFor="let point of series.points"
+                  [attr.cx]="point.x"
+                  [attr.cy]="point.y"
+                  r="3"
+                  [attr.fill]="series.color"
+                  class="sponsors__curve-point"
+                >
+                  <title>{{ series.sponsorName }} - {{ point.label }}: {{ point.value }} sponsorship{{ point.value === 1 ? '' : 's' }}</title>
+                </circle>
+              </g>
+            </svg>
+
+            <div class="sponsors__curve-legend">
+              <div class="sponsors__curve-legend-item" *ngFor="let series of curveLegendSeries">
+                <span [style.background]="series.color"></span>
+                <p>{{ series.sponsorName }}</p>
+              </div>
+            </div>
+          </div>
+        </ng-template>
       </div>
-    </ng-template>
-
-    <div class="sponsors__pagination" *ngIf="filteredSponsors.length > pageSize">
-      <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
-      <span>Page {{ currentPage }} / {{ totalPages }}</span>
-      <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
     </div>
+
+    <aside class="sponsors__sponsors-stats">
+      <div class="sponsors__card sponsors__stats-card sponsors__stats-card--pulse">
+        <p class="sponsors__stats-title">Sponsor Pulse</p>
+        <div class="sponsors__stats-list">
+          <div class="sponsors__stats-list-row">
+            <span>Total Sponsors</span>
+            <strong>{{ totalSponsorsCount }}</strong>
+          </div>
+          <div class="sponsors__stats-list-row">
+            <span>Confirmed</span>
+            <strong class="sponsors__stats-value sponsors__stats-value--confirmed">{{ confirmedSponsorsCount }}</strong>
+          </div>
+          <div class="sponsors__stats-list-row">
+            <span>Pending</span>
+            <strong class="sponsors__stats-value sponsors__stats-value--pending">{{ pendingSponsorsCount }}</strong>
+          </div>
+          <div class="sponsors__stats-list-row">
+            <span>Denied</span>
+            <strong class="sponsors__stats-value sponsors__stats-value--declined">{{ deniedSponsorsCount }}</strong>
+          </div>
+          <div class="sponsors__stats-list-row sponsors__stats-list-row--rate">
+            <span>Confirmation Rate</span>
+            <strong>{{ sponsorConfirmationRate }}%</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="sponsors__card sponsors__stats-card sponsors__stats-card--top-paid">
+        <p class="sponsors__stats-title">Top Sponsors by Paid Amount</p>
+        <div class="sponsors__stats-top" *ngIf="topPaidSponsors.length > 0; else noTopSponsors">
+          <div class="sponsors__stats-top-item" *ngFor="let row of topPaidSponsors; let i = index">
+            <img class="sponsors__stats-medal" [src]="topRankMedal(i)" [alt]="rankLabel(i) + ' medal'" />
+            <div class="sponsors__stats-sponsor-logo">
+              <img *ngIf="row.sponsorLogoUrl" [src]="row.sponsorLogoUrl" alt="Sponsor logo" />
+              <span *ngIf="!row.sponsorLogoUrl">SP</span>
+            </div>
+            <div>
+              <strong>{{ row.sponsorName }}</strong>
+              <small>{{ row.sponsorshipCount }} sponsorship{{ row.sponsorshipCount === 1 ? '' : 's' }}</small>
+            </div>
+            <span>{{ formatAmount(row.paidAmount) }}</span>
+          </div>
+        </div>
+        <ng-template #noTopSponsors>
+          <p class="sponsors__stats-empty">No sponsorship payments recorded yet.</p>
+        </ng-template>
+      </div>
+
+      <div class="sponsors__card sponsors__stats-card sponsors__stats-card--pie">
+        <p class="sponsors__stats-title">Sponsorship Lifecycle Split</p>
+        <div class="sponsors__stats-pie-layout">
+          <div class="sponsors__stats-pie sponsors__stats-pie--interactive" role="img" aria-label="Sponsorship lifecycle split pie chart">
+            <svg class="sponsors__stats-pie-svg" viewBox="0 0 160 160" preserveAspectRatio="xMidYMid meet">
+              <path
+                *ngFor="let slice of sponsorshipLifecycleSlices"
+                class="sponsors__stats-pie-slice"
+                [attr.d]="slice.path"
+                [attr.fill]="slice.color"
+                (mouseenter)="setLifecyclePieHover(slice.label)"
+                (mouseleave)="clearLifecyclePieHover()"
+              >
+                <title>{{ slice.label }} - {{ slice.percent }}%</title>
+              </path>
+
+              <text
+                *ngFor="let slice of sponsorshipLifecycleSlices"
+                class="sponsors__stats-pie-percent"
+                [attr.x]="slice.labelX"
+                [attr.y]="slice.labelY"
+                [attr.fill]="slice.textColor"
+              >
+                {{ slice.percent }}%
+              </text>
+            </svg>
+          </div>
+          <p class="sponsors__stats-pie-hover-label">{{ lifecyclePieHoverLabel || 'Hover a section to see its meaning' }}</p>
+        </div>
+      </div>
+    </aside>
   </div>
 
   <div class="sponsors__overlay" *ngIf="showAddForm" (click)="closeAddForm()">
@@ -441,6 +877,108 @@
     </div>
   </div>
 
+  <div class="sponsors__overlay" *ngIf="showSponsorHistoryModal" (click)="closeSponsorHistoryModal()">
+    <div class="sponsors__dialog sponsors__dialog--history" (click)="$event.stopPropagation()">
+      <div class="sponsors__history-header">
+        <div>
+          <h3 class="sponsors__dialog-title">Sponsorship History · {{ selectedHistorySponsor?.name }}</h3>
+          <p class="sponsors__history-subtitle">Track sponsorship progress and open one item to view full details.</p>
+        </div>
+        <div class="sponsors__history-header-actions">
+          <button class="sponsors__btn sponsors__btn--primary" (click)="exportSponsorHistoryPdf()">Export PDF</button>
+          <button class="sponsors__btn sponsors__btn--secondary" (click)="closeSponsorHistoryModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="sponsors__history-layout">
+        <section class="sponsors__history-list-wrap">
+          <div class="sponsors__history-list-head">
+            <span>Event</span>
+            <span>Column</span>
+            <span>State</span>
+          </div>
+
+          <button
+            type="button"
+            class="sponsors__history-row"
+            *ngFor="let item of pagedSponsorSponsorshipHistory"
+            [class.sponsors__history-row--active]="selectedHistorySponsorship?.id === item.id"
+            (click)="selectSponsorHistoryItem(item)"
+          >
+            <div>
+              <strong>{{ item.eventName || 'No event yet' }}</strong>
+              <small>Created {{ formatDateTime(item.createdAt) }}</small>
+            </div>
+            <span class="sponsors__history-column">{{ statusLabel(item.status) }}</span>
+            <span class="sponsors__history-state" [class.sponsors__history-state--done]="!isSponsorshipRunning(item)">
+              {{ sponsorshipRunningLabel(item) }}
+            </span>
+          </button>
+
+          <div class="sponsors__history-empty" *ngIf="pagedSponsorSponsorshipHistory.length === 0">
+            No sponsorships found for this sponsor.
+          </div>
+
+          <div class="sponsors__history-pagination" *ngIf="sponsorSponsorshipHistory.length > historyPageSize">
+            <button class="sponsors__btn sponsors__btn--secondary" (click)="goToSponsorHistoryPage(historyCurrentPage - 1)" [disabled]="historyCurrentPage === 1">Previous</button>
+            <span>Page {{ historyCurrentPage }} / {{ sponsorHistoryTotalPages }}</span>
+            <button class="sponsors__btn sponsors__btn--secondary" (click)="goToSponsorHistoryPage(historyCurrentPage + 1)" [disabled]="historyCurrentPage === sponsorHistoryTotalPages">Next</button>
+          </div>
+        </section>
+
+        <section class="sponsors__history-details" *ngIf="selectedHistorySponsorship as item">
+          <div class="sponsors__details-grid sponsors__details-grid--history">
+            <div class="sponsors__detail-item"><span>Sponsor Name</span><strong>{{ item.sponsorName || '--' }}</strong></div>
+            <div class="sponsors__detail-item"><span>Event Name</span><strong>{{ item.eventName || '--' }}</strong></div>
+            <div class="sponsors__detail-item"><span>Current Column</span><strong>{{ statusLabel(item.status) }}</strong></div>
+            <div class="sponsors__detail-item"><span>State</span><strong>{{ sponsorshipRunningLabel(item) }}</strong></div>
+            <div class="sponsors__detail-item"><span>Outreach Decision</span><strong>{{ item.outreachDecision || '--' }}</strong></div>
+            <div class="sponsors__detail-item"><span>Created At</span><strong>{{ formatDateTime(item.createdAt) }}</strong></div>
+            <div class="sponsors__detail-item sponsors__detail-item--full"><span>Proposal Summary</span><strong>{{ item.proposalSummary || '--' }}</strong></div>
+            <div class="sponsors__detail-item sponsors__detail-item--full"><span>Internal Notes</span><strong>{{ item.notes || '--' }}</strong></div>
+
+            <div class="sponsors__detail-docs sponsors__detail-item--full">
+              <p class="sponsors__detail-docs-title">Documents</p>
+              <div class="sponsors__detail-docs-grid">
+                <div class="sponsors__detail-doc">
+                  <span>Proposal</span>
+                  <strong>{{ item.proposalDocumentName || '--' }}</strong>
+                  <button class="sponsors__doc-view" type="button" [disabled]="!item.proposalDocumentName" (click)="openSponsorshipDoc('Proposals', item.proposalDocumentName)">View</button>
+                </div>
+                <div class="sponsors__detail-doc">
+                  <span>Contract</span>
+                  <strong>{{ item.contractDocumentName || '--' }}</strong>
+                  <button class="sponsors__doc-view" type="button" [disabled]="!item.contractDocumentName" (click)="openSponsorshipDoc('Contracts', item.contractDocumentName)">View</button>
+                </div>
+                <div class="sponsors__detail-doc">
+                  <span>Signed</span>
+                  <strong>{{ item.signedDocumentName || '--' }}</strong>
+                  <button class="sponsors__doc-view" type="button" [disabled]="!item.signedDocumentName" (click)="openSponsorshipDoc('Signed', item.signedDocumentName)">View</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="sponsors__detail-docs sponsors__detail-item--full">
+              <p class="sponsors__detail-docs-title">Tracked Emails</p>
+              <p class="sponsors__history-emails-state" *ngIf="historyEmailsLoading">Loading tracked emails...</p>
+              <p class="sponsors__history-emails-state sponsors__history-emails-state--error" *ngIf="!historyEmailsLoading && historyEmailsError">{{ historyEmailsError }}</p>
+              <div class="sponsors__history-emails-list" *ngIf="!historyEmailsLoading && !historyEmailsError && historyTrackedEmailsPreview.length > 0">
+                <div class="sponsors__history-email-item" *ngFor="let email of historyTrackedEmailsPreview">
+                  <div>
+                    <strong>{{ email.subject || 'No subject' }}</strong>
+                    <small>{{ formatEmailDate(email.sentAt) }}</small>
+                  </div>
+                  <span>{{ directionLabel(email.direction) }}</span>
+                </div>
+              </div>
+              <p class="sponsors__history-emails-state" *ngIf="!historyEmailsLoading && !historyEmailsError && historyTrackedEmailsPreview.length === 0">No tracked sponsorship emails for this sponsor yet.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <div class="sponsors__overlay" *ngIf="showAttachmentViewer" (click)="closeAttachmentViewer()">
     <div class="sponsors__dialog sponsors__dialog--attachment-viewer" (click)="$event.stopPropagation()">
       <div class="sponsors__emails-header">
@@ -473,4 +1011,5 @@
   <div class="sponsors__toast" *ngIf="toastVisible" [ngClass]="'sponsors__toast--' + toastType">
     {{ toastMessage }}
   </div>
+  </ng-container>
 </div>

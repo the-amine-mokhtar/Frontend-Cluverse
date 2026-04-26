@@ -5,13 +5,15 @@ import { FinanceHomeComponent } from './components/finance-home/finance-home.com
 import { FinanceBudgetsComponent } from './components/finance-budgets/finance-budgets.component';
 import { FinanceTransactionsComponent } from './components/finance-transactions/finance-transactions.component';
 import { FinanceSponsorPaymentComponent } from './components/finance-sponsor-payment/finance-sponsor-payment.component';
+import { TreasurerChatWidgetComponent } from './components/treasurer-chat-widget/treasurer-chat-widget.component';
 
 @NgModule({
   declarations: [
     FinanceHomeComponent,
     FinanceBudgetsComponent,
     FinanceTransactionsComponent,
-    FinanceSponsorPaymentComponent
+    FinanceSponsorPaymentComponent,
+    TreasurerChatWidgetComponent
   ],
   imports: [SharedModule, FinanceRoutingModule]
 })

@@ -14,18 +14,18 @@
   </nav>
 
   <section class="payment-shell">
-    <article class="payment-card">
-      <div class="payment-card__visa">VISA</div>
+    <article class="payment-card" [class.payment-card--active]="isCardInputActive" [class.payment-card--complete]="isCardInputComplete">
+      <div class="payment-card__visa">{{ cardPreviewBrand }}</div>
       <div class="payment-card__chip" aria-hidden="true"></div>
-      <div class="payment-card__number">{{ formattedCardNumber }}</div>
+      <div class="payment-card__number">{{ cardPreviewNumber }}</div>
       <div class="payment-card__row">
         <div>
           <span class="payment-card__label">FULL NAME</span>
           <strong>{{ sponsorName || 'Sponsor Name' }}</strong>
         </div>
         <div>
-          <span class="payment-card__label">EXPIRES</span>
-          <strong>MM / YY</strong>
+          <span class="payment-card__label">CARD STATUS</span>
+          <strong>{{ cardPreviewStatus }}</strong>
         </div>
       </div>
     </article>
@@ -39,6 +39,16 @@
       </div>
 
       <div class="form-grid">
+        <label class="field field--full">
+          <span class="field__label">Linked Signed Sponsorship</span>
+          <select class="field__control" [(ngModel)]="selectedSponsorshipId" (change)="onLinkedSponsorshipChange()">
+            <option [ngValue]="null">Select signed sponsorship</option>
+            <option *ngFor="let sponsorship of signedSponsorships" [ngValue]="sponsorship.id">
+              #{{ sponsorship.id }} - {{ sponsorship.sponsorName || sponsorship.sponsor?.name || 'Sponsor' }} - {{ sponsorship.eventName || 'Event' }}
+            </option>
+          </select>
+        </label>
+
         <label class="field field--full">
           <span class="field__label">Sponsor Full Name</span>
           <input class="field__control" type="text" placeholder="John Doe" [(ngModel)]="sponsorName" />
@@ -57,11 +67,6 @@
         <label class="field">
           <span class="field__label">EUR -> TND Rate</span>
           <input class="field__control" type="number" min="0.0001" step="0.0001" [(ngModel)]="conversionRate" />
-        </label>
-
-        <label class="field">
-          <span class="field__label">Card number digits (preview only)</span>
-          <input class="field__control" type="text" placeholder="1234 5678 9012 3456" maxlength="19" [(ngModel)]="cardDigits" />
         </label>
 
         <label class="field">
@@ -84,6 +89,10 @@
 
       <p class="payment-note">
         {{ stripeInfoMessage }}
+      </p>
+
+      <p class="status status--error" *ngIf="signedSponsorships.length === 0">
+        No signed sponsorship is available to receive payment yet.
       </p>
 
       <div class="form-actions">
