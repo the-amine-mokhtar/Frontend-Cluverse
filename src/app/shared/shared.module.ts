@@ -2,12 +2,10 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NotFoundComponent } from './components/not-found/not-found.component';
-import { FinancialAgentWidgetComponent } from './components/financial-agent-widget/financial-agent-widget.component';
 
 @NgModule({
   declarations: [
-    NotFoundComponent,
-    FinancialAgentWidgetComponent
+    NotFoundComponent
   ],
   imports: [
     CommonModule,
@@ -18,8 +16,7 @@ import { FinancialAgentWidgetComponent } from './components/financial-agent-widg
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    NotFoundComponent,
-    FinancialAgentWidgetComponent
+    NotFoundComponent
   ]
 })
 export class SharedModule { }

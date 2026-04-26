@@ -21,6 +21,9 @@ interface TextBeat {
   scrollEnd: number;
   hasCta: boolean;
   ctaText?: string;
+  hasSecondaryCta?: boolean;
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
   hasLogo?: boolean;
   logoSrc?: string;
 }
@@ -86,7 +89,10 @@ export class HeroSequenceComponent implements OnInit, AfterViewInit, OnDestroy {
       scrollStart: 0.75,
       scrollEnd: 1.0,
       hasCta: true,
-      ctaText: 'Get Started for Free'
+      ctaText: 'Let us manage your club workflow or connect to your club portal',
+      hasSecondaryCta: true,
+      secondaryCtaText: 'Apply to our partner clubs',
+      secondaryCtaLink: '#open-campaigns'
     }
   ];
 
@@ -302,6 +308,15 @@ export class HeroSequenceComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'left': return 'beat-left';
       case 'right': return 'beat-right';
       default: return 'beat-center';
+    }
+  }
+
+  scrollToFragment(fragmentId: string | undefined): void {
+    if (!fragmentId) return;
+    const element = document.querySelector(fragmentId);
+    if (element) {
+      // Small delay to allow the scroll snap to stop or just scroll smoothly
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 }

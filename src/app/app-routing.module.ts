@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { SharedModule } from './shared/shared.module';
 import { NotFoundComponent } from './shared/components/not-found/not-found.component';
 import { AuthGuard } from './core/guards/auth.guard';
 
@@ -17,15 +16,16 @@ const routes: Routes = [
       import('./features/auth/auth.module').then(m => m.AuthModule)
   },
   {
+    path: 'logistics',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/logistics/logistics.module').then(m => m.LogisticsModule)
+  },
+  {
     path: 'dashboard',
     canActivate: [AuthGuard],
     loadChildren: () =>
       import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
-  },
-  {
-    path: 'donate',
-    loadChildren: () =>
-      import('./features/donate/donate.module').then(m => m.DonateModule)
   },
   {
     path: 'apply',
@@ -36,6 +36,16 @@ const routes: Routes = [
     path: 'verify',
     loadChildren: () =>
       import('./features/verify/verify.module').then(m => m.VerifyModule),
+  },
+  {
+    path: 'sponsor-response',
+    loadChildren: () =>
+      import('./features/sponsor-response/sponsor-response.module').then(m => m.SponsorResponseModule)
+  },
+  {
+    path: 'interview',
+    loadChildren: () =>
+      import('./features/interview/interview.module').then(m => m.InterviewModule)
   },
   {
     path: 'not-found',
@@ -49,7 +59,6 @@ const routes: Routes = [
 
 @NgModule({
   imports: [
-    SharedModule,
     RouterModule.forRoot(routes, {
       scrollPositionRestoration: 'enabled',
       anchorScrolling: 'enabled'

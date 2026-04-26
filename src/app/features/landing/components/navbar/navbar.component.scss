@@ -85,27 +85,6 @@ $body-color: rgba(255, 255, 255, 0.60);
   }
 }
 
-/* ─── Donate Button ──────────────────────────────────────── */
-
-.donate-btn {
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-  text-decoration: none;
-  background: #2f6fec;
-  border: 1px solid #2f6fec;
-  border-radius: 8px;
-  padding: 8px 18px;
-  transition: background 0.2s ease, border-color 0.2s ease;
-  white-space: nowrap;
-
-  &:hover {
-    background: #2563d4;
-    border-color: #2563d4;
-  }
-}
-
 /* ─── Hamburger Trigger ──────────────────────────────────── */
 
 .navTrigger {

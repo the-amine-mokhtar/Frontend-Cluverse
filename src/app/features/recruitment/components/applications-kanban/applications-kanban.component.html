@@ -37,6 +37,56 @@
     </div>
   </div>
 
+  <!-- ── Interview Config Modal ── -->
+  <div class="kbn-modal__overlay" *ngIf="showInterviewModal" (click)="cancelInterview()">
+    <div class="kbn-modal__dialog" (click)="$event.stopPropagation()">
+      <div class="kbn-modal__header">
+        <h3 class="kbn-modal__title">Configurer l'entretien</h3>
+        <button class="kbn-modal__close" (click)="cancelInterview()">&times;</button>
+      </div>
+      <div class="kbn-modal__body">
+        <p style="color: var(--body); margin-bottom: 1rem;">
+          Candidat : <strong style="color: var(--heading)">{{ pendingInterviewApp?.candidateName }}</strong>
+        </p>
+        <div class="kbn-detail-group">
+          <label><strong>Durée (minutes)</strong></label>
+          <input type="number" [(ngModel)]="interviewForm.duration" min="10" max="60"
+            style="width:100%; padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; margin-top: 0.25rem;" />
+        </div>
+        <div class="kbn-detail-group" style="margin-top: 1rem;">
+          <label><strong>Niveau</strong></label>
+          <select [(ngModel)]="interviewForm.level"
+            style="width:100%; padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; margin-top: 0.25rem;">
+            <option value="junior">Junior</option>
+            <option value="mid">Intermédiaire</option>
+            <option value="senior">Senior</option>
+          </select>
+        </div>
+        <div class="kbn-detail-group" style="margin-top: 1rem;">
+          <label><strong>Type d'entretien</strong></label>
+          <select [(ngModel)]="interviewForm.interviewType"
+            style="width:100%; padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; margin-top: 0.25rem;">
+            <option value="Motivation">Motivation</option>
+            <option value="Compétences">Compétences</option>
+            <option value="Général">Général</option>
+          </select>
+        </div>
+        <div class="kbn-detail-group" style="margin-top: 1rem;">
+          <label><strong>Notes pour le recruteur IA (optionnel)</strong></label>
+          <textarea [(ngModel)]="interviewForm.presidentNotes" rows="3"
+            placeholder="Ex: Insister sur la motivation et les projets personnels..."
+            style="width:100%; padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; margin-top: 0.25rem; resize: vertical;"></textarea>
+        </div>
+      </div>
+      <div style="display: flex; gap: 1rem; padding: 1rem 1.5rem; justify-content: flex-end;">
+        <button class="btn btn--outline" (click)="cancelInterview()">Annuler</button>
+        <button class="btn btn--primary" (click)="confirmInterview()" [disabled]="isSubmittingInterview">
+          {{ isSubmittingInterview ? 'Envoi en cours...' : 'Confirmer et envoyer le mail' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Header ── -->
   <div class="kbn-header">
     <div class="kbn-header__left">
@@ -58,6 +108,11 @@
         {{ toastMessage }}
       </div>
       <div class="kbn-error-inline" *ngIf="csvError" style="font-size:0.85rem; color:#ef4444;">{{ csvError }}</div>
+      
+      <button class="btn btn--outline" [routerLink]="['/dashboard/recruitment', campaignId, 'interviews']">
+        Résultats entretiens
+      </button>
+
       <button class="btn btn--outline" (click)="exportCSV()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         Export CSV
