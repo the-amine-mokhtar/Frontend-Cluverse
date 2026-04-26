@@ -32,6 +32,9 @@ export interface MaintenancePredictionResponse {
   specificAdvices: string[];
   estimatedKmBeforeService: number;
   urgency: string;
+  avgKmPerTransport: number;
+  estimatedDaysUntilFailure: number;
+  predictedMonthlyTransports: number;
   modelType: string;
 }
 
@@ -165,27 +168,10 @@ export class MaintenanceService {
 
   // Get all vehicles at risk of breakdown (CRITICAL or WARNING status)
   getVehiclesAtRisk(): Observable<MaintenancePredictionResponse[]> {
-    // Use getAlerts to fetch vehicles with CRITICAL or WARNING maintenance status
-    return this.getAlerts().pipe(
-      map((alerts) => {
-        // Convert VehicleMaintenanceRecord to MaintenancePredictionResponse format
-        return alerts.map((alert) => ({
-          vehicleId: alert.vehicleId,
-          vehicleModel: '', // Will be fetched from vehicle service if needed
-          vehiclePlate: '',
-          breakdownRisk: alert.status === 'CRITICAL' ? 75 : 45, // Estimated risk
-          riskLevel: alert.status,
-          overallAdvice: alert.status === 'CRITICAL' 
-            ? '🚨 Intervention immédiate requise'
-            : '⚠️ Entretien recommandé cette semaine',
-          specificAdvices: alert.notes ? [alert.notes] : [],
-          estimatedKmBeforeService: 0,
-          urgency: alert.status === 'CRITICAL' 
-            ? 'Intervention immédiate requise'
-            : 'Cette semaine',
-          modelType: 'MAINTENANCE_STATUS'
-        } as MaintenancePredictionResponse));
-      }),
+    return this.http.get<MaintenancePredictionResponse[]>(
+      `${this.predictionEndpoint}/vehicles-at-risk`,
+      { headers: this.authHeaders() }
+    ).pipe(
       catchError((error) => {
         console.error('[MaintenanceService] getVehiclesAtRisk failed', error);
         return of([]);
