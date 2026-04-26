@@ -988,6 +988,7 @@ export class FinanceHomeComponent implements OnInit {
     }
 
     const payload: BudgetAlertEmailPayload = {
+      recipientEmail: this.authHelperService.getEmail() || undefined,
       recipientName: this.authHelperService.getFullName() || 'Finance Manager',
       clubName: this.clubName,
       exerciseYear: this.selectedExerciseYear,
