@@ -1,0 +1,162 @@
+<section class="member-shell">
+  <header class="member-hero">
+    <div>
+      <p class="member-eyebrow">Competencies</p>
+      <h2>{{ currentUserFullName || 'Member' }} profile</h2>
+      <p>Personal overview of progression, AI priorities, badges, and the latest Speech Analyzer signal.</p>
+    </div>
+    <div class="member-hero-actions">
+      <a class="m-btn m-btn--ghost" routerLink="/dashboard/competencies/sessions">Sessions</a>
+      <button type="button" class="m-btn m-btn--ghost" (click)="loadInitialData()" [disabled]="loading">Refresh</button>
+    </div>
+  </header>
+
+  <div *ngIf="errorMessage" class="m-alert m-alert--error">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="m-alert m-alert--success">{{ successMessage }}</div>
+
+  <section class="metric-grid">
+    <article class="metric-card">
+      <span>Tracked skills</span>
+      <strong>{{ totalSkillsCount }}</strong>
+      <small>Competencies tracked on your profile</small>
+    </article>
+    <article class="metric-card">
+      <span>Current level</span>
+      <strong>{{ averageCurrentLevel }}</strong>
+      <small>Average current level /5</small>
+    </article>
+    <article class="metric-card">
+      <span>Target level</span>
+      <strong>{{ averageTargetLevel }}</strong>
+      <small>Average target level /5</small>
+    </article>
+    <article class="metric-card metric-card--accent">
+      <span>Readiness score</span>
+      <strong>{{ readinessScore }}</strong>
+      <small>Average gap: {{ averageGapLevel }}</small>
+    </article>
+  </section>
+
+  <section *ngIf="clubStats" class="metric-grid">
+    <article class="metric-card">
+      <span>Club members</span>
+      <strong>{{ clubStats.totalMembers }}</strong>
+      <small>Members with competency tracking</small>
+    </article>
+    <article class="metric-card">
+      <span>Club avg level</span>
+      <strong>{{ clubStats.avgLevelAcrossAll }}</strong>
+      <small>Across all member competencies</small>
+    </article>
+    <article class="metric-card">
+      <span>Total gaps</span>
+      <strong>{{ clubStats.totalGaps }}</strong>
+      <small>Current level below target</small>
+    </article>
+    <article class="metric-card metric-card--accent">
+      <span>Critical gaps</span>
+      <strong>{{ clubStats.criticalGaps }}</strong>
+      <small>Gap >= 2 levels</small>
+    </article>
+  </section>
+
+  <div class="dashboard-grid">
+    <article class="m-card radar-card">
+      <h3>Competency radar</h3>
+      <div *ngIf="radarSkills.length > 0; else noRadar" class="radar-wrap">
+        <svg viewBox="0 0 220 220" class="radar-svg" role="img" aria-label="Radar competencies">
+          <g class="radar-grid">
+            <polygon points="110,25 190,70 190,150 110,195 30,150 30,70" />
+            <polygon points="110,43 174,79 174,141 110,177 46,141 46,79" />
+            <polygon points="110,61 158,88 158,132 110,159 62,132 62,88" />
+            <polygon points="110,79 142,97 142,123 110,141 78,123 78,97" />
+          </g>
+          <polygon [attr.points]="radarTargetPoints" class="radar-target" />
+          <polygon [attr.points]="radarCurrentPoints" class="radar-current" />
+        </svg>
+        <ul class="radar-labels">
+          <li *ngFor="let axis of radarSkills">
+            <strong>{{ axis.name }}</strong>
+            <span>{{ axis.current }} / {{ axis.target }}</span>
+          </li>
+        </ul>
+      </div>
+      <ng-template #noRadar>
+        <p class="m-state">No competency data available for the radar.</p>
+      </ng-template>
+    </article>
+
+    <article class="m-card progress-card">
+      <h3>Skill progress and AI tips</h3>
+      <div *ngIf="skillTips.length === 0" class="m-state">No progress data available.</div>
+      <ul *ngIf="skillTips.length > 0" class="skill-list">
+        <li *ngFor="let skill of skillTips" [ngClass]="'gap-' + gapSeverityById(skill.id)">
+          <div class="skill-head">
+            <strong>{{ skill.skillName }}</strong>
+            <span>{{ skill.current }}/{{ skill.target }}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" [style.width.%]="skill.progress"></div>
+          </div>
+          <p class="skill-gap">Gap: {{ gapDisplayById(skill.id) }}</p>
+          <p class="skill-tip">{{ skill.tip }}</p>
+        </li>
+      </ul>
+    </article>
+
+    <article class="m-card path-card">
+      <h3>Learning path</h3>
+      <ul class="path-list" *ngIf="learningPath.length > 0; else noPath">
+        <li *ngFor="let step of learningPath" [class]="'step-' + step.state">
+          <div class="path-title-row">
+            <strong>{{ step.title }}</strong>
+            <span>{{ step.state | uppercase }}</span>
+          </div>
+          <div class="bar-track bar-track--thin">
+            <div class="bar-fill" [style.width.%]="step.progress"></div>
+          </div>
+          <p>{{ step.summary }}</p>
+        </li>
+      </ul>
+      <ng-template #noPath>
+        <p class="m-state">Learning path unavailable.</p>
+      </ng-template>
+    </article>
+
+    <article class="m-card badge-card">
+      <h3>Badge gallery</h3>
+      <div class="badge-grid">
+        <div *ngFor="let badge of memberBadges" class="member-badge" [class.member-badge--locked]="!badge.unlocked">
+          <div class="member-badge__icon">{{ badge.icon }}</div>
+          <strong>{{ badge.title }}</strong>
+          <small>{{ badge.unlocked ? 'Unlocked' : 'Locked' }}</small>
+          <p>{{ badge.hint }}</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="m-card speech-summary-card">
+      <h3>Latest Speech Analyzer session</h3>
+      <div class="speech-summary">
+        <p><strong>Status:</strong> {{ latestSpeechSummary.status }}</p>
+        <p><strong>Score:</strong> {{ latestSpeechSummary.score }} ({{ latestSpeechSummary.level }})</p>
+        <p><strong>Confidence:</strong> {{ latestSpeechSummary.confidence }}%</p>
+        <p><strong>Pace:</strong> {{ latestSpeechSummary.pace }} words/min</p>
+        <p *ngIf="latestSpeechSummary.updatedAt"><strong>Updated:</strong> {{ latestSpeechSummary.updatedAt | date:'medium' }}</p>
+        <p class="speech-feedback">{{ latestSpeechSummary.feedback }}</p>
+      </div>
+      <div class="speech-actions">
+        <button type="button" class="m-btn m-btn--primary" (click)="pickRandomTopic()">AI topic</button>
+        <button
+          type="button"
+          class="m-btn m-btn--primary"
+          [disabled]="isRecordingSpeech || selectedSpeechMemberCompetencyId === 0 || !speechTopic.trim()"
+          (click)="startSpeechTest()"
+        >
+          Start voice test
+        </button>
+        <button type="button" class="m-btn" [disabled]="!isRecordingSpeech" (click)="stopSpeechTest()">Stop</button>
+      </div>
+    </article>
+  </div>
+</section>

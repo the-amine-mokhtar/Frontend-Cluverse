@@ -1,0 +1,176 @@
+<div class="p-6 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+  <button
+    type="button"
+    class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition cursor-pointer bg-none border-none p-0 mb-6"
+    (click)="goBack()"
+  >
+    ← Retour
+  </button>
+
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      📦 Inventaire — {{ resource?.name || '...' }}
+    </h1>
+  </div>
+
+  <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm mb-6">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Resource summary -->
+  <div *ngIf="!loadingResource && resource" class="bg-white rounded-xl shadow-lg border border-teal-100 p-6 mb-8">
+    <div class="flex items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+        <span class="{{ getStatusBadgeClasses(resourceStatusLabels[resource.status].color) }} inline-block px-4 py-2 text-sm font-bold">
+          {{ resourceStatusLabels[resource.status].label }}
+        </span>
+
+        <div class="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 rounded-lg p-4">
+          <div class="text-xs font-semibold text-teal-700 uppercase mb-1">📊 Quantité</div>
+          <div class="flex items-baseline gap-2">
+            <span class="text-2xl font-bold text-teal-900">{{ resource.availableQuantity }}</span>
+            <span class="text-sm text-teal-700">/</span>
+            <span class="text-lg font-semibold text-teal-700">{{ resource.quantityTotal }}</span>
+            <span class="text-xs text-teal-600">unités</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-4">
+        <div class="text-xs font-semibold text-yellow-700 uppercase mb-1">🚨 Seuil d'alerte</div>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl font-bold text-yellow-900">{{ resource.lowStockThreshold }}</span>
+          <span *ngIf="isLowStock(resource)" class="text-2xl" aria-label="Stock bas">⚠</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loadingResource" class="text-inherit opacity-80 mb-6">Chargement...</div>
+
+  <!-- Add transaction form -->
+  <div class="bg-white rounded-xl shadow-lg border border-purple-100 p-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">➕ Enregistrer un mouvement</h2>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Type select -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">📋 Type</label>
+          <select
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+            formControlName="type"
+          >
+            <option *ngFor="let t of typeOptions" [value]="t">
+              {{ inventoryTypeLabels[t].label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Quantity input -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">📊 Quantité</label>
+          <input
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+            [class.border-red-500]="isInvalid('quantity')"
+            type="number"
+            min="1"
+            formControlName="quantity"
+          />
+          <div *ngIf="isInvalid('quantity')" class="text-sm text-red-600 mt-1 font-medium">
+            Valeur invalide
+          </div>
+        </div>
+
+        <!-- Reason input -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">💬 Raison</label>
+          <input
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+            [class.border-red-500]="isInvalid('reason')"
+            type="text"
+            formControlName="reason"
+            placeholder="Ex: Départ événement, Retour stock..."
+          />
+          <div *ngIf="isInvalid('reason')" class="text-sm text-red-600 mt-1 font-medium">
+            Minimum 3 caractères requis
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="formError" class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm font-medium">
+        {{ formError }}
+      </div>
+
+      <div *ngIf="stockValidationMessage()" class="bg-orange-50 border border-orange-200 text-orange-700 rounded-lg p-4 text-sm font-medium">
+        {{ stockValidationMessage() }}
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button
+          type="submit"
+          class="bg-gradient-to-r from-purple-600 to-violet-600 text-white px-8 py-3 rounded-lg hover:from-purple-700 hover:to-violet-700 transition shadow-md hover:shadow-lg font-semibold disabled:opacity-50"
+          [disabled]="isSubmitting || form.invalid"
+        >
+          {{ isSubmitting ? '⏳ Enregistrement...' : '✔️ Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Transactions table -->
+  <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mt-8">
+    <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+      <h2 class="text-2xl font-bold text-gray-900">📜 Historique des mouvements</h2>
+      <p class="text-gray-600 text-sm mt-1">Tous les mouvements de stock enregistrés</p>
+    </div>
+
+    <div *ngIf="loadingTransactions" class="p-8 text-center text-inherit opacity-80">Chargement...</div>
+
+    <div *ngIf="!loadingTransactions" class="max-h-[360px] overflow-y-auto movement-history-scroll">
+      <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="text-left font-semibold px-6 py-4 text-gray-700">📋 Type</th>
+            <th class="text-left font-semibold px-6 py-4 text-gray-700">📊 Quantité</th>
+            <th class="text-left font-semibold px-6 py-4 text-gray-700">🕐 Date</th>
+            <th class="text-left font-semibold px-6 py-4 text-gray-700">💬 Raison</th>
+            <th class="text-center font-semibold px-6 py-4 text-gray-700">✓ Appliqué</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngIf="transactions.length === 0">
+            <td class="px-6 py-8 text-center text-gray-500 font-medium" colspan="5">
+              <div class="text-3xl mb-2">📭</div>
+              Aucune transaction enregistrée
+            </td>
+          </tr>
+
+          <tr *ngFor="let tx of transactions" class="hover:bg-gray-50 transition-colors duration-150">
+            <td class="px-6 py-4">
+              <span class="{{ getStatusBadgeClasses(inventoryTypeLabels[tx.type].color) }} inline-block text-xs font-bold px-3 py-1">
+                {{ inventoryTypeLabels[tx.type].label }}
+              </span>
+            </td>
+
+            <td class="px-6 py-4">
+              <span [class]="quantityLabel(tx).classes" class="inline-block text-sm font-bold">{{ quantityLabel(tx).text }}</span>
+            </td>
+
+            <td class="px-6 py-4 text-gray-900 font-medium text-sm">
+              {{ tx.date | date: 'dd/MM/yyyy HH:mm' }}
+            </td>
+
+            <td class="px-6 py-4 text-gray-700 text-sm">{{ tx.reason || '—' }}</td>
+
+            <td class="px-6 py-4 text-center">
+              <span *ngIf="tx.applied" class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-700 font-bold text-sm">✓</span>
+              <span *ngIf="!tx.applied" class="text-gray-300 font-bold text-2xl">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

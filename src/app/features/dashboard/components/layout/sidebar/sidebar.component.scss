@@ -178,17 +178,19 @@ $sidebar-width-sm: 72px;
     color: $sidebar-text;
     text-decoration: none;
     cursor: pointer;
-    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s, transform 0.2s ease;
 
     &:hover {
       color: $sidebar-hover;
       background-color: rgba(255, 255, 255, 0.04);
+      transform: translateX(2px);
     }
 
     &--active {
       color: $sidebar-active;
       border-right-color: $sidebar-active;
       background-color: rgba(255, 255, 255, 0.06);
+      transform: translateX(3px);
     }
 
     &--disabled {

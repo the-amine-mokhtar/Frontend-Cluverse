@@ -1,0 +1,30 @@
+<button type="button" class="voice-fab" (click)="toggleOpen()" [attr.aria-expanded]="isOpen">
+  <span>{{ isOpen ? '✕' : '🎤' }}</span>
+</button>
+
+<div class="voice-popup" *ngIf="isOpen">
+  <div class="voice-popup__header">
+    <div>
+      <div class="voice-popup__title">Assistant vocal</div>
+      <div class="voice-popup__subtitle">Module logistique</div>
+    </div>
+    <button type="button" class="voice-listen" (click)="toggleListening()" [disabled]="!supported"
+      [ngClass]="listening ? 'is-on' : 'is-off'">
+      {{ listening ? 'Arrêter' : 'Écouter' }}
+    </button>
+  </div>
+
+  <div class="voice-popup__block">
+    <div class="voice-popup__label">Dernière phrase</div>
+    <div class="voice-popup__value">{{ transcript || '—' }}</div>
+  </div>
+
+  <div class="voice-popup__block">
+    <div class="voice-popup__label">Réponse</div>
+    <div class="voice-popup__value">{{ message }}</div>
+  </div>
+
+  <div *ngIf="!supported" class="voice-popup__error">
+    Reconnaissance vocale non supportée sur ce navigateur.
+  </div>
+</div>

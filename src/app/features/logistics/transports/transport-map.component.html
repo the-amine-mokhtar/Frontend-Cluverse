@@ -1,0 +1,92 @@
+<div class="bg-gradient-to-br from-indigo-50 to-white rounded-xl shadow-md border-2 border-indigo-300 p-6">
+  <!-- Header -->
+  <div class="flex items-center gap-2 mb-4">
+    <div class="text-2xl">🗺️</div>
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Carte du trajét</h2>
+      <p class="text-sm text-gray-600 mt-0.5">Route entre le départ et l'arrivée</p>
+    </div>
+  </div>
+
+  <!-- Error messages -->
+  <div *ngIf="error" class="bg-red-100 border-2 border-red-400 rounded-lg p-5 mb-8">
+    <div class="flex items-center gap-3 text-red-800">
+      <span class="text-3xl">⚠️</span>
+      <span class="text-lg font-bold">{{ error }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="geocodingError" class="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-5 mb-8">
+    <div class="flex items-center gap-3 text-yellow-800">
+      <span class="text-3xl">⚙️</span>
+      <span class="text-lg font-bold">{{ geocodingError }}</span>
+    </div>
+  </div>
+
+  <!-- Info text before map -->
+  <div *ngIf="!error" class="bg-white rounded-lg p-3 mb-4 border-2 border-gray-200">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Departure info -->
+      <div class="flex items-start gap-2">
+        <div class="text-2xl">📍</div>
+        <div class="flex-1">
+          <div class="text-xs font-bold text-gray-600 uppercase">Point de départ</div>
+          <div class="text-sm font-bold text-gray-900 mt-0.5">{{ getDepartureText() || 'Non défini' }}</div>
+        </div>
+      </div>
+
+      <!-- Arrival info -->
+      <div class="flex items-start gap-2">
+        <div class="text-2xl">🎯</div>
+        <div class="flex-1">
+          <div class="text-xs font-bold text-gray-600 uppercase">Point d'arrivée</div>
+          <div class="text-sm font-bold text-gray-900 mt-0.5">{{ getArrivalText() || 'Non défini' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map container with explicit height -->
+  <div *ngIf="!error" class="mb-4 rounded-xl overflow-hidden shadow-2xl border-4 border-indigo-400 bg-white">
+    <div #mapContainer style="height: 400px; width: 100%;"></div>
+  </div>
+
+  <!-- Route info grid - LARGE AND CLEAR -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <!-- Distance Card -->
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-l-2 border-blue-600 shadow">
+      <div class="text-center md:text-left">
+        <div class="text-sm font-bold text-blue-700 uppercase tracking-wide mb-1">Distance</div>
+        <div class="text-2xl font-black text-blue-900" style="line-height: 1.1;">
+          {{ routeInfo.distance }}
+        </div>
+        <div class="text-xs text-blue-700 font-bold mt-1">📏 Kilomètres</div>
+      </div>
+    </div>
+
+    <!-- Duration Card -->
+    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border-l-2 border-green-600 shadow">
+      <div class="text-center md:text-left">
+        <div class="text-sm font-bold text-green-700 uppercase tracking-wide mb-1">Durée estimée</div>
+        <div class="text-2xl font-black text-green-900" style="line-height: 1.1;">
+          {{ routeInfo.duration }}
+        </div>
+        <div class="text-xs text-green-700 font-bold mt-1">⏱️ Temps de trajet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary section -->
+  <div class="bg-indigo-50 rounded-lg p-4 border-2 border-indigo-200">
+    <div class="text-center">
+      <div class="text-sm font-semibold text-indigo-900 mb-1">📊 Résumé du trajet</div>
+      <div class="text-lg font-bold text-indigo-700">
+        {{ routeInfo.distance }} en {{ routeInfo.duration }}
+      </div>
+      <p class="text-xs text-indigo-600 mt-2">Vitesse moyenne estimée: 50 km</p>
+    </div>
+  </div>
+</div>
+
+
+

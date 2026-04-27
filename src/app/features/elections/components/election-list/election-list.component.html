@@ -1,0 +1,166 @@
+<div class="elections animate-fade-in relative">
+  <div class="elections__header">
+    <div>
+      <h2 class="elections__title">Elections Hub</h2>
+      <p class="elections__subtitle">Manage election events and status</p>
+    </div>
+    <div class="elections__actions">
+      <input 
+        type="text" 
+        class="elections__search"
+        placeholder="Search by title, status, ID..." 
+        [(ngModel)]="searchTerm" 
+        (input)="applyFilters()"
+      />
+      <a routerLink="/dashboard/elections/elections/form" class="elections__btn elections__btn--primary">
+        + New
+      </a>
+    </div>
+  </div>
+
+  <div class="elections__card">
+    <div class="elections__table-wrap" *ngIf="filteredElections.length > 0; else emptyState">
+      <table class="elections__table">
+        <thead>
+          <tr>
+            <th (click)="sortBy('id')">ID</th>
+            <th (click)="sortBy('title')">Title</th>
+            <th (click)="sortBy('position')">Position</th>
+            <th (click)="sortBy('dates')">Start &rarr; End</th>
+            <th (click)="sortBy('status')">Status</th>
+            <th style="text-align: right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let election of filteredElections | paginate: { itemsPerPage: itemsPerPage, currentPage: page }">
+            <td style="color: var(--e-muted); font-family: monospace;">{{ election.id }}</td>
+            <td style="font-weight: 700; color: var(--e-primary);">{{ election.title || 'N/A' }}</td>
+            <td style="font-weight: 600;">
+              <a *ngIf="election.position" [routerLink]="['/dashboard/elections/positions-list']" [queryParams]="{positionId: election.position.id}" style="color: var(--e-secondary); text-decoration: underline;">
+                {{ election.position.name || 'Position #' + election.position.id }}
+              </a>
+              <span *ngIf="!election.position" style="color: var(--e-muted);">-</span>
+            </td>
+            <td style="color: var(--e-muted); font-weight: 500; white-space: nowrap;">
+              {{ (election.startDate | date:'shortDate') || 'TBD' }} &rarr; {{ (election.endDate | date:'shortDate') || 'TBD' }}
+            </td>
+            <td>
+              <span class="elections__badge" 
+                    [ngClass]="{
+                      'elections__badge--success': election.status === 'OPEN',
+                      'elections__badge--warning': election.status === 'CLOSED',
+                      'elections__badge--gray': election.status === 'ARCHIVED'
+                    }">
+                {{ election.status || 'UNKNOWN' }}
+              </span>
+            </td>
+            <td>
+              <div class="elections__actions-cell">
+                <a [routerLink]="['/dashboard/elections/elections/form', election.id]" class="elections__icon-btn elections__icon-btn--edit" title="Edit">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                     <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                     <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+                <button class="elections__icon-btn elections__icon-btn--primary" title="Details" (click)="openDetails(election)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fill-rule="evenodd" d="M10 18c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8zm0-14c-3.314 0-6 2.686-6 6s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <a [routerLink]="['/dashboard/elections/candidates']" [queryParams]="{electionId: election.id}" class="elections__icon-btn elections__icon-btn--success" title="View Candidates">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+                <a [routerLink]="['/dashboard/elections/votes']" [queryParams]="{electionId: election.id}" class="elections__icon-btn elections__icon-btn--warning" title="View Votes">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                   </svg>
+                </a>
+                <button class="elections__icon-btn elections__icon-btn--delete" title="Delete" (click)="deleteElection(election.id)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="elections__pagination">
+        <div class="e-page-info">
+          Page {{ page }}
+        </div>
+        <pagination-controls (pageChange)="page = $event" class="modern-pagination"></pagination-controls>
+      </div>
+    </div>
+    
+    <ng-template #emptyState>
+      <div class="elections__empty">
+        <p style="font-weight: 600; font-size: 1.1rem; color: var(--e-text); margin-bottom: 0.5rem;">No elections found</p>
+        <p>No registers available matching your criteria.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  
+  <div *ngIf="selectedElection" class="elections__modal-overlay animate-fade-in" (click)="closeDetails()">
+    
+    <div class="elections__modal-content" (click)="$event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+        <h3 class="modal-title">{{ selectedElection.title }}</h3>
+        <button class="modal-close-btn" (click)="closeDetails()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="detail-block">
+          <label>Status</label>
+          <span class="elections__badge" 
+                [ngClass]="{
+                  'elections__badge--success': selectedElection.status === 'OPEN',
+                  'elections__badge--warning': selectedElection.status === 'CLOSED',
+                  'elections__badge--gray': selectedElection.status === 'ARCHIVED'
+                }">
+            {{ selectedElection.status }}
+          </span>
+        </div>
+        
+        <div class="detail-block">
+          <label>Description</label>
+          <div class="desc-box">{{ selectedElection.description || 'No description provided.' }}</div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="detail-block" style="background: var(--e-bg-input); padding: 1rem; border-radius: 8px; border: 1px solid var(--e-border);">
+            <label>Start Date</label>
+            <p>{{ (selectedElection.startDate | date:'mediumDate') || 'TBD' }}</p>
+          </div>
+          <div class="detail-block" style="background: var(--e-bg-input); padding: 1rem; border-radius: 8px; border: 1px solid var(--e-border);">
+            <label>End Date</label>
+            <p>{{ (selectedElection.endDate | date:'mediumDate') || 'TBD' }}</p>
+          </div>
+        </div>
+        
+        <div class="detail-block">
+          <label>Related Position</label>
+          <p *ngIf="selectedElection.position" style="color: var(--e-secondary); cursor: pointer; text-decoration: underline;" [routerLink]="['/dashboard/elections/positions-list']" [queryParams]="{positionId: selectedElection.position.id}">
+            {{ selectedElection.position.name || 'Position #' + selectedElection.position.id }}
+          </p>
+          <p *ngIf="!selectedElection.position" style="color: var(--e-muted);">Unassigned role</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="elections__btn elections__btn--primary" (click)="closeDetails()">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,60 @@
+<div class="landing-page">
+  <div *ngIf="isLoading" class="landing-center">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <div *ngIf="error && !isLoading" class="landing-center">
+    <div class="error-icon">⚠️</div>
+    <h2>{{ error }}</h2>
+    <p style="color: var(--body);">Vérifiez le lien reçu ou contactez le président de votre club.</p>
+  </div>
+
+  <div *ngIf="config && !isLoading" class="landing-center">
+    <div class="landing-card">
+      <div class="club-logo" *ngIf="config.application?.recruitmentCampaign?.club?.logoUrl">
+        <img [src]="config.application.recruitmentCampaign.club.logoUrl" alt="Club Logo" />
+      </div>
+      <h1 class="landing-title">Bienvenue à votre entretien</h1>
+      <h2 class="club-name">{{ config.application?.recruitmentCampaign?.club?.name }}</h2>
+      <p class="landing-subtitle">Préparez-vous pour votre entretien de recrutement IA</p>
+      <div class="landing-info">
+        <div class="info-item">
+          <span class="info-icon">⏱</span>
+          <span>{{ config.duration }} minutes</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🇫🇷</span>
+          <span>En français</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">⚠️</span>
+          <span>Une seule tentative</span>
+        </div>
+      </div>
+      <ul class="landing-instructions">
+        <li>Assurez-vous d'avoir un microphone fonctionnel</li>
+        <li>Choisissez un endroit calme</li>
+        <li>L'entretien sera évalué par une IA</li>
+      </ul>
+      <button class="btn btn--primary btn--lg" (click)="start()">
+        Démarrer l'entretien
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+.landing-page { min-height: 100vh; background: var(--deep-navy); display: flex; align-items: center; justify-content: center; padding: 2rem; }
+.landing-center { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem; }
+.landing-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 2.5rem; max-width: 480px; width: 100%; }
+.club-logo img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; }
+.landing-title { font-size: 1.8rem; font-weight: 700; color: var(--heading); margin-bottom: 0.5rem; }
+.club-name { font-size: 1.3rem; font-weight: 600; color: var(--accent-teal); margin-bottom: 0.5rem; }
+.landing-subtitle { color: var(--body); margin-bottom: 1.5rem; }
+.landing-info { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.info-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border-radius: 20px; font-size: 0.9rem; color: var(--body); }
+.landing-instructions { text-align: left; color: var(--body); padding-left: 1.2rem; margin-bottom: 2rem; line-height: 2; }
+.btn--lg { width: 100%; padding: 1rem; font-size: 1.1rem; }
+.error-icon { font-size: 4rem; }
+</style>

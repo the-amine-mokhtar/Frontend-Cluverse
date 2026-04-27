@@ -1,0 +1,215 @@
+<div class="p-6 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+  <div class="mb-8">
+    <div class="flex items-center gap-3 mb-4">
+      <button
+        type="button"
+        (click)="goBack()"
+        class="text-2xl text-gray-500 hover:text-gray-700 transition" 
+        aria-label="Retour"
+      >
+        ←
+      </button>
+    </div>
+    
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Véhicules</h1>
+        <p class="text-gray-600 mt-1">Gestion et suivi de la flotte</p>
+      </div>
+
+      <a
+        class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition shadow-md hover:shadow-lg font-semibold whitespace-nowrap"
+        [routerLink]="['/logistics/vehicles/new']"
+      >
+        ➕ Ajouter un véhicule
+      </a>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-inherit opacity-80">Chargement...</div>
+
+  <div *ngIf="!loading && errorMessage" class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm mb-6">
+    {{ errorMessage }}
+  </div>
+
+  <ng-container *ngIf="!loading && !errorMessage">
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-5 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">🔍 Recherche</label>
+          <input
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+            type="text"
+            placeholder="Modèle ou immatriculation..."
+            [(ngModel)]="searchText"
+            (input)="applyFilters()"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">🚗 Disponibilité</label>
+          <select
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+            [(ngModel)]="availabilityFilter"
+            (change)="applyFilters()"
+          >
+            <option value="ALL">Tous</option>
+            <option value="AVAILABLE">Disponibles</option>
+            <option value="UNAVAILABLE">Indisponibles</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end">
+          <button
+            class="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 transition font-medium"
+            type="button"
+            (click)="resetFilters()"
+          >
+            🔄 Réinitialiser
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div *ngIf="filteredVehicles.length === 0" class="text-center text-gray-500 py-12">
+      <div class="text-4xl mb-2">🚗</div>
+      Aucun véhicule trouvé
+    </div>
+
+    <div *ngIf="filteredVehicles.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div 
+        *ngFor="let v of pagedVehicles" 
+        class="bg-white rounded-xl shadow-md border border-gray-100 p-5 flex flex-col hover:shadow-lg hover:border-green-200 transition-all duration-200 transform hover:scale-105"
+      >
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <div class="text-xl font-bold text-gray-900">{{ v.model }}</div>
+            <div class="text-sm text-gray-500 mt-0.5">Modèle</div>
+          </div>
+          <div class="flex gap-2 flex-wrap justify-end">
+            <span
+              *ngIf="v.available"
+              class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 whitespace-nowrap shadow-sm"
+            >
+              ✓ Disponible
+            </span>
+            <span
+              *ngIf="!v.available"
+              class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-orange-100 text-red-800 whitespace-nowrap shadow-sm"
+            >
+              ✗ Indisponible
+            </span>
+            <span
+              *ngIf="hasMaintenanceAlert(v.id) && getMaintenanceAlert(v.id)?.status === 'CRITICAL'"
+              class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-100 text-red-800 whitespace-nowrap shadow-sm"
+            >
+              🚨 CRITIQUE
+            </span>
+            <span
+              *ngIf="hasMaintenanceAlert(v.id) && getMaintenanceAlert(v.id)?.status === 'WARNING'"
+              class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 whitespace-nowrap shadow-sm"
+            >
+              ⚠️ ALERTE
+            </span>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 pt-4 mt-3 space-y-3">
+          <div class="flex items-center gap-3">
+            <span class="text-lg">🏷️</span>
+            <div>
+              <div class="text-xs text-gray-500 font-medium uppercase">Immatriculation</div>
+              <div class="text-sm font-bold text-gray-900 font-mono">{{ v.plateNumber }}</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="text-lg">📏</span>
+            <div>
+              <div class="text-xs text-gray-500 font-medium uppercase">Kilométrage Total</div>
+              <div class="text-sm font-bold text-gray-900 font-mono">{{ (v.totalKilometers || 0) | number:'1.0-1' }} km</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 pt-4 mt-4 flex items-center justify-between gap-2">
+          <a
+            class="flex-1 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 transition text-sm font-medium text-center"
+            [routerLink]="['/logistics/vehicles', v.id]"
+          >
+            👁️ Voir
+          </a>
+
+          <a
+            class="flex-1 bg-amber-50 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-100 transition text-sm font-medium text-center"
+            [routerLink]="['/logistics/vehicles', v.id, 'edit']"
+          >
+            ✏️ Éditer
+          </a>
+
+          <button
+            type="button"
+            class="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition text-sm font-medium"
+            (click)="delete(v)"
+          >
+            🗑️ Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="filteredVehicles.length > 0 && totalPages > 1" class="mt-10">
+      <div class="flex items-center justify-center gap-2">
+        <button
+          type="button"
+          class="w-10 h-10 rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-semibold"
+          (click)="prevPage()"
+          [disabled]="currentPage === 1"
+          aria-label="Page précédente"
+        >
+          ‹
+        </button>
+
+        <ng-container *ngFor="let item of paginationItems">
+          <span *ngIf="item === '...'" class="px-1 text-gray-500">…</span>
+
+          <button
+            *ngIf="item !== '...'"
+            type="button"
+            class="w-10 h-10 rounded-full transition font-semibold"
+            [class.bg-gradient-to-r]="item === currentPage"
+            [class.from-green-600]="item === currentPage"
+            [class.to-emerald-600]="item === currentPage"
+            [class.text-white]="item === currentPage"
+            [class.border]="item !== currentPage"
+            [class.border-gray-300]="item !== currentPage"
+            [class.bg-white]="item !== currentPage"
+            [class.text-gray-700]="item !== currentPage"
+            [class.hover:bg-gray-50]="item !== currentPage"
+            (click)="setPage(item)"
+            [attr.aria-label]="'Aller à la page ' + item"
+          >
+            {{ item }}
+          </button>
+        </ng-container>
+
+        <button
+          type="button"
+          class="w-10 h-10 rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-semibold"
+          (click)="nextPage()"
+          [disabled]="currentPage === totalPages"
+          aria-label="Page suivante"
+        >
+          ›
+        </button>
+      </div>
+
+      <div class="text-center text-sm text-gray-600 mt-4">
+        {{ pageStart }}–{{ pageEnd }} sur {{ filteredVehicles.length }} véhicules
+      </div>
+    </div>
+  </ng-container>
+</div>
