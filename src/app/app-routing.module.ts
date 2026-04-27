@@ -38,6 +38,11 @@ const routes: Routes = [
       import('./features/sponsor-response/sponsor-response.module').then(m => m.SponsorResponseModule)
   },
   {
+    path: 'sponsor-payment',
+    loadChildren: () =>
+      import('./features/sponsor-payment/sponsor-payment.module').then(m => m.SponsorPaymentModule)
+  },
+  {
     path: 'not-found',
     component: NotFoundComponent
   },

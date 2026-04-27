@@ -110,7 +110,19 @@
           </div>
         </div>
         <div class="sponsors__form-field">
-          <label>Proposal Summary</label>
+          <div class="sponsors__field-head">
+            <label>Proposal Summary</label>
+            <button
+              type="button"
+              class="sponsors__ai-generate-btn"
+              (click)="generateSponsorshipProposalSummary()"
+              [disabled]="generatingSponsorshipSummary"
+              [attr.aria-label]="generatingSponsorshipSummary ? 'Generating proposal summary' : 'Generate proposal summary with AI'"
+              [attr.title]="generatingSponsorshipSummary ? 'Generating...' : 'Generate with AI'"
+            >
+              <img class="sponsors__ai-generate-icon" src="assets/logos/wand.png" alt="" aria-hidden="true" />
+            </button>
+          </div>
           <textarea rows="3" [(ngModel)]="sponsorshipForm.proposalSummary" placeholder="Persuasive summary for this opportunity"></textarea>
         </div>
         <div class="sponsors__form-field">
