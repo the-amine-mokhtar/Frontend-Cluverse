@@ -1,0 +1,15 @@
+fastapi==0.115.8
+uvicorn[standard]==0.34.0
+websockets==15.0.1
+openai-whisper==20240930
+librosa==0.10.2.post1
+numpy==1.26.4
+soundfile==0.13.1
+openai==1.76.2
+anthropic==0.51.0
+pydantic-settings==2.8.1
+joblib==1.4.2
+scikit-learn==1.6.1
+python-dotenv==1.0.1
+httpx==0.28.1
+torch==2.5.1

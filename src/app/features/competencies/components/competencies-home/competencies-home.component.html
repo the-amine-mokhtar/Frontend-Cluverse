@@ -3,13 +3,16 @@
 
 <section class="cmp-shell">
   <header class="cmp-hero">
-    <div class="cmp-hero__copy">
-      <p class="cmp-eyebrow">Competencies</p>
-      <h1>Admin dashboard</h1>
-      <p>
-        Manage the competency catalog, spot the distribution at a glance, and keep the club structure clean.
-      </p>
-    </div>
+      <div class="cmp-hero__title-group">
+        <svg class="cmp-hero__icon" viewBox="0 0 24 24" focusable="false">
+          <path d="M12 3C8.686 3 6 5.686 6 9C6 11.22 7.21 13.15 9 14.19V17C9 17.55 9.45 18 10 18H14C14.55 18 15 17.55 15 17V14.19C16.79 13.15 18 11.22 18 9C18 5.686 15.314 3 12 3ZM13 16H11V15H13V16ZM13.85 12.85L13 13.28V13H11V13.28L10.15 12.85C8.87 12.19 8 10.68 8 9C8 6.79 9.79 5 12 5C14.21 5 16 6.79 16 9C16 10.68 15.13 12.19 13.85 12.85Z"/>
+          <path d="M9 21H15V19H9V21Z"/>
+        </svg>
+        <div>
+          <p class="cmp-eyebrow">Competencies</p>
+          <h1>Admin dashboard</h1>
+        </div>
+      </div>
 
     <div class="cmp-hero__actions">
       <button type="button" class="cmp-btn cmp-btn--ghost" (click)="bulkImportInput.click()" [disabled]="loading || importing">
@@ -28,6 +31,10 @@
         <svg viewBox="0 0 24 24" focusable="false"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm11 8H6v10h12V10Zm0-4H6v2h12V6Z"/></svg>
         Sessions
       </a>
+      <button type="button" class="cmp-btn cmp-btn--accent" (click)="openAssignDialog()" [disabled]="loading || competencies.length === 0">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        Assign to Member
+      </button>
       <label for="cmp-add-dialog-toggle" class="cmp-btn cmp-btn--primary" (click)="cancelEdit()">
         <svg viewBox="0 0 24 24" focusable="false"><path d="M11 5h2v14h-2zM5 11h14v2H5z"/></svg>
         Add competency
@@ -77,33 +84,6 @@
   </section>
 
   <section class="cmp-grid">
-    <article class="cmp-panel cmp-panel--summary">
-      <div class="cmp-panel__head">
-        <div>
-          <p class="cmp-panel__eyebrow">Quick overview</p>
-          <h2>Skill distribution</h2>
-        </div>
-        <div class="cmp-panel__badge">{{ competencies.length }} items</div>
-      </div>
-
-      <div class="cmp-chart" *ngIf="competencies.length > 0; else emptyChart">
-        <div *ngFor="let item of categoryBreakdown" class="cmp-chart__row">
-          <div class="cmp-chart__label">
-            <span [class]="categoryCssClass(item.category)">{{ categoryLabel(item.category) }}</span>
-            <small>{{ item.count }} competencies</small>
-          </div>
-          <div class="cmp-chart__track">
-            <div class="cmp-chart__fill" [ngClass]="'cmp-chart__fill--' + item.category.toLowerCase()" [style.width.%]="item.percent"></div>
-          </div>
-          <strong class="cmp-chart__pct">{{ item.percent }}%</strong>
-        </div>
-      </div>
-
-      <ng-template #emptyChart>
-        <div class="cmp-empty cmp-empty--soft">No competency data yet.</div>
-      </ng-template>
-    </article>
-
     <article class="cmp-panel cmp-panel--library">
       <div class="cmp-panel__head cmp-panel__head--stacked">
         <div>
@@ -112,12 +92,15 @@
           <p class="cmp-panel__desc">Search, filter, edit, and delete from one view.</p>
         </div>
         <div class="cmp-panel__tools">
-          <input
-            type="search"
-            class="cmp-search"
-            [(ngModel)]="searchTerm"
-            placeholder="Search competencies..."
-          />
+          <div class="cmp-search-wrapper">
+            <svg class="cmp-search-icon" viewBox="0 0 24 24" focusable="false"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input
+              type="search"
+              class="cmp-search"
+              [(ngModel)]="searchTerm"
+              placeholder="Search competencies..."
+            />
+          </div>
           <div *ngIf="isSuperAdmin" class="cmp-clone-control">
             <label for="target-club-id">Clone target club</label>
             <input id="target-club-id" type="number" min="1" [(ngModel)]="targetClubId" placeholder="Club ID" />
@@ -142,96 +125,77 @@
       <div *ngIf="!loading && competencies.length > 0 && filteredCompetencies.length === 0" class="cmp-empty">No result for this filter.</div>
 
       <ul *ngIf="!loading && filteredCompetencies.length > 0" class="cmp-list">
-        <li *ngFor="let item of filteredCompetencies; trackBy: trackById" class="cmp-list__item">
-          <div class="cmp-list__icon">
-            <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
+        <li *ngFor="let item of pagedCompetencies; trackBy: trackById" class="cmp-list__item">
+          <div class="cmp-list__icon" [ngClass]="'cmp-list__icon--' + item.category.toLowerCase()">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
           </div>
           <div class="cmp-list__body">
             <div class="cmp-list__name">
               <span>{{ item.name }}</span>
               <span [class]="categoryCssClass(item.category)">{{ categoryLabel(item.category) }}</span>
             </div>
-            <div class="cmp-list__desc">{{ item.description || 'No description provided.' }}</div>
+            <div class="cmp-list__desc cmp-list__desc--clamp">{{ item.description || 'No description provided.' }}</div>
           </div>
           <div class="cmp-list__actions">
-            <label for="cmp-add-dialog-toggle" class="cmp-link" (click)="edit(item)">Edit</label>
-            <button *ngIf="isSuperAdmin" type="button" class="cmp-link" (click)="cloneCompetency(item)" [disabled]="cloningId === item.id || !targetClubId">
+            <label for="cmp-add-dialog-toggle" class="cmp-action-btn cmp-action-btn--edit" (click)="edit(item)">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              Edit
+            </label>
+            <button *ngIf="isSuperAdmin" type="button" class="cmp-action-btn cmp-action-btn--clone" (click)="cloneCompetency(item)" [disabled]="cloningId === item.id || !targetClubId">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 14H8V7h11v12z"/></svg>
               {{ cloningId === item.id ? 'Cloning...' : 'Clone' }}
             </button>
-            <button type="button" class="cmp-link cmp-link--danger" (click)="delete(item)">Delete</button>
+            <button type="button" class="cmp-action-btn cmp-action-btn--delete" (click)="delete(item)">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              Delete
+            </button>
           </div>
         </li>
       </ul>
+
+      <div class="cmp-pagination" *ngIf="!loading && filteredCompetencies.length > 0">
+        <span class="cmp-pagination__info">
+          Showing <strong>{{ pageStart }}–{{ pageEnd }}</strong> of <strong>{{ filteredCompetencies.length }}</strong>
+        </span>
+        <div class="cmp-pagination__controls" *ngIf="totalPages > 1">
+          <button type="button" class="cmp-page-btn" (click)="prevPage()" [disabled]="currentPage === 1" aria-label="Previous page">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+          </button>
+          <span class="cmp-pagination__label">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button type="button" class="cmp-page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages" aria-label="Next page">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          </button>
+        </div>
+      </div>
     </article>
   </section>
 
   <section class="cmp-stats" *ngIf="stats">
-    <article class="cmp-panel cmp-stats__card">
+    <article class="cmp-panel cmp-panel--summary cmp-stats__card">
       <div class="cmp-panel__head">
         <div>
-          <p class="cmp-panel__eyebrow">Aggregated stats</p>
-          <h2>Club overview</h2>
+          <p class="cmp-panel__eyebrow">Quick overview</p>
+          <h2>Skill distribution</h2>
         </div>
+        <div class="cmp-panel__badge">{{ competencies.length }} items</div>
       </div>
 
-      <div class="cmp-stat-grid">
-        <div class="cmp-stat-pill">
-          <span>Total competencies</span>
-          <strong>{{ stats.totalCompetencies }}</strong>
-        </div>
-        <div class="cmp-stat-pill">
-          <span>Total assignments</span>
-          <strong>{{ stats.totalAssignments }}</strong>
-        </div>
-      </div>
-
-      <div class="cmp-stats__table">
-        <div *ngFor="let item of stats.membersPerCompetency | slice:0:5" class="cmp-stats__row">
-          <div class="cmp-stats__label">
-            <strong>{{ item.competencyName }}</strong>
-            <small>{{ item.memberCount }} members</small>
+      <div class="cmp-chart" *ngIf="competencies.length > 0; else emptyChart">
+        <div *ngFor="let item of categoryBreakdown" class="cmp-chart__row">
+          <div class="cmp-chart__label">
+            <span [class]="categoryCssClass(item.category)">{{ categoryLabel(item.category) }}</span>
+            <small>{{ item.count }} competencies</small>
           </div>
-          <span class="cmp-stats__value">{{ item.averageGap | number:'1.0-1' }} gap</span>
-        </div>
-      </div>
-    </article>
-
-    <article class="cmp-panel cmp-stats__card">
-      <div class="cmp-panel__head">
-        <div>
-          <p class="cmp-panel__eyebrow">By category</p>
-          <h2>Average level</h2>
-        </div>
-      </div>
-
-      <div class="cmp-stats__table">
-        <div *ngFor="let item of stats.averageLevelByCategory" class="cmp-stats__row">
-          <div class="cmp-stats__label">
-            <strong>{{ categoryLabel(item.category) }}</strong>
-            <small>{{ item.competencyCount }} competencies</small>
+          <div class="cmp-chart__track">
+            <div class="cmp-chart__fill" [ngClass]="'cmp-chart__fill--' + item.category.toLowerCase()" [style.width.%]="item.percent"></div>
           </div>
-          <span class="cmp-stats__value">{{ item.averageCurrentLevel | number:'1.0-1' }}</span>
-        </div>
-      </div>
-    </article>
-
-    <article class="cmp-panel cmp-stats__card cmp-stats__card--wide">
-      <div class="cmp-panel__head">
-        <div>
-          <p class="cmp-panel__eyebrow">Weakest skills</p>
-          <h2>Top 3 competencies to fix</h2>
+          <strong class="cmp-chart__pct">{{ item.percent }}%</strong>
         </div>
       </div>
 
-      <div class="cmp-stats__table">
-        <div *ngFor="let item of stats.weakestCompetencies" class="cmp-stats__row">
-          <div class="cmp-stats__label">
-            <strong>{{ item.competencyName }}</strong>
-            <small>{{ categoryLabel(item.category) }} · {{ item.memberCount }} members</small>
-          </div>
-          <span class="cmp-stats__value cmp-stats__value--danger">{{ item.averageGap | number:'1.0-1' }}</span>
-        </div>
-      </div>
+      <ng-template #emptyChart>
+        <div class="cmp-empty cmp-empty--soft">No competency data yet.</div>
+      </ng-template>
     </article>
   </section>
 </section>
@@ -273,4 +237,121 @@
       <label for="cmp-add-dialog-toggle" *ngIf="isEditing" class="cmp-btn cmp-btn--ghost" (click)="cancelEdit()">Cancel</label>
     </div>
   </form>
+</section>
+
+<!-- ═══════════════════════════  ASSIGN MODAL  ═══════════════════════════ -->
+<div class="cmp-assign-backdrop" *ngIf="assignDialogOpen" (click)="closeAssignDialog()"></div>
+
+<section class="cmp-assign-modal" *ngIf="assignDialogOpen" role="dialog" aria-modal="true" aria-label="Assign Competency to Members">
+  <div class="cmp-assign-modal__header">
+    <div class="cmp-assign-modal__title-group">
+      <div class="cmp-assign-modal__icon">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      </div>
+      <div>
+        <p class="cmp-assign-modal__eyebrow">Assignment</p>
+        <h2 class="cmp-assign-modal__heading">Assign Competency to Members</h2>
+      </div>
+    </div>
+    <button type="button" class="cmp-assign-modal__close" (click)="closeAssignDialog()" aria-label="Close">
+      <svg viewBox="0 0 24 24" focusable="false"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+  </div>
+
+  <div class="cmp-assign-modal__body">
+
+    <!-- Competency picker -->
+    <div class="cmp-assign-field">
+      <label class="cmp-assign-label">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M4 6h16v3H4zM4 11h10v3H4zM4 16h16v2H4z"/></svg>
+        Competency
+      </label>
+      <select class="cmp-assign-select" [(ngModel)]="assignCompetencyId">
+        <option *ngFor="let c of competencies" [ngValue]="c.id">{{ c.name }} ({{ categoryLabel(c.category) }})</option>
+      </select>
+    </div>
+
+    <!-- Level controls -->
+    <div class="cmp-assign-levels">
+      <div class="cmp-assign-field">
+        <label class="cmp-assign-label">
+          <svg viewBox="0 0 24 24" focusable="false"><path d="M3 13h2v8H3zm4-8h2v16H7zm4-2h2v18h-2zm4-2h2v20h-2zm4 4h2v16h-2z"/></svg>
+          Current Level
+          <span class="cmp-assign-badge">{{ assignCurrentLevel }}</span>
+        </label>
+        <input type="range" class="cmp-assign-range" min="0" max="5" step="1"
+               [(ngModel)]="assignCurrentLevel" />
+        <div class="cmp-assign-range-labels">
+          <span *ngFor="let l of [0,1,2,3,4,5]">{{ levelLabel(l) }}</span>
+        </div>
+      </div>
+      <div class="cmp-assign-field">
+        <label class="cmp-assign-label">
+          <svg viewBox="0 0 24 24" focusable="false"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Target Level
+          <span class="cmp-assign-badge cmp-assign-badge--accent">{{ assignTargetLevel }}</span>
+        </label>
+        <input type="range" class="cmp-assign-range" min="0" max="5" step="1"
+               [(ngModel)]="assignTargetLevel" />
+        <div class="cmp-assign-range-labels">
+          <span *ngFor="let l of [0,1,2,3,4,5]">{{ levelLabel(l) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Member picker -->
+    <div class="cmp-assign-field">
+      <label class="cmp-assign-label">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"/></svg>
+        Select Members
+        <span class="cmp-assign-badge cmp-assign-badge--accent" *ngIf="selectedMemberCount > 0">{{ selectedMemberCount }} selected</span>
+      </label>
+
+      <div *ngIf="membersLoading" class="cmp-assign-members-loading">
+        <div class="cmp-assign-spinner"></div>
+        Loading members...
+      </div>
+
+      <div *ngIf="!membersLoading && members.length === 0" class="cmp-assign-empty">
+        No members found in this club.
+      </div>
+
+      <div *ngIf="!membersLoading && members.length > 0" class="cmp-assign-members">
+        <button
+          type="button"
+          *ngFor="let m of members; trackBy: trackByMemberId"
+          class="cmp-assign-member"
+          [class.cmp-assign-member--selected]="isMemberSelected(m.id ?? m.userId)"
+          (click)="toggleMember(m.id ?? m.userId)"
+        >
+          <div class="cmp-assign-member__avatar">
+            {{ (m.firstName || m.email || 'U')[0].toUpperCase() }}
+          </div>
+          <div class="cmp-assign-member__info">
+            <strong>{{ m.firstName }} {{ m.lastName }}</strong>
+            <small>{{ m.email }}</small>
+          </div>
+          <div class="cmp-assign-member__check" *ngIf="isMemberSelected(m.id ?? m.userId)">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="assignError" class="cmp-assign-alert cmp-assign-alert--error">{{ assignError }}</div>
+    <div *ngIf="assignSuccess" class="cmp-assign-alert cmp-assign-alert--success">{{ assignSuccess }}</div>
+  </div>
+
+  <div class="cmp-assign-modal__footer">
+    <button type="button" class="cmp-btn cmp-btn--ghost" (click)="closeAssignDialog()">Cancel</button>
+    <button
+      type="button"
+      class="cmp-btn cmp-btn--primary"
+      (click)="submitAssignment()"
+      [disabled]="assignSubmitting || selectedMemberCount === 0 || !assignCompetencyId"
+    >
+      <svg viewBox="0 0 24 24" focusable="false"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      {{ assignSubmitting ? 'Assigning...' : 'Assign Competency' }}
+    </button>
+  </div>
 </section>

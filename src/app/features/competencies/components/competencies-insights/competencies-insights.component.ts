@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import {
   ApiService,
   CompetencyMatchCandidateResponse,
@@ -41,6 +42,7 @@ type BreakdownRow = {
 })
 export class CompetenciesInsightsComponent implements OnInit {
   readonly matchingContexts: Array<'MISSION' | 'EVENT' | 'POSITION'> = ['MISSION', 'EVENT', 'POSITION'];
+  readonly categories: Array<CompetencyResponse['category']> = ['TECHNICAL', 'HARD', 'SOFT'];
 
   clubId = 0;
   loading = false;
@@ -58,6 +60,10 @@ export class CompetenciesInsightsComponent implements OnInit {
   selectedSkillIds: number[] = [];
   matchingResult: CompetencyMatchingResponse | null = null;
 
+  // Search and Filtering
+  skillSearchQuery = '';
+  expandedCategories: Set<string> = new Set(['TECHNICAL', 'HARD', 'SOFT']);
+
   totalMembers = 0;
   totalSkills = 0;
   totalAssignments = 0;
@@ -72,12 +78,12 @@ export class CompetenciesInsightsComponent implements OnInit {
   constructor(
     private readonly apiService: ApiService,
     private readonly authHelperService: AuthHelperService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.clubId = this.authHelperService.getClubId();
     if (!this.clubId) {
-      this.errorMessage = 'Club introuvable. Reconnecte-toi puis reessaie.';
+      this.errorMessage = 'Club not found. Reconnect and try again.';
       return;
     }
 
@@ -88,32 +94,43 @@ export class CompetenciesInsightsComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.apiService.getClubMembers(this.clubId).subscribe({
-      next: (members) => {
-        this.members = (members ?? []).map((member: any) => ({
+    // Load all data in parallel
+    const members$ = this.apiService.getClubMembers(this.clubId);
+    const competencies$ = this.apiService.getCompetencies(this.clubId);
+    const assignments$ = this.apiService.getMemberCompetenciesByClub(this.clubId);
+
+    forkJoin({
+      members: members$,
+      competencies: competencies$,
+      assignments: assignments$
+    }).subscribe({
+      next: (data) => {
+        this.members = (data.members ?? []).map((member: any) => ({
           userId: Number(member.userId ?? member.id ?? 0),
           firstName: member.firstName,
           lastName: member.lastName,
           email: member.email
         })).filter((member: { userId: number }) => member.userId > 0);
-        this.loadCompetencies();
+
+        this.competencies = data.competencies ?? [];
+        this.memberCompetencies = data.assignments ?? [];
+
+        this.computeInsights();
+        this.loading = false;
       },
-      error: () => {
-        this.errorMessage = 'Impossible de charger les membres du club.';
+      error: (err) => {
+        console.error('Insights load error:', err);
+        this.errorMessage = 'Failed to load dashboard data.';
         this.loading = false;
       }
     });
   }
 
+  // Simplified loaders for manual refresh
   loadCompetencies(): void {
     this.apiService.getCompetencies(this.clubId).subscribe({
       next: (competencies) => {
         this.competencies = competencies ?? [];
-        this.loadMemberCompetencies();
-      },
-      error: () => {
-        this.errorMessage = 'Impossible de charger les competencies.';
-        this.loading = false;
       }
     });
   }
@@ -123,17 +140,41 @@ export class CompetenciesInsightsComponent implements OnInit {
       next: (items) => {
         this.memberCompetencies = items ?? [];
         this.computeInsights();
-        this.loading = false;
-      },
-      error: () => {
-        this.errorMessage = 'Impossible de charger les insights.';
-        this.loading = false;
       }
     });
   }
 
   refresh(): void {
     this.loadData();
+  }
+
+  // --- Skill Selection & Filtering ---
+
+  get filteredCompetenciesByCategory() {
+    const grouped: Record<string, CompetencyResponse[]> = {};
+    const searchQuery = this.skillSearchQuery.toLowerCase().trim();
+
+    this.categories.forEach(cat => {
+      grouped[cat] = this.competencies.filter(c => {
+        const categoryMatch = c.category && c.category.toUpperCase() === cat.toUpperCase();
+        const searchMatch = searchQuery === '' || (c.name && c.name.toLowerCase().includes(searchQuery));
+        return categoryMatch && searchMatch;
+      });
+    });
+
+    return grouped;
+  }
+
+  toggleCategory(category: string): void {
+    if (this.expandedCategories.has(category)) {
+      this.expandedCategories.delete(category);
+    } else {
+      this.expandedCategories.add(category);
+    }
+  }
+
+  isCategoryExpanded(category: string): boolean {
+    return this.expandedCategories.has(category);
   }
 
   toggleSkillSelection(skillId: number): void {
@@ -148,9 +189,32 @@ export class CompetenciesInsightsComponent implements OnInit {
     return this.selectedSkillIds.includes(skillId);
   }
 
+  toggleCategorySelection(category: string): void {
+    const categorySkills = this.competencies
+      .filter(c => c.category && c.category.toUpperCase() === category.toUpperCase())
+      .map(c => c.id);
+    const allSelected = categorySkills.length > 0 && categorySkills.every(id => this.selectedSkillIds.includes(id));
+
+    if (allSelected) {
+      this.selectedSkillIds = this.selectedSkillIds.filter(id => !categorySkills.includes(id));
+    } else {
+      const newIds = categorySkills.filter(id => !this.selectedSkillIds.includes(id));
+      this.selectedSkillIds = [...this.selectedSkillIds, ...newIds];
+    }
+  }
+
+  isCategoryFullySelected(category: string): boolean {
+    const categorySkills = this.competencies
+      .filter(c => c.category && c.category.toUpperCase() === category.toUpperCase())
+      .map(c => c.id);
+    return categorySkills.length > 0 && categorySkills.every(id => this.selectedSkillIds.includes(id));
+  }
+
+  // --- Matching Engine ---
+
   runMatching(): void {
     if (this.selectedSkillIds.length === 0) {
-      this.matchingError = 'Selectionne au moins une competence requise.';
+      this.matchingError = 'Select at least one required competency.';
       return;
     }
 
@@ -171,7 +235,7 @@ export class CompetenciesInsightsComponent implements OnInit {
         this.matchingLoading = false;
       },
       error: () => {
-        this.matchingError = 'Impossible de generer le matching intelligent.';
+        this.matchingError = 'Failed to generate smart matching.';
         this.matchingLoading = false;
       }
     });
@@ -184,6 +248,7 @@ export class CompetenciesInsightsComponent implements OnInit {
     this.selectedSkillIds = [];
     this.matchingResult = null;
     this.matchingError = '';
+    this.skillSearchQuery = '';
   }
 
   candidateScoreClass(candidate: CompetencyMatchCandidateResponse): string {
@@ -239,24 +304,32 @@ export class CompetenciesInsightsComponent implements OnInit {
   }
 
   private computeInsights(): void {
-    this.totalMembers = new Set(this.members.map(member => member.userId)).size;
+    this.totalMembers = this.members.length;
     this.totalSkills = this.competencies.length;
     this.totalAssignments = this.memberCompetencies.length;
 
-    const positiveGaps = this.memberCompetencies.map(item => Math.max(item.gap ?? (item.targetLevel - item.currentLevel), 0));
-    this.readyAssignments = this.memberCompetencies.filter(item => (item.gap ?? (item.targetLevel - item.currentLevel)) <= 0).length;
-    this.criticalAssignments = this.memberCompetencies.filter(item => (item.gap ?? (item.targetLevel - item.currentLevel)) >= 20).length;
+    const positiveGaps = this.memberCompetencies.map(item => {
+      const gap = item.gapLevel ?? item.gap ?? (item.targetLevel - item.currentLevel);
+      return Math.max(gap, 0);
+    });
+
+    this.readyAssignments = this.memberCompetencies.filter(item => (item.gapLevel ?? item.gap ?? (item.targetLevel - item.currentLevel)) <= 0).length;
+    this.criticalAssignments = this.memberCompetencies.filter(item => (item.gapLevel ?? item.gap ?? (item.targetLevel - item.currentLevel)) >= 2).length;
+
     this.averageGap = positiveGaps.length
       ? Math.round((positiveGaps.reduce((sum, value) => sum + value, 0) / positiveGaps.length) * 10) / 10
       : 0;
 
     const skillMap = new Map<number, { gaps: number[]; count: number }>();
     for (const item of this.memberCompetencies) {
-      const gap = Math.max(item.gap ?? (item.targetLevel - item.currentLevel), 0);
-      const current = skillMap.get(item.skillId) ?? { gaps: [], count: 0 };
+      const gap = Math.max(item.gapLevel ?? item.gap ?? (item.targetLevel - item.currentLevel), 0);
+      const sId = Number(item.skillId || item.competencyId);
+      if (!sId) continue;
+
+      const current = skillMap.get(sId) ?? { gaps: [], count: 0 };
       current.gaps.push(gap);
       current.count += 1;
-      skillMap.set(item.skillId, current);
+      skillMap.set(sId, current);
     }
 
     this.topSkillGaps = Array.from(skillMap.entries())
@@ -276,19 +349,22 @@ export class CompetenciesInsightsComponent implements OnInit {
           maxGap
         };
       })
-      .sort((left, right) => right.averageGap - left.averageGap)
+      .sort((left, right) => right.averageGap - left.averageGap || right.maxGap - left.maxGap)
       .slice(0, 5);
 
     const memberMap = new Map<number, { gaps: number[]; readyCount: number; count: number }>();
     for (const item of this.memberCompetencies) {
-      const gap = Math.max(item.gap ?? (item.targetLevel - item.currentLevel), 0);
-      const current = memberMap.get(item.userId) ?? { gaps: [], readyCount: 0, count: 0 };
+      const gap = Math.max(item.gapLevel ?? item.gap ?? (item.targetLevel - item.currentLevel), 0);
+      const uId = Number(item.userId);
+      if (!uId) continue;
+
+      const current = memberMap.get(uId) ?? { gaps: [], readyCount: 0, count: 0 };
       current.gaps.push(gap);
       current.count += 1;
       if (gap <= 0) {
         current.readyCount += 1;
       }
-      memberMap.set(item.userId, current);
+      memberMap.set(uId, current);
     }
 
     this.topMemberGaps = Array.from(memberMap.entries())
@@ -306,11 +382,11 @@ export class CompetenciesInsightsComponent implements OnInit {
           readyCount: data.readyCount
         };
       })
-      .sort((left, right) => right.averageGap - left.averageGap)
+      .sort((left, right) => right.averageGap - left.averageGap || right.maxGap - left.maxGap)
       .slice(0, 5);
 
     this.strongestMembers = [...this.topMemberGaps]
-      .sort((left, right) => right.readyCount - left.readyCount || left.averageGap - right.averageGap)
+      .sort((left, right) => (right.readyCount / right.assignedCount) - (left.readyCount / left.assignedCount) || left.averageGap - right.averageGap)
       .slice(0, 5);
   }
 }
