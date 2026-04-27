@@ -47,6 +47,7 @@
 .faw__bot-face {
   width: 38px;
   height: 38px;
+  object-fit: contain;
 }
 
 // Pulsing ring
@@ -117,6 +118,7 @@
   border-radius: 50%;
   padding: 4px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .faw__header-info {

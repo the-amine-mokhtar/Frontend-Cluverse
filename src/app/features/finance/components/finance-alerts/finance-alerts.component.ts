@@ -28,13 +28,55 @@ export class FinanceAlertsComponent implements OnInit, OnDestroy {
   readonly pageSize = 10;
 
   // Simulate panel
-  showSimulate = false;
-  simAmount    = 500000;
-  simStatus    = 'succeeded';
-  simCustomer  = '';
+  showSimulate  = false;
+  simAmount     = 500000;
+  simStatus     = 'succeeded';
+  simCustomer   = '';
   simDescription = 'Test transaction';
+  simScenario   = 'normal';
   simResult: string | null = null;
-  isSimulating = false;
+  isSimulating  = false;
+
+  readonly SCENARIOS: { value: string; label: string }[] = [
+    { value: 'normal',                label: 'Normal transaction' },
+    { value: 'blocked',               label: 'Always blocked (4100 0000 0000 0019)' },
+    { value: 'highest_risk',          label: 'Highest risk — Radar (4000 0000 0000 4954)' },
+    { value: 'elevated_risk',         label: 'Elevated risk — Radar (4000 0000 0000 9235)' },
+    { value: 'manual_review',         label: 'Queued for manual review (dispute score card)' },
+    { value: 'cvc_fail',              label: 'CVC check fails (4000 0000 0000 0101)' },
+    { value: 'postal_fail',           label: 'Postal code check fails (4000 0000 0000 0036)' },
+    { value: 'address_fail',          label: 'Address line 1 check fails (4000 0000 0000 0028)' },
+    { value: 'cvc_postal_elevated',   label: 'CVC + postal fail + elevated (4000 0584 0030 7872)' },
+    { value: 'early_fraud_warning',   label: 'Early fraud warning (radar.early_fraud_warning)' },
+    { value: 'dispute',               label: 'Charge disputed (charge.dispute.created)' },
+  ];
+
+  private buildScenarioOverrides() {
+    switch (this.simScenario) {
+      case 'blocked':
+        return { stripeOutcomeType: 'blocked' } as const;
+      case 'highest_risk':
+        return { stripeRiskLevel: 'highest', stripeRiskScore: 85 } as const;
+      case 'elevated_risk':
+        return { stripeRiskLevel: 'elevated', stripeRiskScore: 65 } as const;
+      case 'manual_review':
+        return { stripeOutcomeType: 'manual_review', stripeRiskLevel: 'elevated' } as const;
+      case 'cvc_fail':
+        return { cvcCheck: 'fail' } as const;
+      case 'postal_fail':
+        return { postalCheck: 'fail' } as const;
+      case 'address_fail':
+        return { addressCheck: 'fail' } as const;
+      case 'cvc_postal_elevated':
+        return { cvcCheck: 'fail', postalCheck: 'fail', stripeRiskLevel: 'elevated' } as const;
+      case 'early_fraud_warning':
+        return { isEarlyFraudWarning: true, fraudType: 'card_not_present_fraud' } as const;
+      case 'dispute':
+        return { isDispute: true, disputeReason: 'fraudulent' } as const;
+      default:
+        return {};
+    }
+  }
 
   dismissingId: number | null = null;
 
@@ -145,6 +187,7 @@ export class FinanceAlertsComponent implements OnInit, OnDestroy {
       status:      this.simStatus,
       customer:    this.simCustomer || undefined,
       description: this.simDescription,
+      ...this.buildScenarioOverrides(),
     }).subscribe({
       next: ({ alert, stored }) => {
         this.isSimulating = false;

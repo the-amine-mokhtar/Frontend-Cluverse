@@ -46,6 +46,12 @@
     <h3 class="simulate-panel__title">Simulate Stripe Transaction</h3>
     <p class="simulate-panel__hint">Sends a fake event through the full fraud pipeline (rule engine + ML).</p>
     <div class="simulate-panel__fields">
+      <label class="sim-field sim-field--full">
+        <span>Stripe Fraud Scenario</span>
+        <select [(ngModel)]="simScenario">
+          <option *ngFor="let s of SCENARIOS" [value]="s.value">{{ s.label }}</option>
+        </select>
+      </label>
       <label class="sim-field">
         <span>Amount (cents)</span>
         <input type="number" [(ngModel)]="simAmount" min="1" />

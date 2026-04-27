@@ -67,6 +67,17 @@ export class FraudDetectionService {
     status?: string;
     customer?: string;
     description?: string;
+    // Stripe Radar scenario fields
+    stripeRiskLevel?:   'normal' | 'elevated' | 'highest';
+    stripeRiskScore?:   number;
+    stripeOutcomeType?: 'authorized' | 'blocked' | 'issuer_declined' | 'manual_review';
+    cvcCheck?:          'pass' | 'fail';
+    postalCheck?:       'pass' | 'fail';
+    addressCheck?:      'pass' | 'fail';
+    isEarlyFraudWarning?: boolean;
+    fraudType?:         string;
+    isDispute?:         boolean;
+    disputeReason?:     string;
   }): Observable<{ alert: FraudAlert; stored: boolean }> {
     return this.http.post<{ alert: FraudAlert; stored: boolean }>(
       `${this.baseUrl}/api/fraud-alerts/simulate`,

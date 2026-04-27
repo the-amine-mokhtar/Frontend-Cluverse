@@ -1,4 +1,5 @@
 <section class="finance-page">
+
   <header class="finance-page__header">
     <div>
       <h1 class="finance-page__title">Finance Dashboard</h1>
@@ -6,6 +7,13 @@
     </div>
 
     <div class="finance-page__actions">
+      <div class="exercise-bar">
+        <label class="exercise-bar__label" for="exerciseYear">Year</label>
+        <select id="exerciseYear" class="exercise-bar__select" [(ngModel)]="selectedExerciseYear"
+          (ngModelChange)="onExerciseYearChange($event)">
+          <option *ngFor="let year of availableExerciseYears" [ngValue]="year">{{ year }}</option>
+        </select>
+      </div>
       <button type="button" class="btn btn--secondary" (click)="openInvoicePanel()">Facture Sponsor</button>
       <button type="button" class="btn btn--secondary" (click)="openExportCustomization()">Exporter Rapport</button>
     </div>
@@ -20,19 +28,12 @@
     <a class="finance-nav__item" routerLink="/dashboard/finance/alerts">Alerts</a>
   </nav>
 
-  <section class="exercise-bar">
-    <label class="exercise-bar__label" for="exerciseYear">Exercice</label>
-    <select id="exerciseYear" class="exercise-bar__select" [(ngModel)]="selectedExerciseYear"
-      (ngModelChange)="onExerciseYearChange($event)">
-      <option *ngFor="let year of availableExerciseYears" [ngValue]="year">{{ year }}</option>
-    </select>
-  </section>
-
+  <!-- Alert popup (floating) -->
   <section class="alert-popup" *ngIf="showBudgetAlertPopup && popupBudgetUtilizationAlerts.length > 0"
     aria-live="polite">
     <header class="alert-popup__header">
       <div>
-        <h3>Budget vs Actual Alerts</h3>
+        <h3>Budget Alerts</h3>
         <p class="alert-popup__subtitle">{{ popupBudgetUtilizationAlerts.length }} active alert{{
           popupBudgetUtilizationAlerts.length > 1 ? 's' : '' }} require attention</p>
       </div>
@@ -74,9 +75,9 @@
         {{ budgetAlertEmailStatus }}
       </span>
     </div>
-
   </section>
 
+  <!-- Export branding panel -->
   <section class="branding-panel" *ngIf="showBrandingPanel">
     <div class="branding-panel__header">
       <div class="branding-panel__identity">
@@ -95,12 +96,10 @@
         <span>Titre du rapport</span>
         <input type="text" [(ngModel)]="reportTitle" placeholder="Rapport Financier Personnalise" />
       </label>
-
       <label class="branding-panel__field branding-panel__field--color">
         <span>Couleur primaire</span>
         <input type="color" [(ngModel)]="brandPrimaryColor" />
       </label>
-
       <label class="branding-panel__field branding-panel__field--color">
         <span>Couleur accent</span>
         <input type="color" [(ngModel)]="brandAccentColor" />
@@ -113,6 +112,7 @@
     </div>
   </section>
 
+  <!-- Invoice panel -->
   <section class="branding-panel" *ngIf="showInvoicePanel">
     <div class="branding-panel__identity">
       <div>
@@ -129,32 +129,26 @@
           <option *ngFor="let sponsor of sponsorOptions" [ngValue]="sponsor.id">{{ sponsor.name }}</option>
         </select>
       </label>
-
       <label class="branding-panel__field">
         <span>Numero facture</span>
         <input type="text" [(ngModel)]="invoiceNumber" />
       </label>
-
       <label class="branding-panel__field">
         <span>Titre</span>
         <input type="text" [(ngModel)]="invoiceTitle" placeholder="FACTURE" />
       </label>
-
       <label class="branding-panel__field">
         <span>Date emission</span>
         <input type="date" [(ngModel)]="invoiceIssueDate" />
       </label>
-
       <label class="branding-panel__field">
         <span>Date echeance</span>
         <input type="date" [(ngModel)]="invoiceDueDate" />
       </label>
-
       <label class="branding-panel__field">
         <span>TVA (%)</span>
         <input type="number" min="0" step="0.1" [(ngModel)]="invoiceVatRate" />
       </label>
-
       <label class="branding-panel__field">
         <span>Remise (%)</span>
         <input type="number" min="0" step="0.1" [(ngModel)]="invoiceDiscount" />
@@ -167,62 +161,173 @@
     </div>
   </section>
 
+  <!-- KPI Stat Cards -->
   <div class="stats-grid">
-    <article class="stat-card">
-      <span class="stat-card__label">Total Budget</span>
+    <article class="stat-card stat-card--budget">
+      <div class="stat-card__header">
+        <span class="stat-card__label">Total Budget</span>
+        <div class="stat-card__icon">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+        </div>
+      </div>
       <span class="stat-card__value">{{ formatCurrency(totalBudget) }}</span>
+      <span class="stat-card__hint">Allocated this exercise</span>
     </article>
 
-    <article class="stat-card">
-      <span class="stat-card__label">Spent</span>
+    <article class="stat-card stat-card--spent">
+      <div class="stat-card__header">
+        <span class="stat-card__label">Spent</span>
+        <div class="stat-card__icon">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd"/></svg>
+        </div>
+      </div>
       <span class="stat-card__value stat-card__value--danger">{{ formatCurrency(totalSpent) }}</span>
+      <span class="stat-card__hint">Total expenses recorded</span>
     </article>
 
-    <article class="stat-card">
-      <span class="stat-card__label">Remaining</span>
+    <article class="stat-card stat-card--remaining">
+      <div class="stat-card__header">
+        <span class="stat-card__label">Remaining</span>
+        <div class="stat-card__icon">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        </div>
+      </div>
       <span class="stat-card__value stat-card__value--success">{{ formatCurrency(remainingBudget) }}</span>
+      <span class="stat-card__hint">Available to allocate</span>
     </article>
 
-    <article class="stat-card">
-      <span class="stat-card__label">Monthly Net</span>
+    <article class="stat-card" [class.stat-card--net-pos]="netFlow >= 0" [class.stat-card--net-neg]="netFlow < 0">
+      <div class="stat-card__header">
+        <span class="stat-card__label">Monthly Net</span>
+        <div class="stat-card__icon">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/></svg>
+        </div>
+      </div>
       <span class="stat-card__value" [class.stat-card__value--success]="netFlow >= 0"
         [class.stat-card__value--danger]="netFlow < 0">
         {{ netFlow >= 0 ? '+' : '-' }}{{ formatCurrency(absoluteNetFlow) }}
       </span>
+      <span class="stat-card__hint">This month's net flow</span>
     </article>
   </div>
 
+  <!-- Fraud Alerts Overview -->
+  <section class="alerts-overview" *ngIf="fraudAlerts.length > 0 || fraudAlertsLoading">
+    <div class="alerts-overview__head">
+      <div class="alerts-overview__title-group">
+        <svg class="alerts-overview__icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <h3 class="alerts-overview__title">Fraud Alerts</h3>
+        <span class="alerts-overview__badge">{{ fraudAlerts.length }}</span>
+      </div>
+      <div class="alerts-overview__pills">
+        <span class="alert-pill alert-pill--limit" *ngIf="fraudCountBySeverity('critical') > 0">
+          {{ fraudCountBySeverity('critical') }} critical
+        </span>
+        <span class="alert-pill alert-pill--critical" *ngIf="fraudCountBySeverity('high') > 0">
+          {{ fraudCountBySeverity('high') }} high
+        </span>
+        <span class="alert-pill alert-pill--warning" *ngIf="fraudCountBySeverity('medium') > 0">
+          {{ fraudCountBySeverity('medium') }} medium
+        </span>
+      </div>
+    </div>
+
+    <p class="status" *ngIf="fraudAlertsLoading">Loading fraud alerts...</p>
+
+    <div class="fraud-list" *ngIf="!fraudAlertsLoading">
+      <article class="fraud-card"
+        *ngFor="let alert of fraudAlerts.slice(0, 3)"
+        [class.fraud-card--critical]="alert.severity === 'critical'"
+        [class.fraud-card--high]="alert.severity === 'high'"
+        [class.fraud-card--medium]="alert.severity === 'medium'"
+        [class.fraud-card--low]="alert.severity === 'low'">
+
+        <div class="fraud-card__header">
+          <div class="fraud-card__id-row">
+            <code class="fraud-card__tx-id">{{ alert.transactionId }}</code>
+            <span [class]="fraudSeverityClass(alert.severity)">{{ alert.severity | uppercase }}</span>
+            <span class="badge badge--event">{{ alert.eventType }}</span>
+          </div>
+          <span class="fraud-card__time">{{ formatFraudDate(alert.flaggedAt) }}</span>
+        </div>
+
+        <div class="fraud-card__body">
+          <div class="fraud-card__amount-row">
+            <span class="fraud-card__amount">{{ formatFraudAmount(alert.amount, alert.currency) }}</span>
+            <span class="fraud-card__status" [class.fraud-card__status--failed]="alert.status === 'failed'">{{ alert.status }}</span>
+          </div>
+
+          <div class="score-bar" role="progressbar" [attr.aria-valuenow]="alert.riskScore" aria-valuemin="0" aria-valuemax="100">
+            <div class="score-bar__fill" [class]="fraudScoreBarClass(alert.riskScore)" [style.width.%]="alert.riskScore"></div>
+          </div>
+          <div class="score-bar__labels">
+            <span class="score-bar__score">Risk score: <strong>{{ alert.riskScore }}/100</strong></span>
+            <span class="score-bar__ml">ML anomaly: {{ (alert.mlAnomalyScore * 100) | number:'1.0-0' }}%</span>
+          </div>
+
+          <ul class="alert-reasons" *ngIf="alert.reasons.length">
+            <li class="alert-reasons__item" *ngFor="let reason of alert.reasons.slice(0, 2)">
+              <span class="alert-reasons__dot"></span>{{ reason }}
+            </li>
+          </ul>
+        </div>
+
+        <div class="fraud-card__footer">
+          <button
+            class="btn btn--ghost btn--sm"
+            type="button"
+            (click)="dismissFraudAlert(alert)"
+            [disabled]="dismissingFraudId === alert.internalId">
+            {{ dismissingFraudId === alert.internalId ? 'Dismissing...' : 'Dismiss' }}
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <a routerLink="/dashboard/finance/alerts" class="alerts-overview__see-all">
+      View all fraud alerts &rarr;
+    </a>
+  </section>
+
+  <p class="status" *ngIf="isLoading">Loading finance dashboard...</p>
+  <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <!-- Forecast Panel -->
   <section class="panel" *ngIf="aiForecast && forecastProjections.length > 0">
     <header class="panel__header">
       <div>
         <h2 class="panel__title">Treasury Cash Forecast</h2>
-        <p class="panel__subtitle">A practical view of expected cash position for 1, 3, and 6 months</p>
+        <p class="panel__subtitle">Expected cash position for 1, 3, and 6 months</p>
       </div>
     </header>
 
-    <div class="forecast-switch" role="tablist" aria-label="Forecast horizons">
-      <button type="button" class="forecast-switch__btn"
-        [class.forecast-switch__btn--active]="selectedForecastHorizon === 1" (click)="setForecastHorizon(1)">1M</button>
-      <button type="button" class="forecast-switch__btn"
-        [class.forecast-switch__btn--active]="selectedForecastHorizon === 3" (click)="setForecastHorizon(3)">3M</button>
-      <button type="button" class="forecast-switch__btn"
-        [class.forecast-switch__btn--active]="selectedForecastHorizon === 6" (click)="setForecastHorizon(6)">6M</button>
-    </div>
-
-    <div class="forecast-health" *ngIf="selectedForecastProjection as forecast">
-      <span class="reliability-badge" [ngClass]="getConfidenceToneClass(forecast)">
-        Confidence: {{ getConfidenceLabel(forecast) }}
-      </span>
-      <span class="reliability-badge" [ngClass]="getRiskToneClass(forecast)">
-        Risk: {{ forecast.riskLevel || 'Moderate' }}
-      </span>
-      <span class="forecast-health__hint">Data quality {{ forecast.dataQualityScore ?? 0 }}%</span>
+    <div class="forecast-controls">
+      <div class="forecast-switch" role="tablist" aria-label="Forecast horizons">
+        <button type="button" class="forecast-switch__btn"
+          [class.forecast-switch__btn--active]="selectedForecastHorizon === 1" (click)="setForecastHorizon(1)">1M</button>
+        <button type="button" class="forecast-switch__btn"
+          [class.forecast-switch__btn--active]="selectedForecastHorizon === 3" (click)="setForecastHorizon(3)">3M</button>
+        <button type="button" class="forecast-switch__btn"
+          [class.forecast-switch__btn--active]="selectedForecastHorizon === 6" (click)="setForecastHorizon(6)">6M</button>
+      </div>
+      <div class="forecast-health" *ngIf="selectedForecastProjection as forecast">
+        <span class="reliability-badge" [ngClass]="getConfidenceToneClass(forecast)">
+          Confidence: {{ getConfidenceLabel(forecast) }}
+        </span>
+        <span class="reliability-badge" [ngClass]="getRiskToneClass(forecast)">
+          Risk: {{ forecast.riskLevel || 'Moderate' }}
+        </span>
+        <span class="forecast-health__hint">Data quality {{ forecast.dataQualityScore ?? 0 }}%</span>
+      </div>
     </div>
 
     <p class="forecast-summary" *ngIf="selectedForecastProjection as forecast">
       {{ forecast.summary || 'Forecast prepared from recent transactions and planned budgets.' }}
     </p>
 
+    <!-- 4 key metric cards -->
     <div class="forecast-grid" *ngIf="selectedForecastProjection as forecast">
       <article class="forecast-card">
         <span class="forecast-card__label">Expected Cash At End</span>
@@ -232,95 +337,88 @@
           {{ forecast.expectedClosingBalance !== undefined ? formatCurrency(forecast.expectedClosingBalance) : 'N/A' }}
         </strong>
       </article>
-
       <article class="forecast-card">
         <span class="forecast-card__label">Projected Income</span>
-        <strong class="forecast-card__value forecast-card__value--income">{{ formatCurrency(forecast.projectedInflow)
-          }}</strong>
+        <strong class="forecast-card__value forecast-card__value--income">{{ formatCurrency(forecast.projectedInflow) }}</strong>
       </article>
-
       <article class="forecast-card">
         <span class="forecast-card__label">Projected Expenses</span>
-        <strong class="forecast-card__value forecast-card__value--expense">{{ formatCurrency(forecast.projectedOutflow)
-          }}</strong>
+        <strong class="forecast-card__value forecast-card__value--expense">{{ formatCurrency(forecast.projectedOutflow) }}</strong>
       </article>
-
       <article class="forecast-card">
         <span class="forecast-card__label">Expected Net Change</span>
-        <strong class="forecast-card__value" [class.forecast-card__value--income]="forecast.projectedNet >= 0"
+        <strong class="forecast-card__value"
+          [class.forecast-card__value--income]="forecast.projectedNet >= 0"
           [class.forecast-card__value--expense]="forecast.projectedNet < 0">
           {{ forecast.projectedNet >= 0 ? '+' : '-' }}{{ formatCurrency(absValue(forecast.projectedNet)) }}
         </strong>
       </article>
-
-      <article class="forecast-card">
-        <span class="forecast-card__label">Most Likely Cash Range</span>
-        <strong class="forecast-card__value">
-          {{ forecast.closingLowerBound !== undefined ? formatCurrency(forecast.closingLowerBound) :
-          formatCurrency(forecast.netLowerBound) }} to {{ forecast.closingUpperBound !== undefined ?
-          formatCurrency(forecast.closingUpperBound) : formatCurrency(forecast.netUpperBound) }}
-        </strong>
-      </article>
-
-      <article class="forecast-card">
-        <span class="forecast-card__label">Forecast Confidence Score</span>
-        <strong class="forecast-card__value">{{ forecast.confidenceScore }}%</strong>
-      </article>
-
-      <article class="forecast-card">
-        <span class="forecast-card__label">Data Quality</span>
-        <strong class="forecast-card__value">{{ forecast.dataQualityScore ?? 0 }}%</strong>
-      </article>
     </div>
 
-    <div class="forecast-table-wrap" *ngIf="selectedForecastProjection as forecast">
-      <table class="forecast-table">
-        <thead>
-          <tr>
-            <th>Month</th>
-            <th>Income</th>
-            <th>Expenses</th>
-            <th>Event Budget Cost</th>
-            <th>Net Change</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let month of forecast.monthlyBreakdown">
-            <td>{{ month.monthLabel }}</td>
-            <td class="forecast-table__income">{{ formatCurrency(month.projectedInflow) }}</td>
-            <td class="forecast-table__expense">{{ formatCurrency(month.projectedOutflow) }}</td>
-            <td>{{ formatCurrency(month.eventOutflowShare) }}</td>
-            <td [class.forecast-table__income]="month.projectedNet >= 0"
-              [class.forecast-table__expense]="month.projectedNet < 0">{{ month.projectedNet >= 0 ? '+' : '-' }}{{
-              formatCurrency(absValue(month.projectedNet)) }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Tabs -->
+    <div class="forecast-tabs" role="tablist">
+      <button class="forecast-tab" role="tab"
+        [class.forecast-tab--active]="forecastTab === 'breakdown'"
+        (click)="setForecastTab('breakdown')">Monthly Breakdown</button>
+      <button class="forecast-tab" role="tab"
+        [class.forecast-tab--active]="forecastTab === 'insights'"
+        (click)="setForecastTab('insights')">Factors &amp; Actions</button>
     </div>
 
-    <div class="forecast-factors" *ngIf="selectedForecastProjection as forecast">
-      <h3 class="forecast-factors__title">Why This Forecast Looks Like This</h3>
-      <p class="forecast-factors__meta">Historical check points used: {{ forecast.backtestSampleSize }}</p>
-      <ul class="forecast-factors__list">
-        <li *ngFor="let factor of forecast.factors"
-          [class.forecast-factors__item--positive]="factor.impact === 'positive'"
-          [class.forecast-factors__item--negative]="factor.impact === 'negative'">
-          {{ factor.label }}
-        </li>
-      </ul>
-    </div>
+    <ng-container *ngIf="selectedForecastProjection as forecast">
 
-    <div class="forecast-actions" *ngIf="selectedForecastProjection as forecast">
-      <h3 class="forecast-factors__title">Recommended Actions For Treasurer</h3>
-      <ul class="forecast-factors__list">
-        <li *ngFor="let action of forecast.actionItems">{{ action }}</li>
-      </ul>
-    </div>
+      <!-- Breakdown tab -->
+      <div class="forecast-table-wrap" *ngIf="forecastTab === 'breakdown'">
+        <table class="forecast-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Income</th>
+              <th>Expenses</th>
+              <th>Event Budget Cost</th>
+              <th>Net Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let month of forecast.monthlyBreakdown">
+              <td>{{ month.monthLabel }}</td>
+              <td class="forecast-table__income">{{ formatCurrency(month.projectedInflow) }}</td>
+              <td class="forecast-table__expense">{{ formatCurrency(month.projectedOutflow) }}</td>
+              <td>{{ formatCurrency(month.eventOutflowShare) }}</td>
+              <td [class.forecast-table__income]="month.projectedNet >= 0"
+                [class.forecast-table__expense]="month.projectedNet < 0">
+                {{ month.projectedNet >= 0 ? '+' : '-' }}{{ formatCurrency(absValue(month.projectedNet)) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Insights tab -->
+      <div class="forecast-insights" *ngIf="forecastTab === 'insights'">
+        <div class="forecast-factors">
+          <h3 class="forecast-factors__title">Why This Forecast Looks Like This</h3>
+          <p class="forecast-factors__meta">Historical check points used: {{ forecast.backtestSampleSize }}</p>
+          <ul class="forecast-factors__list">
+            <li *ngFor="let factor of forecast.factors"
+              [class.forecast-factors__item--positive]="factor.impact === 'positive'"
+              [class.forecast-factors__item--negative]="factor.impact === 'negative'">
+              {{ factor.label }}
+            </li>
+          </ul>
+        </div>
+        <div class="forecast-actions">
+          <h3 class="forecast-factors__title">Recommended Actions</h3>
+          <ul class="forecast-factors__list">
+            <li *ngFor="let action of forecast.actionItems">{{ action }}</li>
+          </ul>
+        </div>
+      </div>
+
+    </ng-container>
   </section>
 
-  <p class="status" *ngIf="isLoading">Loading finance dashboard...</p>
-  <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
-
+  <!-- Financial Statistics -->
   <section class="panel">
     <header class="panel__header">
       <div>
@@ -339,7 +437,7 @@
         <strong class="kpi-card__value">{{ incomeExpenseRatio | number:'1.2-2' }}x</strong>
       </article>
       <article class="kpi-card">
-        <span class="kpi-card__label">Average Transaction</span>
+        <span class="kpi-card__label">Avg Transaction</span>
         <strong class="kpi-card__value">{{ formatCurrency(averageTransactionAmount) }}</strong>
       </article>
       <article class="kpi-card">
@@ -348,8 +446,7 @@
       </article>
       <article class="kpi-card">
         <span class="kpi-card__label">Runway</span>
-        <strong class="kpi-card__value">{{ runwayMonths > 900 ? 'N/A' : (runwayMonths | number:'1.1-1') + ' months'
-          }}</strong>
+        <strong class="kpi-card__value">{{ runwayMonths > 900 ? 'N/A' : (runwayMonths | number:'1.1-1') + ' mo' }}</strong>
       </article>
       <article class="kpi-card">
         <span class="kpi-card__label">Savings Rate</span>
@@ -358,10 +455,6 @@
       <article class="kpi-card">
         <span class="kpi-card__label">Largest Income</span>
         <strong class="kpi-card__value kpi-card__value--income">{{ formatCurrency(largestIncome) }}</strong>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-card__label">Largest Expense</span>
-        <strong class="kpi-card__value kpi-card__value--expense">{{ formatCurrency(largestExpense) }}</strong>
       </article>
       <article class="kpi-card">
         <span class="kpi-card__label">Budget Variance</span>
@@ -418,6 +511,7 @@
     </div>
   </section>
 
+  <!-- Budget + Transactions -->
   <div class="finance-grid">
     <section class="panel">
       <header class="panel__header">
@@ -429,12 +523,12 @@
       </header>
 
       <div class="panel-tools">
-        <input class="panel-tools__search" type="text" placeholder="Search budget cards..."
+        <input class="panel-tools__search" type="text" placeholder="Search budgets..."
           [(ngModel)]="budgetSearchTerm" (ngModelChange)="resetBudgetPage()" />
         <select class="panel-tools__filter" [(ngModel)]="budgetFilter" (ngModelChange)="resetBudgetPage()">
-          <option value="all">All Utilization</option>
+          <option value="all">All</option>
           <option value="healthy">Healthy (&lt;70%)</option>
-          <option value="warning">Warning (70-90%)</option>
+          <option value="warning">Warning (70–90%)</option>
           <option value="critical">Critical (&gt;90%)</option>
         </select>
       </div>
@@ -448,19 +542,16 @@
             </div>
             <span class="budget-card__amount">{{ formatCurrency(budget.spent) }}</span>
           </div>
-
           <div class="budget-card__progress" role="progressbar" [attr.aria-valuenow]="utilization(budget)"
             aria-valuemin="0" aria-valuemax="100">
             <div class="budget-card__bar" [style.width.%]="utilization(budget)"></div>
           </div>
-
           <div class="budget-card__bottom">
             <span>{{ utilization(budget) }}% used</span>
             <strong>{{ formatCurrency(budget.total) }}</strong>
           </div>
         </article>
-        <p class="status" *ngIf="!isLoading && filteredBudgetItems.length === 0 && !errorMessage">No budgets match your
-          search/filter.</p>
+        <p class="status" *ngIf="!isLoading && filteredBudgetItems.length === 0 && !errorMessage">No budgets match your filter.</p>
       </div>
       <div class="trend-pagination" *ngIf="budgetTotalPages > 1">
         <button class="trend-pagination__btn" (click)="budgetPrev()" [disabled]="budgetPage === 0">&#8249;</button>
@@ -490,19 +581,20 @@
 
       <div class="transactions-list">
         <article class="transaction-row" *ngFor="let transaction of pagedRecentTransactions">
-          <div>
+          <div class="transaction-row__dot"
+            [class.transaction-row__dot--income]="transaction.type === 'income'"
+            [class.transaction-row__dot--expense]="transaction.type === 'expense'"></div>
+          <div class="transaction-row__body">
             <h3 class="transaction-row__title">{{ transaction.description }}</h3>
-            <p class="transaction-row__meta">{{ transaction.category }} . {{ transaction.date }} . {{
-              transaction.addedBy }}</p>
+            <p class="transaction-row__meta">{{ transaction.category }} &middot; {{ transaction.date }}</p>
           </div>
-
-          <span class="transaction-row__amount" [class.transaction-row__amount--income]="transaction.type === 'income'"
+          <span class="transaction-row__amount"
+            [class.transaction-row__amount--income]="transaction.type === 'income'"
             [class.transaction-row__amount--expense]="transaction.type === 'expense'">
             {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
           </span>
         </article>
-        <p class="status" *ngIf="!isLoading && filteredRecentTransactions.length === 0 && !errorMessage">No transactions
-          match your search/filter.</p>
+        <p class="status" *ngIf="!isLoading && filteredRecentTransactions.length === 0 && !errorMessage">No transactions match your filter.</p>
       </div>
       <div class="trend-pagination" *ngIf="transactionTotalPages > 1">
         <button class="trend-pagination__btn" (click)="transactionPrev()" [disabled]="transactionPage === 0">&#8249;</button>
@@ -511,4 +603,5 @@
       </div>
     </section>
   </div>
+
 </section>
