@@ -26,7 +26,7 @@ import { AuthHelperService } from '../../../../core/services/auth-helper.service
 })
 export class SessionsDashboardComponent implements OnInit, OnDestroy {
 
-  readonly weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  readonly weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   readonly adminStatusFilters: Array<'ALL' | SessionStatus> = ['ALL', 'SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED'];
   readonly adminStatusChecks: SessionStatus[] = ['SCHEDULED', 'ONGOING', 'COMPLETED'];
 
@@ -137,7 +137,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
     this.isMemberRole = this.role === 'MEMBER';
 
     if (!this.clubId) {
-      this.errorMessage = 'Club introuvable. Reconnecte-toi puis reessaie.';
+      this.errorMessage = 'Club not found. Reconnect and try again.';
       return;
     }
 
@@ -174,7 +174,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'Impossible de charger les données du club.';
+        this.errorMessage = 'Failed to load club data.';
       }
     });
   }
@@ -193,7 +193,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
           },
           error: () => {
             this.loading = false;
-            this.errorMessage = 'Impossible de charger les sessions.';
+            this.errorMessage = 'Failed to load sessions.';
           }
         });
       return;
@@ -219,7 +219,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'Impossible de charger les sessions.';
+        this.errorMessage = 'Failed to load sessions.';
       }
     });
   }
@@ -269,7 +269,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
     }
     const participantUserIds = this.selectedParticipantIds;
     if (participantUserIds.length === 0) {
-      this.errorMessage = 'Sélectionne au moins un participant.';
+      this.errorMessage = 'Select at least one participant.';
       return;
     }
     const payload: CompetencySessionScheduleRequest = {
@@ -287,14 +287,14 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.saving = false;
-          this.successMessage = 'Session programmée avec succès.';
+          this.successMessage = 'Session scheduled successfully.';
           this.closeScheduleDialog();
           this.loading = true;
           this.loadSessions();
         },
         error: () => {
           this.saving = false;
-          this.errorMessage = 'Planification impossible.';
+          this.errorMessage = 'Scheduling failed.';
         }
       });
   }
@@ -315,7 +315,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
           this.closeDialogParticipants = participants.map(p => ({ ...p, attended: p.attended ?? false }));
         },
         error: () => {
-          this.errorMessage = 'Impossible de charger les participants.';
+          this.errorMessage = 'Failed to load participants.';
         }
       });
   }
@@ -343,14 +343,14 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.saving = false;
-          this.successMessage = 'Session clôturée.';
+          this.successMessage = 'Session closed.';
           this.closeCloseDialog();
           this.loading = true;
           this.loadSessions();
         },
         error: (error) => {
           this.saving = false;
-          this.errorMessage = error?.message || 'Clôture impossible.';
+          this.errorMessage = error?.message || 'Failed to close session.';
         }
       });
   }
@@ -422,7 +422,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
     };
 
     if (payload.participantUserIds.length === 0) {
-      this.errorMessage = 'Sélectionne au moins un participant.';
+      this.errorMessage = 'Select at least one participant.';
       return;
     }
 
@@ -433,13 +433,13 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
         next: (participants) => {
           this.saving = false;
           this.participantsDialogParticipants = participants;
-          this.successMessage = 'Participants mis à jour.';
+          this.successMessage = 'Participants updated.';
           this.loading = true;
           this.loadSessions();
         },
         error: () => {
           this.saving = false;
-          this.errorMessage = 'Mise à jour des participants impossible.';
+          this.errorMessage = 'Failed to update participants.';
         }
       });
   }
@@ -455,14 +455,14 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.saving = false;
-        this.successMessage = 'Session annulée.';
+        this.successMessage = 'Session cancelled.';
         this.closeCancelDialog();
         this.loading = true;
         this.loadSessions();
       },
       error: (error) => {
         this.saving = false;
-        this.errorMessage = error?.message || 'Annulation impossible.';
+        this.errorMessage = error?.message || 'Failed to cancel session.';
       }
     });
   }
@@ -471,7 +471,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
 
   openRescheduleDialog(session: CompetencySessionResponse): void {
     if (!this.canReschedule(session)) {
-      this.errorMessage = 'Cette session ne peut pas être replanifiée.';
+      this.errorMessage = 'This session cannot be rescheduled.';
       return;
     }
     this.closeSessionDetailsDialog();
@@ -493,7 +493,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
     }
     const date = new Date(this.rescheduleForm.controls.startsAt.value);
     if (isNaN(date.getTime())) {
-      this.errorMessage = 'Date invalide.';
+      this.errorMessage = 'Date invalid.';
       return;
     }
     this.rescheduleSessionToDate(this.rescheduleTargetSession, date, false);
@@ -505,7 +505,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
     if (!day) return;
     const session = event.item.data as CompetencySessionResponse;
     if (!session || !this.canReschedule(session)) {
-      this.errorMessage = 'Impossible de replanifier cette session.';
+      this.errorMessage = 'Cannot reschedule this session.';
       return;
     }
     const original = new Date(session.startsAt);
@@ -542,8 +542,8 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
         next: (updated) => {
           this.saving = false;
           this.successMessage = fromDrag
-            ? 'Session replanifiée par glisser-déposer.'
-            : 'Session replanifiée avec succès.';
+            ? 'Session rescheduled by drag & drop.'
+            : 'Session rescheduled successfully.';
           this.adminSessions = this.adminSessions.map(s => s.id === updated.id ? updated : s);
           this.ensureCalendarSelection();
           this.ensureSelectedAdminSession();
@@ -553,7 +553,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.saving = false;
-          this.errorMessage = error?.message || 'Replanification impossible.';
+          this.errorMessage = error?.message || 'Rescheduling failed.';
         }
       });
   }
@@ -633,7 +633,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
   // ─── getters computed ────────────────────────────────────────────────
 
   get calendarMonthLabel(): string {
-    return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(this.currentCalendarDate);
+    return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(this.currentCalendarDate);
   }
 
   get calendarSessions(): CompetencySessionResponse[] {
@@ -671,7 +671,7 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
 
   get selectedCalendarDateLabel(): string {
     if (!this.selectedCalendarDate) return '';
-    return new Intl.DateTimeFormat('fr-FR', {
+    return new Intl.DateTimeFormat('en-US', {
       weekday: 'long',
       day: '2-digit',
       month: 'long',
@@ -735,10 +735,10 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
 
   statusLabel(status: SessionStatus): string {
     const map: Record<SessionStatus, string> = {
-      SCHEDULED: 'Planifiée',
-      ONGOING: 'En cours',
-      COMPLETED: 'Terminée',
-      CANCELLED: 'Annulée'
+      SCHEDULED: 'Scheduled',
+      ONGOING: 'Ongoing',
+      COMPLETED: 'Completed',
+      CANCELLED: 'Cancelled'
     };
     return map[status] ?? status;
   }
@@ -756,14 +756,14 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
     const dayAfter = new Date(todayStart);
     dayAfter.setDate(todayStart.getDate() + 2);
 
-    if (date >= todayStart && date < tomorrow) return "Aujourd'hui";
-    if (date >= tomorrow && date < dayAfter) return 'Demain';
+    if (date >= todayStart && date < tomorrow) return "Today";
+    if (date >= tomorrow && date < dayAfter) return 'Tomorrow';
     return '';
   }
 
   formatDate(dateValue?: string): string {
     if (!dateValue) return '-';
-    return new Intl.DateTimeFormat('fr-FR', {
+    return new Intl.DateTimeFormat('en-US', {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     }).format(new Date(dateValue));
@@ -771,8 +771,8 @@ export class SessionsDashboardComponent implements OnInit, OnDestroy {
 
   memberDisplayName(userId: number): string {
     const found = this.members.find(m => m.userId === userId);
-    if (!found) return 'Inconnu';
-    return `${found.firstName ?? ''} ${found.lastName ?? ''}`.trim() || found.email || 'Inconnu';
+    if (!found) return 'Unknown';
+    return `${found.firstName ?? ''} ${found.lastName ?? ''}`.trim() || found.email || 'Unknown';
   }
 
   toggleMemberSelection(userId: number): void {

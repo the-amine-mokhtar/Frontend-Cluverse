@@ -114,6 +114,7 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
   sponsorshipsLoading = false;
   sponsorshipsError = '';
   sponsorshipSaving = false;
+  generatingSponsorshipSummary = false;
   sponsorshipSearchQuery = '';
   showAddSponsorshipForm = false;
   showEditSponsorshipForm = false;
@@ -1253,6 +1254,7 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
   openAddSponsorshipForm(): void {
     this.showAddSponsorshipForm = true;
     this.showEditSponsorshipForm = false;
+    this.generatingSponsorshipSummary = false;
     this.sponsorshipForm = {
       sponsorId: this.sponsors[0]?.id || 0,
       eventName: '',
@@ -1264,6 +1266,7 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
 
   cancelAddSponsorshipForm(): void {
     this.showAddSponsorshipForm = false;
+    this.generatingSponsorshipSummary = false;
   }
 
   createSponsorship(): void {
@@ -1279,6 +1282,7 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
       next: (created) => {
         this.sponsorships = [created, ...this.sponsorships];
         this.sponsorshipSaving = false;
+        this.generatingSponsorshipSummary = false;
         this.showAddSponsorshipForm = false;
         this.showToast('Sponsorship card created in Prospecting.', 'success');
       },
@@ -1286,6 +1290,48 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
         this.sponsorshipSaving = false;
         this.sponsorshipsError = this.resolveError(err, 'Failed to create sponsorship.');
         this.showToast(this.sponsorshipsError, 'error');
+      }
+    });
+  }
+
+  generateSponsorshipProposalSummary(): void {
+    if (this.generatingSponsorshipSummary) {
+      return;
+    }
+
+    const sponsor = this.sponsors.find((item) => item.id === this.sponsorshipForm.sponsorId);
+    if (!sponsor?.name) {
+      this.showToast('Select a sponsor before generating the proposal summary.', 'error');
+      return;
+    }
+
+    const eventName = (this.sponsorshipForm.eventName || '').trim();
+    if (!eventName) {
+      this.showToast('Enter the event name before generating the proposal summary.', 'error');
+      return;
+    }
+
+    const expectedAmount = Number(this.sponsorshipForm.expectedAmount || 0);
+    if (!Number.isFinite(expectedAmount) || expectedAmount <= 0) {
+      this.showToast('Enter a valid expected amount before generating the proposal summary.', 'error');
+      return;
+    }
+
+    this.generatingSponsorshipSummary = true;
+    this.sponsorshipService.generateProposalSummaryWithAi({
+      sponsorName: sponsor.name,
+      eventName,
+      expectedAmount
+    }).subscribe({
+      next: (response) => {
+        this.sponsorshipForm.proposalSummary = (response.summary || '').trim();
+        this.generatingSponsorshipSummary = false;
+        this.showToast('Proposal summary generated with AI.', 'success');
+      },
+      error: (err: unknown) => {
+        this.generatingSponsorshipSummary = false;
+        const message = this.resolveError(err, 'Failed to generate proposal summary with AI.');
+        this.showToast(message, 'error');
       }
     });
   }

@@ -2,6 +2,7 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } fr
 import { HttpErrorResponse } from '@angular/common/http';
 import { Stripe, StripeCardElement, StripeCardElementChangeEvent, StripeElements, loadStripe } from '@stripe/stripe-js';
 import { ClubSummary, DonateReceiptPayload, DonateService } from '../../donate.service';
+import { FraudDetectionService } from '../../../finance/services/fraud-detection.service';
 import { environment } from '../../../../../environments/environment.development';
 
 @Component({
@@ -39,7 +40,10 @@ export class DonatePageComponent implements OnInit, AfterViewInit, OnDestroy {
   private elements: StripeElements | null = null;
   private cardElement: StripeCardElement | null = null;
 
-  constructor(private readonly donateService: DonateService) {}
+  constructor(
+    private readonly donateService: DonateService,
+    private readonly fraudService: FraudDetectionService,
+  ) {}
 
   ngOnInit(): void {
     this.loadClubs();
@@ -52,6 +56,13 @@ export class DonatePageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyCard();
+  }
+
+  get cardBrandKey(): 'visa' | 'mastercard' | 'other' {
+    const b = this.cardPreviewBrand.toLowerCase();
+    if (b === 'visa') return 'visa';
+    if (b === 'mastercard') return 'mastercard';
+    return 'other';
   }
 
   get amountTndPreview(): number {
@@ -153,6 +164,7 @@ export class DonatePageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.successMessage = `Thank you, ${this.donorName.trim()}! Your donation of ${this.formatEur(amountEur)} to ${this.selectedClub?.name} was successful. A receipt has been sent to ${this.donorEmail.trim()}.`;
         this.isSubmitting = false;
         this.sendReceipt(amountEur, amountTnd, reference, paymentIntentId, date);
+        this.reportToFraudService(amountEur, paymentIntentId, reference);
       },
       error: (e: unknown) => {
         this.errorMessage = `Payment succeeded but failed to record transaction. ${this.httpError(e)}`;
@@ -174,6 +186,16 @@ export class DonatePageComponent implements OnInit, AfterViewInit, OnDestroy {
       date
     };
     this.donateService.sendDonationReceipt(receipt).subscribe({ error: () => {} });
+  }
+
+  private reportToFraudService(amountEur: number, paymentIntentId: string, reference: string): void {
+    this.fraudService.simulateTransaction({
+      amount:      Math.round(amountEur * 100),
+      currency:    'eur',
+      status:      'succeeded',
+      customer:    this.donorEmail.trim() || undefined,
+      description: `Donation ${reference} | ${this.donorName.trim()} | ${amountEur.toFixed(2)} EUR (${paymentIntentId})`,
+    }).subscribe({ error: () => {} });
   }
 
   private loadClubs(): void {

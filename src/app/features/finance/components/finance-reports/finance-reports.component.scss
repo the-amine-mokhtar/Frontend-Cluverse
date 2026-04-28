@@ -544,3 +544,124 @@
     white-space: pre-wrap;
   }
 }
+
+// ── Light mode ────────────────────────────────────────────────────────────────
+:host-context(body.light-mode) {
+  .finance-page {
+    &__title {
+      background: linear-gradient(120deg, #0f172a 0%, #1d4ed8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    &__subtitle { color: #64748b; }
+  }
+
+  .finance-nav {
+    background: #ffffff;
+    border-color: #e2e8f0;
+
+    &__item {
+      color: #64748b;
+      &:hover { color: #0f172a; background: rgba(0, 0, 0, 0.04); }
+    }
+    &__item--active { color: #ffffff; }
+  }
+
+  .exercise-bar {
+    &__label { color: #64748b; }
+    &__select {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+  }
+
+  .loading-hint { color: #64748b; }
+
+  .panel {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    &:hover { border-color: #93c5fd; }
+    &__title    { color: #0f172a; }
+    &__subtitle { color: #64748b; }
+  }
+
+  .report-statements__label { color: #64748b; }
+
+  .report-block {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    &__title { color: #0f172a; }
+  }
+
+  .report-line {
+    color: #64748b;
+    strong { color: #0f172a; }
+    &--total { border-top-color: #e2e8f0; }
+  }
+
+  .report-input {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+  }
+
+  .report-input__label { color: #64748b; }
+
+  .btn--secondary {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+    &:hover { border-color: #2f6fec; color: #1d4ed8; }
+  }
+
+  .bac-section__title { color: #334155; }
+
+  .bac-table-wrap { border-color: #e2e8f0; }
+
+  .bac-table {
+    th {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+    th, td { border-bottom-color: #e2e8f0; }
+    tbody tr:hover { background: rgba(47, 111, 236, 0.04); }
+    td { color: #0f172a; }
+  }
+
+  .bac-input {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+  }
+
+  .bac-remove-btn { border-color: #e2e8f0; }
+
+  .bac-result {
+    background: #f8fafc;
+    border-color: rgba(47, 111, 236, 0.25);
+    &__label { color: #64748b; }
+    &__value { color: #1d4ed8; }
+  }
+
+  .bac-breakdown__row {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+  }
+
+  .bac-breakdown__name { color: #64748b; }
+  .bac-breakdown__cost { color: #0f172a; }
+
+  .bac-vs-cash {
+    border-top-color: #e2e8f0;
+    color: #64748b;
+    strong { color: #0f172a; }
+  }
+
+  .ai-suggestion {
+    background: linear-gradient(145deg, #f5f3ff, #ede9fe);
+    border-color: rgba(124, 58, 237, 0.25);
+    &__body { color: #334155; }
+  }
+}

@@ -8,6 +8,7 @@ import { TreasurerChatWidgetComponent } from './components/treasurer-chat-widget
 import { FinanceReportsComponent } from './components/finance-reports/finance-reports.component';
 import { FinanceSponsorPaymentComponent } from './components/finance-sponsor-payment/finance-sponsor-payment.component';
 import { MemberDuesComponent } from './components/member-dues/member-dues.component';
+import { FinanceAlertsComponent } from './components/finance-alerts/finance-alerts.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { MemberDuesComponent } from './components/member-dues/member-dues.compon
     TreasurerChatWidgetComponent,
     FinanceReportsComponent,
     FinanceSponsorPaymentComponent,
-    MemberDuesComponent
+    MemberDuesComponent,
+    FinanceAlertsComponent
   ],
   imports: [SharedModule, FinanceRoutingModule]
 })

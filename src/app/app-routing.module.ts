@@ -49,6 +49,11 @@ const routes: Routes = [
       import('./features/sponsor-response/sponsor-response.module').then(m => m.SponsorResponseModule)
   },
   {
+    path: 'sponsor-payment',
+    loadChildren: () =>
+      import('./features/sponsor-payment/sponsor-payment.module').then(m => m.SponsorPaymentModule)
+  },
+  {
     path: 'interview',
     loadChildren: () =>
       import('./features/interview/interview.module').then(m => m.InterviewModule)

@@ -1,0 +1,201 @@
+<section class="finance-page">
+  <header class="finance-page__header">
+    <div>
+      <h1 class="finance-page__title">Fraud Alerts</h1>
+      <p class="finance-page__subtitle">Real-time Stripe transaction analysis — rule engine + ML anomaly detection</p>
+    </div>
+    <div class="finance-page__actions">
+      <button type="button" class="btn btn--secondary" (click)="showSimulate = !showSimulate">
+        {{ showSimulate ? 'Close' : 'Simulate Transaction' }}
+      </button>
+      <button type="button" class="btn btn--primary" (click)="reloadAlerts()">Refresh</button>
+    </div>
+  </header>
+
+  <nav class="finance-nav" aria-label="Finance sections">
+    <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/transactions">Transactions</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/reports">Reports</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/dues">Member Dues</a>
+    <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/alerts">Alerts</a>
+  </nav>
+
+  <!-- Stats row -->
+  <div class="stats-grid" *ngIf="stats">
+    <article class="stat-card stat-card--alert">
+      <span class="stat-card__label">Active Alerts</span>
+      <span class="stat-card__value">{{ stats.active }}</span>
+    </article>
+    <article class="stat-card stat-card--critical">
+      <span class="stat-card__label">Critical</span>
+      <span class="stat-card__value stat-card__value--danger">{{ stats.critical }}</span>
+    </article>
+    <article class="stat-card stat-card--high">
+      <span class="stat-card__label">High</span>
+      <span class="stat-card__value stat-card__value--warning">{{ stats.high }}</span>
+    </article>
+    <article class="stat-card">
+      <span class="stat-card__label">Medium / Low</span>
+      <span class="stat-card__value stat-card__value--success">{{ stats.medium + stats.low }}</span>
+    </article>
+  </div>
+
+  <!-- Simulate panel -->
+  <section class="simulate-panel" *ngIf="showSimulate">
+    <h3 class="simulate-panel__title">Simulate Stripe Transaction</h3>
+    <p class="simulate-panel__hint">Sends a fake event through the full fraud pipeline (rule engine + ML).</p>
+    <div class="simulate-panel__fields">
+      <label class="sim-field sim-field--full">
+        <span>Stripe Fraud Scenario</span>
+        <select [(ngModel)]="simScenario">
+          <option *ngFor="let s of SCENARIOS" [value]="s.value">{{ s.label }}</option>
+        </select>
+      </label>
+      <label class="sim-field">
+        <span>Amount (cents)</span>
+        <input type="number" [(ngModel)]="simAmount" min="1" />
+      </label>
+      <label class="sim-field">
+        <span>Status</span>
+        <select [(ngModel)]="simStatus">
+          <option value="succeeded">succeeded</option>
+          <option value="failed">failed</option>
+          <option value="pending">pending</option>
+        </select>
+      </label>
+      <label class="sim-field">
+        <span>Customer ID (optional)</span>
+        <input type="text" [(ngModel)]="simCustomer" placeholder="cus_xyz" />
+      </label>
+      <label class="sim-field">
+        <span>Description</span>
+        <input type="text" [(ngModel)]="simDescription" />
+      </label>
+    </div>
+    <div class="simulate-panel__actions">
+      <button class="btn btn--primary" (click)="runSimulation()" [disabled]="isSimulating">
+        {{ isSimulating ? 'Running...' : 'Run Simulation' }}
+      </button>
+    </div>
+    <p class="simulate-panel__result" *ngIf="simResult" [class.simulate-panel__result--flagged]="simResult.startsWith('Flagged')">
+      {{ simResult }}
+    </p>
+  </section>
+
+  <!-- Filters -->
+  <div class="panel-tools">
+    <input
+      class="panel-tools__search"
+      type="text"
+      placeholder="Search by transaction ID, description, customer..."
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="page = 0"
+    />
+
+    <select class="panel-tools__filter" [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()">
+      <option value="active">Active</option>
+      <option value="dismissed">Dismissed</option>
+      <option value="all">All</option>
+    </select>
+
+    <select class="panel-tools__filter" [(ngModel)]="severityFilter" (ngModelChange)="onSeverityFilterChange()">
+      <option value="all">All Severities</option>
+      <option value="critical">Critical</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+  </div>
+
+  <p class="status" *ngIf="isLoading">Loading fraud alerts...</p>
+  <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <!-- Alert cards -->
+  <section class="panel" *ngIf="!isLoading">
+    <header class="panel__header">
+      <div>
+        <h2 class="panel__title">Flagged Transactions</h2>
+        <p class="panel__subtitle">{{ filteredAlerts.length }} alert{{ filteredAlerts.length !== 1 ? 's' : '' }} matching filters</p>
+      </div>
+    </header>
+
+    <div class="alerts-list" *ngIf="pagedAlerts.length > 0; else emptyState">
+      <article class="alert-card" *ngFor="let alert of pagedAlerts"
+        [class.alert-card--critical]="alert.severity === 'critical'"
+        [class.alert-card--high]="alert.severity === 'high'"
+        [class.alert-card--medium]="alert.severity === 'medium'"
+        [class.alert-card--low]="alert.severity === 'low'"
+        [class.alert-card--dismissed]="alert.dismissed">
+
+        <div class="alert-card__header">
+          <div class="alert-card__id-row">
+            <code class="alert-card__tx-id">{{ alert.transactionId }}</code>
+            <span [class]="severityClass(alert.severity)">{{ alert.severity | uppercase }}</span>
+            <span class="badge badge--event">{{ alert.eventType }}</span>
+          </div>
+          <span class="alert-card__time">{{ formatDate(alert.flaggedAt) }}</span>
+        </div>
+
+        <div class="alert-card__body">
+          <div class="alert-card__amount">
+            {{ formatAmount(alert.amount, alert.currency) }}
+            <span class="alert-card__status" [class.alert-card__status--failed]="alert.status === 'failed'">
+              {{ alert.status }}
+            </span>
+          </div>
+
+          <!-- Risk score bar -->
+          <div class="score-bar" role="progressbar" [attr.aria-valuenow]="alert.riskScore" aria-valuemin="0" aria-valuemax="100">
+            <div class="score-bar__fill" [class]="scoreBarClass(alert.riskScore)" [style.width.%]="alert.riskScore"></div>
+          </div>
+          <div class="score-bar__labels">
+            <span class="score-bar__score">Risk score: <strong>{{ alert.riskScore }}/100</strong></span>
+            <span class="score-bar__ml">ML anomaly: {{ (alert.mlAnomalyScore * 100) | number:'1.0-0' }}%</span>
+          </div>
+
+          <ul class="alert-reasons">
+            <li class="alert-reasons__item" *ngFor="let reason of alert.reasons">
+              <span class="alert-reasons__dot"></span>{{ reason }}
+            </li>
+          </ul>
+
+          <div class="alert-card__meta" *ngIf="alert.customerId || alert.description">
+            <span *ngIf="alert.customerId">Customer: <strong>{{ alert.customerId }}</strong></span>
+            <span *ngIf="alert.description">{{ alert.description }}</span>
+          </div>
+        </div>
+
+        <div class="alert-card__footer">
+          <span class="alert-card__dismissed-tag" *ngIf="alert.dismissed">
+            Dismissed {{ formatDate(alert.dismissedAt!) }}
+          </span>
+          <button
+            *ngIf="!alert.dismissed"
+            class="btn btn--ghost btn--sm"
+            (click)="dismiss(alert)"
+            [disabled]="dismissingId === alert.internalId">
+            {{ dismissingId === alert.internalId ? 'Dismissing...' : 'Dismiss' }}
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #emptyState>
+      <p class="status" *ngIf="!isLoading">
+        {{ statusFilter === 'active' ? 'No active alerts — everything looks clean.' : 'No alerts match your filters.' }}
+      </p>
+    </ng-template>
+
+    <div class="trend-pagination" *ngIf="totalPages > 1">
+      <button class="trend-pagination__btn" (click)="prevPage()" [disabled]="page === 0">&#8249;</button>
+      <span class="trend-pagination__info">{{ page + 1 }} / {{ totalPages }}</span>
+      <button class="trend-pagination__btn" (click)="nextPage()" [disabled]="page === totalPages - 1">&#8250;</button>
+    </div>
+  </section>
+
+  <p class="service-note">
+    Stripe webhooks → <code>http://localhost:8092/webhook/stripe</code> &nbsp;|&nbsp;
+    Start service: <code>cd stripe-fraud-detection-service && npm start</code>
+  </p>
+</section>
