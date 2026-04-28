@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+﻿import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
@@ -206,7 +206,10 @@ export interface CompleteSponsorPaymentByTokenPayload {
   providedIn: 'root'
 })
 export class FinanceService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = environment.financeApiUrl;
+  private readonly eventsUrl = environment.eventsApiUrl;
+  private readonly sponsorsUrl = environment.sponsorsApiUrl;
+  private readonly userUrl = environment.userApiUrl;
   private readonly forecastApiUrl = environment.forecastApiUrl;
 
   constructor(private readonly http: HttpClient) {}
@@ -265,13 +268,13 @@ export class FinanceService {
   }
 
   getSponsors(): Observable<SponsorDto[]> {
-    return this.http.get<SponsorDto[]>(`${this.baseUrl}/api/sponsors`, {
+    return this.http.get<SponsorDto[]>(`${this.sponsorsUrl}/api/sponsors`, {
       headers: this.authHeaders()
     });
   }
 
   getSponsorships(clubId: number): Observable<SponsorshipDto[]> {
-    return this.http.get<SponsorshipDto[]>(`${this.baseUrl}/api/sponsorships`, {
+    return this.http.get<SponsorshipDto[]>(`${this.sponsorsUrl}/api/sponsorships`, {
       headers: this.authHeaders(),
       params: new HttpParams().set('clubId', String(clubId))
     }).pipe(
@@ -280,7 +283,7 @@ export class FinanceService {
   }
 
   getEvents(clubId: number): Observable<EventDto[]> {
-    return this.http.get<EventDto[]>(`${this.baseUrl}/api/events`, {
+    return this.http.get<EventDto[]>(`${this.eventsUrl}/api/events`, {
       headers: this.authHeaders(),
       params: new HttpParams().set('clubId', String(clubId))
     }).pipe(
@@ -322,13 +325,13 @@ export class FinanceService {
   }
 
   getSponsorPaymentPageContext(token: string): Observable<SponsorPaymentPageContextDto> {
-    return this.http.get<SponsorPaymentPageContextDto>(`${this.baseUrl}/api/sponsorships/respond/payment-context`, {
+    return this.http.get<SponsorPaymentPageContextDto>(`${this.sponsorsUrl}/api/sponsorships/respond/payment-context`, {
       params: new HttpParams().set('token', token)
     });
   }
 
   completeSponsorPaymentByToken(token: string, payload: CompleteSponsorPaymentByTokenPayload): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/api/sponsorships/respond/payment`, payload, {
+    return this.http.post<void>(`${this.sponsorsUrl}/api/sponsorships/respond/payment`, payload, {
       params: new HttpParams().set('token', token)
     });
   }
@@ -340,7 +343,7 @@ export class FinanceService {
   }
 
   sendBudgetAlertEmail(payload: BudgetAlertEmailPayload): Observable<string> {
-    return this.http.post(`${this.baseUrl}/api/notifications/budget-alert-email`, payload, {
+    return this.http.post(`${this.userUrl}/api/notifications/budget-alert-email`, payload, {
       headers: this.authHeaders(),
       responseType: 'text'
     });

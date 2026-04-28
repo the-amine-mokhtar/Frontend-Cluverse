@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { EMPTY, Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -8,7 +8,7 @@ import { TransportPrediction } from '../models/transport-prediction.model';
 
 @Injectable({ providedIn: 'root' })
 export class TransportService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = environment.logisticsApiUrl;
   private readonly endpoint = `${this.baseUrl}/api/transports`;
 
   constructor(private http: HttpClient) {}

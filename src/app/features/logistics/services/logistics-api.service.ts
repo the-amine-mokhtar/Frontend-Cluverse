@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -132,7 +132,7 @@ export interface InventoryTransactionCreatePayload {
 
 @Injectable({ providedIn: 'root' })
 export class LogisticsApiService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = environment.logisticsApiUrl;
 
   constructor(private http: HttpClient) {}
 

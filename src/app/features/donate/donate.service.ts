@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+﻿import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
@@ -52,12 +52,13 @@ export interface DonateReceiptPayload {
 
 @Injectable({ providedIn: 'root' })
 export class DonateService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = environment.financeApiUrl;
+  private readonly userUrl = environment.userApiUrl;
 
   constructor(private readonly http: HttpClient) {}
 
   getAllClubs(): Observable<ClubSummary[]> {
-    return this.http.get<ClubSummary[]>(`${this.baseUrl}/api/clubs`, { headers: this.authHeaders() });
+    return this.http.get<ClubSummary[]>(`${this.userUrl}/api/clubs`, { headers: this.authHeaders() });
   }
 
   getStripePublicConfig(): Observable<DonateStripeConfigResponse> {

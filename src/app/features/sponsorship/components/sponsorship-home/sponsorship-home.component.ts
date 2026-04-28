@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+﻿import { Component, OnDestroy, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
@@ -1388,7 +1388,7 @@ export class SponsorshipHomeComponent implements OnInit, OnDestroy {
     if (!normalized) {
       return null;
     }
-    return `${environment.apiUrl}/assets/sponsorfiles/${folder}/${encodeURIComponent(normalized)}`;
+    return `${environment.sponsorsApiUrl}/assets/sponsorfiles/${folder}/${encodeURIComponent(normalized)}`;
   }
 
   saveSponsorshipEdit(): void {
