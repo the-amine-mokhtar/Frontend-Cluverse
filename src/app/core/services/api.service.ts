@@ -137,6 +137,49 @@ export interface ClubCompetencyStats {
   criticalGaps: number;
 }
 
+export interface CVAnalysisResponse {
+  extractedSkills: Array<{
+    skillName: string;
+    level: number;
+  }>;
+  suggestedCompetencies: Array<{
+    competencyId: number;
+    name: string;
+    category: string;
+    currentLevel: number;
+    targetLevel: number;
+  }>;
+  summary: string;
+}
+
+export interface LearningResource {
+  title: string;
+  type: 'VIDEO' | 'ARTICLE' | 'COURSE' | 'BOOK';
+  url?: string;
+  description?: string;
+}
+
+export interface LearningPathResponse {
+  skillName: string;
+  targetLevel: number;
+  currentLevel: number;
+  estimatedTime: string;
+  resources: LearningResource[];
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct_answer: number;
+  explanation: string;
+}
+
+export interface QuizResponse {
+  skill: string;
+  level: string;
+  questions: QuizQuestion[];
+}
+
 export interface MemberCompetencyGapResponse {
   id: number;
   currentLevel: number;
@@ -277,6 +320,7 @@ export interface CompetencySessionRescheduleRequest {
 })
 export class ApiService {
   private baseUrl = environment.apiUrl;
+  private speechUrl = (environment as any).speechUrl || 'http://localhost:8001';
 
   constructor(private http: HttpClient) {}
 
