@@ -7,6 +7,8 @@ import { ImageCropperComponent } from 'ngx-image-cropper';
 import { AuthContainerComponent } from './components/auth-container/auth-container.component';
 import { ClubApplicationComponent } from './components/club-application/club-application.component';
 import { MemberLoginComponent } from './components/member-login/member-login.component';
+import { OAuth2ButtonsComponent } from './components/oauth2-buttons/oauth2-buttons.component';
+import { OAuth2CallbackComponent } from './components/oauth2-callback/oauth2-callback.component';
 
 @NgModule({
   declarations: [
@@ -14,7 +16,9 @@ import { MemberLoginComponent } from './components/member-login/member-login.com
     Login2Component,
     AuthContainerComponent,
     ClubApplicationComponent,
-    MemberLoginComponent
+    MemberLoginComponent,
+    OAuth2ButtonsComponent,
+    OAuth2CallbackComponent
   ],
   imports: [
     SharedModule,

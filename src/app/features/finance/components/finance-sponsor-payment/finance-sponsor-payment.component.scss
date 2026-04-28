@@ -72,10 +72,12 @@
   color: #ffffff;
   overflow: hidden;
   background:
-    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 30%),
-    linear-gradient(138deg, #09122a 0%, #1f3264 34%, #0088cc 70%, #22c1c3 100%);
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 88% 82%, rgba(255, 232, 168, 0.22), transparent 28%),
+    linear-gradient(135deg, #071227 0%, #182f63 35%, #0277bd 72%, #16a6a8 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 16px 38px rgba(7, 16, 42, 0.45);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 
   &::after {
     content: '';
@@ -88,13 +90,39 @@
     background: rgba(255, 255, 255, 0.12);
   }
 
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.14) 48%, transparent 62%);
+    transform: translateX(-110%);
+    transition: transform 220ms ease;
+    pointer-events: none;
+  }
+
+  &--active {
+    transform: translateY(-2px);
+    border-color: rgba(191, 219, 254, 0.7);
+    box-shadow: 0 20px 46px rgba(10, 31, 73, 0.56);
+
+    &::before {
+      transform: translateX(100%);
+    }
+  }
+
+  &--complete {
+    border-color: rgba(74, 222, 128, 0.7);
+    box-shadow: 0 20px 46px rgba(20, 83, 45, 0.45);
+  }
+
   &__visa {
     position: relative;
     z-index: 1;
     text-align: right;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
+    opacity: 0.95;
   }
 
   &__chip {
@@ -112,9 +140,11 @@
     position: relative;
     z-index: 1;
     margin-top: 1.1rem;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     font-size: 1rem;
     font-weight: 700;
+    font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+    text-shadow: 0 1px 10px rgba(9, 17, 32, 0.45);
   }
 
   &__row {
@@ -131,6 +161,7 @@
       margin-top: 0.2rem;
       font-size: 0.85rem;
       font-weight: 700;
+      max-width: 170px;
     }
   }
 

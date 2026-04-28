@@ -137,6 +137,49 @@ export interface ClubCompetencyStats {
   criticalGaps: number;
 }
 
+export interface CVAnalysisResponse {
+  extractedSkills: Array<{
+    skillName: string;
+    level: number;
+  }>;
+  suggestedCompetencies: Array<{
+    competencyId: number;
+    name: string;
+    category: string;
+    currentLevel: number;
+    targetLevel: number;
+  }>;
+  summary: string;
+}
+
+export interface LearningResource {
+  title: string;
+  type: 'VIDEO' | 'ARTICLE' | 'COURSE' | 'BOOK';
+  url?: string;
+  description?: string;
+}
+
+export interface LearningPathResponse {
+  skillName: string;
+  targetLevel: number;
+  currentLevel: number;
+  estimatedTime: string;
+  resources: LearningResource[];
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct_answer: number;
+  explanation: string;
+}
+
+export interface QuizResponse {
+  skill: string;
+  level: string;
+  questions: QuizQuestion[];
+}
+
 export interface MemberCompetencyGapResponse {
   id: number;
   currentLevel: number;
@@ -277,6 +320,7 @@ export interface CompetencySessionRescheduleRequest {
 })
 export class ApiService {
   private baseUrl = environment.apiUrl;
+  private speechUrl = (environment as any).speechUrl || 'http://localhost:8001';
 
   constructor(private http: HttpClient) {}
 
@@ -826,6 +870,42 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
   getInterviewMessages(applicationId: number): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.baseUrl}/api/interview-configs/application/${applicationId}/messages`,
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+// ─── Member Payments ──────────────────────────────────────────────────────────
+
+  getMemberPayments(clubId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/api/member-payments?clubId=${clubId}`, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  createMemberPayment(membershipId: number, clubId: number, payment: { amount: number; status: string; dueDate: string }): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/api/member-payments?membershipId=${membershipId}&clubId=${clubId}`,
+      payment,
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  updateMemberPayment(id: number, payment: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/api/member-payments/${id}`, payment, {
+      headers: this.authHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  deleteMemberPayment(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/api/member-payments/${id}`, {
+      headers: this.authHeaders(), responseType: 'text'
+    }).pipe(catchError(this.handleError));
+  }
+
+  sendPaymentReminders(clubId: number): Observable<number> {
+    return this.http.post<number>(
+      `${this.baseUrl}/api/member-payments/remind?clubId=${clubId}`,
+      {},
       { headers: this.authHeaders() }
     ).pipe(catchError(this.handleError));
   }

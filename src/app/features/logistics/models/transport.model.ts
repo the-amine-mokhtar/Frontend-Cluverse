@@ -9,7 +9,8 @@ export interface Transport {
   scheduledDate: string;
   departureLocationId: number | null;
   arrivalLocationId: number | null;
-  distance?: number;  // Distance in km
+  distance?: number;
+  duration?: number;
   status: TransportStatus;
   vehicleId: number;
   userId: number;
@@ -20,7 +21,8 @@ export interface TransportUpsertPayload {
   scheduledDate: string;
   departureLocationId: number;
   arrivalLocationId: number;
-  distance?: number;  // Distance in km
+  distance?: number;
+  duration?: number;
   status: TransportStatus;
   vehicleId: number;
   userId: number;

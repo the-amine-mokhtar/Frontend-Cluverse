@@ -4,18 +4,17 @@ import { catchError, forkJoin, of } from 'rxjs';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 import { ApiService } from '../../../../core/services/api.service';
 import {
+  AiCashFlowForecastResult,
+  AiCashFlowProjection,
+  BudgetAlertEmailPayload,
   BudgetDto,
   FinanceService,
+  ForecastHorizon,
   SponsorDto,
   SponsorshipDto,
   TransactionDto
 } from '../../../../core/services/finance.service';
-import {
-  AiCashFlowForecastResult,
-  AiCashFlowProjection,
-  CashflowForecastAiService,
-  ForecastHorizon
-} from '../../services/cashflow-forecast-ai.service';
+import { FraudAlert, FraudDetectionService, FraudSeverity } from '../../services/fraud-detection.service';
 
 interface BudgetItem {
   title: string;
@@ -101,16 +100,36 @@ export class FinanceHomeComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   private dismissedBudgetAlertKeys = new Set<string>();
+  emailAlertsEnabled = true;
+  budgetAlertEmailStatus = '';
+  budgetAlertEmailStatusTone: 'info' | 'success' | 'error' = 'info';
+  isSendingBudgetAlertEmail = false;
+  private readonly alertEmailPreferenceStorageKey = 'finance.budgetAlert.emailPreference';
+  private readonly emailedAlertDeliveryStorageKey = 'finance.budgetAlert.emailDeliveryKeys';
+  private emailedBudgetAlertDeliveryKeys = new Set<string>();
+  trendPage = 0;
+  readonly trendPageSize = 4;
+  budgetPage = 0;
+  readonly budgetPageSize = 3;
+  transactionPage = 0;
+  readonly transactionPageSize = 5;
+
+  fraudAlerts: FraudAlert[] = [];
+  fraudAlertsLoading = false;
+  dismissingFraudId: number | null = null;
 
   constructor(
     private readonly financeService: FinanceService,
     private readonly authHelperService: AuthHelperService,
     private readonly apiService: ApiService,
-    private readonly cashflowForecastAiService: CashflowForecastAiService
+    private readonly fraudService: FraudDetectionService
   ) {}
 
   ngOnInit(): void {
+    this.initializeBudgetAlertEmailSettings();
+    this.loadEmailedBudgetAlertDeliveryKeys();
     this.loadDashboardData();
+    this.loadFraudAlerts();
   }
 
   get totalBudget(): number {
@@ -118,7 +137,12 @@ export class FinanceHomeComponent implements OnInit {
   }
 
   get totalSpent(): number {
-    return this.budgetItems.reduce((sum, item) => sum + item.spent, 0);
+    // Keep top summary aligned with KPI stats by using realized expense transactions.
+    return this.expenseTotal;
+  }
+
+  get remainingBudget(): number {
+    return this.totalBudget - this.totalSpent;
   }
 
   get netFlow(): number {
@@ -438,6 +462,49 @@ export class FinanceHomeComponent implements OnInit {
     return rows;
   }
 
+  get pagedTrendRows(): MonthlyTrendRow[] {
+    const start = this.trendPage * this.trendPageSize;
+    return this.monthlyTrendRows.slice(start, start + this.trendPageSize);
+  }
+
+  get trendTotalPages(): number {
+    return Math.ceil(this.monthlyTrendRows.length / this.trendPageSize);
+  }
+
+  trendPrev(): void {
+    if (this.trendPage > 0) this.trendPage--;
+  }
+
+  trendNext(): void {
+    if (this.trendPage < this.trendTotalPages - 1) this.trendPage++;
+  }
+
+  get pagedBudgetItems(): BudgetItem[] {
+    const start = this.budgetPage * this.budgetPageSize;
+    return this.filteredBudgetItems.slice(start, start + this.budgetPageSize);
+  }
+
+  get budgetTotalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredBudgetItems.length / this.budgetPageSize));
+  }
+
+  budgetPrev(): void { if (this.budgetPage > 0) this.budgetPage--; }
+  budgetNext(): void { if (this.budgetPage < this.budgetTotalPages - 1) this.budgetPage++; }
+  resetBudgetPage(): void { this.budgetPage = 0; }
+
+  get pagedRecentTransactions(): TransactionItem[] {
+    const start = this.transactionPage * this.transactionPageSize;
+    return this.filteredRecentTransactions.slice(start, start + this.transactionPageSize);
+  }
+
+  get transactionTotalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredRecentTransactions.length / this.transactionPageSize));
+  }
+
+  transactionPrev(): void { if (this.transactionPage > 0) this.transactionPage--; }
+  transactionNext(): void { if (this.transactionPage < this.transactionTotalPages - 1) this.transactionPage++; }
+  resetTransactionPage(): void { this.transactionPage = 0; }
+
   onExerciseYearChange(year: number | string): void {
     const parsed = Number(year);
     if (!Number.isFinite(parsed)) {
@@ -448,8 +515,78 @@ export class FinanceHomeComponent implements OnInit {
     this.refreshDashboardView();
   }
 
+  forecastTab: 'breakdown' | 'insights' = 'breakdown';
+
   setForecastHorizon(horizon: ForecastHorizon): void {
     this.selectedForecastHorizon = horizon;
+  }
+
+  setForecastTab(tab: 'breakdown' | 'insights'): void {
+    this.forecastTab = tab;
+  }
+
+  alertCountByLevel(level: AlertLevel): number {
+    return this.budgetUtilizationAlerts.filter(a => a.level === level).length;
+  }
+
+  fraudCountBySeverity(severity: FraudSeverity): number {
+    return this.fraudAlerts.filter(a => a.severity === severity).length;
+  }
+
+  fraudSeverityClass(severity: FraudSeverity): string {
+    return `badge badge--${severity}`;
+  }
+
+  fraudScoreBarClass(score: number): string {
+    if (score >= 80) return 'score-bar__fill--critical';
+    if (score >= 60) return 'score-bar__fill--high';
+    if (score >= 35) return 'score-bar__fill--medium';
+    return 'score-bar__fill--low';
+  }
+
+  formatFraudAmount(amount: number, currency: string): string {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
+  }
+
+  formatFraudDate(iso: string): string {
+    return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  dismissFraudAlert(alert: FraudAlert): void {
+    this.dismissingFraudId = alert.internalId;
+    this.fraudService.dismissAlert(alert.internalId).subscribe({
+      next: () => {
+        this.fraudAlerts = this.fraudAlerts.filter(a => a.internalId !== alert.internalId);
+        this.dismissingFraudId = null;
+      },
+      error: () => { this.dismissingFraudId = null; }
+    });
+  }
+
+  getConfidenceLabel(forecast: AiCashFlowProjection): string {
+    return forecast.confidenceLevel || (forecast.confidenceScore >= 75 ? 'High' : forecast.confidenceScore >= 50 ? 'Medium' : 'Low');
+  }
+
+  getConfidenceToneClass(forecast: AiCashFlowProjection): string {
+    const label = this.getConfidenceLabel(forecast);
+    if (label === 'High') {
+      return 'reliability-badge--green';
+    }
+    if (label === 'Medium') {
+      return 'reliability-badge--amber';
+    }
+    return 'reliability-badge--red';
+  }
+
+  getRiskToneClass(forecast: AiCashFlowProjection): string {
+    const level = forecast.riskLevel || 'Moderate';
+    if (level === 'Low') {
+      return 'reliability-badge--green';
+    }
+    if (level === 'Moderate') {
+      return 'reliability-badge--amber';
+    }
+    return 'reliability-badge--red';
   }
 
   utilization(item: BudgetItem): number {
@@ -463,7 +600,7 @@ export class FinanceHomeComponent implements OnInit {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      maximumFractionDigits: 0
+      maximumFractionDigits: 2
     }).format(value);
   }
 
@@ -496,6 +633,18 @@ export class FinanceHomeComponent implements OnInit {
     if (this.popupBudgetUtilizationAlerts.length === 0) {
       this.showBudgetAlertPopup = false;
     }
+  }
+
+  saveBudgetAlertEmailSettings(): void {
+    this.persistBudgetAlertEmailSettings();
+    this.budgetAlertEmailStatus = this.emailAlertsEnabled
+      ? 'Email alerts are enabled. Alerts will be sent to your current account email automatically.'
+      : 'Email alerts are disabled.';
+    this.budgetAlertEmailStatusTone = 'success';
+  }
+
+  sendBudgetAlertsNow(): void {
+    this.trySendBudgetAlertEmail(true);
   }
 
   get sponsorOptions(): SponsorDto[] {
@@ -555,26 +704,37 @@ export class FinanceHomeComponent implements OnInit {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${safeTitle} - ${this.escapeHtml(this.invoiceNumber)}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
-          body { font-family: 'Segoe UI', Arial, sans-serif; background:#f6f6f6; margin:0; padding:26px; color:#111827; }
-          .sheet { max-width:900px; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:28px; }
-          .top { display:flex; justify-content:space-between; gap:12px; border-bottom:2px solid #111827; padding-bottom:12px; }
-          .brand { display:flex; align-items:center; gap:10px; }
-          .brand h1 { margin:0; font-size:26px; letter-spacing:2px; color:${safeAccent}; }
-          .brand small { color:#6b7280; }
-          .doc-title { text-align:right; }
-          .doc-title h2 { margin:0; font-size:46px; letter-spacing:2px; color:${safeAccent}; }
-          .meta { margin-top:10px; display:flex; justify-content:space-between; gap:16px; font-size:13px; }
-          .box { width:48%; }
-          .box h3 { margin:0 0 6px; color:${safeAccent}; font-size:14px; text-transform:uppercase; }
-          table { width:100%; border-collapse:collapse; margin-top:16px; }
-          th, td { border-bottom:1px solid #d1d5db; padding:9px 6px; font-size:13px; }
-          th { text-align:left; color:${safeAccent}; }
-          .totals { margin-top:16px; margin-left:auto; width:340px; }
-          .line { display:flex; justify-content:space-between; margin:5px 0; }
-          .line.total { border-top:2px solid #111827; padding-top:7px; font-size:18px; font-weight:700; }
-          .note { margin-top:18px; color:#6b7280; font-size:12px; }
-          @media print { body { background:#fff; padding:0; } .sheet { border:none; border-radius:0; } }
+          body { font-family: 'Inter', sans-serif; background: #e2e8f0; margin: 0; padding: 40px; color: #0f172a; }
+          .sheet { max-width: 850px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+          .top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid ${safePrimary}20; padding-bottom: 24px; margin-bottom: 24px; }
+          .brand { display: flex; align-items: center; gap: 16px; }
+          .brand h1 { margin: 0; font-size: 28px; font-weight: 700; color: ${safeAccent}; letter-spacing: -0.5px; }
+          .brand small { display: block; color: #64748b; font-size: 14px; margin-top: 4px; }
+          .doc-title { text-align: right; }
+          .doc-title h2 { margin: 0; font-size: 40px; font-weight: 700; color: ${safePrimary}; letter-spacing: -1px; text-transform: uppercase; }
+          .doc-title div { font-size: 16px; color: #475569; margin-top: 8px; font-weight: 500; }
+          .meta { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 32px; font-size: 14px; line-height: 1.6; }
+          .box { width: 48%; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; }
+          .box h3 { margin: 0 0 12px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+          .box strong { color: ${safeAccent}; font-size: 16px; display: block; margin-bottom: 4px; }
+          table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 24px; }
+          th, td { padding: 16px; font-size: 14px; border-bottom: 1px solid #e2e8f0; }
+          th { background: #f8fafc; font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; text-align: left; }
+          th:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+          th:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+          tbody tr:last-child td { border-bottom: none; }
+          .totals { margin-top: 32px; margin-left: auto; width: 350px; background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #f1f5f9; }
+          .line { display: flex; justify-content: space-between; margin: 12px 0; color: #475569; font-size: 14px; }
+          .line strong { color: #0f172a; font-weight: 600; }
+          .line.total { border-top: 2px solid #cbd5e1; padding-top: 16px; margin-top: 16px; font-size: 20px; color: ${safePrimary}; font-weight: 700; }
+          .line.total strong { color: ${safePrimary}; }
+          .note { margin-top: 40px; padding: 16px; background:#eff6ff; border-left: 4px solid ${safePrimary}; color: #1e3a8a; font-size: 13px; border-radius: 0 8px 8px 0; line-height: 1.5; }
+          @media print { 
+            body { background: #fff; padding: 0; margin: 10mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+            .sheet { border: none; border-radius: 0; padding: 0; box-shadow: none; max-width: 100%; } 
+          }
         </style>
       </head>
       <body>
@@ -589,20 +749,20 @@ export class FinanceHomeComponent implements OnInit {
             </div>
             <div class="doc-title">
               <h2>${safeTitle}</h2>
-              <div><strong>Facture N°</strong> ${this.escapeHtml(this.invoiceNumber)}</div>
+              <div>N° ${this.escapeHtml(this.invoiceNumber)}</div>
             </div>
           </div>
 
           <div class="meta">
             <div class="box">
-              <h3>Emetteur</h3>
-              <div>${safeClubName}</div>
-              <div>Date: ${this.escapeHtml(issueDate)}</div>
-              <div>Echeance: ${this.escapeHtml(dueDate)}</div>
+              <h3>Émetteur</h3>
+              <strong>${safeClubName}</strong>
+              <div>Date d'émission: ${this.escapeHtml(issueDate)}</div>
+              <div>Échéance: ${this.escapeHtml(dueDate)}</div>
             </div>
-            <div class="box" style="text-align:right;">
-              <h3>Destinataire</h3>
-              <div>${sponsorName}</div>
+            <div class="box" style="text-align: right;">
+              <h3>Destinataire (Sponsor)</h3>
+              <strong>${sponsorName}</strong>
               <div>${sponsorEmail}</div>
               <div>${sponsorPhone}</div>
             </div>
@@ -612,24 +772,24 @@ export class FinanceHomeComponent implements OnInit {
             <thead>
               <tr>
                 <th>Description</th>
-                <th style="text-align:right;">Prix unitaire</th>
-                <th style="text-align:center;">Quantite</th>
-                <th style="text-align:right;">Total</th>
+                <th style="text-align:right;">Prix U.</th>
+                <th style="text-align:center;">Qté</th>
+                <th style="text-align:right;">Total HT</th>
               </tr>
             </thead>
             <tbody>
-              ${rowsHtml || '<tr><td colspan="4">Aucune ligne disponible.</td></tr>'}
+              ${rowsHtml || '<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:32px;">Aucune ligne disponible.</td></tr>'}
             </tbody>
           </table>
 
           <div class="totals">
-            <div class="line"><span>TOTAL HT:</span><strong>${this.formatCurrency(subtotal)}</strong></div>
-            <div class="line"><span>REMISE ${this.invoiceDiscount}%:</span><strong>- ${this.formatCurrency(discountAmount)}</strong></div>
-            <div class="line"><span>TVA ${this.invoiceVatRate}%:</span><strong>${this.formatCurrency(vatAmount)}</strong></div>
-            <div class="line total"><span>TOTAL TTC:</span><strong>${this.formatCurrency(totalTtc)}</strong></div>
+            <div class="line"><span>Sous-total HT</span><strong>${this.formatCurrency(subtotal)}</strong></div>
+            <div class="line"><span>Remise (${this.invoiceDiscount}%)</span><strong style="color:#ef4444;">- ${this.formatCurrency(discountAmount)}</strong></div>
+            <div class="line"><span>TVA (${this.invoiceVatRate}%)</span><strong>${this.formatCurrency(vatAmount)}</strong></div>
+            <div class="line total"><span>TOTAL TTC</span><strong>${this.formatCurrency(totalTtc)}</strong></div>
           </div>
 
-          <p class="note">Facture basee sur les contrats de sponsoring et les donations (transactions INCOME) associees a ${sponsorName} pour l'exercice ${this.selectedExerciseYear}.</p>
+          <p class="note">Facture générée numériquement et basée sur les contrats de sponsoring / transactions de type INCOME en faveur de ${sponsorName} pour l'exercice ${this.selectedExerciseYear}.</p>
         </section>
       </body>
       </html>
@@ -688,87 +848,104 @@ export class FinanceHomeComponent implements OnInit {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Rapport Financier ${this.selectedExerciseYear}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
-          body { font-family: Segoe UI, Tahoma, Arial, sans-serif; color: #0f172a; margin: 24px; }
-          h1 { margin: 0 0 4px; font-size: 24px; }
-          h2 { margin: 20px 0 8px; font-size: 18px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
-          .brand-head { display:flex; align-items:center; justify-content:space-between; gap:14px; border:1px solid #e2e8f0; border-left:6px solid ${safePrimary}; border-radius:12px; padding:12px; background: linear-gradient(90deg, ${safePrimary}15, ${safeAccent}08); }
-          .brand-title { display:flex; align-items:center; gap:12px; }
-          .brand-club { color:#334155; font-weight:600; font-size:14px; }
-          .meta { color: #475569; font-size: 13px; margin-bottom: 12px; }
-          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-          .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; }
-          .line { display: flex; justify-content: space-between; margin: 6px 0; font-size: 14px; }
-          .line strong { font-weight: 700; }
-          .income { color: #15803d; }
-          .expense { color: #b91c1c; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          th, td { border: 1px solid #e2e8f0; padding: 8px; font-size: 13px; }
-          th { background: #f8fafc; text-align: left; }
-          .footer { margin-top: 18px; color: #64748b; font-size: 12px; }
+          body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #0f172a; margin: 0; padding: 40px; }
+          .container { max-width: 900px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+          h1 { margin: 0 0 8px; font-size: 28px; font-weight: 700; color: ${safePrimary}; letter-spacing: -0.5px; }
+          h2 { margin: 32px 0 16px; font-size: 20px; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; color: ${safeAccent}; }
+          .brand-head { display:flex; align-items:center; justify-content:space-between; gap:20px; border-radius:12px; padding:24px; background: linear-gradient(135deg, ${safePrimary}10, ${safeAccent}05); border: 1px solid ${safePrimary}20; border-left: 6px solid ${safePrimary}; margin-bottom: 32px; }
+          .brand-title { display:flex; align-items:center; gap:16px; }
+          .brand-club { color:#334155; font-weight:600; font-size:15px; margin-top:4px; }
+          .meta { text-align: right; color: #475569; font-size: 13px; line-height: 1.6; }
+          .meta strong { color: ${safeAccent}; font-weight: 600; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+          .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: #f8fafc; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
+          .line { display: flex; justify-content: space-between; align-items: center; margin: 12px 0; font-size: 14px; color: #475569; }
+          .line strong { font-weight: 700; font-size: 16px; color: #0f172a; }
+          .income { color: #16a34a !important; }
+          .expense { color: #dc2626 !important; }
+          table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 16px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+          th, td { padding: 14px; font-size: 14px; border-bottom: 1px solid #e2e8f0; }
+          th { background: #f8fafc; font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; text-align: left; }
+          tbody tr:last-child td { border-bottom: none; }
+          tbody tr:nth-child(even) { background-color: #f8fafc; }
+          .footer { margin-top: 48px; color: #64748b; font-size: 13px; text-align: center; padding-top: 24px; border-top: 1px solid #e2e8f0; }
           @media print {
-            body { margin: 10mm; }
+            body { margin: 10mm; background: #fff; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .container { padding: 0; box-shadow: none; border-radius: 0; }
           }
         </style>
       </head>
       <body>
-        <div class="brand-head">
-          <div class="brand-title">
-            ${logoHtml}
-            <div>
-              <h1>${safeTitle}</h1>
-              <div class="brand-club">${safeClubName}</div>
+        <div class="container">
+          <div class="brand-head">
+            <div class="brand-title">
+              ${logoHtml}
+              <div>
+                <h1>${safeTitle}</h1>
+                <div class="brand-club">${safeClubName}</div>
+              </div>
+            </div>
+            <div class="meta">
+              <strong>Period:</strong> ${this.selectedExerciseYear}<br/>
+              <strong>Generated:</strong> ${generatedAt.toLocaleString('en-GB')}
             </div>
           </div>
-          <div class="meta">Exercice: ${this.selectedExerciseYear}<br/>Genere le: ${generatedAt.toLocaleString('fr-FR')}</div>
-        </div>
 
-        <h2>Bilan Financier</h2>
-        <div class="grid">
-          <div class="card">
-            <div class="line"><span>Actif - Tresorerie</span><strong>${this.formatCurrency(this.closingCash)}</strong></div>
-            <div class="line"><span>Actif - Creances</span><strong>N/A</strong></div>
+          <h2>Balance Sheet Summary</h2>
+          <div class="grid">
+            <div class="card">
+              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Assets</strong></div>
+              <div class="line"><span>Available cash</span><strong>${this.formatCurrency(this.closingCash)}</strong></div>
+              <div class="line"><span>Receivables</span><strong>N/A</strong></div>
+            </div>
+            <div class="card">
+              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Liabilities</strong></div>
+              <div class="line"><span>Debts</span><strong>N/A</strong></div>
+              <div class="line"><span>Equity (estimated)</span><strong>${this.formatCurrency(this.equityTotal)}</strong></div>
+            </div>
           </div>
+
+          <h2>Simplified Income Statement</h2>
           <div class="card">
-            <div class="line"><span>Passif - Dettes</span><strong>N/A</strong></div>
-            <div class="line"><span>Passif - Fonds propres (estime)</span><strong>${this.formatCurrency(this.equityTotal)}</strong></div>
+            <div class="line"><span>Total Revenue</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
+            <div class="line"><span>Total Expenses</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
+            <div class="line" style="margin-top: 12px; padding-top: 12px; border-top: 2px dashed #cbd5e1;">
+              <span style="font-weight: 600; color: #0f172a;">Net Result</span>
+              <strong class="${this.netResult >= 0 ? 'income' : 'expense'}" style="font-size: 18px;">${netResultSign}${this.formatCurrency(this.absValue(this.netResult))}</strong>
+            </div>
           </div>
+
+          <h2>Treasury Report & Projections</h2>
+          <div class="card">
+            <div class="line"><span>Opening Balance</span><strong>${this.formatCurrency(this.openingCash)}</strong></div>
+            <div class="line"><span>Inflows</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
+            <div class="line"><span>Outflows</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
+            <div class="line" style="background:#f1f5f9; padding:8px 12px; border-radius:6px; margin-top:8px;"><span><strong>Calculated Closing Balance</strong></span><strong style="color:${safePrimary}">${this.formatCurrency(this.closingCash)}</strong></div>
+
+            <div class="line" style="margin-top:24px;"><span>Bank reconciliation gap</span><strong>${reconciliationLabel}</strong></div>
+            <div class="line"><span>Net Projection / Month</span><strong class="${this.projectedNetFlow >= 0 ? 'income' : 'expense'}">${projectedNetSign}${this.formatCurrency(this.absValue(this.projectedNetFlow))}</strong></div>
+            <div class="line"><span>Projected Balance in ${this.forecastMonths} months</span><strong>${this.formatCurrency(this.projectedClosingCash)}</strong></div>
+          </div>
+
+          <h2>Recent Transactions</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th style="text-align:right;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml || '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">No transactions available for this period.</td></tr>'}
+            </tbody>
+          </table>
+
+          <div class="footer">Report automatically generated by the Finance module – Cluverse</div>
         </div>
-
-        <h2>Compte de Resultat</h2>
-        <div class="card">
-          <div class="line"><span>Recettes</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
-          <div class="line"><span>Depenses</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
-          <div class="line"><span>Resultat net</span><strong class="${this.netResult >= 0 ? 'income' : 'expense'}">${netResultSign}${this.formatCurrency(this.absValue(this.netResult))}</strong></div>
-        </div>
-
-        <h2>Rapport de Tresorerie</h2>
-        <div class="card">
-          <div class="line"><span>Solde initial</span><strong>${this.formatCurrency(this.openingCash)}</strong></div>
-          <div class="line"><span>Entrees</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
-          <div class="line"><span>Sorties</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
-          <div class="line"><span>Solde final calcule</span><strong>${this.formatCurrency(this.closingCash)}</strong></div>
-          <div class="line"><span>Ecart de rapprochement</span><strong>${reconciliationLabel}</strong></div>
-          <div class="line"><span>Projection nette / mois</span><strong class="${this.projectedNetFlow >= 0 ? 'income' : 'expense'}">${projectedNetSign}${this.formatCurrency(this.absValue(this.projectedNetFlow))}</strong></div>
-          <div class="line"><span>Solde projete a ${this.forecastMonths} mois</span><strong>${this.formatCurrency(this.projectedClosingCash)}</strong></div>
-        </div>
-
-        <h2>Extrait des Dernieres Transactions</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Description</th>
-              <th style="text-align:right;">Montant</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml || '<tr><td colspan="4">Aucune transaction disponible sur cet exercice.</td></tr>'}
-          </tbody>
-        </table>
-
-        <div class="footer">Rapport genere depuis le module Finance - Cluverse</div>
       </body>
       </html>
     `;
@@ -778,6 +955,16 @@ export class FinanceHomeComponent implements OnInit {
     reportWindow.document.close();
     reportWindow.focus();
     reportWindow.print();
+  }
+
+  private loadFraudAlerts(): void {
+    this.fraudAlertsLoading = true;
+    this.fraudService.getAlerts({ dismissed: false, limit: 10 }).pipe(
+      catchError(() => of({ alerts: [] as FraudAlert[] }))
+    ).subscribe(({ alerts }) => {
+      this.fraudAlerts = alerts;
+      this.fraudAlertsLoading = false;
+    });
   }
 
   private loadDashboardData(): void {
@@ -836,12 +1023,7 @@ export class FinanceHomeComponent implements OnInit {
       .filter((budget) => this.normalizeYear(budget.year) === this.selectedExerciseYear)
       .map((budget) => this.toBudgetItem(budget, exerciseTransactions));
 
-    this.aiForecast = this.cashflowForecastAiService.generateForecast(
-      this.allTransactions,
-      this.allBudgets,
-      new Date(),
-      [1, 3, 6]
-    );
+    this.loadAiForecast();
 
     if (!this.forecastProjections.some((projection) => projection.horizonMonths === this.selectedForecastHorizon)) {
       this.selectedForecastHorizon = 3;
@@ -849,10 +1031,130 @@ export class FinanceHomeComponent implements OnInit {
 
     this.dismissedBudgetAlertKeys.clear();
     this.showBudgetAlertPopup = this.budgetUtilizationAlerts.length > 0;
+    this.trySendBudgetAlertEmail();
+  }
+
+  private trySendBudgetAlertEmail(forceSend = false): void {
+    if (this.isSendingBudgetAlertEmail) {
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const alertsToSend = forceSend
+      ? this.popupBudgetUtilizationAlerts
+      : this.popupBudgetUtilizationAlerts.filter((alert) => !this.emailedBudgetAlertDeliveryKeys.has(this.getAlertDeliveryKey(alert, today)));
+
+    if (alertsToSend.length === 0) {
+      return;
+    }
+
+    const payload: BudgetAlertEmailPayload = {
+      recipientEmail: this.authHelperService.getEmail() || undefined,
+      recipientName: this.authHelperService.getFullName() || 'Finance Manager',
+      clubName: this.clubName,
+      exerciseYear: this.selectedExerciseYear,
+      triggeredAt: new Date().toISOString(),
+      alerts: alertsToSend.map((alert) => ({
+        title: alert.title,
+        department: alert.department,
+        utilization: alert.utilization,
+        reachedThreshold: alert.reachedThreshold,
+        level: alert.level
+      }))
+    };
+
+    this.isSendingBudgetAlertEmail = true;
+    this.budgetAlertEmailStatus = 'Sending personalized budget alert email...';
+    this.budgetAlertEmailStatusTone = 'info';
+
+    this.financeService.sendBudgetAlertEmail(payload).subscribe({
+      next: () => {
+        alertsToSend.forEach((alert) => this.emailedBudgetAlertDeliveryKeys.add(this.getAlertDeliveryKey(alert, today)));
+        this.persistEmailedBudgetAlertDeliveryKeys();
+        this.budgetAlertEmailStatus = `${alertsToSend.length} budget alert email${alertsToSend.length > 1 ? 's were' : ' was'} sent successfully.`;
+        this.budgetAlertEmailStatusTone = 'success';
+        this.isSendingBudgetAlertEmail = false;
+      },
+      error: (error: unknown) => {
+        this.budgetAlertEmailStatus = `Email notification failed. ${this.formatHttpError(error)}`;
+        this.budgetAlertEmailStatusTone = 'error';
+        this.isSendingBudgetAlertEmail = false;
+      }
+    });
+  }
+
+  private loadAiForecast(): void {
+    this.aiForecast = null;
+
+    this.financeService.getCashflowForecast({
+      asOfDate: new Date().toISOString(),
+      horizons: [1, 3, 6],
+      transactions: this.allTransactions,
+      budgets: this.allBudgets,
+      currentCashBalance: this.closingCash
+    }).subscribe({
+      next: (forecast) => {
+        this.aiForecast = forecast;
+
+        if (!this.forecastProjections.some((projection) => projection.horizonMonths === this.selectedForecastHorizon)) {
+          this.selectedForecastHorizon = 3;
+        }
+      },
+      error: (error: unknown) => {
+        this.errorMessage = `Failed to load AI forecast from external service. ${this.formatHttpError(error)}`;
+      }
+    });
   }
 
   private getAlertKey(alert: BudgetUtilizationAlert): string {
     return `${alert.title}|${alert.department}|${alert.reachedThreshold}`;
+  }
+
+  private getAlertDeliveryKey(alert: BudgetUtilizationAlert, dateStr = new Date().toISOString().slice(0, 10)): string {
+    return `${dateStr}|${this.getAlertKey(alert)}`;
+  }
+
+  private initializeBudgetAlertEmailSettings(): void {
+    // Always enable automatic email alerts — the manual toggle was removed from the UI.
+    this.emailAlertsEnabled = true;
+  }
+
+  private persistBudgetAlertEmailSettings(): void {
+    try {
+      localStorage.setItem(this.alertEmailPreferenceStorageKey, JSON.stringify({
+        enabled: this.emailAlertsEnabled
+      }));
+    } catch {
+      // Ignore local storage issues and keep runtime settings.
+    }
+  }
+
+  private loadEmailedBudgetAlertDeliveryKeys(): void {
+    try {
+      const raw = localStorage.getItem(this.emailedAlertDeliveryStorageKey);
+      if (!raw) return;
+
+      const keys = JSON.parse(raw) as string[];
+      if (!Array.isArray(keys)) return;
+
+      // Keep only today's keys so alerts re-trigger on new days.
+      const today = new Date().toISOString().slice(0, 10);
+      const todayKeys = keys.filter((k) => k.startsWith(`${today}|`));
+      this.emailedBudgetAlertDeliveryKeys = new Set(todayKeys);
+      if (todayKeys.length !== keys.length) {
+        this.persistEmailedBudgetAlertDeliveryKeys();
+      }
+    } catch {
+      this.emailedBudgetAlertDeliveryKeys.clear();
+    }
+  }
+
+  private persistEmailedBudgetAlertDeliveryKeys(): void {
+    try {
+      localStorage.setItem(this.emailedAlertDeliveryStorageKey, JSON.stringify(Array.from(this.emailedBudgetAlertDeliveryKeys)));
+    } catch {
+      // Ignore local storage issues and keep runtime deduplication.
+    }
   }
 
   private get exerciseTransactions(): TransactionDto[] {
@@ -948,17 +1250,56 @@ export class FinanceHomeComponent implements OnInit {
   }
 
   private normalizeYear(year: number | string): number {
+    const currentYear = new Date().getFullYear();
+
+    const toValidYear = (value: number): number | null => {
+      if (!Number.isFinite(value)) {
+        return null;
+      }
+
+      const integerValue = Math.trunc(value);
+      if (integerValue >= 1900 && integerValue <= 3000) {
+        return integerValue;
+      }
+
+      const text = String(Math.abs(integerValue));
+      if (text.length === 8) {
+        const candidate = Number(text.slice(0, 4));
+        if (candidate >= 1900 && candidate <= 3000) {
+          return candidate;
+        }
+      }
+
+      return null;
+    };
+
     if (typeof year === 'number') {
-      return year;
+      return toValidYear(year) ?? currentYear;
     }
 
-    const parsed = new Date(year);
+    const trimmedYear = year.trim();
+
+    if (/^\d{8}$/.test(trimmedYear)) {
+      const compactYear = Number(trimmedYear.slice(0, 4));
+      if (compactYear >= 1900 && compactYear <= 3000) {
+        return compactYear;
+      }
+    }
+
+    if (/^\d{4}$/.test(trimmedYear)) {
+      const fourDigitYear = Number(trimmedYear);
+      if (fourDigitYear >= 1900 && fourDigitYear <= 3000) {
+        return fourDigitYear;
+      }
+    }
+
+    const parsed = new Date(trimmedYear);
     if (!Number.isNaN(parsed.getTime())) {
       return parsed.getUTCFullYear();
     }
 
-    const numericYear = Number(year);
-    return Number.isFinite(numericYear) ? numericYear : new Date().getFullYear();
+    const numericYear = Number(trimmedYear);
+    return toValidYear(numericYear) ?? currentYear;
   }
 
   private formatHttpError(error: unknown): string {

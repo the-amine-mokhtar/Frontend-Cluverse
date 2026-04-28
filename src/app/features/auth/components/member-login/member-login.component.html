@@ -61,4 +61,10 @@
 
     <a class="form__link">Forgot your password?</a>
     <button class="form__button button submit" (click)="submitLogin($event)">SIGN IN</button>
+
+    <!-- OAuth2 Buttons -->
+    <app-oauth2-buttons 
+        [title]="'Or sign in with'" 
+        [showDivider]="true">
+    </app-oauth2-buttons>
 </form>

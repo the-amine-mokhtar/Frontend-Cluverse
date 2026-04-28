@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { SharedModule } from './shared/shared.module';
 import { NotFoundComponent } from './shared/components/not-found/not-found.component';
 import { AuthGuard } from './core/guards/auth.guard';
 
@@ -26,6 +27,11 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     loadChildren: () =>
       import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
+  },
+  {
+    path: 'donate',
+    loadChildren: () =>
+      import('./features/donate/donate.module').then(m => m.DonateModule)
   },
   {
     path: 'apply',
@@ -64,6 +70,7 @@ const routes: Routes = [
 
 @NgModule({
   imports: [
+    SharedModule,
     RouterModule.forRoot(routes, {
       scrollPositionRestoration: 'enabled',
       anchorScrolling: 'enabled'
