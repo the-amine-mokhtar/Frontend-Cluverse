@@ -541,7 +541,7 @@ export class LogisticsDashboardComponent implements OnInit, OnDestroy {
   }
 
   getPageNumbers(): number[] {
-    const pages = [];
+    const pages: number[] = [];
     for (let i = 1; i <= this.totalTransportPages; i++) {
       pages.push(i);
     }
