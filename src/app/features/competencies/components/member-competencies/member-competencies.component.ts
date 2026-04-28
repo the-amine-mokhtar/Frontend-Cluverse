@@ -857,7 +857,7 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
 
   // Option B: Milestones + Impact Score
   generateMilestones(target: number, current: number): { level: number; completed: boolean }[] {
-    const milestones = [];
+    const milestones: { level: number; completed: boolean }[] = [];
     for (let i = 1; i <= target; i++) {
       milestones.push({ level: i, completed: i <= current });
     }
