@@ -108,6 +108,31 @@
     box-shadow: 0 20px 46px rgba(20, 83, 45, 0.45);
   }
 
+  &--visa {
+    background:
+      radial-gradient(ellipse at 10% 60%, rgba(120, 200, 255, 0.35) 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 10%, rgba(60, 130, 230, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(30, 80, 180, 0.5) 0%, transparent 60%),
+      linear-gradient(140deg, #0a1640 0%, #12306e 25%, #1a5aaa 55%, #0d3880 100%);
+    border-color: rgba(100, 180, 255, 0.25);
+  }
+
+  &--mastercard {
+    background:
+      radial-gradient(circle at 25% 40%, rgba(255,255,255,0.35) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(180,180,180,0.2) 0%, transparent 45%),
+      linear-gradient(135deg, #6e6e6e 0%, #a0a0a0 20%, #d8d8d8 45%, #b0b0b0 70%, #787878 100%);
+    color: #1a1a1a;
+    border-color: rgba(200,200,200,0.5);
+    box-shadow: 0 16px 38px rgba(0,0,0,0.35);
+
+    .payment-card__label { color: rgba(0,0,0,0.55); }
+    .payment-card__number { color: #2a2a2a; text-shadow: none; }
+    strong { color: #1a1a1a; }
+
+    &.payment-card--complete { border-color: rgba(74,222,128,0.7); }
+  }
+
   &__visa {
     position: relative;
     z-index: 1;
@@ -162,6 +187,59 @@
     font-size: 0.68rem;
     letter-spacing: 0.08em;
     color: rgba(255, 255, 255, 0.72);
+  }
+}
+
+.card-logo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  &--default {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    opacity: 0.95;
+  }
+
+  &--visa {
+    .visa-text {
+      font-family: 'Times New Roman', 'Georgia', serif;
+      font-size: 1.9rem;
+      font-weight: 900;
+      font-style: italic;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+    }
+  }
+
+  &--mastercard {
+    position: relative;
+    width: 56px;
+    height: 34px;
+
+    .mc-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+
+      &--left {
+        left: 0;
+        background: #eb001b;
+        opacity: 0.92;
+      }
+
+      &--right {
+        left: 22px;
+        background: #f79e1b;
+        opacity: 0.92;
+      }
+    }
   }
 }
 

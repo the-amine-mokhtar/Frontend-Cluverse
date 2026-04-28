@@ -14,6 +14,7 @@ import {
   SponsorshipDto,
   TransactionDto
 } from '../../../../core/services/finance.service';
+import { FraudAlert, FraudDetectionService, FraudSeverity } from '../../services/fraud-detection.service';
 
 interface BudgetItem {
   title: string;
@@ -113,16 +114,22 @@ export class FinanceHomeComponent implements OnInit {
   transactionPage = 0;
   readonly transactionPageSize = 5;
 
+  fraudAlerts: FraudAlert[] = [];
+  fraudAlertsLoading = false;
+  dismissingFraudId: number | null = null;
+
   constructor(
     private readonly financeService: FinanceService,
     private readonly authHelperService: AuthHelperService,
-    private readonly apiService: ApiService
+    private readonly apiService: ApiService,
+    private readonly fraudService: FraudDetectionService
   ) {}
 
   ngOnInit(): void {
     this.initializeBudgetAlertEmailSettings();
     this.loadEmailedBudgetAlertDeliveryKeys();
     this.loadDashboardData();
+    this.loadFraudAlerts();
   }
 
   get totalBudget(): number {
@@ -508,8 +515,52 @@ export class FinanceHomeComponent implements OnInit {
     this.refreshDashboardView();
   }
 
+  forecastTab: 'breakdown' | 'insights' = 'breakdown';
+
   setForecastHorizon(horizon: ForecastHorizon): void {
     this.selectedForecastHorizon = horizon;
+  }
+
+  setForecastTab(tab: 'breakdown' | 'insights'): void {
+    this.forecastTab = tab;
+  }
+
+  alertCountByLevel(level: AlertLevel): number {
+    return this.budgetUtilizationAlerts.filter(a => a.level === level).length;
+  }
+
+  fraudCountBySeverity(severity: FraudSeverity): number {
+    return this.fraudAlerts.filter(a => a.severity === severity).length;
+  }
+
+  fraudSeverityClass(severity: FraudSeverity): string {
+    return `badge badge--${severity}`;
+  }
+
+  fraudScoreBarClass(score: number): string {
+    if (score >= 80) return 'score-bar__fill--critical';
+    if (score >= 60) return 'score-bar__fill--high';
+    if (score >= 35) return 'score-bar__fill--medium';
+    return 'score-bar__fill--low';
+  }
+
+  formatFraudAmount(amount: number, currency: string): string {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
+  }
+
+  formatFraudDate(iso: string): string {
+    return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  dismissFraudAlert(alert: FraudAlert): void {
+    this.dismissingFraudId = alert.internalId;
+    this.fraudService.dismissAlert(alert.internalId).subscribe({
+      next: () => {
+        this.fraudAlerts = this.fraudAlerts.filter(a => a.internalId !== alert.internalId);
+        this.dismissingFraudId = null;
+      },
+      error: () => { this.dismissingFraudId = null; }
+    });
   }
 
   getConfidenceLabel(forecast: AiCashFlowProjection): string {
@@ -904,6 +955,16 @@ export class FinanceHomeComponent implements OnInit {
     reportWindow.document.close();
     reportWindow.focus();
     reportWindow.print();
+  }
+
+  private loadFraudAlerts(): void {
+    this.fraudAlertsLoading = true;
+    this.fraudService.getAlerts({ dismissed: false, limit: 10 }).pipe(
+      catchError(() => of({ alerts: [] as FraudAlert[] }))
+    ).subscribe(({ alerts }) => {
+      this.fraudAlerts = alerts;
+      this.fraudAlertsLoading = false;
+    });
   }
 
   private loadDashboardData(): void {

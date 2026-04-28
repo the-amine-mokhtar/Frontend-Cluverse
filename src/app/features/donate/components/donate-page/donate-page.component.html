@@ -29,9 +29,24 @@
   <section class="payment-shell" *ngIf="selectedClubId && !successMessage">
 
     <article class="payment-card"
+      [class.payment-card--visa]="cardBrandKey === 'visa'"
+      [class.payment-card--mastercard]="cardBrandKey === 'mastercard'"
       [class.payment-card--active]="isCardInputActive"
       [class.payment-card--complete]="isCardInputComplete">
-      <div class="payment-card__visa">{{ cardPreviewBrand }}</div>
+
+      <!-- Visa logo -->
+      <div *ngIf="cardBrandKey === 'visa'" class="card-logo card-logo--visa">
+        <span class="visa-text">VISA</span>
+      </div>
+
+      <!-- Mastercard logo -->
+      <div *ngIf="cardBrandKey === 'mastercard'" class="card-logo card-logo--mastercard">
+        <div class="mc-circle mc-circle--left"></div>
+        <div class="mc-circle mc-circle--right"></div>
+      </div>
+
+      <!-- Default brand text -->
+      <div *ngIf="cardBrandKey === 'other'" class="card-logo card-logo--default">{{ cardPreviewBrand }}</div>
       <div class="payment-card__chip"></div>
       <div class="payment-card__number">{{ cardPreviewNumber }}</div>
       <div class="payment-card__row">
