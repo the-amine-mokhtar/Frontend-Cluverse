@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
-import { BudgetDto, EventDto, FinanceService } from '../../../../core/services/finance.service';
+import { BudgetDto, EventDto, FinanceService, MemberPaymentDto, TransactionDto } from '../../../../core/services/finance.service';
 
 interface BudgetItem {
   id: number;
@@ -23,6 +24,13 @@ interface BudgetItem {
 export class FinanceBudgetsComponent implements OnInit {
   budgetItems: BudgetItem[] = [];
   clubEvents: EventDto[] = [];
+
+  clubTotalIncome = 0;
+  clubTotalAllocated = 0;
+
+  get clubFreeBalance(): number {
+    return this.clubTotalIncome - this.clubTotalAllocated;
+  }
 
   budgetPage = 0;
   readonly budgetPageSize = 6;
@@ -49,8 +57,7 @@ export class FinanceBudgetsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadClubEvents();
-    this.loadBudgets();
+    this.loadData();
   }
 
   openCreateBudgetForm(): void {
@@ -163,7 +170,7 @@ export class FinanceBudgetsComponent implements OnInit {
     });
   }
 
-  private loadBudgets(): void {
+  private loadData(): void {
     const clubId = this.authHelperService.getClubId();
 
     if (!clubId) {
@@ -174,33 +181,44 @@ export class FinanceBudgetsComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.financeService.getBudgets(clubId).subscribe({
-      next: (budgets) => {
+    forkJoin({
+      budgets: this.financeService.getBudgets(clubId),
+      transactions: this.financeService.getTransactions(clubId),
+      events: this.financeService.getEvents(clubId),
+      memberPayments: this.financeService.getMemberPayments(clubId)
+    }).subscribe({
+      next: ({ budgets, transactions, events, memberPayments }) => {
+        this.clubEvents = [...events].sort((a, b) => a.title.localeCompare(b.title));
         this.budgetItems = budgets.map((budget) => this.toBudgetItem(budget));
+        this.computeClubTotals(budgets, transactions, memberPayments);
         this.isLoading = false;
       },
       error: (error: unknown) => {
-        this.errorMessage = `Failed to load budgets from backend. ${this.formatHttpError(error)}`;
+        this.errorMessage = `Failed to load data. ${this.formatHttpError(error)}`;
         this.isLoading = false;
       }
     });
   }
 
-  private loadClubEvents(): void {
-    const clubId = this.authHelperService.getClubId();
+  private computeClubTotals(budgets: BudgetDto[], transactions: TransactionDto[], memberPayments: MemberPaymentDto[]): void {
+    const transactionIncome = transactions
+      .filter((t) => {
+        const isClubScope = !t.scope || t.scope === 'CLUB';
+        const isIncome = t.type === 'INCOME';
+        const isClubLevel = !t.eventId && !t.budgetId;
+        return isIncome && (isClubScope || isClubLevel);
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    if (!clubId) {
-      return;
-    }
+    const paidDues = memberPayments
+      .filter((p) => p.status === 'PAID')
+      .reduce((sum, p) => sum + Number(p.amount), 0);
 
-    this.financeService.getEvents(clubId).subscribe({
-      next: (events) => {
-        this.clubEvents = [...events].sort((a, b) => a.title.localeCompare(b.title));
-      },
-      error: () => {
-        this.clubEvents = [];
-      }
-    });
+    this.clubTotalIncome = transactionIncome + paidDues;
+
+    this.clubTotalAllocated = budgets
+      .filter((b) => b.eventId != null)
+      .reduce((sum, b) => sum + b.totalAllocated, 0);
   }
 
   private formatHttpError(error: unknown): string {
@@ -226,8 +244,9 @@ export class FinanceBudgetsComponent implements OnInit {
     const eventId = budgetData.event?.id ?? budgetData.eventId ?? budgetData.event_id ?? null;
     const totalAllocated = budgetData.totalAllocated ?? budgetData.total_allocated ?? 0;
     const year = this.normalizeYear(budgetData.year);
-    const eventTitle = budgetData.event?.title ?? null;
-    const budgetType = budgetData.budgetType ?? eventTitle ?? (eventId ? 'EVENT' : 'GENERAL');
+    const eventTitle = budgetData.event?.title ??
+      (eventId ? (this.clubEvents.find(e => e.id === eventId)?.title ?? null) : null);
+    const budgetType = eventTitle ?? (budgetData.budgetType === 'GENERAL' || !eventId ? 'GENERAL' : budgetData.budgetType ?? 'GENERAL');
     return {
       id: budgetData.id,
       year,

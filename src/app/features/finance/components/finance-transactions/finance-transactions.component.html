@@ -32,6 +32,22 @@
         </select>
       </label>
 
+      <label class="field">
+        <span class="field__label">Scope</span>
+        <select class="field__control" [(ngModel)]="newTransaction.scope" name="transactionScope" (ngModelChange)="onFormScopeChange()">
+          <option value="club">Club-wide (e.g. sponsor donation)</option>
+          <option value="event">Event-specific</option>
+        </select>
+      </label>
+
+      <label class="field" *ngIf="newTransaction.scope === 'event'">
+        <span class="field__label">Event</span>
+        <select class="field__control" [(ngModel)]="newTransaction.eventId" name="transactionEventId">
+          <option [ngValue]="null">— Select event —</option>
+          <option *ngFor="let event of clubEvents" [ngValue]="event.id">{{ event.title }}</option>
+        </select>
+      </label>
+
       <label class="field field--wide">
         <span class="field__label">Description</span>
         <input class="field__control" type="text" placeholder="Describe the transaction" [(ngModel)]="newTransaction.description" name="transactionDescription" />
@@ -71,31 +87,16 @@
         (ngModelChange)="resetTransactionPage()"
       />
 
-      <div class="transactions-toolbar__filters" role="tablist" aria-label="Transaction filters">
-        <button
-          type="button"
-          class="filter-btn"
-          [class.filter-btn--active]="activeFilter === 'all'"
-          (click)="setFilter('all')"
-        >
-          All
-        </button>
-        <button
-          type="button"
-          class="filter-btn"
-          [class.filter-btn--active]="activeFilter === 'income'"
-          (click)="setFilter('income')"
-        >
-          Income
-        </button>
-        <button
-          type="button"
-          class="filter-btn"
-          [class.filter-btn--active]="activeFilter === 'expense'"
-          (click)="setFilter('expense')"
-        >
-          Expenses
-        </button>
+      <div class="transactions-toolbar__filters" role="tablist" aria-label="Transaction type filters">
+        <button type="button" class="filter-btn" [class.filter-btn--active]="activeFilter === 'all'" (click)="setFilter('all')">All</button>
+        <button type="button" class="filter-btn" [class.filter-btn--active]="activeFilter === 'income'" (click)="setFilter('income')">Income</button>
+        <button type="button" class="filter-btn" [class.filter-btn--active]="activeFilter === 'expense'" (click)="setFilter('expense')">Expenses</button>
+      </div>
+
+      <div class="transactions-toolbar__filters" role="tablist" aria-label="Transaction scope filters">
+        <button type="button" class="filter-btn" [class.filter-btn--active]="scopeFilter === 'all'" (click)="setScopeFilter('all')">All Sources</button>
+        <button type="button" class="filter-btn" [class.filter-btn--active]="scopeFilter === 'club'" (click)="setScopeFilter('club')">Club-Level</button>
+        <button type="button" class="filter-btn" [class.filter-btn--active]="scopeFilter === 'event'" (click)="setScopeFilter('event')">Events</button>
       </div>
     </div>
 
@@ -104,6 +105,7 @@
         <thead>
           <tr>
             <th>Type</th>
+            <th>Source</th>
             <th>Description</th>
             <th>Date</th>
             <th class="align-right">Amount</th>
@@ -118,6 +120,11 @@
                 {{ transaction.type }}
               </span>
             </td>
+            <td>
+              <span class="pill" [class.pill--club]="transaction.scope === 'CLUB'" [class.pill--event]="transaction.scope === 'EVENT'">
+                {{ transaction.scope === 'EVENT' ? 'Event' : 'Club' }}
+              </span>
+            </td>
             <td class="description">{{ transaction.description }}</td>
             <td>{{ transaction.date }}</td>
             <td class="align-right amount" [class.amount--income]="transaction.type === 'income'" [class.amount--expense]="transaction.type === 'expense'">
@@ -130,7 +137,7 @@
           </tr>
 
           <tr *ngIf="!isLoading && filteredTransactions.length === 0">
-            <td colspan="5" class="empty-state">No transactions found for the selected filter.</td>
+            <td colspan="6" class="empty-state">No transactions found for the selected filter.</td>
           </tr>
         </tbody>
       </table>
