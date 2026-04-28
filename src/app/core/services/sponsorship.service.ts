@@ -60,6 +60,17 @@ export interface UpdateSponsorshipRequest {
   notes?: string | null;
 }
 
+export interface GenerateSponsorshipProposalSummaryRequest {
+  sponsorName: string;
+  eventName: string;
+  expectedAmount: number;
+}
+
+export interface GenerateSponsorshipProposalSummaryResponse {
+  summary: string;
+  model: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -95,5 +106,13 @@ export class SponsorshipService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`, { headers: this.authHeaders() });
+  }
+
+  generateProposalSummaryWithAi(payload: GenerateSponsorshipProposalSummaryRequest): Observable<GenerateSponsorshipProposalSummaryResponse> {
+    return this.http.post<GenerateSponsorshipProposalSummaryResponse>(
+      `${environment.apiUrl}/api/ai/summary/sponsorship-proposal`,
+      payload,
+      { headers: this.authHeaders() }
+    );
   }
 }
