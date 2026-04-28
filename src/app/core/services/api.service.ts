@@ -874,223 +874,40 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
     ).pipe(catchError(this.handleError));
   }
 
-  // ========== CV Analysis & Learning Path methods ==========
-  analyzeCV(userId: number, clubId: number, file: File): Observable<CVAnalysisResponse> {
-    const formData = new FormData();
-    formData.append('userId', String(userId));
-    formData.append('clubId', String(clubId));
-    formData.append('file', file);
+// ─── Member Payments ──────────────────────────────────────────────────────────
 
-    return this.http.post<CVAnalysisResponse>(`${this.baseUrl}/api/member-competencies/cv/analyze`, formData, {
+  getMemberPayments(clubId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/api/member-payments?clubId=${clubId}`, {
       headers: this.authHeaders()
     }).pipe(catchError(this.handleError));
   }
 
-  generateLearningPath(skillName: string, targetLevel: number): Observable<LearningPathResponse> {
-    return this.http.get<LearningPathResponse>(`${this.baseUrl}/api/member-competencies/cv/learning-path/generate`, {
-      headers: this.authHeaders(),
-      params: { skillName, targetLevel: targetLevel.toString() }
-    }).pipe(catchError(this.handleError));
+  createMemberPayment(membershipId: number, clubId: number, payment: { amount: number; status: string; dueDate: string }): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/api/member-payments?membershipId=${membershipId}&clubId=${clubId}`,
+      payment,
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
   }
 
-  generateQuiz(skillName: string, level: number): Observable<QuizResponse> {
-    return this.http.post<QuizResponse>(`${this.speechUrl}/quiz/generate`, {
-      skill_name: skillName,
-      level
-    }).pipe(catchError(this.handleError));
-  }
-
-  // ========== Mentorship API methods ==========
-  createMentorshipConversation(mentorId: number, menteeId: number, clubId: number,
-    skillName: string, mentorLevel: number, menteeLevel: number): Observable<any> {
-    let params = new HttpParams()
-      .set('mentorId', mentorId)
-      .set('menteeId', menteeId)
-      .set('clubId', clubId)
-      .set('skillName', skillName)
-      .set('mentorLevel', mentorLevel)
-      .set('menteeLevel', menteeLevel);
-
-    return this.http.post(`${this.baseUrl}/api/mentorship/conversations`, null, {
-      headers: this.authHeaders(),
-      params
-    }).pipe(catchError(this.handleError));
-  }
-
-  getUserMentorshipConversations(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/conversations/user/${userId}`, {
+  updateMemberPayment(id: number, payment: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/api/member-payments/${id}`, payment, {
       headers: this.authHeaders()
     }).pipe(catchError(this.handleError));
   }
 
-  getMentorshipConversationMessages(conversationId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/conversations/${conversationId}/messages`, {
-      headers: this.authHeaders()
+  deleteMemberPayment(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/api/member-payments/${id}`, {
+      headers: this.authHeaders(), responseType: 'text'
     }).pipe(catchError(this.handleError));
   }
 
-  sendMentorshipMessage(conversationId: number, senderId: number, content: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/mentorship/conversations/${conversationId}/messages`,
-      content, {
-      headers: this.authHeaders(),
-      params: new HttpParams().set('senderId', senderId)
-    }).pipe(catchError(this.handleError));
-  }
-
-  markMentorshipMessagesAsRead(conversationId: number, userId: number): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/api/mentorship/conversations/${conversationId}/read`, null, {
-      headers: this.authHeaders(),
-      params: new HttpParams().set('userId', userId)
-    }).pipe(catchError(this.handleError));
-  }
-
-  // ========== Mentorship Session Request API methods ==========
-  createMentorshipSessionRequest(conversationId: number, requesterId: number, requestedUserId: number,
-    proposedDateTime: string, description: string): Observable<any> {
-    let params = new HttpParams()
-      .set('conversationId', conversationId)
-      .set('requesterId', requesterId)
-      .set('requestedUserId', requestedUserId)
-      .set('proposedDateTime', proposedDateTime)
-      .set('description', description);
-
-    return this.http.post(`${this.baseUrl}/api/mentorship/session-requests`, null, {
-      headers: this.authHeaders(),
-      params
-    }).pipe(catchError(this.handleError));
-  }
-
-  respondToMentorshipSessionRequest(requestId: number, userId: number, accepted: boolean, responseMessage?: string): Observable<any> {
-    let params = new HttpParams()
-      .set('userId', userId)
-      .set('accepted', accepted);
-
-    if (responseMessage) {
-      params = params.set('responseMessage', responseMessage);
-    }
-
-    return this.http.post(`${this.baseUrl}/api/mentorship/session-requests/${requestId}/respond`, null, {
-      headers: this.authHeaders(),
-      params
-    }).pipe(catchError(this.handleError));
-  }
-
-  getPendingMentorshipRequests(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/session-requests/pending/${userId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  getUserMentorshipRequests(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/session-requests/user/${userId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  // ========== Mentorship Feedback API methods ==========
-  submitMentorshipFeedback(conversationId: number, giverId: number, receiverId: number,
-    rating: number, comment?: string): Observable<any> {
-    let params = new HttpParams()
-      .set('conversationId', conversationId)
-      .set('giverId', giverId)
-      .set('receiverId', receiverId)
-      .set('rating', rating);
-
-    if (comment) {
-      params = params.set('comment', comment);
-    }
-
-    return this.http.post(`${this.baseUrl}/api/mentorship/feedback`, null, {
-      headers: this.authHeaders(),
-      params
-    }).pipe(catchError(this.handleError));
-  }
-
-  getConversationFeedback(conversationId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/feedback/conversation/${conversationId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  getUserReceivedFeedback(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/feedback/received/${userId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  // ========== Mentorship Goals API methods ==========
-  createMentorshipGoal(conversationId: number, menteeId: number, title: string,
-    description?: string, targetDate?: string): Observable<any> {
-    let params = new HttpParams()
-      .set('conversationId', conversationId)
-      .set('menteeId', menteeId)
-      .set('title', title);
-
-    if (description) params = params.set('description', description);
-    if (targetDate) params = params.set('targetDate', targetDate);
-
-    return this.http.post(`${this.baseUrl}/api/mentorship/goals`, null, {
-      headers: this.authHeaders(),
-      params
-    }).pipe(catchError(this.handleError));
-  }
-
-  updateGoalProgress(goalId: number, progress: number): Observable<any> {
-    return this.http.put(`${this.baseUrl}/api/mentorship/goals/${goalId}/progress`, null, {
-      headers: this.authHeaders(),
-      params: new HttpParams().set('progress', progress)
-    }).pipe(catchError(this.handleError));
-  }
-
-  getConversationGoals(conversationId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/goals/conversation/${conversationId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  getMenteeGoals(menteeId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/goals/mentee/${menteeId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  areAllGoalsCompleted(conversationId: number): Observable<boolean> {
-    return this.http.get<boolean>(`${this.baseUrl}/api/mentorship/goals/${conversationId}/completed`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  // ========== Mentorship Certificate API methods ==========
-  generateCertificate(conversationId: number): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/mentorship/certificates/generate`, null, {
-      headers: this.authHeaders(),
-      params: new HttpParams().set('conversationId', conversationId)
-    }).pipe(catchError(this.handleError));
-  }
-
-  getCertificateByConversation(conversationId: number): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/mentorship/certificates/conversation/${conversationId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  getMenteeCertificates(menteeId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/certificates/mentee/${menteeId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  getMentorCertificates(mentorId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/api/mentorship/certificates/mentor/${mentorId}`, {
-      headers: this.authHeaders()
-    }).pipe(catchError(this.handleError));
-  }
-
-  downloadCertificatePdf(conversationId: number): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/api/mentorship/certificates/${conversationId}/pdf`, {
-      headers: this.authHeaders(),
-      responseType: 'blob'
-    }).pipe(catchError(this.handleError));
+  sendPaymentReminders(clubId: number): Observable<number> {
+    return this.http.post<number>(
+      `${this.baseUrl}/api/member-payments/remind?clubId=${clubId}`,
+      {},
+      { headers: this.authHeaders() }
+    ).pipe(catchError(this.handleError));
   }
 }
 

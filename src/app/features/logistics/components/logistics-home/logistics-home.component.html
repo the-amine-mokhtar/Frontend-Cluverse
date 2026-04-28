@@ -1,0 +1,117 @@
+<div class="logistics">
+  <div class="logistics__header">
+    <div>
+      <h1 class="logistics__title">Logistique</h1>
+      <p class="logistics__subtitle">Centralise les demandes, l’inventaire et les livraisons de ton club.</p>
+    </div>
+
+    <div class="logistics__header-actions">
+      <button class="btn btn--primary" type="button" (click)="goToNewRequest()">
+        + Nouvelle demande
+      </button>
+      <button class="btn btn--ghost" type="button" (click)="goToRequests()">
+        Voir tout
+      </button>
+    </div>
+  </div>
+
+  <div class="logistics__warnings" *ngIf="warnings.length > 0">
+    <div class="logistics__warning" *ngFor="let warning of warnings">
+      {{ warning }}
+    </div>
+  </div>
+
+  <div class="logistics__kpis">
+    <div class="kpi" *ngFor="let kpi of kpis">
+      <div class="kpi__label">{{ kpi.label }}</div>
+      <div class="kpi__value">{{ kpi.value }}</div>
+      <div class="kpi__hint" *ngIf="kpi.hint">{{ kpi.hint }}</div>
+    </div>
+  </div>
+
+  <div class="logistics__grid">
+    <section class="card card--accent">
+      <div class="card__header">
+        <h2 class="card__title">Actions rapides</h2>
+        <span class="card__pill">Productivité</span>
+      </div>
+
+      <div class="actions">
+        <button
+          class="action"
+          type="button"
+          [disabled]="a.disabled"
+          (click)="
+            a.icon === 'request' ? goToNewRequest() :
+            a.icon === 'truck' ? goToDeliveries() :
+            a.icon === 'box' ? goToInventory() :
+            goToVehicles()
+          "
+          *ngFor="let a of quickActions">
+          <div class="action__icon" [attr.data-icon]="a.icon">
+            <ng-container [ngSwitch]="a.icon">
+              <svg *ngSwitchCase="'request'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6M9 16h6M7 3h10a2 2 0 012 2v14l-4-3H7a2 2 0 01-2-2V5a2 2 0 012-2z"/>
+              </svg>
+              <svg *ngSwitchCase="'truck'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h11v10H3V7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 10h4l3 3v4h-7v-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 17a2 2 0 100 4 2 2 0 000-4zM18 17a2 2 0 100 4 2 2 0 000-4z"/>
+              </svg>
+              <svg *ngSwitchCase="'box'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8l-9 5-9-5 9-5 9 5z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8v8l9 5 9-5V8"/>
+              </svg>
+              <svg *ngSwitchCase="'vehicle'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h11v10H3V7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 10h4l3 3v4h-7v-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 17a2 2 0 100 4 2 2 0 000-4zM18 17a2 2 0 100 4 2 2 0 000-4z"/>
+              </svg>
+            </ng-container>
+          </div>
+
+          <div class="action__content">
+            <div class="action__title">{{ a.title }}</div>
+            <div class="action__desc">{{ a.description }}</div>
+            <div class="action__cta">{{ a.cta }}</div>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__header">
+        <h2 class="card__title">Dernières demandes</h2>
+        <button class="link" type="button" (click)="goToManageRequest()">Gérer</button>
+      </div>
+
+      <div class="table">
+        <div class="row" *ngFor="let r of recentRequests; trackBy: trackById">
+          <div class="row__main">
+            <div class="row__title">{{ r.title }}</div>
+            <div class="row__meta">{{ r.id }} • {{ r.meta }}</div>
+          </div>
+          <span class="badge" [attr.data-status]="r.status">{{ r.status }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__header">
+        <h2 class="card__title">Livraisons à venir</h2>
+        <button class="link" type="button" (click)="goToDeliveries()">Calendrier</button>
+      </div>
+
+      <div class="table">
+        <div class="row" *ngFor="let d of upcomingDeliveries; trackBy: trackById">
+          <div class="row__main">
+            <div class="row__title">{{ d.title }}</div>
+            <div class="row__meta">{{ d.id }} • {{ d.meta }}</div>
+          </div>
+          <span class="badge" [attr.data-status]="d.status">{{ d.status }}</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+

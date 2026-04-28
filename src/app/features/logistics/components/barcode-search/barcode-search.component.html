@@ -1,0 +1,142 @@
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 px-4 py-8">
+  <div class="max-w-6xl mx-auto">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <app-back-button></app-back-button>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-cyan-500 to-emerald-600 bg-clip-text text-transparent mb-2">Recherche par Code-barres</h1>
+      <p class="text-gray-600">Scannez le code-barres d'une ressource pour afficher ses détails</p>
+    </div>
+
+    <!-- État initial -->
+    <!-- SUPPRIMÉ: Page d'instructions complètement -->
+
+    <!-- État résultat trouvé -->
+    <div *ngIf="foundResource && !showScanner" class="space-y-6">
+      <!-- Layout 2 COLONNES -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- En-tête -->
+        <div class="bg-gradient-to-r from-cyan-500 to-emerald-600 px-6 py-4">
+          <p class="text-white font-bold text-lg text-center">✓ Ressource trouvée avec succès !</p>
+        </div>
+
+        <!-- Contenu en 2 colonnes -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-0">
+          <!-- COLONNE GAUCHE (1/3) - Image et infos de base -->
+          <div class="md:col-span-1 bg-gradient-to-b from-cyan-50 to-emerald-50 p-4 border-r border-gray-200">
+            <!-- Image -->
+            <div *ngIf="foundResource.imageUrl" class="mb-3">
+              <img
+                [src]="foundResource.imageUrl"
+                [alt]="foundResource.name"
+                class="w-full h-40 object-cover rounded-lg shadow-md">
+            </div>
+
+            <!-- Nom -->
+            <div class="mb-3">
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-0.5">Nom</p>
+              <h2 class="text-xl font-bold text-gray-800">{{ foundResource.name }}</h2>
+            </div>
+
+            <!-- Code-barres -->
+            <div class="mb-3">
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-0.5">Code-barres</p>
+              <p class="font-mono text-xs bg-white px-2 py-1 rounded border-2 border-cyan-400 text-cyan-600 font-bold">
+                {{ foundResource.barcode }}
+              </p>
+            </div>
+
+            <!-- Statut -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-0.5">Statut</p>
+              <span
+                [ngClass]="'status-badge status-' + foundResource.status.toLowerCase()"
+                class="inline-block px-3 py-1 rounded-lg font-bold text-white text-xs">
+                {{ foundResource.status }}
+              </span>
+            </div>
+          </div>
+
+          <!-- COLONNE DROITE (2/3) - Tous les détails -->
+          <div class="md:col-span-2 p-4 space-y-3">
+            <!-- Grille Quantités -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-cyan-50 rounded-lg p-3 border-l-4 border-cyan-600">
+                <p class="text-xs font-semibold text-gray-600 uppercase mb-0.5">Total</p>
+                <p class="text-2xl font-bold text-cyan-600">{{ foundResource.quantityTotal }}</p>
+              </div>
+
+              <div [ngClass]="foundResource.availableQuantity > 0 ? 'bg-green-50 border-green-600' : 'bg-red-50 border-red-600'" class="rounded-lg p-3 border-l-4">
+                <p class="text-xs font-semibold text-gray-600 uppercase mb-0.5">Dispo</p>
+                <p [ngClass]="foundResource.availableQuantity > 0 ? 'text-green-600' : 'text-red-600'" class="text-2xl font-bold">
+                  {{ foundResource.availableQuantity }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div *ngIf="foundResource.description">
+              <p class="text-xs font-semibold text-gray-700 uppercase">Description</p>
+              <p class="text-sm text-gray-700 bg-gray-50 p-2 rounded line-clamp-2">{{ foundResource.description }}</p>
+            </div>
+
+            <!-- Coût & Seuil -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-xs font-semibold text-gray-700 uppercase mb-0.5">Coût</p>
+                <p class="text-lg font-bold text-gray-800">${{ foundResource.unitCost.toFixed(2) }}</p>
+              </div>
+              <div *ngIf="foundResource.lowStockThreshold">
+                <p class="text-xs font-semibold text-gray-700 uppercase mb-0.5">Seuil</p>
+                <p class="text-lg font-bold text-gray-800">{{ foundResource.lowStockThreshold }} u.</p>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div *ngIf="foundResource.notes">
+              <p class="text-xs font-semibold text-gray-700 uppercase">Notes</p>
+              <p class="text-sm text-gray-700 bg-gray-50 p-2 rounded line-clamp-1">{{ foundResource.notes }}</p>
+            </div>
+
+            <!-- Dernière mise à jour -->
+            <div class="text-right border-t pt-2">
+              <p class="text-xs text-gray-500 italic">Dernière mise à jour: {{ foundResource.lastUpdated | date:'short' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerte si stock faible -->
+      <div
+        *ngIf="foundResource.availableQuantity <= foundResource.lowStockThreshold"
+        class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+        <div class="flex gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <p class="font-semibold text-yellow-800">Stock faible</p>
+            <p class="text-sm text-yellow-700">Cette ressource a un stock disponible faible</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boutons actions -->
+      <div>
+        <button
+          (click)="onOpenScanner()"
+          class="w-full bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg">
+          Scanner autre
+        </button>
+      </div>
+    </div>
+
+    <!-- Scanner actif -->
+    <app-barcode-scanner-modal
+      *ngIf="showScanner"
+      (resourceFound)="onResourceFound($event)"
+      (closed)="onScannerClosed()">
+    </app-barcode-scanner-modal>
+  </div>
+</div>

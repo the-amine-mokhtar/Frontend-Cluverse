@@ -1,0 +1,228 @@
+<div class="p-6 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+  <div class="mb-8">
+    <app-back-button></app-back-button>
+    
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Ressources</h1>
+        <p class="text-gray-600 mt-1">Gestion du matériel et du stock</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          type="button"
+          (click)="exportToCSV()"
+          class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition shadow-md hover:shadow-lg font-semibold whitespace-nowrap"
+        >
+          📥 Exporter CSV
+        </button>
+        <a
+          class="bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-600 hover:to-emerald-700 text-white px-6 py-3 rounded-lg transition shadow-md hover:shadow-lg font-semibold whitespace-nowrap flex items-center gap-2"
+          [routerLink]="['/logistics/barcode-search']"
+        >
+          📱 Scanner code-barres
+        </a>
+        <a
+          class="bg-gradient-to-r from-purple-600 to-violet-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-violet-700 transition shadow-md hover:shadow-lg font-semibold whitespace-nowrap"
+          [routerLink]="['/logistics/resources/new']"
+        >
+          ➕ Ajouter une ressource
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-inherit opacity-80">Chargement...</div>
+
+  <div *ngIf="!loading && errorMessage" class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm mb-6">
+    {{ errorMessage }}
+  </div>
+
+  <ng-container *ngIf="!loading && !errorMessage">
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-5 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">🔍 Recherche</label>
+          <input
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+            type="text"
+            placeholder="Nom de la ressource..."
+            [(ngModel)]="searchText"
+            (input)="applyFilters()"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">📊 Statut</label>
+          <select
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+            [(ngModel)]="statusFilter"
+            (change)="applyFilters()"
+          >
+            <option value="ALL">Tous</option>
+            <option *ngFor="let s of statusOptions" [value]="s">
+              {{ statusLabels[s].label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="flex justify-end">
+          <button
+            class="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 transition font-medium"
+            type="button"
+            (click)="searchText=''; statusFilter='ALL'; applyFilters()"
+          >
+            🔄 Réinitialiser
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div *ngIf="filteredResources.length === 0" class="text-center py-12">
+      <div class="text-4xl mb-2">📦</div>
+      <p class="text-gray-500 font-medium">Aucune ressource trouvée</p>
+    </div>
+
+    <div *ngIf="filteredResources.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div *ngFor="let r of pagedResources" class="bg-white rounded-xl shadow-md border border-purple-100 p-5 hover:shadow-lg hover:border-purple-300 transition-all duration-200 transform hover:scale-105 flex flex-col">
+        <!-- Header with image/initials and status -->
+        <div class="flex items-start justify-between gap-3 mb-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <ng-container *ngIf="r.imageUrl; else initials">
+              <img
+                class="w-14 h-14 rounded-lg object-cover"
+                [src]="r.imageUrl"
+                [alt]="r.name"
+              />
+            </ng-container>
+            <ng-template #initials>
+              <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 flex items-center justify-center font-bold text-lg">
+                {{ getInitials(r.name) }}
+              </div>
+            </ng-template>
+
+            <div class="min-w-0">
+              <a
+                class="text-purple-600 hover:text-purple-800 font-bold block truncate text-sm"
+                [routerLink]="['/logistics/resources', r.id]"
+                [title]="r.name"
+              >
+                {{ r.name }}
+              </a>
+              <div class="text-xs text-gray-500 truncate" [title]="r.description">
+                {{ r.description || '—' }}
+              </div>
+            </div>
+          </div>
+
+          <span class="{{ getStatusBadgeClasses(statusLabels[r.status].color) }} whitespace-nowrap text-xs font-bold px-3 py-1">
+            {{ statusLabels[r.status].label }}
+          </span>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="grid grid-cols-2 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+          <div>
+            <div class="text-xs font-semibold text-gray-600 uppercase mb-1">📦 Stock</div>
+            <div class="flex items-center gap-2">
+              <span
+                class="font-bold text-sm"
+                [class.text-orange-700]="isLowStock(r)"
+                [class.text-green-700]="!isLowStock(r)"
+              >
+                {{ r.availableQuantity }} / {{ r.quantityTotal }}
+              </span>
+              <span *ngIf="isLowStock(r)" class="text-orange-600 text-lg" aria-label="Stock bas">⚠</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs font-semibold text-gray-600 uppercase mb-1">💰 Coût</div>
+            <div class="text-gray-900 font-bold text-sm">
+              {{ unitCostText(r) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="border-t border-gray-100 pt-4 flex items-center justify-between gap-2">
+          <a
+            class="flex-1 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 transition text-sm font-medium text-center"
+            [routerLink]="['/logistics/resources', r.id]"
+          >
+            👁️ Voir
+          </a>
+
+          <a
+            class="flex-1 bg-amber-50 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-100 transition text-sm font-medium text-center"
+            [routerLink]="['/logistics/resources', r.id, 'edit']"
+          >
+            ✏️ Éditer
+          </a>
+
+          <button
+            type="button"
+            class="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition text-sm font-medium"
+            (click)="delete(r)"
+          >
+            🗑️ Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="filteredResources.length > 0 && totalPages > 1" class="mt-10">
+      <div class="flex items-center justify-center gap-2">
+        <button
+          type="button"
+          class="w-10 h-10 rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-semibold"
+          (click)="prevPage()"
+          [disabled]="currentPage === 1"
+          aria-label="Page précédente"
+        >
+          ‹
+        </button>
+
+        <ng-container *ngFor="let item of paginationItems">
+          <span *ngIf="item === '...'" class="px-1 text-gray-500">…</span>
+
+          <button
+            *ngIf="item !== '...'"
+            type="button"
+            class="w-10 h-10 rounded-full transition font-semibold"
+            [class.bg-gradient-to-r]="item === currentPage"
+            [class.from-purple-600]="item === currentPage"
+            [class.to-violet-600]="item === currentPage"
+            [class.text-white]="item === currentPage"
+            [class.border]="item !== currentPage"
+            [class.border-gray-300]="item !== currentPage"
+            [class.bg-white]="item !== currentPage"
+            [class.text-gray-700]="item !== currentPage"
+            [class.hover:bg-gray-50]="item !== currentPage"
+            (click)="setPage(item)"
+            [attr.aria-label]="'Aller à la page ' + item"
+          >
+            {{ item }}
+          </button>
+        </ng-container>
+
+        <button
+          type="button"
+          class="w-10 h-10 rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-semibold"
+          (click)="nextPage()"
+          [disabled]="currentPage === totalPages"
+          aria-label="Page suivante"
+        >
+          ›
+        </button>
+      </div>
+
+      <div class="text-center text-sm text-gray-600 mt-4">
+        {{ pageStart }}–{{ pageEnd }} sur {{ filteredResources.length }} ressources
+      </div>
+    </div>
+  </ng-container>
+</div>

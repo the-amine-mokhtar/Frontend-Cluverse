@@ -1,0 +1,206 @@
+<div class="p-4 md:p-8 bg-gray-50 min-h-screen">
+  <app-back-button></app-back-button>
+
+  <div class="max-w-full mx-auto mt-6">
+    
+    <!-- Top Action Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg text-2xl">
+          🚗
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
+            {{ vehicle?.model || 'Détails Véhicule' }}
+          </h1>
+          <p class="text-gray-600 text-sm mt-1 font-medium">Fiche technique et historique opérationnel</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a *ngIf="vehicle" [routerLink]="['/logistics/vehicles', vehicle.id, 'edit']"
+           class="bg-white text-gray-700 px-6 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition font-semibold shadow-sm flex items-center gap-2 text-sm">
+          ✏️ Éditer
+        </a>
+        <a *ngIf="vehicle" [routerLink]="['/logistics/vehicles', vehicle.id, 'maintenance']"
+           class="bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition font-semibold shadow-md flex items-center gap-2 text-sm">
+          🔧 Maintenance IA
+        </a>
+        <button (click)="delete()" [disabled]="isDeleting || !vehicle"
+                class="bg-rose-50 text-rose-600 px-6 py-3 rounded-xl hover:bg-rose-100 transition font-semibold flex items-center gap-2 text-sm">
+          {{ isDeleting ? '⏳...' : '🗑️ Supprimer' }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-100 text-red-700 rounded-xl p-4 text-sm mb-8 flex items-center gap-3">
+      <span class="text-xl">⚠️</span> {{ errorMessage }}
+    </div>
+
+    <!-- Main Layout Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+      
+      <!-- Left Column: Status & KPI (4/12) -->
+      <div class="lg:col-span-4 flex flex-col">
+        
+        <!-- Status & Plate Hero Card -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col h-full">
+          <div class="p-8 text-center text-white" [ngClass]="vehicle?.available ? 'bg-gradient-to-br from-emerald-500 to-green-600' : 'bg-gradient-to-br from-rose-500 to-red-600'">
+            <div class="text-xs font-semibold tracking-wider opacity-80 mb-2">Immatriculation</div>
+            <div class="text-4xl font-bold tracking-tight mb-4 font-mono">{{ vehicle?.plateNumber }}</div>
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full backdrop-blur-md text-xs font-bold tracking-wider">
+              {{ vehicle?.available ? '✓ Disponible' : '✗ Indisponible' }}
+            </div>
+          </div>
+
+          <div class="p-8 flex-1 flex flex-col justify-between space-y-6">
+            <!-- Transports Stats -->
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-semibold text-gray-500 mb-1">📊 Total Transports</div>
+                <div class="text-3xl font-bold text-gray-900">{{ transports.length }}</div>
+              </div>
+              <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">📦</div>
+            </div>
+
+            <div class="h-px bg-gray-100"></div>
+
+            <!-- Fuel Section -->
+            <div *ngIf="!loadingFuelStatus && fuelStatus" class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-semibold text-gray-500 mb-1">⛽ Niveau Carburant</div>
+                  <div class="text-3xl font-bold text-gray-900" [ngClass]="getFuelStatusTextClass()">{{ fuelStatus.fuelLevel?.toFixed(1) || 0 }}%</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner" [ngClass]="getFuelStatusCardClass()">⛽</div>
+              </div>
+              
+              <div class="bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div class="h-full transition-all duration-1000" [ngClass]="getFuelStatusBadgeClass()" [style.width.%]="fuelStatus.fuelLevel"></div>
+              </div>
+
+              <div class="flex justify-between text-xs font-medium text-gray-500">
+                <span>Autonomie: {{ fuelStatus.remainingRange?.toFixed(0) || 0 }} km</span>
+                <span class="font-bold tracking-wider" [ngClass]="getFuelStatusTextClass()">{{ fuelStatus.status }}</span>
+              </div>
+
+              <button *ngIf="fuelStatus.fuelLevel < 100" (click)="openRefuelModal()"
+                      class="w-full bg-emerald-600 text-white py-3 rounded-xl hover:bg-emerald-700 transition font-bold text-sm flex items-center justify-center gap-2 shadow-md">
+                ⛽ Recharger
+              </button>
+            </div>
+
+            <div *ngIf="loadingFuelStatus" class="animate-pulse space-y-4">
+              <div class="h-12 bg-gray-100 rounded-xl w-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: History (8/12) -->
+      <div class="lg:col-span-8 flex flex-col">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col h-full">
+          <div class="p-6 border-b border-gray-200 bg-gray-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">📜</span>
+              <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Historique des transports</h2>
+            </div>
+            <span class="px-3 py-1 bg-white rounded-lg text-xs font-bold text-gray-500 border border-gray-200">
+              {{ transports.length }} records
+            </span>
+          </div>
+
+          <div class="flex-1 overflow-y-auto max-h-[600px] movement-history-scroll">
+            <div *ngIf="loadingTransports" class="p-12 text-center">
+              <div class="animate-spin text-4xl mb-4">⌛</div>
+              <p class="text-gray-400 font-bold text-sm">Chargement...</p>
+            </div>
+
+            <table *ngIf="!loadingTransports" class="w-full">
+              <thead class="sticky top-0 bg-gray-50 border-b border-gray-200 z-10">
+                <tr>
+                  <th class="px-6 py-4 font-semibold text-left text-gray-700 text-sm">🕐 Date</th>
+                  <th class="px-6 py-4 font-semibold text-left text-gray-700 text-sm">📊 Statut</th>
+                  <th class="px-6 py-4 font-semibold text-left text-gray-700 text-sm">🎯 Événement</th>
+                  <th class="px-6 py-4 font-semibold text-right text-gray-700 text-sm">⚙️ Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr *ngIf="transports.length === 0">
+                  <td colspan="4" class="px-6 py-12 text-center">
+                    <div class="text-4xl mb-4 opacity-30">📭</div>
+                    <p class="text-gray-500 font-semibold">Aucun transport enregistré</p>
+                  </td>
+                </tr>
+                <tr *ngFor="let t of transports" class="hover:bg-gray-50 transition-colors duration-150">
+                  <td class="px-6 py-4 text-gray-900 font-medium text-sm whitespace-nowrap">
+                    {{ t.scheduledDate | date: 'dd/MM/yyyy HH:mm' }}
+                  </td>
+                  <td class="px-6 py-4 text-sm">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold tracking-wider border"
+                          [ngClass]="getStatusBadgeClasses(transportStatusLabels[t.status].color)">
+                      {{ transportStatusLabels[t.status].label }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-700">
+                    <div *ngIf="t.eventId" class="flex items-center gap-2">
+                      <span class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0"></span>
+                      <span class="font-semibold text-indigo-700">{{ eventText(t.eventId) }}</span>
+                    </div>
+                    <span *ngIf="!t.eventId" class="text-gray-400">—</span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <a [routerLink]="['/logistics/transports', t.id]"
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition font-bold text-xs tracking-wider">
+                      👁️ Détails
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refuel Modal -->
+  <div *ngIf="showRefuelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">⛽ Recharger le Carburant</h2>
+
+      <div *ngIf="refuelError" class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">
+        ⚠️ {{ refuelError }}
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-semibold text-gray-700 mb-3">
+          💧 Carburant à ajouter (%)
+        </label>
+        <div class="flex items-center gap-4">
+          <input type="range" min="0" max="100" [(ngModel)]="refuelAmount"
+            class="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-red-500 to-green-500" />
+          <span class="text-2xl font-bold text-blue-600 min-w-[60px]">{{ refuelAmount }}%</span>
+        </div>
+        <div class="text-xs text-gray-600 mt-2">
+          💡 Carburant actuel: {{ fuelStatus?.fuelLevel?.toFixed(1) || 0 }}%
+          <br />
+          ➡️ Après: {{ getPredictedFuelAfterRefuel().toFixed(1) }}%
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button (click)="closeRefuelModal()"
+          class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
+          [disabled]="refueling">
+          ❌ Annuler
+        </button>
+        <button (click)="refuelVehicle()"
+          class="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition font-semibold disabled:opacity-50"
+          [disabled]="refueling">
+          {{ refueling ? '⏳ Recharge...' : '✅ Recharger' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

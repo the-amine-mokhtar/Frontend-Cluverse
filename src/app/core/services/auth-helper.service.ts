@@ -40,10 +40,19 @@ export class AuthHelperService {
     return `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
   }
 
+  getEmail(): string {
+    return this.getPayload()?.email ?? '';
+  }
+
   getClubId(): number {
-    const rawClubId = this.getPayload()?.clubid;
-    const clubId = Number(rawClubId);
-    return Number.isFinite(clubId) ? clubId : 0;
+    const payload = this.getPayload();
+    const fromToken = Number(payload?.clubid ?? payload?.clubId ?? 0);
+    if (Number.isFinite(fromToken) && fromToken > 0) {
+      return fromToken;
+    }
+
+    const fromStorage = Number(localStorage.getItem('clubId') ?? 0);
+    return Number.isFinite(fromStorage) ? fromStorage : 0;
   }
 
   getRole(): string {

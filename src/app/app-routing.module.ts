@@ -17,10 +17,21 @@ const routes: Routes = [
       import('./features/auth/auth.module').then(m => m.AuthModule)
   },
   {
+    path: 'logistics',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/logistics/logistics.module').then(m => m.LogisticsModule)
+  },
+  {
     path: 'dashboard',
     canActivate: [AuthGuard],
     loadChildren: () =>
       import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
+  },
+  {
+    path: 'donate',
+    loadChildren: () =>
+      import('./features/donate/donate.module').then(m => m.DonateModule)
   },
   {
     path: 'apply',
