@@ -22,6 +22,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.dashState.loadDashboardData();
 
+    /*
     const role = this.authHelper.getRole();
     const currentUrl = this.router.url;
     if (role === 'MEMBER') {
@@ -35,6 +36,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
         this.router.navigate(['/dashboard/competencies/member-competencies'], { replaceUrl: true });
       }
     }
+    */
 
     // Auto-logout: check every 60 seconds if the token has expired
     this.tokenCheckInterval = setInterval(() => {
