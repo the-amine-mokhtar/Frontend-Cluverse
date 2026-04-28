@@ -9,6 +9,7 @@ import { environment } from '../../../../environments/environment';
 // ══════════════════════════════════════════════════════════════════════════════
 
 export type EventStatus = 'PLANNED'| 'CANCELLED' | 'COMPLETED' | 'ONGOING';
+export type EventType = 'OFFLINE' | 'ONLINE';
 export type ParticipationStatus =
   | 'REGISTERED'
   | 'ATTENDED'
@@ -41,8 +42,6 @@ export function normalizeEvent(e: EventItem): EventItem {
     isFull:   (e.capacity != null && e.capacity > 0)
               ? (e.participantsCount ?? 0) >= e.capacity
               : false,
-    price:    e.price    ?? 0,
-    currency: e.currency ?? 'EUR',
     date:     e.startDate,
   };
 }
@@ -59,13 +58,10 @@ export interface EventItem {
   endDate:             string;
   capacity:            number;
   participantsCount?:  number;
-  isPaid?:             boolean;
-  currency?:           string;
   category?:           string;
   imageUrl?:           string;
   status?:             EventStatus;
   isFull?:             boolean;
-  price?:              number;
   date?:               string;
   cancelledAt?:        string;
   availableSeats?:     number;
@@ -78,12 +74,17 @@ export interface EventItem {
   locationAddress?:    string | null;
   locationLatitude?:   string | null;
   locationLongitude?:  string | null;
+  eventType?:          EventType;
+  meetingUrl?:         string | null;
   targetAudience?:     string;
   budget?:             number;
   maxParticipants?:    number;
   featured?:           boolean;
   isCampaign?:         boolean;
   visibility?:         string;
+  views?:              number;
+  clicks?:             number;
+  registrationCount?:  number;
 }
 
 export interface Campaign {
@@ -141,6 +142,8 @@ export interface EventRequestPayload {
   location?:          string;
   latitude?:          string;
   longitude?:         string;
+  eventType?:         EventType;
+  meetingUrl?:        string | null;
   startDate?:         string;
   endDate?:           string;
   status?:            string;
@@ -150,8 +153,6 @@ export interface EventRequestPayload {
   imageUrl?:          string;
   category?:          string;
   isFull?:            boolean;
-  isPaid:             boolean;
-  price?:             number;
 }
 
 export interface ParticipationPayload {
@@ -185,7 +186,151 @@ export interface Participation {
   userName?:             string;
   userEmail?:            string;
   userPhone?:            string;
+  fullName?:             string;        // ✅ NEW: Stored participant full name
+  participantPhone?:     string;        // ✅ NEW: Stored participant phone
   event?:                EventItem;
+}
+
+export interface AiStatisticResponse {
+  label: string;
+  value: string;
+  hint: string;
+}
+
+export interface EventAiInsightResponse {
+  eventId: number;
+  score: number;
+  popularityScore: number;
+  participationScore: number;
+  recencyScore: number;
+  trendScore: number;
+  conversionScore: number;
+  momentum: 'hot' | 'rising' | 'stable';
+  badgeLabel?: string;
+  reasons: string[];
+  urgencyScore?: number;
+  predictedTrend?: 'future-trending' | 'watchlist' | 'stable';
+  scoreBreakdown?: Array<{ label: string; value: number; weight: number; contribution: number }>;
+  dominantFactors?: string[];
+  structuredExplanation?: {
+    headline: string;
+    reasons: string[];
+    dominantFactors: string[];
+  };
+  fallbackStrategy?: string;
+}
+
+export interface EventAiRankedEventResponse extends EventItem {
+  aiInsight: EventAiInsightResponse;
+  campaignTitle?: string | null;
+}
+
+export interface EventAiDashboardResponse {
+  avgScore: number;
+  trending: number;
+  popular: number;
+  almostFull: number;
+  statistics: AiStatisticResponse[];
+  rankedEvents: EventAiRankedEventResponse[];
+  highlights: EventAiRankedEventResponse[];
+  trendingEvents: EventAiRankedEventResponse[];
+  almostFullEvents: EventAiRankedEventResponse[];
+}
+
+export interface EventAiSchedulingSlotResponse {
+  label: string;
+  shortLabel: string;
+  score: number;
+  participants: number;
+  fillRate: number;
+  sampleSize: number;
+}
+
+export interface EventAiSchedulingTrendPointResponse {
+  label: string;
+  shortLabel: string;
+  participants: number;
+  fillRate: number;
+  score: number;
+  projected?: boolean;
+  changeRate?: number;
+}
+
+export interface EventAiSchedulingResponse {
+  recommendationTitle: string;
+  recommendationNarrative: string;
+  forecastNarrative?: string;
+  predictionParticipants: number;
+  expectedLift: number;
+  confidence: number;
+  successProbability?: number;
+  trendDirection?: 'up' | 'down' | 'stable' | string;
+  trendDeltaPercent?: number;
+  analyzedPastEvents: number;
+  bestDay?: EventAiSchedulingSlotResponse | null;
+  bestHour?: EventAiSchedulingSlotResponse | null;
+  bestMonth?: EventAiSchedulingSlotResponse | null;
+  topDays: EventAiSchedulingSlotResponse[];
+  topHours: EventAiSchedulingSlotResponse[];
+  historicalTrend?: EventAiSchedulingTrendPointResponse[];
+  forecastTrend?: EventAiSchedulingTrendPointResponse[];
+  monthlyTrend: EventAiSchedulingTrendPointResponse[];
+  forecastHighlights?: string[];
+}
+
+export interface ParticipantAiInsightResponse {
+  eventId: number;
+  score: number;
+  popularityScore: number;
+  availabilityScore: number;
+  recencyScore: number;
+  trendScore: number;
+  affinityScore: number;
+  urgencyLevel: 'high' | 'medium' | 'low';
+  recommendationLabel: string;
+  explanation: string;
+  decisionMessage: string;
+  seatsLeft: number | null;
+  badges: string[];
+  urgencyScore?: number;
+  conversionScore?: number;
+  predictedTrend?: 'future-trending' | 'watchlist' | 'stable';
+  scoreBreakdown?: Array<{ label: string; value: number; weight: number; contribution: number }>;
+  dominantFactors?: string[];
+  structuredExplanation?: {
+    headline: string;
+    reasons: string[];
+    dominantFactors: string[];
+  };
+  affinityProfile?: {
+    preferredCategories: string[];
+    clickedCategories: string[];
+    participationHistoryCount: number;
+    interactionBalance: number;
+  };
+  feedbackSignals?: {
+    clicks: number;
+    impressions: number;
+    ignored: number;
+  };
+  fallbackStrategy?: string;
+}
+
+export interface ParticipantAiRecommendationResponse extends EventItem {
+  participationAi: ParticipantAiInsightResponse;
+  campaignTitle?: string | null;
+}
+
+export interface ParticipantAiDashboardResponse {
+  recommended: number;
+  trending: number;
+  urgent: number;
+  profileSignals: number;
+  profileSummary: string;
+  statistics: AiStatisticResponse[];
+  recommendations: ParticipantAiRecommendationResponse[];
+  trendingEvents: ParticipantAiRecommendationResponse[];
+  urgentEvents: ParticipantAiRecommendationResponse[];
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -232,6 +377,20 @@ export class EventApiService {
     return this.http.get<EventItem[]>(url, { headers: this.authHeaders() });
   }
 
+  getMyClubAiDashboard(): Observable<EventAiDashboardResponse> {
+    return this.http.get<EventAiDashboardResponse>(
+      `${this.baseUrl}/api/events/my-club/ai-dashboard`,
+      { headers: this.authHeaders() }
+    );
+  }
+
+  getMyClubAiScheduling(): Observable<EventAiSchedulingResponse> {
+    return this.http.get<EventAiSchedulingResponse>(
+      `${this.baseUrl}/api/events/my-club/ai-scheduling`,
+      { headers: this.authHeaders() }
+    );
+  }
+
   getEventById(id: number): Observable<EventItem> {
     return this.http.get<EventItem>(`${this.baseUrl}/api/events/${id}`, {
       headers: this.authHeaders(),
@@ -260,6 +419,19 @@ export class EventApiService {
     return this.http.delete<void>(`${this.baseUrl}/api/events/${id}`, {
       headers: this.authHeaders(),
     });
+  }
+
+  // ── CANCEL EVENT (Set status to CANCELLED + notify participants via SMS)
+  cancelEvent(id: number): Observable<EventItem> {
+    return this.http.post<EventItem>(`${this.baseUrl}/api/events/${id}/cancel`, {}, {
+      headers: this.authHeaders(),
+    }).pipe(
+      tap(updated => console.log('[API] Event cancelled and SMS sent to participants:', updated)),
+      catchError(err => {
+        console.error('[API] Cancel failed:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   uploadImage(formData: FormData): Observable<{ url: string }> {
@@ -319,6 +491,13 @@ export class EventApiService {
     );
   }
 
+  getParticipantAiDashboard(): Observable<ParticipantAiDashboardResponse> {
+    return this.http.get<ParticipantAiDashboardResponse>(
+      `${this.baseUrl}/api/participants/me/ai-dashboard`,
+      { headers: this.authHeaders() }
+    );
+  }
+
   updateParticipation(id: number, payload: Partial<ParticipationPayload>): Observable<Participation> {
     return this.http.put<Participation>(
       `${this.baseUrl}/api/participants/${id}`,
@@ -348,21 +527,7 @@ export class EventApiService {
 
   // ── Paiement ──────────────────────────────────────────────────────────────
 
-  payEvent(eventId: number, userId: number): Observable<any> {
-    return this.http.post(
-      `${this.baseUrl}/api/payments/create?eventId=${eventId}&userId=${userId}`,
-      {},
-      { headers: this.authHeaders() }
-    );
-  }
 
-  confirmPayment(paymentIntentId: string): Observable<any> {
-    return this.http.post(
-      `${this.baseUrl}/api/payments/confirm?paymentIntentId=${paymentIntentId}`,
-      {},
-      { headers: this.authHeaders() }
-    );
-  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // RESOURCES & RESERVATIONS

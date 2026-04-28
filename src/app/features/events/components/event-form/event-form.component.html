@@ -101,8 +101,25 @@
         </div>
       </div>
 
+      <!-- EVENT TYPE -->
+      <div class="field">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+          </svg>
+          Event mode <span class="req">*</span>
+        </label>
+        <div class="grid-2">
+          <label class="upload-zone" *ngFor="let type of eventTypes" [class.selected]="eventForm.value.eventType === type.value">
+            <input type="radio" formControlName="eventType" [value]="type.value" />
+            <span class="upload-text">{{ type.label }}</span>
+            <span class="upload-hint">{{ type.description }}</span>
+          </label>
+        </div>
+      </div>
+
       <!-- LOCATION WITH AUTOCOMPLETE -->
-      <div class="field field--suggest">
+      <div class="field field--suggest" *ngIf="!isOnlineEventMode">
         <label class="field-label">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -141,8 +158,29 @@
         </div>
       </div>
 
+      <div class="field" *ngIf="isOnlineEventMode">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+          </svg>
+          Online meeting
+        </label>
+        <div class="field-warning" style="margin-top: 0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12a10 10 0 1 1-10-10"/><path d="M22 2 12 12"/>
+          </svg>
+          <span>Jitsi Meet link will be generated automatically when this event is saved.</span>
+        </div>
+        <div class="input-wrap" style="margin-top: 12px;">
+          <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07L11.8 5"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07L12.2 19"/>
+          </svg>
+          <input type="text" formControlName="meetingUrl" readonly placeholder="Jitsi link preview" />
+        </div>
+      </div>
+
       <!-- MAP -->
-      <div class="field">
+      <div class="field" *ngIf="!isOnlineEventMode">
         <label class="field-label">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
@@ -244,6 +282,15 @@
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <span *ngIf="eventForm.get('campaignId')?.errors?.['required']">Campaign selection is required</span>
+        </div>
+
+        <!-- Campaign Status Warning -->
+        <div class="field-warning" *ngIf="!canAddEventToCampaign && campaignStatusMessage">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>{{ campaignStatusMessage }}</span>
         </div>
       </div>
 
@@ -381,51 +428,6 @@
           </div>
         </div>
 
-        <div class="field">
-          <label class="field-label">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="5" width="20" height="14" rx="2"/>
-              <line x1="2" y1="10" x2="22" y2="10"/>
-            </svg>
-            Event type
-          </label>
-          <div class="input-wrap">
-            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="5" width="20" height="14" rx="2"/>
-              <line x1="2" y1="10" x2="22" y2="10"/>
-            </svg>
-            <select formControlName="isPaid">
-              <option [ngValue]="false">Free event</option>
-              <option [ngValue]="true">Paid event</option>
-            </select>
-            <svg class="select-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- PRICE (conditional) -->
-      <div class="grid-2" *ngIf="eventForm.get('isPaid')?.value === true">
-        <div class="field">
-          <label class="field-label">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="1" x2="12" y2="23"/>
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-            Price <span class="req">*</span>
-          </label>
-          <div class="input-wrap">
-            <span class="input-prefix">$</span>
-            <input type="number" formControlName="price" placeholder="0.00" class="has-prefix" step="0.01" min="0" />
-          </div>
-          <div class="field-error" *ngIf="eventForm.get('price')?.hasError('required') && eventForm.get('price')?.touched">
-            Price is required for paid events
-          </div>
-          <div class="field-error" *ngIf="eventForm.get('price')?.hasError('min') && eventForm.get('price')?.touched">
-            Price must be greater than 0
-          </div>
-        </div>
       </div>
 
 
@@ -459,7 +461,7 @@
 
       <!-- ACTIONS -->
       <div class="form-actions">
-        <button class="btn btn-primary" type="submit" [disabled]="eventForm.invalid || isSubmitting">
+        <button class="btn btn-primary" type="submit" [disabled]="eventForm.invalid || isSubmitting || !canAddEventToCampaign">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
             <polyline points="17 21 17 13 7 13 7 21"/>

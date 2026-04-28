@@ -1198,3 +1198,200 @@ mat-chip.selected { background-color: var(--c-primary) !important; color: #fff !
   border-radius: 12px;
   box-shadow: 0 8px 50px rgba(0,0,0,0.18);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// DELETE MODAL — Campaign/Event Cancellation
+// ═══════════════════════════════════════════════════════════════
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal__box {
+  position: relative;
+  background: var(--c-surface);
+  border-radius: 12px;
+  box-shadow: 0 10px 60px rgba(0, 0, 0, 0.25);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+  
+  &.modal__box--sm {
+    width: min(420px, 90vw);
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal__stripe {
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb, #059669);
+  border-radius: 12px 12px 0 0;
+  
+  &.modal__stripe--red {
+    background: linear-gradient(90deg, #dc2626, #ea580c);
+  }
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--c-border);
+  position: relative;
+}
+
+.modal__danger-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dc2626;
+  flex-shrink: 0;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.modal__close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--c-text-3);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: var(--transition);
+  
+  &:hover {
+    background: var(--c-surface-2);
+    color: var(--c-text);
+  }
+}
+
+.modal__body {
+  padding: 24px 20px;
+}
+
+.modal__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--c-text);
+  margin: 0 0 12px 0;
+}
+
+.modal__desc {
+  font-size: 13px;
+  color: var(--c-text-2);
+  line-height: 1.6;
+  margin: 0;
+  
+  p {
+    margin: 0 0 8px 0;
+    
+    &:first-child {
+      font-weight: 600;
+      color: var(--c-text);
+    }
+  }
+  
+  ul {
+    margin: 8px 0;
+    padding-left: 20px;
+    list-style: none;
+    
+    li {
+      margin: 4px 0;
+      color: var(--c-text-2);
+    }
+  }
+  
+  .text-danger {
+    color: #dc2626;
+    font-weight: 600;
+  }
+}
+
+.modal__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+  font-family: inherit;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.btn-secondary {
+  background: var(--c-surface-3);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  
+  &:hover:not(:disabled) {
+    background: var(--c-border);
+    border-color: var(--c-border-2);
+  }
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  
+  &:hover:not(:disabled) {
+    background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}

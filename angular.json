@@ -59,9 +59,15 @@
                   "glob": "**/*",
                   "input": "node_modules/cesium/Source/Assets",
                   "output": "assets/cesium/Assets"
+                },
+                {
+                  "glob": "*",
+                  "input": "node_modules/leaflet/dist/images",
+                  "output": "assets/leaflet"
                 }
             ],
             "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
               "node_modules/cesium/Build/Cesium/Widgets/widgets.css",
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "src/styles.scss"
@@ -78,8 +84,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kb",
-                  "maximumError": "16kb"
+                  "maximumWarning": "24kb",
+                  "maximumError": "48kb"
                 }
               ],
               "outputHashing": "all"

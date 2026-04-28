@@ -137,7 +137,7 @@
             </div>
             <div class="card-stats">
               <div class="stat-item"><mat-icon>visibility</mat-icon><span>{{ c.views | number }}</span></div>
-              <div class="stat-item"><mat-icon>event</mat-icon><span>{{ c.events?.length || 0 }} events</span></div>
+              <div class="stat-item"><mat-icon>event</mat-icon><span>{{ c.eventsCount || 0 }} events</span></div>
             </div>
           </div>
 
@@ -160,7 +160,7 @@
                 <mat-icon>edit</mat-icon>
               </button>
               <button *ngIf="isAdmin" mat-icon-button class="action-btn action-delete"
-                (click)="deleteCampaign($event, c)">
+                (click)="openDeleteModal(c); $event.stopPropagation()">
                 <mat-icon>delete_outline</mat-icon>
               </button>
             </div>
@@ -732,7 +732,7 @@
         <div class="detail-stats-band">
           <div class="dstat"><mat-icon>people</mat-icon><span class="dstat-num">{{ selectedCampaign.currentParticipants }}</span><span class="dstat-lbl">Participants</span></div>
           <div class="dstat"><mat-icon>visibility</mat-icon><span class="dstat-num">{{ selectedCampaign.views | number }}</span><span class="dstat-lbl">Views</span></div>
-          <div class="dstat"><mat-icon>event</mat-icon><span class="dstat-num">{{ selectedCampaign.events?.length || 0 }}</span><span class="dstat-lbl">Events</span></div>
+          <div class="dstat"><mat-icon>event</mat-icon><span class="dstat-num">{{ selectedCampaign.eventsCount || campaignEvents.length || 0 }}</span><span class="dstat-lbl">Events</span></div>
           <div *ngIf="selectedCampaign.maxParticipants" class="dstat"><mat-icon>donut_large</mat-icon><span class="dstat-num">{{ getEngagementRate(selectedCampaign) }}%</span><span class="dstat-lbl">Engagement</span></div>
         </div>
 
@@ -787,12 +787,12 @@
 
           <!-- Events -->
           <div *ngIf="detailTab === 'events'" class="panel-events">
-            <div *ngIf="!selectedCampaign.events?.length" class="panel-empty"><mat-icon>event_busy</mat-icon><p>No events linked yet.</p></div>
-            <div *ngIf="selectedCampaign.events?.length" class="events-list">
-              <div *ngFor="let evt of selectedCampaign.events" class="event-row">
+            <div *ngIf="!campaignEvents.length" class="panel-empty"><mat-icon>event_busy</mat-icon><p>No events linked yet.</p></div>
+            <div *ngIf="campaignEvents.length" class="events-list">
+              <div *ngFor="let evt of campaignEvents" class="event-row">
                 <div class="event-dot"></div>
                 <div class="event-info">
-                  <span class="event-name">{{ evt.title || evt.name || 'Event' }}</span>
+                  <span class="event-name">{{  evt.title || 'Event' }}</span>
                   <span *ngIf="evt.startDate" class="event-date"><mat-icon>calendar_today</mat-icon>{{ evt.startDate | date:'dd MMM yyyy' }}</span>
                 </div>
                 <span *ngIf="evt.status" class="badge" [ngClass]="getStatusClass(evt.status)">{{ getStatusLabel(evt.status) }}</span>
@@ -921,8 +921,9 @@
                     <span class="badge badge-sm" [ngClass]="getStatusClass(c.status)">{{ getStatusLabel(c.status) }}</span>
                   </div>
                   <div class="top-stats">
-                    <span><mat-icon>visibility</mat-icon>{{ c.views | number }}</span>
                     <span><mat-icon>people</mat-icon>{{ c.currentParticipants }}</span>
+                    <span><mat-icon>visibility</mat-icon>{{ c.views | number }}</span>
+                    <span><mat-icon>event</mat-icon>{{ c.eventsCount || 0 }}</span>
                   </div>
                 </li>
               </ol>
@@ -963,7 +964,7 @@
                     <td><span class="badge badge-sm" [ngClass]="getVisibilityClass(c.visibility)">{{ getVisibilityLabel(c.visibility) }}</span></td>
                     <td class="td-num">{{ c.currentParticipants }}</td>
                     <td class="td-num">{{ c.views | number }}</td>
-                    <td class="td-num">{{ c.events?.length || 0 }}</td>
+                    <td class="td-num">{{ c.eventsCount || 0 }}</td>
                     <td class="td-date">{{ c.startDate | date:'dd MMM yy' }}</td>
                     <td class="td-date">{{ c.endDate | date:'dd MMM yy' }}</td>
                     <td class="td-actions">
@@ -986,4 +987,37 @@
     </ng-container><!-- /viewMode === 'dashboard' -->
 
   </main>
+
+  <!-- ══════════════ DELETE MODAL ══════════════ -->
+  <div class="modal" *ngIf="showDeleteModal">
+    <div class="modal__box modal__box--sm">
+      <div class="modal__stripe modal__stripe--red"></div>
+      <div class="modal__header">
+        <div class="modal__danger-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </div>
+        <button class="modal__close" (click)="closeDeleteModal()">×</button>
+      </div>
+      <div class="modal__body">
+        <h2 class="modal__title">Cancel Campaign</h2>
+        <div class="modal__desc">
+          <p>Cancel <strong>{{ selectedCampaignToDelete?.title }}</strong>?</p>
+          <p style="margin-top: 12px; font-size: 13px;">This action will:</p>
+          <ul style="margin-top: 8px; padding-left: 20px; font-size: 13px;">
+            <li>✓ Change status to CANCELLED</li>
+            <li>✓ Notify all Event Managers via email</li>
+          </ul>
+          <p style="margin-top: 12px;"><span class="text-danger">This action cannot be undone.</span></p>
+        </div>
+        <div class="modal__actions">
+          <button class="btn btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+          <button class="btn btn-danger" (click)="confirmDelete()">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            Cancel Campaign
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>

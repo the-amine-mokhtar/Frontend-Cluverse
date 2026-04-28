@@ -1,179 +1,447 @@
 <div class="events">
 
-  <!-- ═══════════════════════════════════════════ HEADER ═══ -->
+  <!-- ══════════════ HEADER ══════════════ -->
   <div class="events__header">
     <div class="header-left">
       <h1 class="header-title">
         {{ isViewingHistory ? 'Event History' : 'Events Dashboard' }}
       </h1>
       <p class="header-sub">
-        <strong>{{ allEvents.length }}</strong>
-        {{ isViewingHistory ? 'archived events' : 'events registered' }}
-        <span class="sep-dot"></span>
-        <span class="live-indicator" *ngIf="!isViewingHistory && countByStatus('ONGOING') > 0">
-          <span class="live-dot"></span>
-          {{ countByStatus('ONGOING') }} live
+        <strong>{{ allEvents.length }}</strong> {{ isViewingHistory ? 'archived' : 'registered' }} events
+        <span *ngIf="!isViewingHistory && countByStatus('ONGOING') > 0">
+          &nbsp;·&nbsp;
+          <span class="live-indicator">
+            <span class="live-dot"></span>
+            {{ countByStatus('ONGOING') }} live
+          </span>
         </span>
       </p>
     </div>
 
     <div class="header-actions">
-      <button class="btn btn-teal" (click)="openCalendarModal()"
-              [class.active]="showCalendarModal" title="Event Calendar">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+
+      <!-- AI Optimizer toggle button -->
+      <button *ngIf="!isViewingHistory && (smartRankedEvents.length > 0 || planningSourceEventsCount > 0)"
+              class="btn btn-ai"
+              [class.active]="showAiPanel"
+              (click)="showAiPanel = !showAiPanel">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        AI Recommendations
+        <span class="btn-badge btn-badge--ai" *ngIf="planningConfidence > 0">{{ planningConfidence }}%</span>
+      </button>
+
+      <button class="btn btn-ghost" (click)="openCalendarModal()" [class.active]="showCalendarModal">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
         Calendar
       </button>
 
-      <button class="btn btn-purple" (click)="toggleHistoryView()">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-        {{ isViewingHistory ? 'Back to Active' : 'History' }}
-        <span class="btn-badge btn-badge--gray" *ngIf="!isViewingHistory && historyEventsCount > 0">
-          {{ historyEventsCount }}
-        </span>
+      <button class="btn btn-ghost" (click)="toggleHistoryView()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12,6 12,12 16,14"/>
+        </svg>
+        {{ isViewingHistory ? 'Active' : 'History' }}
+        <span class="btn-badge" *ngIf="!isViewingHistory && historyEventsCount > 0">{{ historyEventsCount }}</span>
       </button>
 
       <button *ngIf="!isViewingHistory"
-              class="btn btn-teal"
+              class="btn btn-ghost"
               [class.active]="showAccessibleCampaignsPanel"
               (click)="toggleAccessibleCampaignsPanel()">
-        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"/>
+          <circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
         Campaigns
-        <span class="btn-badge btn-badge--teal" *ngIf="accessibleCampaigns.length > 0">
-          {{ accessibleCampaigns.length }}
-        </span>
+        <span class="btn-badge btn-badge--teal" *ngIf="accessibleCampaigns.length > 0">{{ accessibleCampaigns.length }}</span>
       </button>
 
       <button *ngIf="isPresident && !isViewingHistory"
-              class="btn btn-amber"
+              class="btn btn-ghost"
               [class.active]="showCampaignsPanel"
               (click)="toggleCampaignsPanel()">
-        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
         My Campaigns
-        <span class="btn-badge btn-badge--amber" *ngIf="campaigns.length > 0">
-          {{ campaigns.length }}
-        </span>
+        <span class="btn-badge btn-badge--amber" *ngIf="campaigns.length > 0">{{ campaigns.length }}</span>
       </button>
 
       <button *ngIf="!isViewingHistory" class="btn btn-primary" (click)="goToNew()">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
         New Event
       </button>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════ STAT CARDS ═══ -->
+  <!-- ══════════════ STAT CARDS ══════════════ -->
   <div class="stat-grid" *ngIf="!isViewingHistory">
     <div class="stat-card stat-card--blue">
-      <div class="stat-label">Total Events</div>
-      <div class="stat-value">{{ allEvents.length }}</div>
-      <div class="stat-sub">All registered</div>
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Total</span>
+        <span class="stat-value">{{ allEvents.length }}</span>
+      </div>
     </div>
+
     <div class="stat-card stat-card--green">
-      <div class="stat-label">Live Now</div>
-      <div class="stat-value">{{ countByStatus('ONGOING') }}</div>
-      <div class="stat-sub">Currently ongoing</div>
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Live</span>
+        <span class="stat-value">{{ countByStatus('ONGOING') }}</span>
+        <span class="stat-sub"><span class="pulse-dot"></span> Ongoing</span>
+      </div>
     </div>
+
     <div class="stat-card stat-card--amber">
-      <div class="stat-label">Upcoming</div>
-      <div class="stat-value">{{ countByStatus('PLANNED') }}</div>
-      <div class="stat-sub">Planned events</div>
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,8 12,12 14.5,14.5"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Upcoming</span>
+        <span class="stat-value">{{ countByStatus('PLANNED') }}</span>
+      </div>
     </div>
+
     <div class="stat-card stat-card--teal">
-      <div class="stat-label">Campaigns</div>
-      <div class="stat-value">{{ accessibleCampaigns.length }}</div>
-      <div class="stat-sub">Shared with club</div>
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Campaigns</span>
+        <span class="stat-value">{{ accessibleCampaigns.length }}</span>
+      </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════ PANEL: ACCESSIBLE CAMPAIGNS ═══ -->
-  <div class="campaigns-panel campaigns-panel--teal"
-       *ngIf="showAccessibleCampaignsPanel && !isViewingHistory">
-    <div class="panel-stripe panel-stripe--teal"></div>
+  <!-- ══════════════ AI OPTIMIZER (COLLAPSIBLE PANEL) ══════════════ -->
+  <section class="ai-section" *ngIf="showAiPanel && !isViewingHistory && (smartRankedEvents.length > 0 || planningSourceEventsCount > 0)">
 
-    <div class="panel-header">
-      <div class="panel-title-row">
-        <div class="panel-icon panel-icon--teal">
-          <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    <!-- Header bar inside panel -->
+    <div class="ai-panel-header">
+      <div class="ai-panel-header__left">
+        <span class="ai-kicker">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          AI Scheduling Optimizer
+        </span>
+        <div class="ai-chips">
+          <span class="ai-chip ai-chip--live">{{ aiRefreshLabel }}</span>
+          <span class="ai-chip">{{ planningSourceEventsCount }} events analysed</span>
+          <span class="ai-chip">{{ planningConfidence }}% confidence</span>
+        </div>
+      </div>
+      <button class="ai-panel-close" (click)="showAiPanel = false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Key stats row -->
+    <div class="ai-hero__stats">
+      <div class="ai-stat">
+        <span class="ai-stat__val">{{ planningPredictionParticipants || smartDashboardStats.avgScore }}</span>
+        <span class="ai-stat__lbl">Predicted Attendance</span>
+      </div>
+      <div class="ai-stat">
+        <span class="ai-stat__val">+{{ planningExpectedLift }}%</span>
+        <span class="ai-stat__lbl">Expected Lift</span>
+      </div>
+      <div class="ai-stat">
+        <span class="ai-stat__val">{{ planningConfidence }}%</span>
+        <span class="ai-stat__lbl">Confidence</span>
+      </div>
+      <div class="ai-stat">
+        <span class="ai-stat__val">{{ smartDashboardStats.trending }}</span>
+        <span class="ai-stat__lbl">Trending</span>
+      </div>
+    </div>
+
+    <!-- Recommendation (compact) -->
+    <div class="ai-model-panel">
+      <div class="ai-model-panel__left">
+        <span class="ai-model-panel__kicker">Best slot</span>
+        <p class="ai-model-panel__formula">{{ planningRecommendationTitle }}</p>
+      </div>
+      <div class="ai-model-panel__pills">
+        <span class="ai-pill" *ngFor="let bullet of planningRecommendationBullets">{{ bullet }}</span>
+      </div>
+    </div>
+
+    <!-- Insight metric cards -->
+    <div class="ai-metric-grid">
+      <article class="ai-metric-card" [ngClass]="'ai-metric-card--' + stat.tone" *ngFor="let stat of planningInsightCards">
+        <span class="ai-metric-card__label">{{ stat.label }}</span>
+        <span class="ai-metric-card__value">{{ stat.value }}</span>
+        <p class="ai-metric-card__hint">{{ stat.hint }}</p>
+      </article>
+    </div>
+
+    <!-- Best slot + Forecast -->
+    <div class="ai-planning-grid">
+
+      <!-- Best Slot -->
+      <article class="ai-card ai-card--spotlight">
+        <div class="ai-card__top">
+          <span class="ai-score-badge">Best Slot</span>
+          <span class="ai-status-badge ai-status-badge--blue">{{ planningConfidence }}% conf.</span>
+        </div>
+        <h3 class="ai-card__title">{{ planningRecommendationTitle }}</h3>
+        <div class="ai-card__meta-row">
+          <span>{{ planningPredictionParticipants || 0 }} predicted</span>
+          <span>+{{ planningExpectedLift }}% lift</span>
+          <span>n={{ planningSourceEventsCount }}</span>
+        </div>
+        <div class="ai-signals" *ngIf="planningBestDay || planningBestHour || planningBestMonth">
+          <div class="ai-signal" *ngIf="planningBestDay">
+            <span class="ai-signal__label">Day</span>
+            <div class="ai-signal__bar"><span class="ai-signal__fill" [style.width.%]="planningBestDay.value"></span></div>
+            <span class="ai-signal__val">{{ planningBestDay.shortLabel }}</span>
+          </div>
+          <div class="ai-signal" *ngIf="planningBestHour">
+            <span class="ai-signal__label">Time</span>
+            <div class="ai-signal__bar"><span class="ai-signal__fill" [style.width.%]="planningBestHour.value"></span></div>
+            <span class="ai-signal__val">{{ planningBestHour.shortLabel }}</span>
+          </div>
+          <div class="ai-signal" *ngIf="planningBestMonth">
+            <span class="ai-signal__label">Period</span>
+            <div class="ai-signal__bar"><span class="ai-signal__fill" [style.width.%]="planningBestMonth.value"></span></div>
+            <span class="ai-signal__val">{{ planningBestMonth.shortLabel }}</span>
+          </div>
+        </div>
+        <div class="ai-card__tags">
+          <span *ngFor="let bullet of planningRecommendationBullets">{{ bullet }}</span>
+        </div>
+      </article>
+
+      <!-- Forecast -->
+      <article class="ai-card ai-card--forecast">
+        <div class="ai-card__top">
+          <span class="ai-score-badge">Forecast</span>
+          <span class="ai-status-badge"
+            [ngClass]="{
+              'ai-status-badge--blue': planningTrendDirection === 'up',
+              'ai-status-badge--red':  planningTrendDirection === 'down',
+              'ai-status-badge--gray': planningTrendDirection === 'stable'
+            }">
+            {{ planningTrendDirection === 'up' ? '↑ Upward' : planningTrendDirection === 'down' ? '↓ Downward' : '→ Stable' }}
+          </span>
+        </div>
+        <h3 class="ai-card__title">Attendance Forecast</h3>
+
+        <div class="ai-forecast-stats">
+          <div class="ai-forecast-stat">
+            <span class="ai-forecast-stat__label">Success prob.</span>
+            <strong class="ai-forecast-stat__val">{{ planningSuccessProbability }}%</strong>
+          </div>
+          <div class="ai-forecast-stat">
+            <span class="ai-forecast-stat__label">Projected delta</span>
+            <strong class="ai-forecast-stat__val" [class.is-down]="planningTrendDeltaPercent < 0">
+              {{ planningTrendDeltaPercent > 0 ? '+' : '' }}{{ planningTrendDeltaPercent }}%
+            </strong>
+          </div>
+          <div class="ai-forecast-stat">
+            <span class="ai-forecast-stat__label">Data points</span>
+            <strong class="ai-forecast-stat__val">{{ planningHistoricalTrend.length }}</strong>
+          </div>
+        </div>
+
+        <div class="ai-line-chart" *ngIf="planningCombinedTrend.length > 1; else noTrend">
+          <svg class="ai-line-chart__svg" viewBox="0 0 220 148" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(37,99,235,0.2)"/>
+                <stop offset="100%" stop-color="rgba(37,99,235,0.01)"/>
+              </linearGradient>
+              <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#2563eb"/>
+                <stop offset="60%" stop-color="#7c3aed"/>
+                <stop offset="100%" stop-color="#0d9488"/>
+              </linearGradient>
+            </defs>
+            <path class="ai-line-chart__area" [attr.d]="planningChartAreaPath" fill="url(#areaGrad)"/>
+            <polyline class="ai-line-chart__line" [attr.points]="planningChartPolyline" stroke="url(#lineGrad)"/>
+            <circle class="ai-line-chart__dot"
+                    *ngFor="let pt of planningChartPoints"
+                    [class.is-forecast]="pt.projected"
+                    [attr.cx]="pt.x" [attr.cy]="pt.y" r="4"/>
+          </svg>
+          <div class="ai-line-chart__legend">
+            <span><i class="legend-dot legend-dot--solid"></i> Historical</span>
+            <span><i class="legend-dot legend-dot--forecast"></i> Forecast</span>
+          </div>
+          <div class="ai-line-chart__labels">
+            <div class="ai-line-chart__label" *ngFor="let pt of planningCombinedTrend">
+              <strong>{{ pt.participants }}</strong>
+              <span>{{ pt.shortLabel }}</span>
+            </div>
+          </div>
+        </div>
+        <ng-template #noTrend>
+          <div class="ai-empty-note">Not enough data for a reliable trend.</div>
+        </ng-template>
+      </article>
+    </div>
+
+    <!-- Event Highlights -->
+    <div class="ai-highlights-grid">
+      <article class="ai-highlight-card" *ngFor="let event of smartEventHighlights">
+        <div class="ai-card__top">
+          <span class="ai-score-badge">{{ event.aiInsight.score }}</span>
+          <span class="ai-status-badge" [ngClass]="getAiBadgeClass(event)">{{ getAiBadgeLabel(event) }}</span>
+        </div>
+        <h3 class="ai-card__title">{{ event.title }}</h3>
+        <div class="ai-card__meta-row">
+          <span>{{ getStatusLabel(event.status) }}</span>
+          <span>{{ formatDate(event.startDate) }}</span>
+          <span>{{ event.participantsCount || 0 }} participants</span>
+        </div>
+        <div class="ai-signals">
+          <div class="ai-signal" *ngFor="let row of getPerformanceRows(event.id)">
+            <span class="ai-signal__label">{{ row.label }}</span>
+            <div class="ai-signal__bar"><span class="ai-signal__fill" [style.width.%]="row.value"></span></div>
+            <span class="ai-signal__val">{{ row.value }}</span>
+          </div>
+        </div>
+        <div class="ai-card__tags">
+          <span *ngFor="let r of getEventInsightReasons(event.id)">{{ r }}</span>
+        </div>
+      </article>
+    </div>
+
+    <!-- Day & Hour Performance Lanes -->
+    <div class="ai-lanes">
+      <div class="ai-lane">
+        <div class="ai-lane__head">
+          <span class="ai-lane__kicker">Best Days</span>
+          <h4 class="ai-lane__title">Top Performing Days</h4>
+        </div>
+        <div class="ai-mini-list">
+          <div class="ai-mini-card" *ngFor="let day of planningDayPerformance">
+            <div class="ai-mini-card__top">
+              <span class="ai-mini-card__name">{{ day.label }}</span>
+              <span class="ai-mini-card__score">{{ day.value }}/100</span>
+            </div>
+            <div class="ai-mini-card__bar"><span class="ai-mini-card__fill" [style.width.%]="day.value"></span></div>
+            <p class="ai-mini-card__meta">{{ day.participants }} avg · {{ day.fillRate }}% fill · {{ day.count }} events</p>
+          </div>
+          <div class="ai-empty-note" *ngIf="planningDayPerformance.length === 0">No day data.</div>
+        </div>
+      </div>
+
+      <div class="ai-lane">
+        <div class="ai-lane__head">
+          <span class="ai-lane__kicker">Best Hours</span>
+          <h4 class="ai-lane__title">Recommended Time Slots</h4>
+        </div>
+        <div class="ai-mini-list">
+          <div class="ai-mini-card" *ngFor="let hour of planningHourPerformance">
+            <div class="ai-mini-card__top">
+              <span class="ai-mini-card__name">{{ hour.label }}</span>
+              <span class="ai-mini-card__score">{{ hour.value }}/100</span>
+            </div>
+            <div class="ai-mini-card__bar"><span class="ai-mini-card__fill" [style.width.%]="hour.value"></span></div>
+            <p class="ai-mini-card__meta">{{ hour.participants }} avg · {{ hour.fillRate }}% fill · {{ hour.count }} events</p>
+          </div>
+          <div class="ai-empty-note" *ngIf="planningHourPerformance.length === 0">No time slot data.</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════ PANEL: ACCESSIBLE CAMPAIGNS ══════════════ -->
+  <div class="panel panel--teal" *ngIf="showAccessibleCampaignsPanel && !isViewingHistory">
+    <div class="panel__stripe panel__stripe--teal"></div>
+    <div class="panel__header">
+      <div class="panel__title-row">
+        <div class="panel__icon panel__icon--teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </div>
         <div>
-          <h3 class="panel-title">Accessible Campaigns</h3>
-          <p class="panel-sub">
-            <span class="panel-sub__count">{{ accessibleCampaigns.length }}</span>
-            campaign{{ accessibleCampaigns.length !== 1 ? 's' : '' }} shared with your club
-          </p>
+          <h3 class="panel__title">Accessible Campaigns</h3>
+          <p class="panel__sub">{{ accessibleCampaigns.length }} campaign{{ accessibleCampaigns.length !== 1 ? 's' : '' }} shared</p>
         </div>
       </div>
-
-      <div class="panel-header-right">
-        <div class="panel-search" *ngIf="!isLoadingAccessible && accessibleCampaigns.length > 0">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search campaigns..."
+      <div class="panel__header-right">
+        <div class="panel__search" *ngIf="!isLoadingAccessible && accessibleCampaigns.length > 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search…"
                  [(ngModel)]="accessibleCampaignSearch"
                  (input)="filterAccessibleCampaigns()"/>
-          <button *ngIf="accessibleCampaignSearch" class="search-clear" (click)="clearAccessibleSearch()">×</button>
+          <button *ngIf="accessibleCampaignSearch" class="panel__search-clear" (click)="clearAccessibleSearch()">×</button>
         </div>
-        <button class="panel-close" (click)="toggleAccessibleCampaignsPanel()">×</button>
+        <button class="panel__close" (click)="toggleAccessibleCampaignsPanel()">×</button>
       </div>
     </div>
 
-    <div class="panel-loading" *ngIf="isLoadingAccessible">
+    <div class="panel__loading" *ngIf="isLoadingAccessible">
       <div class="spinner spinner--teal"></div>
-      <span>Loading campaigns…</span>
+      <span>Loading…</span>
     </div>
 
-    <div class="panel-empty" *ngIf="!isLoadingAccessible && accessibleCampaigns.length === 0">
+    <div class="panel__empty" *ngIf="!isLoadingAccessible && accessibleCampaigns.length === 0">
       <div class="empty-icon">
-        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </div>
       <p class="empty-title">No shared campaigns</p>
       <p class="empty-sub">No president has shared a campaign with your club yet.</p>
     </div>
 
-    <div class="panel-empty" *ngIf="!isLoadingAccessible && accessibleCampaigns.length > 0 && filteredAccessibleCampaigns.length === 0">
+    <div class="panel__empty" *ngIf="!isLoadingAccessible && accessibleCampaigns.length > 0 && filteredAccessibleCampaigns.length === 0">
       <div class="empty-icon">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </div>
-      <p class="empty-title">No results found</p>
-      <p class="empty-sub">No campaigns match "<strong>{{ accessibleCampaignSearch }}</strong>"</p>
+      <p class="empty-title">No results for "{{ accessibleCampaignSearch }}"</p>
     </div>
 
     <div class="campaigns-grid" *ngIf="!isLoadingAccessible && filteredAccessibleCampaigns.length > 0">
       <div class="campaign-card campaign-card--teal"
            *ngFor="let campaign of filteredAccessibleCampaigns; trackBy: trackByCampaignId">
-
-        <div class="cc-body">
-          <div class="cc-meta">
-            <span class="pill" [attr.data-status]="campaign.status">
-              {{ getCampaignStatusLabel(campaign.status || '') }}
-            </span>
-            <span class="pill pill--vis" [attr.data-vis]="campaign.visibility">
-              {{ getVisibilityLabel(campaign.visibility || '') }}
-            </span>
+        <div class="campaign-card__body">
+          <div class="campaign-card__pills">
+            <span class="pill" [attr.data-status]="campaign.status">{{ getCampaignStatusLabel(campaign.status || '') }}</span>
+            <span class="pill pill--vis" [attr.data-vis]="campaign.visibility">{{ getVisibilityLabel(campaign.visibility || '') }}</span>
             <span class="pill pill--can-add" *ngIf="campaign.canAddEvent">
-              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Can add
             </span>
             <span class="pill pill--readonly" *ngIf="!campaign.canAddEvent">
-              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Read only
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              View only
             </span>
           </div>
-          <h4 class="cc-title">{{ campaign.title }}</h4>
-          <p class="cc-desc" *ngIf="campaign.description">{{ campaign.description }}</p>
-          <div class="cc-owner" *ngIf="campaign.ownerClubName">
-            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            By <strong>{{ campaign.ownerClubName }}</strong>
+          <h4 class="campaign-card__title">{{ campaign.title }}</h4>
+          <div class="campaign-card__owner" *ngIf="campaign.ownerClubName">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            {{ campaign.ownerClubName }}
           </div>
         </div>
 
-        <div class="cc-dates" *ngIf="campaign.startDate || campaign.endDate">
-          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div class="campaign-card__dates" *ngIf="campaign.startDate || campaign.endDate">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span *ngIf="campaign.startDate">{{ formatDate(campaign.startDate) }}</span>
-          <span class="dates-sep" *ngIf="campaign.startDate && campaign.endDate">→</span>
+          <span class="dates-arrow" *ngIf="campaign.startDate && campaign.endDate">→</span>
           <span *ngIf="campaign.endDate">{{ formatDate(campaign.endDate) }}</span>
         </div>
 
-        <div class="cc-progress" *ngIf="campaign.maxParticipants && campaign.maxParticipants > 0">
+        <div class="campaign-card__progress" *ngIf="campaign.maxParticipants && campaign.maxParticipants > 0">
           <div class="progress-labels">
             <span>Participants</span>
             <span>{{ campaign.currentParticipants || 0 }} / {{ campaign.maxParticipants }}</span>
@@ -183,16 +451,17 @@
           </div>
         </div>
 
-        <div class="cc-footer">
-          <button class="cc-btn-add"
-                  [class.disabled]="!campaign.canAddEvent"
-                  [disabled]="!campaign.canAddEvent"
+        <div class="campaign-card__footer">
+          <button class="cc-btn cc-btn--add"
+                  [class.disabled]="!canAddEventToCampaign(campaign)"
+                  [disabled]="!canAddEventToCampaign(campaign)"
+                  [title]="getCampaignStatusMessage(campaign)"
                   (click)="addEventToCampaign(campaign)">
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            {{ campaign.canAddEvent ? 'Add Event' : 'Not Allowed' }}
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {{ canAddEventToCampaign(campaign) ? 'Add Event' : 'Not Allowed' }}
           </button>
-          <a class="cc-btn-dash" [routerLink]="['/campaigns/dashboard', campaign.id]">
-            <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.5 9.5L12 16l-3-3L6.5 14.5"/></svg>
+          <a class="cc-btn cc-btn--dash" [routerLink]="['/campaigns/dashboard', campaign.id]">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.5 9.5L12 16l-3-3L6.5 14.5"/></svg>
             Dashboard
           </a>
         </div>
@@ -200,65 +469,54 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════ PANEL: MY CAMPAIGNS (PRESIDENT) ═══ -->
-  <div class="campaigns-panel campaigns-panel--amber"
-       *ngIf="showCampaignsPanel && isPresident">
-    <div class="panel-stripe panel-stripe--amber"></div>
-
-    <div class="panel-header">
-      <div class="panel-title-row">
-        <div class="panel-icon panel-icon--amber">
-          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  <!-- ══════════════ PANEL: MY CAMPAIGNS ══════════════ -->
+  <div class="panel panel--amber" *ngIf="showCampaignsPanel && isPresident">
+    <div class="panel__stripe panel__stripe--amber"></div>
+    <div class="panel__header">
+      <div class="panel__title-row">
+        <div class="panel__icon panel__icon--amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </div>
         <div>
-          <h3 class="panel-title">My Campaigns</h3>
-          <p class="panel-sub">
-            <span class="panel-sub__count panel-sub__count--amber">{{ campaigns.length }}</span>
-            active campaign{{ campaigns.length !== 1 ? 's' : '' }}
-          </p>
+          <h3 class="panel__title">My Campaigns</h3>
+          <p class="panel__sub">{{ campaigns.length }} campaign{{ campaigns.length !== 1 ? 's' : '' }}</p>
         </div>
       </div>
-      <button class="panel-close" (click)="toggleCampaignsPanel()">×</button>
+      <button class="panel__close" (click)="toggleCampaignsPanel()">×</button>
     </div>
 
-    <div class="panel-loading" *ngIf="isLoadingCampaigns">
+    <div class="panel__loading" *ngIf="isLoadingCampaigns">
       <div class="spinner spinner--amber"></div>
-      <span>Loading campaigns…</span>
+      <span>Loading…</span>
     </div>
 
-    <div class="panel-empty" *ngIf="!isLoadingCampaigns && campaigns.length === 0">
+    <div class="panel__empty" *ngIf="!isLoadingCampaigns && campaigns.length === 0">
       <div class="empty-icon">
-        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </div>
-      <p class="empty-title">No campaigns found</p>
+      <p class="empty-title">No campaigns yet</p>
       <p class="empty-sub">Create your first campaign to get started.</p>
     </div>
 
     <div class="campaigns-grid" *ngIf="!isLoadingCampaigns && campaigns.length > 0">
       <div class="campaign-card campaign-card--amber"
            *ngFor="let campaign of campaigns; trackBy: trackByCampaignId">
-
-        <div class="cc-body">
-          <div class="cc-meta">
-            <span class="pill" [attr.data-status]="campaign.status">
-              {{ getCampaignStatusLabel(campaign.status || '') }}
-            </span>
-            <span class="pill pill--vis" [attr.data-vis]="campaign.visibility">
-              {{ getVisibilityLabel(campaign.visibility || '') }}
-            </span>
+        <div class="campaign-card__body">
+          <div class="campaign-card__pills">
+            <span class="pill" [attr.data-status]="campaign.status">{{ getCampaignStatusLabel(campaign.status || '') }}</span>
+            <span class="pill pill--vis" [attr.data-vis]="campaign.visibility">{{ getVisibilityLabel(campaign.visibility || '') }}</span>
           </div>
-          <h4 class="cc-title">{{ campaign.title }}</h4>
-          <p class="cc-desc" *ngIf="campaign.description">{{ campaign.description }}</p>
+          <h4 class="campaign-card__title">{{ campaign.title }}</h4>
         </div>
 
-        <div class="cc-dates" *ngIf="campaign.startDate || campaign.endDate">
-          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div class="campaign-card__dates" *ngIf="campaign.startDate || campaign.endDate">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span *ngIf="campaign.startDate">{{ formatDate(campaign.startDate) }}</span>
-          <span class="dates-sep" *ngIf="campaign.startDate && campaign.endDate">→</span>
+          <span class="dates-arrow" *ngIf="campaign.startDate && campaign.endDate">→</span>
           <span *ngIf="campaign.endDate">{{ formatDate(campaign.endDate) }}</span>
         </div>
 
-        <div class="cc-progress" *ngIf="campaign.maxParticipants && campaign.maxParticipants > 0">
+        <div class="campaign-card__progress" *ngIf="campaign.maxParticipants && campaign.maxParticipants > 0">
           <div class="progress-labels">
             <span>Participants</span>
             <span>{{ campaign.currentParticipants || 0 }} / {{ campaign.maxParticipants }}</span>
@@ -268,16 +526,16 @@
           </div>
         </div>
 
-        <div class="cc-footer">
-          <button class="cc-btn-add cc-btn-add--amber"
+        <div class="campaign-card__footer">
+          <button class="cc-btn cc-btn--add cc-btn--add-amber"
                   [class.disabled]="!canAddEventToCampaign(campaign)"
                   [disabled]="!canAddEventToCampaign(campaign)"
                   (click)="addEventToCampaign(campaign)">
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             {{ canAddEventToCampaign(campaign) ? 'Add Event' : 'Not Allowed' }}
           </button>
-          <a class="cc-btn-dash" [routerLink]="['/campaigns/dashboard', campaign.id]">
-            <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.5 9.5L12 16l-3-3L6.5 14.5"/></svg>
+          <a class="cc-btn cc-btn--dash" [routerLink]="['/campaigns/dashboard', campaign.id]">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.5 9.5L12 16l-3-3L6.5 14.5"/></svg>
             Dashboard
           </a>
         </div>
@@ -285,65 +543,49 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════ FILTERS ROW ═══ -->
+  <!-- ══════════════ FILTERS ══════════════ -->
   <div class="filters-row">
-    <div class="category-pills">
-      <button class="cat-pill cat-pill--all" [class.active]="selectedCategory === ''" (click)="setCategoryFilter('')">All</button>
-      <button class="cat-pill cat-pill--conference" [class.active]="selectedCategory === 'CONFERENCE'" (click)="setCategoryFilter('CONFERENCE')">
-        <span class="cat-dot"></span>Conference
-      </button>
-      <button class="cat-pill cat-pill--workshop" [class.active]="selectedCategory === 'WORKSHOP'" (click)="setCategoryFilter('WORKSHOP')">
-        <span class="cat-dot"></span>Workshop
-      </button>
-      <button class="cat-pill cat-pill--meeting" [class.active]="selectedCategory === 'MEETING'" (click)="setCategoryFilter('MEETING')">
-        <span class="cat-dot"></span>Meeting
-      </button>
-      <button class="cat-pill cat-pill--training" [class.active]="selectedCategory === 'TRAINING'" (click)="setCategoryFilter('TRAINING')">
-        <span class="cat-dot"></span>Training
-      </button>
-      <button class="cat-pill cat-pill--hackathon" [class.active]="selectedCategory === 'HACKATHON'" (click)="setCategoryFilter('HACKATHON')">
-        <span class="cat-dot"></span>Hackathon
-      </button>
-      <button class="cat-pill cat-pill--social" [class.active]="selectedCategory === 'SOCIAL'" (click)="setCategoryFilter('SOCIAL')">
-        <span class="cat-dot"></span>Social
-      </button>
+    <div class="cat-pills">
+      <button class="cat-pill cat-pill--all"        [class.active]="selectedCategory === ''"           (click)="setCategoryFilter('')">All</button>
+      <button class="cat-pill cat-pill--conference" [class.active]="selectedCategory === 'CONFERENCE'" (click)="setCategoryFilter('CONFERENCE')"><span class="cat-dot"></span>Conf.</button>
+      <button class="cat-pill cat-pill--workshop"   [class.active]="selectedCategory === 'WORKSHOP'"   (click)="setCategoryFilter('WORKSHOP')"><span class="cat-dot"></span>Workshop</button>
+      <button class="cat-pill cat-pill--meeting"    [class.active]="selectedCategory === 'MEETING'"    (click)="setCategoryFilter('MEETING')"><span class="cat-dot"></span>Meeting</button>
+      <button class="cat-pill cat-pill--training"   [class.active]="selectedCategory === 'TRAINING'"   (click)="setCategoryFilter('TRAINING')"><span class="cat-dot"></span>Training</button>
+      <button class="cat-pill cat-pill--hackathon"  [class.active]="selectedCategory === 'HACKATHON'"  (click)="setCategoryFilter('HACKATHON')"><span class="cat-dot"></span>Hackathon</button>
+      <button class="cat-pill cat-pill--social"     [class.active]="selectedCategory === 'SOCIAL'"     (click)="setCategoryFilter('SOCIAL')"><span class="cat-dot"></span>Social</button>
       <div class="cat-pill cat-pill--custom" [class.active]="isCustomCategory">
         <span class="cat-dot"></span>
-        <input type="text" class="cat-custom-input" placeholder="Other..."
+        <input type="text" class="cat-custom-input" placeholder="Other…"
                [(ngModel)]="customCategoryInput"
                (input)="onCustomCategoryInput()"
                (keydown.enter)="applyCustomCategory()"/>
         <button *ngIf="customCategoryInput" class="cat-clear" (click)="clearCustomCategory()">×</button>
       </div>
     </div>
-
     <div class="filters-right">
-      <button *ngIf="hasActiveFilters()" class="btn-clear-filters" (click)="clearAllFilters()">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        Clear filters
+      <button *ngIf="hasActiveFilters()" class="btn-clear-all" (click)="clearAllFilters()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Clear
       </button>
       <input type="date" class="date-filter" [(ngModel)]="selectedDate" (change)="applyFilters()">
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════ CALENDAR MODAL ═══ -->
+  <!-- ══════════════ CALENDAR MODAL ══════════════ -->
   <div *ngIf="showCalendarModal" class="modal modal--calendar">
-    <div class="modal__content calendar-modal">
-      <div class="modal__top modal__top--blue"></div>
-      <div class="modal__title-row">
-        <div>
-          <h2>Event Calendar</h2>
-          <p class="modal__subtitle">Browse your events on the calendar.</p>
-        </div>
+    <div class="modal__box">
+      <div class="modal__stripe modal__stripe--blue"></div>
+      <div class="modal__header">
+        <h2 class="modal__title">Event Calendar</h2>
         <button class="modal__close" (click)="closeCalendarModal()">×</button>
       </div>
-      <div class="calendar-popup-body">
+      <div class="modal__body">
         <app-event-calendar></app-event-calendar>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════ SECTION LABEL ═══ -->
+  <!-- ══════════════ SECTION LABEL ══════════════ -->
   <div class="section-row">
     <span class="section-label">{{ isViewingHistory ? 'Archived Events' : 'Active Events' }}</span>
     <span class="section-count">{{ filteredEvents.length }}</span>
@@ -351,7 +593,7 @@
   </div>
 
   <!-- Loading skeleton -->
-  <div class="cards" *ngIf="isLoading">
+  <div class="events-grid" *ngIf="isLoading">
     <div class="event-card event-card--skeleton" *ngFor="let i of [1,2,3,4,5,6]">
       <div class="skeleton-img"></div>
       <div class="skeleton-body">
@@ -365,117 +607,114 @@
   <!-- Empty state -->
   <div class="events-empty" *ngIf="!isLoading && filteredEvents.length === 0">
     <div class="events-empty__icon">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     </div>
-    <h3>{{ hasActiveFilters() ? 'No events match your filters' : 'No events yet' }}</h3>
+    <h3>{{ hasActiveFilters() ? 'No matching events' : 'No events yet' }}</h3>
     <p>{{ hasActiveFilters() ? 'Try adjusting or clearing your filters.' : 'Create your first event to get started.' }}</p>
     <button *ngIf="hasActiveFilters()" class="btn btn-secondary" (click)="clearAllFilters()">Clear filters</button>
     <button *ngIf="!hasActiveFilters() && !isViewingHistory" class="btn btn-primary" (click)="goToNew()">
-      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Event
     </button>
   </div>
 
-  <!-- ═══════════════════════════════════════════ EVENTS GRID ═══ -->
-  <div class="cards" *ngIf="!isLoading && paginatedEvents.length > 0">
-    <div class="event-card" *ngFor="let event of paginatedEvents; trackBy: trackById">
+  <!-- ══════════════ EVENTS GRID ══════════════ -->
+  <div class="events-grid" *ngIf="!isLoading && paginatedEvents.length > 0">
+    <article class="event-card" *ngFor="let event of paginatedEvents; trackBy: trackById">
 
       <div class="event-card__image">
-        <img [src]="event.imageUrl || 'assets/default-event.jpg'"
-             [alt]="event.title"
-             (error)="onImageError($event)">
-        <div class="img-overlay"></div>
+        <img [src]="event.imageUrl || 'assets/default-event.jpg'" [alt]="event.title" (error)="onImageError($event)"/>
+        <div class="event-card__img-overlay"></div>
         <span class="status-badge" [attr.data-status]="event.status">
           <span class="pulse-dot" *ngIf="event.status === 'ONGOING'"></span>
           {{ getStatusLabel(event.status) }}
         </span>
-        <span class="category-tag" [attr.data-cat]="event.category">
-          {{ event.category || 'General' }}
-        </span>
+        <span class="cat-tag" [attr.data-cat]="event.category">{{ event.category || 'General' }}</span>
+        <span class="cat-tag" *ngIf="isOnlineEvent(event)">Online</span>
         <span *ngIf="event.campaignId" class="campaign-img-badge">
-          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
         </span>
       </div>
 
       <div class="event-card__body">
+        <div class="event-card__ai-row" *ngIf="getEventInsight(event.id) as insight">
+          <span class="ai-score-badge">{{ insight.score }}</span>
+          <span class="ai-momentum-badge">{{ getMomentumLabel(insight.momentum) }}</span>
+          <span *ngFor="let r of insight.reasons" class="ai-tag">{{ r }}</span>
+        </div>
         <h3 class="event-card__title">{{ event.title }}</h3>
-        <p class="event-card__desc">{{ event.description || 'No description available' }}</p>
-
         <div class="event-card__meta">
           <span>
-            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             {{ formatDate(event.startDate) }}
           </span>
           <span>
-            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            {{ event.locationName || 'Location not set' }}
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ isOnlineEvent(event) ? 'Jitsi Meet' : (event.locationName || 'TBD') }}
           </span>
         </div>
       </div>
 
       <div class="event-card__capacity">
-        <div class="capacity-left">
-          <span class="cap-count">{{ event.participantsCount || 0 }} / {{ event.capacity || '∞' }}</span>
-          <span class="cap-badge" [ngClass]="'cap-badge--' + getCapacityStatusColor(event)">
-            {{ getCapacityStatusLabel(event) }}
-          </span>
+        <div class="capacity-info">
+          <span class="cap-count">{{ event.participantsCount || 0 }}/{{ event.capacity || '∞' }}</span>
+          <span class="cap-badge" [ngClass]="'cap-badge--' + getCapacityStatusColor(event)">{{ getCapacityStatusLabel(event) }}</span>
         </div>
-        <div class="paid-badge" *ngIf="event.isPaid">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          ${{ event.price?.toFixed(2) }}
+        <div class="capacity-bar">
+          <div class="capacity-bar__fill"
+               [style.width.%]="event.capacity ? ((event.participantsCount || 0) / event.capacity * 100) : 0"
+               [ngClass]="'capacity-bar__fill--' + getCapacityStatusColor(event)">
+          </div>
         </div>
-      </div>
-
-      <div class="event-card__participants">
-        <span class="participants-count">{{ event.participantsCount || 0 }} participants</span>
-        <span *ngIf="event.campaignId" class="campaign-tag">
-          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
-          Campaign
-        </span>
       </div>
 
       <div class="event-card__actions">
-        <button class="icon-btn ib-view" (click)="openPopup(event)" title="View details">
-          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <button class="action-btn action-btn--view" (click)="openPopup(event)" title="View">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           View
         </button>
 
         <button *ngIf="userRole === 'PRESIDENT' && event.campaignId"
-                class="icon-btn ib-dashboard"
-                (click)="openCampaignDashboard(event)" title="Campaign Dashboard">
-          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.5 9.5L12 16l-3-3L6.5 14.5"/></svg>
+                class="action-btn action-btn--dashboard"
+                (click)="openCampaignDashboard(event)" title="Campaign">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.5 9.5L12 16l-3-3L6.5 14.5"/></svg>
           Camp.
         </button>
 
-        <button class="icon-btn ib-people" (click)="viewParticipants(event)" title="View participants">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <button class="action-btn action-btn--people" (click)="viewParticipants(event)" title="Participants">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           People
         </button>
 
-        <button *ngIf="!isViewingHistory && event.status !== 'COMPLETED'"
-                class="icon-btn ib-reserve"
-                (click)="reserveResources(event)" title="Reserve resources">
-          <svg viewBox="0 0 24 24"><path d="M4 7h16v14H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <button *ngIf="canJoinMeeting(event)" class="action-btn action-btn--view" (click)="joinMeeting(event)" title="Join">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          Join
+        </button>
+
+        <button *ngIf="!isViewingHistory && event.status !== 'COMPLETED' && !isOnlineEvent(event)"
+                class="action-btn action-btn--reserve"
+                (click)="reserveResources(event)" title="Reserve">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16v14H4z"/><path d="M9 12h6M12 9v6" stroke-linecap="round"/></svg>
           Reserve
         </button>
 
-        <button *ngIf="!isViewingHistory" class="icon-btn ib-edit" (click)="editEvent(event)" title="Edit event">
-          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <button *ngIf="!isViewingHistory" class="action-btn action-btn--edit" (click)="editEvent(event)" title="Edit">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Edit
         </button>
 
-        <button *ngIf="!isViewingHistory" class="icon-btn ib-delete" (click)="openDeleteModal(event)" title="Delete event">
-          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        <button *ngIf="!isViewingHistory" class="action-btn action-btn--delete" (click)="openDeleteModal(event)" title="Delete">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           Delete
         </button>
       </div>
-    </div>
+    </article>
   </div>
 
-  <!-- ═══════════════════════════════════════════ PAGINATION ═══ -->
+  <!-- ══════════════ PAGINATION ══════════════ -->
   <div class="pagination" *ngIf="totalPages > 1">
     <button class="pg-btn" (click)="prevPage()" [disabled]="currentPage === 1">
-      <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
       Prev
     </button>
     <div class="pg-dots">
@@ -488,62 +727,81 @@
     </div>
     <button class="pg-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
       Next
-      <svg viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
     </button>
   </div>
 
 </div>
 
-<!-- ═══════════════════════════════════════════ DELETE MODAL ═══ -->
+<!-- ══════════════ DELETE MODAL ══════════════ -->
 <div class="modal" *ngIf="showDeleteModal">
-  <div class="modal__content modal__content--sm">
-    <div class="modal__top modal__top--red"></div>
-    <div class="modal__header">
-      <div class="modal__icon modal__icon--danger">
-        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+  <div class="modal__box modal__box--sm">
+    <div class="modal__stripe modal__stripe--red"></div>
+    <div class="modal__header modal__header--danger">
+      <div class="modal__danger-stack">
+        <div class="modal__danger-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </div>
+        <div class="modal__danger-copy">
+          <span class="modal__eyebrow modal__eyebrow--danger">Status change</span>
+          <h2 class="modal__title">Cancel Event</h2>
+        </div>
       </div>
       <button class="modal__close" (click)="closeDeleteModal()">×</button>
     </div>
-    <div class="modal__body">
-      <h2 class="modal__title">Delete Event</h2>
-      <p class="modal__desc">
-        Are you sure you want to delete
-        <strong>{{ selectedEventToDelete?.title }}</strong>?
-        This action <span class="text-danger">cannot be undone</span>.
+    <div class="modal__body modal__body--danger">
+      <p class="modal__desc modal__desc--danger">
+        You are about to mark <strong>{{ selectedEventToDelete?.title }}</strong> as <span class="text-danger">CANCELLED</span>.
       </p>
+
+      <div class="modal__danger-panel">
+        <div class="modal__danger-row">
+          <span class="modal__danger-label">Participants</span>
+          <strong class="modal__danger-value">{{ selectedEventToDelete?.participantsCount || 0 }}</strong>
+        </div>
+        <div class="modal__danger-row">
+          <span class="modal__danger-label">Start date</span>
+          <strong class="modal__danger-value">{{ selectedEventToDelete?.startDate ? formatDate(selectedEventToDelete!.startDate) : 'TBD' }}</strong>
+        </div>
+        <div class="modal__danger-row" *ngIf="selectedEventToDelete?.campaignId">
+          <span class="modal__danger-label">Campaign linked</span>
+          <strong class="modal__danger-value">Yes</strong>
+        </div>
+      </div>
+
+      <div class="modal__danger-note">
+        <span class="modal__danger-note-icon">!</span>
+        <p>Participants will keep the event in history, and SMS notifications may be sent to inform them about the cancellation.</p>
+      </div>
+
       <div class="modal__actions">
-        <button class="btn btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-secondary" (click)="closeDeleteModal()">Keep Event</button>
         <button class="btn btn-danger" (click)="confirmDelete()">
-          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-          Yes, Delete
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Cancel Event
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════ VIEW POPUP MODAL ═══ -->
+<!-- ══════════════ VIEW EVENT MODAL ══════════════ -->
 <div class="modal" *ngIf="selectedEvent">
-  <div class="modal__content">
-    <div class="modal__top modal__top--blue"></div>
+  <div class="modal__box">
+    <div class="modal__stripe modal__stripe--blue"></div>
     <img [src]="selectedEvent.imageUrl || 'assets/default-event.jpg'"
          [alt]="selectedEvent.title"
-         class="modal__image"
-         (error)="onImageError($event)">
+         class="modal__cover-img"
+         (error)="onImageError($event)"/>
     <div class="modal__body">
       <div class="modal__title-row">
         <div>
-          <span class="modal__cat-tag" [attr.data-cat]="selectedEvent.category">
-            {{ selectedEvent.category || 'General' }}
-          </span>
-          <h2>{{ selectedEvent.title }}</h2>
+          <span class="modal__cat-tag" [attr.data-cat]="selectedEvent.category">{{ selectedEvent.category || 'General' }}</span>
+          <h2 class="modal__title">{{ selectedEvent.title }}</h2>
         </div>
         <button class="modal__close" (click)="closePopup()">×</button>
       </div>
-      <p class="modal__description">
-        {{ selectedEvent.description || 'No description available for this event.' }}
-      </p>
-      <div class="modal__grid">
+      <div class="modal__detail-grid">
         <div class="modal__detail modal__detail--green">
           <span class="modal__detail-label">Status</span>
           <span class="modal__detail-value">{{ getStatusLabel(selectedEvent.status) }}</span>
@@ -553,68 +811,68 @@
           <span class="modal__detail-value">{{ selectedEvent.participantsCount || 0 }}</span>
         </div>
         <div class="modal__detail modal__detail--amber">
-          <span class="modal__detail-label">Start Date</span>
+          <span class="modal__detail-label">Start</span>
           <span class="modal__detail-value">{{ formatDate(selectedEvent.startDate) }}</span>
         </div>
         <div class="modal__detail modal__detail--teal">
-          <span class="modal__detail-label">End Date</span>
+          <span class="modal__detail-label">End</span>
           <span class="modal__detail-value">{{ formatDate(selectedEvent.endDate) }}</span>
         </div>
-        <div class="modal__map-section">
-          <div class="map-header">
-            <span class="modal__detail-label">📍 {{ selectedEvent.locationName }}</span>
-            <span class="map-event-title">{{ selectedEvent.title }}</span>
-          </div>
-          <div class="modal-map-container">
-            <app-event-map-3d [events]="[selectedEvent]" [zoom]="16"></app-event-map-3d>
-          </div>
+        <div class="modal__detail modal__detail--teal" *ngIf="canJoinMeeting(selectedEvent)">
+          <span class="modal__detail-label">Meeting</span>
+          <a class="modal__detail-value" [href]="selectedEvent.meetingUrl!" target="_blank" rel="noopener">Join Jitsi Meet</a>
+        </div>
+      </div>
+      <div class="modal__map-section" *ngIf="!isOnlineEvent(selectedEvent)">
+        <span class="modal__detail-label">📍 {{ selectedEvent.locationName }}</span>
+        <div class="modal__map-container">
+          <app-event-map-3d [events]="[selectedEvent]" [zoom]="16"></app-event-map-3d>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════ PARTICIPANTS MODAL ═══ -->
+<!-- ══════════════ PARTICIPANTS MODAL ══════════════ -->
 <div class="modal" *ngIf="showParticipantsModal && selectedEventForParticipants">
-  <div class="modal__content modal__content--participants">
-    <div class="modal__top modal__top--blue"></div>
+  <div class="modal__box modal__box--participants">
+    <div class="modal__stripe modal__stripe--blue"></div>
     <div class="modal__header">
       <div>
-        <h2>Participants</h2>
-        <p class="modal__header-sub">{{ selectedEventForParticipants.title }}</p>
+        <h2 class="modal__title">Participants</h2>
+        <p class="modal__sub">{{ selectedEventForParticipants.title }}</p>
       </div>
       <button class="modal__close" (click)="closeParticipantsModal()">×</button>
     </div>
 
-    <div class="modal__body participants-body">
-      <div class="participants-summary">
-        <div class="summary-stat">
-          <span class="summary-label">Total</span>
-          <span class="summary-value">{{ selectedEventForParticipants.participantsCount || 0 }}/{{ selectedEventForParticipants.capacity || '∞' }}</span>
-        </div>
-        <div class="summary-stat">
-          <span class="summary-label">Capacity</span>
-          <span class="summary-value">{{ selectedEventForParticipants.capacity || 'Unlimited' }}</span>
-        </div>
-        <div class="summary-stat">
-          <span class="summary-label">Seats Left</span>
-          <span class="summary-value"
-                [class.full]="selectedEventForParticipants.capacity > 0 && (selectedEventForParticipants.capacity - (selectedEventForParticipants.participantsCount || 0)) <= 0">
-            {{ selectedEventForParticipants.capacity
-               ? (selectedEventForParticipants.capacity - (selectedEventForParticipants.participantsCount || 0))
-               : '∞' }}
-          </span>
-        </div>
+    <div class="participants-summary">
+      <div class="psummary-stat">
+        <span class="psummary-label">Total</span>
+        <span class="psummary-value">{{ selectedEventForParticipants.participantsCount || 0 }} / {{ selectedEventForParticipants.capacity || '∞' }}</span>
       </div>
+      <div class="psummary-stat">
+        <span class="psummary-label">Capacity</span>
+        <span class="psummary-value">{{ selectedEventForParticipants.capacity || 'Unlimited' }}</span>
+      </div>
+      <div class="psummary-stat">
+        <span class="psummary-label">Seats left</span>
+        <span class="psummary-value"
+              [class.is-full]="selectedEventForParticipants.capacity > 0 && (selectedEventForParticipants.capacity - (selectedEventForParticipants.participantsCount || 0)) <= 0">
+          {{ selectedEventForParticipants.capacity
+             ? (selectedEventForParticipants.capacity - (selectedEventForParticipants.participantsCount || 0))
+             : '∞' }}
+        </span>
+      </div>
+    </div>
 
-      <div *ngIf="isLoadingParticipants" class="loading-state">
+    <div class="participants-body">
+      <div class="participants-loading" *ngIf="isLoadingParticipants">
         <div class="spinner spinner--blue"></div>
-        <p>Loading participants...</p>
+        <p>Loading…</p>
       </div>
-
-      <div *ngIf="!isLoadingParticipants" class="participants-list">
+      <div class="participants-list" *ngIf="!isLoadingParticipants">
         <ng-container *ngIf="eventParticipants.length > 0; else noParticipants">
-          <div class="participant-item" *ngFor="let p of eventParticipants">
+          <div class="participant-row" *ngFor="let p of eventParticipants">
             <div class="participant-avatar">{{ getInitials(p.userName) }}</div>
             <div class="participant-details">
               <div class="participant-name">
@@ -622,23 +880,18 @@
                 <span *ngIf="p.teamName" class="team-badge">{{ p.teamName }}</span>
               </div>
               <div class="participant-meta">
-                <span class="status-pill" [ngClass]="'status-pill--' + (p.status || 'REGISTERED').toLowerCase()">
-                  {{ p.status || 'REGISTERED' }}
-                </span>
+                <span class="status-pill" [ngClass]="'status-pill--' + (p.status || 'REGISTERED').toLowerCase()">{{ p.status || 'REGISTERED' }}</span>
                 <span class="seats-pill">{{ p.reservedSeats || 1 }} seat(s)</span>
               </div>
               <div *ngIf="p.userEmail" class="participant-info"><strong>Email:</strong> {{ p.userEmail }}</div>
-              <div *ngIf="p.userPhone" class="participant-info"><strong>Phone:</strong> {{ p.userPhone }}</div>
               <div *ngIf="p.registrationDate" class="participant-date">Registered: {{ formatDate(p.registrationDate) }}</div>
             </div>
           </div>
         </ng-container>
-
         <ng-template #noParticipants>
-          <div class="empty-participants">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            <h3>No Participants Yet</h3>
-            <p>No one has registered for this event yet.</p>
+          <div class="participants-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <h3>No participants yet</h3>
           </div>
         </ng-template>
       </div>

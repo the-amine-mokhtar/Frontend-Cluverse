@@ -26,9 +26,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { CampaignHomeComponent, ConfirmDeleteCampaignDialog } from './components/campaign-home/campaign-home.component';
+import { CampaignHomeComponent, ConfirmDeleteCampaignDialog, ConfirmRevokeAllDialog } from './components/campaign-home/campaign-home.component';
 import { ReminderStatusComponent } from './components/reminder-status/reminder-status.component';
 import { MatSpinnerStubComponent } from './components/mat-spinner-stub/mat-spinner-stub.component';
+import { CampaignDeleteResultDialogComponent } from './components/campaign-delete-result-dialog/campaign-delete-result-dialog.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +42,9 @@ import { MatSpinnerStubComponent } from './components/mat-spinner-stub/mat-spinn
     CampaignHomeComponent,
     ReminderStatusComponent,
     MatSpinnerStubComponent,
-    ConfirmDeleteCampaignDialog
+    ConfirmDeleteCampaignDialog,
+    ConfirmRevokeAllDialog,
+    CampaignDeleteResultDialogComponent
   ],
   imports: [
     CommonModule,

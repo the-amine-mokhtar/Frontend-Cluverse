@@ -1,555 +1,860 @@
-<div class="page-wrapper">
+<div class="dashboard">
 
-  <!-- NOTIFICATIONS -->
-  <div class="notifications-container" *ngIf="notifications.length > 0 && showNotifications">
-    <div class="notification-item" *ngFor="let notif of notifications" [class]="'notif-' + notif.type">
+  <!-- ═══════════ TOAST NOTIFICATIONS ═══════════ -->
+  <div class="toast-container" *ngIf="notifications.length > 0 && showNotifications">
+    <div class="toast" *ngFor="let n of notifications" [class]="'toast--' + n.type">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
       </svg>
-      <span class="notif-message">{{ notif.message }}</span>
-      <button class="notif-close" (click)="dismissNotification(notif.eventId)">✕</button>
+      <span>{{ n.message }}</span>
+      <button (click)="dismissNotification(n.eventId)" aria-label="Dismiss">✕</button>
     </div>
   </div>
 
-  <!-- HEADER -->
-  <div class="page-header">
+  <!-- ═══════════ HEADER ═══════════ -->
+  <header class="dashboard-header">
     <div class="header-content">
-      <div class="header-eyebrow">Club Universe</div>
-      <h1 class="header-title">Events<span class="title-dot">.</span></h1>
-      <p class="header-sub">Discover, join, and track your club events</p>
+      <span class="header-badge">Participant Portal</span>
+      <h1 class="header-title">Discover Events</h1>
+      <p class="header-subtitle">Find and join events that match your interests</p>
     </div>
     <div class="header-stats">
-      <div class="hstat">
-        <span class="hstat-val">{{ filteredEvents.length }}</span>
-        <span class="hstat-label">Available</span>
+      <div class="stat-item">
+        <span class="stat-value">{{ filteredEvents.length }}</span>
+        <span class="stat-label">Events</span>
       </div>
-      <div class="hstat-divider"></div>
-      <div class="hstat">
-        <span class="hstat-val">{{ activeParticipations.length }}</span>
-        <span class="hstat-label">Joined</span>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value">{{ activeParticipations.length }}</span>
+        <span class="stat-label">Registered</span>
       </div>
-      <div class="hstat-divider"></div>
-      <div class="hstat">
-        <span class="hstat-val">{{ completedParticipations.length }}</span>
-        <span class="hstat-label">Completed</span>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value">{{ completedParticipations.length }}</span>
+        <span class="stat-label">Attended</span>
       </div>
     </div>
+  </header>
+
+  <!-- ═══════════ MAIN CONTENT ═══════════ -->
+  <div class="main-layout">
+    
+    <!-- LEFT COLUMN: Events List -->
+    <div class="events-section">
+      
+      <!-- Search & Filters -->
+      <div class="events-toolbar">
+        <div class="section-title">
+          <span class="title-icon">📅</span>
+          <h2>Available Events</h2>
+          <span class="count-badge">{{ filteredEvents.length }}</span>
+        </div>
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/>
+          </svg>
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            placeholder="Search events..."
+            class="search-input" />
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="state-message" *ngIf="isLoadingEvents">
+        <div class="spinner"></div>
+        <p>Discovering events for you...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="state-message" *ngIf="!isLoadingEvents && filteredEvents.length === 0">
+        <div class="empty-icon">📭</div>
+        <h3>No events found</h3>
+        <p>Try adjusting your search or check back later</p>
+      </div>
+
+      <!-- Events Grid -->
+      <div class="events-grid" *ngIf="!isLoadingEvents && filteredEvents.length > 0">
+        <div class="event-card" *ngFor="let event of filteredEvents">
+          
+          <!-- Image Section -->
+          <div class="event-image">
+            <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.title" (error)="onImgError($event)" />
+            <div class="image-placeholder" *ngIf="!event.imageUrl">
+              <span class="placeholder-icon">🎪</span>
+            </div>
+            
+            <!-- Status Badge -->
+            <div class="event-status" [ngClass]="getEventStatusClassFixed(event)">
+              <span class="status-dot"></span>
+              {{ getEventStatusLabelFixed(event) }}
+            </div>
+            
+            <!-- Category Tag -->
+            <span class="category-tag">{{ event.category || 'General' }}</span>
+          </div>
+
+          <!-- Content -->
+          <div class="event-content">
+            <h3 class="event-name">{{ event.title }}</h3>
+            
+            <p class="event-description" *ngIf="event.description">
+              {{ event.description | slice:0:100 }}{{ event.description.length > 100 ? '...' : '' }}
+            </p>
+
+            <!-- AI Score Badge (small, non-intrusive) -->
+            <div class="ai-badge-inline" *ngIf="isParticipationRecommended(event.id)">
+              <span class="ai-score">⭐ {{ getParticipationScore(event.id) }}% match</span>
+            </div>
+
+            <!-- Meta Info -->
+            <div class="event-meta">
+              <div class="meta-item" *ngIf="event.startDate">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>{{ event.startDate | date:'MMM d, y' }}</span>
+              </div>
+              
+              <div class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                </svg>
+                <span>{{ isOnlineEvent(event) ? 'Online' : (event.locationName || 'TBD') }}</span>
+              </div>
+              
+              <div class="meta-item capacity" *ngIf="event.capacity" [class.full]="event.isFull">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>{{ event.participantsCount || 0 }}/{{ event.capacity }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Footer -->
+          <div class="event-actions">
+            <ng-container [ngSwitch]="getEventButtonState(event)">
+              
+              <ng-container *ngSwitchCase="'registered'">
+                <button class="btn btn-registered" disabled>✓ Registered</button>
+                <button class="btn btn-outline" (click)="openDetail(event)">Details</button>
+              </ng-container>
+              
+              <ng-container *ngSwitchCase="'waiting'">
+                <button class="btn btn-waiting" disabled>On Waiting List</button>
+                <button class="btn btn-outline" (click)="openDetail(event)">Details</button>
+              </ng-container>
+              
+              <ng-container *ngSwitchCase="'full'">
+                <button class="btn btn-warning" (click)="openJoin(event)">Join Waiting List</button>
+                <button class="btn btn-outline" (click)="openDetail(event)">Details</button>
+              </ng-container>
+              
+              <ng-container *ngSwitchCase="'completed'">
+                <button class="btn btn-completed" disabled>✓ Attended</button>
+                <button class="btn btn-outline" (click)="openDetail(event)">Details</button>
+              </ng-container>
+              
+              <ng-container *ngSwitchDefault>
+                <button class="btn btn-primary" (click)="openJoin(event)">Register Now</button>
+                <button class="btn btn-outline" (click)="openDetail(event)">Details</button>
+              </ng-container>
+              
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: AI Recommendations Sidebar -->
+    <aside class="ai-sidebar" *ngIf="smartParticipationRecommendations.length > 0">
+      
+      <!-- My Stats Card -->
+      <div class="sidebar-card stats-card">
+        <h3 class="sidebar-title">Your Activity</h3>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-number">{{ activeParticipations.length }}</span>
+            <span class="stat-text">Active</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-number">{{ completedParticipations.length }}</span>
+            <span class="stat-text">Completed</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-number">{{ waitingListParticipations.length }}</span>
+            <span class="stat-text">Waiting</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-number">{{ participantAiOverview.recommended || 0 }}</span>
+            <span class="stat-text">Suggested</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended For You Card -->
+      <div class="sidebar-card recommendations-card">
+        <div class="card-header">
+          <h3 class="sidebar-title">Recommended For You</h3>
+          <span class="ai-chip">AI Powered</span>
+        </div>
+        
+        <div class="recommendation-list">
+          <div class="recommendation-item" *ngFor="let event of smartParticipationRecommendations | slice:0:5">
+            <div class="rec-score" [class.high]="event.participationAi.score > 80" [class.medium]="event.participationAi.score > 50 && event.participationAi.score <= 80">
+              {{ event.participationAi.score }}%
+            </div>
+            <div class="rec-content">
+              <h4 class="rec-title">{{ event.title }}</h4>
+              <p class="rec-reason">{{ event.participationAi.decisionMessage }}</p>
+              <div class="rec-meta">
+                <span>{{ event.startDate | date:'MMM d' }}</span>
+                <span>•</span>
+                <span>{{ getSeatsLeftLabel(event) }}</span>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-primary" (click)="openJoin(event)">Join</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Deadlines Card -->
+      <div class="sidebar-card" *ngIf="urgentParticipationEvents.length > 0">
+        <h3 class="sidebar-title">⏰ Filling Up Fast</h3>
+        <div class="compact-list">
+          <div class="compact-item" *ngFor="let event of urgentParticipationEvents | slice:0:3">
+            <div class="compact-info">
+              <span class="compact-name">{{ event.title }}</span>
+              <span class="compact-seats">{{ getSeatsLeftLabel(event) }}</span>
+            </div>
+            <div class="compact-bar">
+              <div class="compact-fill" [style.width.%]="getEventCapacityPercentageFixed(event)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 
-  <!-- ALL EVENTS -->
-  <section class="section">
-    <div class="section-bar">
-      <div class="section-label">
-        <span class="section-num">01</span>
-        <span class="section-name">All Events</span>
-      </div>
-      <div class="search-wrap">
-        <svg class="search-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input class="search-input" placeholder="Search events…" [(ngModel)]="searchQuery" (input)="applyFilters()" />
+  <!-- ═══════════ MY PARTICIPATIONS SECTION ═══════════ -->
+  <section class="participations-section">
+    <div class="section-header">
+      <h2>My Participations</h2>
+      <div class="tab-group">
+        <button 
+          class="tab" 
+          [class.active]="activeTab === 'active'" 
+          (click)="setTab('active')">
+          Active
+          <span class="tab-count">{{ activeParticipations.length }}</span>
+        </button>
+        <button 
+          class="tab" 
+          [class.active]="activeTab === 'waiting'" 
+          (click)="setTab('waiting')">
+          Waiting
+          <span class="tab-count">{{ waitingListParticipations.length }}</span>
+        </button>
+        <button 
+          class="tab" 
+          [class.active]="activeTab === 'history'" 
+          (click)="setTab('history')">
+          History
+          <span class="tab-count">{{ completedParticipations.length + cancelledParticipations.length }}</span>
+        </button>
       </div>
     </div>
 
-    <ng-container *ngFor="let campaignEntry of getEventsByCampaign() | keyvalue">
-      <div class="campaign-section" *ngIf="campaignEntry.value.length > 0">
-        <div class="campaign-header">
-          <div class="campaign-header-left">
-            <span class="campaign-dot"></span>
-            <h3 class="campaign-title">{{ getCampaignTitle(campaignEntry.key) }}</h3>
+    <!-- Active Participations -->
+    <ng-container *ngIf="activeTab === 'active'">
+      <div class="participation-list" *ngIf="activeParticipations.length > 0; else noActive">
+        <div class="participation-item active" *ngFor="let p of activeParticipations">
+          <div class="participation-status">
+            <span class="status-indicator active"></span>
+            Registered
           </div>
-          <span class="campaign-count">{{ campaignEntry.value.length }} event{{ campaignEntry.value.length > 1 ? 's' : '' }}</span>
-        </div>
-
-        <div class="events-grid">
-          <div class="event-card" *ngFor="let event of campaignEntry.value"
-               [class.card-full]="isEventFull(event) && !isParticipating(event.id) && !isInWaitingList(event.id)">
-            <div class="card-media">
-              <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.title" (error)="onImgError($event)" />
-              <div class="card-media-blank" *ngIf="!event.imageUrl">
-                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="18" height="18" rx="3"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-                </svg>
-              </div>
-              <div class="card-badges">
-                <span class="badge-cat">{{ event.category || 'General' }}</span>
-                <span class="badge-reg" *ngIf="getParticipation(event.id)?.status === 'REGISTERED'">✓ Joined</span>
-                <span class="badge-waiting" *ngIf="isInWaitingList(event.id)">⏳ Waiting</span>
-              </div>
-              <div class="card-status"
-                   [class.st-live]="event.status === 'ONGOING'"
-                   [class.st-full]="event.isFull && event.status !== 'ONGOING'"
-                   [class.st-open]="!event.isFull && event.status !== 'ONGOING'">
-                <span class="st-dot"></span>
-                {{ event.status === 'ONGOING' ? 'Live' : (event.isFull ? 'Full' : 'Open') }}
-              </div>
+          <div class="participation-details">
+            <h4>{{ p.event?.title || '—' }}</h4>
+            <div class="participation-meta">
+              <span *ngIf="p.event?.locationName">📍 {{ p.event?.locationName }}</span>
+              <span *ngIf="p.event?.startDate">📅 {{ p.event?.startDate | date:'MMM d, y' }}</span>
+              <span *ngIf="p.reservedSeats">🎫 {{ p.reservedSeats }} seat(s)</span>
             </div>
-
-            <div class="card-body">
-              <h3 class="card-title">{{ event.title }}</h3>
-              <p class="card-desc">{{ event.description }}</p>
-              <div class="card-metas">
-                <span class="cmeta" *ngIf="event.locationName">
-                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                  </svg>{{ event.locationName }}
-                </span>
-                <span class="cmeta" *ngIf="event.startDate">
-                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>{{ event.startDate | date:'MMM d, y' }}
-                </span>
-                <span class="cmeta" [class.cmeta-warn]="event.isFull" *ngIf="event.capacity">
-                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                  </svg>{{ event.participantsCount || 0 }}/{{ event.capacity }}
-                </span>
-              </div>
-
-              <div class="card-campaign-strip" *ngIf="event.campaign">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                </svg>
-                <span class="cstrip-name">{{ event.campaign.title }}</span>
-                <span class="cstrip-vis" [attr.data-vis]="event.campaign.visibility">{{ getVisibilityLabel(event.campaign.visibility) }}</span>
-              </div>
-              <div class="card-no-campaign" *ngIf="!event.campaign">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <span>No campaign assigned</span>
-              </div>
-            </div>
-
-            <!-- FIX: card-foot uses getEventButtonState() for all states -->
-            <div class="card-foot">
-              <ng-container [ngSwitch]="getEventButtonState(event)">
-
-                <!-- ✅ Registered -->
-                <ng-container *ngSwitchCase="'registered'">
-                  <button class="btn btn-registered" disabled>✓ Registered</button>
-                  <button class="btn btn-detail" (click)="openDetail(event)">Details</button>
-                </ng-container>
-
-                <!-- ⏳ Already on waiting list -->
-                <ng-container *ngSwitchCase="'waiting'">
-                  <button class="btn btn-on-waiting" disabled>⏳ On Waiting List</button>
-                  <button class="btn btn-detail" (click)="openDetail(event)">Details</button>
-                </ng-container>
-
-                <!-- 🔴 Full — clickable waiting list button -->
-                <ng-container *ngSwitchCase="'full'">
-                  <button class="btn btn-waiting-list" (click)="openJoin(event)">
-                    🔔 Join Waiting List
-                  </button>
-                  <button class="btn btn-detail" (click)="openDetail(event)">Details</button>
-                </ng-container>
-
-                <!-- ✓ Completed -->
-                <ng-container *ngSwitchCase="'completed'">
-                  <span class="btn-done-badge">✓ Completed</span>
-                  <button class="btn btn-detail" (click)="openDetail(event)">Details</button>
-                </ng-container>
-
-                <!-- 🟢 Join now -->
-                <ng-container *ngSwitchDefault>
-                  <button class="btn btn-join" (click)="openJoin(event)">
-                    {{ event.isPaid ? 'Pay & Join' : 'Join Event' }}
-                  </button>
-                  <button class="btn btn-detail" (click)="openDetail(event)">Details</button>
-                </ng-container>
-
-              </ng-container>
-            </div>
+          </div>
+          <div class="participation-actions">
+            <app-reminder-status [participation]="p"></app-reminder-status>
+            <button class="btn btn-sm btn-outline" (click)="openEdit(p.event!.id)">Edit</button>
+            <button class="btn btn-sm btn-danger" (click)="cancelParticipation(p.id)">Cancel</button>
           </div>
         </div>
       </div>
+      <ng-template #noActive>
+        <div class="state-message">
+          <p>No active participations</p>
+        </div>
+      </ng-template>
     </ng-container>
 
-    <div class="empty-state" *ngIf="filteredEvents.length === 0 && !isLoadingEvents">
-      <div class="empty-icon">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-      </div>
-      <p>No events available right now</p>
-    </div>
-    <div class="empty-state" *ngIf="isLoadingEvents">
-      <div class="spin-ring"></div><p>Loading events…</p>
-    </div>
-  </section>
-
-  <!-- PARTICIPATIONS -->
-  <section class="section">
-    <div class="section-bar">
-      <div class="section-label">
-        <span class="section-num">02</span>
-        <span class="section-name">My Participations</span>
-      </div>
-      <div class="ptabs">
-        <button class="ptab" [class.ptab-active]="activeTab === 'active'" (click)="setTab('active')">
-          Active <em>{{ activeParticipations.length }}</em>
-        </button>
-        <button class="ptab" [class.ptab-active]="activeTab === 'waiting'" (click)="setTab('waiting')">
-          Waiting <em>{{ waitingListParticipations.length }}</em>
-        </button>
-        <button class="ptab" [class.ptab-active]="activeTab === 'history'" (click)="setTab('history')">
-          History <em>{{ cancelledParticipations.length + completedParticipations.length }}</em>
-        </button>
-      </div>
-    </div>
-
-    <!-- ACTIVE -->
-    <div class="psub" *ngIf="activeTab === 'active'">
-      <div class="plist" *ngIf="activeParticipations.length > 0">
-        <div class="pcard pcard-active" *ngFor="let p of activeParticipations">
-          <div class="pcard-top">
-            <div class="pcard-topleft">
-              <span class="pcard-pulse"></span>
-              <span class="sbadge sbadge-active">Registered</span>
-            </div>
-            <app-reminder-status [participation]="p"></app-reminder-status>
+    <!-- Waiting List Participations -->
+    <ng-container *ngIf="activeTab === 'waiting'">
+      <div class="participation-list" *ngIf="waitingListParticipations.length > 0; else noWaiting">
+        <div class="participation-item waiting" *ngFor="let p of waitingListParticipations">
+          <div class="participation-status">
+            <span class="status-indicator waiting"></span>
+            Waiting List
           </div>
-          <div class="pcard-event">
-            <div class="pcard-name">{{ p.event?.title || '—' }}</div>
-            <div class="pcard-metas">
-              <span *ngIf="p.event?.locationName" class="pmeta">📍 {{ p.event?.locationName }}</span>
-              <span *ngIf="p.event?.startDate" class="pmeta">📅 {{ p.event?.startDate | date:'MMM d, y' }}</span>
-              <span *ngIf="p.reservedSeats" class="pmeta">🪑 {{ p.reservedSeats }} seat(s)</span>
+          <div class="participation-details">
+            <h4>{{ p.event?.title || '—' }}</h4>
+            <div class="participation-meta">
+              <span *ngIf="p.event?.locationName">📍 {{ p.event?.locationName }}</span>
+              <span *ngIf="p.event?.startDate">📅 {{ p.event?.startDate | date:'MMM d, y' }}</span>
             </div>
           </div>
-          <div class="pcard-campaign" *ngIf="p.event?.campaign">
-            <div class="pcampaign-header">
-              <span class="pcampaign-label">Campaign</span>
-              <span class="pcampaign-name">{{ p.event?.campaign?.title }}</span>
-              <span class="pcampaign-vis" [attr.data-vis]="p.event?.campaign?.visibility">{{ getVisibilityLabel(p.event?.campaign?.visibility) }}</span>
-            </div>
-          </div>
-          <div class="pcard-actions">
-            <button class="btn btn-sm btn-edit" [disabled]="p.status !== 'REGISTERED'" (click)="openEdit(p.event!.id)">Edit</button>
-            <button class="btn btn-sm btn-cancel-p" [disabled]="p.status !== 'REGISTERED'" (click)="cancelParticipation(p.id)">Cancel</button>
+          <div class="participation-actions">
+            <button class="btn btn-sm btn-danger" (click)="cancelParticipation(p.id)">Remove</button>
           </div>
         </div>
       </div>
-      <div class="empty-state compact" *ngIf="activeParticipations.length === 0 && !isLoadingParticipations">
-        <p>No active participations yet</p>
-      </div>
-    </div>
-
-    <!-- WAITING -->
-    <div class="psub" *ngIf="activeTab === 'waiting'">
-      <div class="plist" *ngIf="waitingListParticipations.length > 0">
-        <div class="pcard pcard-waiting" *ngFor="let p of waitingListParticipations">
-          <div class="pcard-top">
-            <div class="pcard-topleft">
-              <span class="pcard-pulse pulse-waiting"></span>
-              <span class="sbadge sbadge-waiting">⏳ Waiting List</span>
-            </div>
-          </div>
-          <div class="pcard-event">
-            <div class="pcard-name">{{ p.event?.title || '—' }}</div>
-            <div class="pcard-metas">
-              <span *ngIf="p.event?.locationName" class="pmeta">📍 {{ p.event?.locationName }}</span>
-              <span *ngIf="p.event?.startDate" class="pmeta">📅 {{ p.event?.startDate | date:'MMM d, y' }}</span>
-              <span class="pmeta pmeta-queue" *ngIf="p.comment">📋 {{ p.comment }}</span>
-            </div>
-          </div>
-          <div class="pcard-actions">
-            <button class="btn btn-sm btn-cancel-p" (click)="cancelParticipation(p.id)">Remove from List</button>
-          </div>
+      <ng-template #noWaiting>
+        <div class="state-message">
+          <p>Not on any waiting lists</p>
         </div>
-      </div>
-      <div class="empty-state compact" *ngIf="waitingListParticipations.length === 0">
-        <p>You're not on any waiting lists</p>
-      </div>
-    </div>
+      </ng-template>
+    </ng-container>
 
-    <!-- HISTORY -->
+    <!-- History -->
     <ng-container *ngIf="activeTab === 'history'">
-      <div class="psub" *ngIf="completedParticipations.length > 0">
-        <div class="psub-label">Completed</div>
-        <div class="plist">
-          <div class="pcard pcard-done" *ngFor="let p of completedParticipations">
-            <div class="pcard-top">
-              <div class="pcard-topleft">
-                <span class="pcard-pulse pulse-done"></span>
-                <span class="sbadge sbadge-done">Completed</span>
-              </div>
-            </div>
-            <div class="pcard-event">
-              <div class="pcard-name">{{ p.event?.title || '—' }}</div>
-              <div class="pcard-metas">
-                <span *ngIf="p.event?.locationName" class="pmeta">📍 {{ p.event?.locationName }}</span>
-                <span *ngIf="p.event?.startDate" class="pmeta">📅 {{ p.event?.startDate | date:'MMM d, y' }}</span>
-              </div>
+      
+      <!-- Completed -->
+      <div class="participation-list" *ngIf="completedParticipations.length > 0">
+        <h3 class="list-subtitle">Completed</h3>
+        <div class="participation-item completed" *ngFor="let p of completedParticipations">
+          <div class="participation-status">
+            <span class="status-indicator completed"></span>
+            Attended
+          </div>
+          <div class="participation-details">
+            <h4>{{ p.event?.title || '—' }}</h4>
+            <div class="participation-meta">
+              <span *ngIf="p.event?.locationName">📍 {{ p.event?.locationName }}</span>
+              <span *ngIf="p.event?.startDate">📅 {{ p.event?.startDate | date:'MMM d, y' }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="psub" *ngIf="cancelledParticipations.length > 0">
-        <div class="psub-label">Cancelled</div>
-        <div class="plist">
-          <div class="pcard pcard-cancelled" *ngFor="let p of cancelledParticipations">
-            <div class="pcard-top">
-              <div class="pcard-topleft">
-                <span class="pcard-pulse pulse-cancelled"></span>
-                <span class="sbadge sbadge-cancelled">Cancelled</span>
-              </div>
+      <!-- Cancelled -->
+      <div class="participation-list" *ngIf="cancelledParticipations.length > 0">
+        <h3 class="list-subtitle">Cancelled</h3>
+        <div class="participation-item cancelled" *ngFor="let p of cancelledParticipations">
+          <div class="participation-status">
+            <span class="status-indicator cancelled"></span>
+            Cancelled
+          </div>
+          <div class="participation-details">
+            <h4>{{ p.event?.title || '—' }}</h4>
+            <div class="participation-meta">
+              <span *ngIf="p.event?.locationName">📍 {{ p.event?.locationName }}</span>
+              <span *ngIf="p.cancelledAt">Cancelled {{ p.cancelledAt | date:'MMM d' }}</span>
             </div>
-            <div class="pcard-event">
-              <div class="pcard-name">{{ p.event?.title || '—' }}</div>
-              <div class="pcard-metas">
-                <span *ngIf="p.event?.locationName" class="pmeta">📍 {{ p.event?.locationName }}</span>
-                <span *ngIf="p.cancelledAt" class="pmeta pmeta-danger">Cancelled on {{ p.cancelledAt | date:'MMM d' }}</span>
-              </div>
-            </div>
-            <div class="pcard-actions">
-              <button class="btn btn-sm btn-reactivate" (click)="reactivateParticipation(p.id)">Reactivate</button>
-            </div>
+          </div>
+          <div class="participation-actions">
+            <button class="btn btn-sm btn-primary" (click)="reactivateParticipation(p.id)">Reactivate</button>
           </div>
         </div>
       </div>
 
-      <div class="empty-state compact" *ngIf="completedParticipations.length === 0 && cancelledParticipations.length === 0 && !isLoadingParticipations">
+      <!-- No History -->
+      <div class="state-message" *ngIf="completedParticipations.length === 0 && cancelledParticipations.length === 0">
         <p>No history yet</p>
       </div>
     </ng-container>
   </section>
-</div>
 
-<!-- MODAL JOIN / EDIT -->
-<div class="modal-overlay" *ngIf="selectedEvent" (click)="closeModalOnOverlay($event)">
-  <div class="modal-box" role="dialog" aria-modal="true">
-    <div class="modal-hdr">
-      <div class="modal-hdr-text">
-        <div class="modal-tag">{{ editId ? 'Edit Registration' : (isEventFull(selectedEvent) ? 'Join Waiting List' : 'Join Event') }}</div>
-        <div class="modal-title">{{ selectedEvent.title }}</div>
-        <div class="modal-sub" *ngIf="selectedEvent.locationName">📍 {{ selectedEvent.locationName }}</div>
-        <!-- FIX: show waiting list notice inside the form when event is full -->
-        <div class="modal-waiting-notice" *ngIf="!editId && isEventFull(selectedEvent)">
-          🔔 This event is <strong>full</strong>. Submitting will add you to the waiting list.
-          You'll get an SMS when a spot opens.
-        </div>
+</div><!-- /dashboard -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════════════════ -->
+
+<!-- Registration / Edit Modal -->
+<div class="modal-backdrop" *ngIf="selectedEvent" (click)="closeModalOnOverlay($event)">
+  <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    
+    <div class="modal-header">
+      <div>
+        <span class="modal-badge">
+          {{ editId ? 'Edit Registration' : (isEventFull(selectedEvent) ? 'Waiting List' : 'Registration') }}
+        </span>
+        <h2>{{ selectedEvent.title }}</h2>
+        <p class="modal-location" *ngIf="selectedEvent.locationName">📍 {{ selectedEvent.locationName }}</p>
       </div>
-      <button class="btn-x" (click)="closeModal()" aria-label="Close">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
+      <button class="modal-close" (click)="closeModal()" aria-label="Close modal">✕</button>
     </div>
 
-    <form [formGroup]="participationForm" (ngSubmit)="submitParticipation()" novalidate>
-      <div class="form-section-title">Your Details</div>
-      <div class="fgrid2">
-        <div class="ffield">
-          <label>Full Name *</label>
-          <input type="text" formControlName="fullName" placeholder="Your full name" />
-          <span class="ferr" *ngIf="participationForm.get('fullName')?.invalid && participationForm.get('fullName')?.touched">Required</span>
+    <div class="modal-body">
+      <div class="notice-box warning" *ngIf="!editId && isEventFull(selectedEvent)">
+        <span>⚠️</span>
+        <p>This event is full. You'll be added to the waiting list and notified when a spot opens.</p>
+      </div>
+
+      <form [formGroup]="participationForm" (ngSubmit)="submitParticipation()" novalidate>
+        
+        <!-- Required Fields -->
+        <div class="form-section-label">Required Information</div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fullName">Full Name *</label>
+            <input id="fullName" type="text" formControlName="fullName" placeholder="Enter your full name" />
+            <span class="form-error" *ngIf="participationForm.get('fullName')?.invalid && participationForm.get('fullName')?.touched">
+              Name is required
+            </span>
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input id="email" type="email" formControlName="email" placeholder="you@example.com" />
+            <span class="form-error" *ngIf="participationForm.get('email')?.invalid && participationForm.get('email')?.touched">
+              Valid email is required
+            </span>
+          </div>
         </div>
-        <div class="ffield">
-          <label>Email *</label>
-          <input type="email" formControlName="email" placeholder="you@example.com" />
-          <span class="ferr" *ngIf="participationForm.get('email')?.invalid && participationForm.get('email')?.touched">Valid email required</span>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone * <small>(SMS reminders)</small></label>
+            <input id="phone" type="tel" formControlName="phone" placeholder="+216 XX XXX XXX" />
+            <span class="form-error" *ngIf="participationForm.get('phone')?.invalid && participationForm.get('phone')?.touched">
+              Phone number is required
+            </span>
+          </div>
+          <div class="form-group">
+            <label for="seats">Number of Seats *</label>
+            <input id="seats" type="number" formControlName="reservedSeats" min="1" />
+            <span class="form-error" *ngIf="participationForm.get('reservedSeats')?.invalid && participationForm.get('reservedSeats')?.touched">
+              Minimum 1 seat
+            </span>
+          </div>
         </div>
-      </div>
-      <div class="fgrid2">
-        <div class="ffield">
-          <label>Phone * <small>(used for SMS reminders)</small></label>
-          <input type="tel" formControlName="phone" placeholder="+216 XX XXX XXX" />
-          <span class="ferr" *ngIf="participationForm.get('phone')?.invalid && participationForm.get('phone')?.touched">Required</span>
+
+        <!-- Optional Fields -->
+        <div class="form-section-label">Optional Information</div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="altContact">Alternative Contact</label>
+            <input id="altContact" type="text" formControlName="contactInfo" placeholder="Secondary contact" />
+          </div>
+          <div class="form-group">
+            <label for="teamName">Team Name</label>
+            <input id="teamName" type="text" formControlName="teamName" placeholder="Your team name" />
+          </div>
         </div>
-        <div class="ffield">
-          <label>Seats *</label>
-          <input type="number" formControlName="reservedSeats" min="1" />
-          <span class="ferr" *ngIf="participationForm.get('reservedSeats')?.invalid && participationForm.get('reservedSeats')?.touched">Min 1</span>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="emergency">Emergency Contact</label>
+            <input id="emergency" type="text" formControlName="emergencyContact" placeholder="Emergency contact info" />
+          </div>
+          <div class="form-group">
+            <label for="dietary">Dietary Requirements</label>
+            <input id="dietary" type="text" formControlName="dietaryRequirements" placeholder="Any dietary needs" />
+          </div>
         </div>
-      </div>
-      <div class="form-divider"><span>Optional</span></div>
-      <div class="ffield">
-        <label>Contact Info</label>
-        <input type="text" formControlName="contactInfo" placeholder="Alternative contact…" />
-      </div>
-      <div class="ffield">
-        <label>Comment</label>
-        <textarea formControlName="comment" rows="2" placeholder="Note for the organizer…"></textarea>
-      </div>
-      <div class="fgrid2">
-        <div class="ffield">
-          <label>Emergency Contact</label>
-          <input type="text" formControlName="emergencyContact" placeholder="+216 …" />
+
+        <div class="form-group">
+          <label for="comment">Note for Organizer</label>
+          <textarea id="comment" formControlName="comment" rows="2" placeholder="Any special requirements or comments..."></textarea>
         </div>
-        <div class="ffield">
-          <label>Team Name</label>
-          <input type="text" formControlName="teamName" placeholder="Your team…" />
-        </div>
-      </div>
-      <div class="ffield">
-        <label>Dietary Requirements</label>
-        <input type="text" formControlName="dietaryRequirements" placeholder="Vegetarian, halal…" />
-      </div>
-      <div class="fcheck">
-        <input type="checkbox" formControlName="wantsReminder" id="reminder" />
-        <label for="reminder">📱 Remind me 24h before the event via SMS</label>
-      </div>
-      <button type="submit" class="btn btn-submit" [disabled]="isSubmitting"
-              [class.btn-submit-waiting]="!editId && isEventFull(selectedEvent)">
-        <span *ngIf="!isSubmitting">
-          {{ editId ? 'Save Changes' : (isEventFull(selectedEvent) ? '🔔 Join Waiting List' : '✓ Confirm Registration') }}
-        </span>
-        <span *ngIf="isSubmitting" class="btn-loading">
-          <span class="spin-sm"></span> Processing…
-        </span>
-      </button>
-    </form>
+
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="wantsReminder" />
+          <span>Send me a reminder 24 hours before the event via SMS</span>
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-full" [disabled]="isSubmitting || participationForm.invalid">
+          <ng-container *ngIf="!isSubmitting">
+            {{ editId ? 'Save Changes' : (isEventFull(selectedEvent) ? 'Join Waiting List' : 'Confirm Registration') }}
+          </ng-container>
+          <ng-container *ngIf="isSubmitting">
+            <span class="spinner spinner-sm"></span> Processing...
+          </ng-container>
+        </button>
+      </form>
+    </div>
   </div>
 </div>
 
-<!-- MODAL WAITING LIST CONFIRM -->
-<div class="modal-overlay confirm-overlay" *ngIf="showWaitingListConfirm" (click)="closeModalOnOverlay($event)">
-  <div class="confirm-box" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
-    <div class="confirm-icon-wrap waiting-icon">
-      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+<!-- Waiting List Confirmation Modal -->
+<div class="modal-backdrop confirm-backdrop" *ngIf="showWaitingListConfirm" (click)="closeModalOnOverlay($event)">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()" role="alertdialog">
+    <div class="confirm-icon warning-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
         <polyline points="12 6 12 12 16 14"/>
       </svg>
     </div>
-    <div class="confirm-title">Event is Full</div>
-    <p class="confirm-body">
-      <strong>{{ waitingListEvent?.title }}</strong> has no available spots right now.<br><br>
-      Would you like to join the <strong>waiting list</strong>?
-      If someone cancels, you'll be automatically added and notified by SMS.
+    <h3 class="confirm-title">Event is Full</h3>
+    <p class="confirm-message">
+      <strong>{{ waitingListEvent?.title }}</strong> has no available spots right now. 
+      Join the waiting list to be notified by SMS when a spot opens up.
     </p>
     <div class="confirm-actions">
-      <button class="btn btn-ghost" (click)="confirmWaitingList(false)">No thanks</button>
-      <button class="btn btn-waiting-confirm" (click)="confirmWaitingList(true)">
-        🔔 Yes, join waiting list
-      </button>
+      <button class="btn btn-outline" (click)="confirmWaitingList(false)">No, thanks</button>
+      <button class="btn btn-warning" (click)="confirmWaitingList(true)">Join Waiting List</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL DETAILS -->
-<div class="modal-overlay" *ngIf="detailEvent" (click)="closeModalOnOverlay($event)">
-  <div class="modal-box modal-detail" role="dialog" aria-modal="true">
-    <div class="modal-hdr">
-      <div class="modal-hdr-text">
-        <div class="modal-tag">Event Details</div>
-        <div class="modal-title">{{ detailEvent.title }}</div>
+<!-- Event Detail Modal -->
+<div class="modal-backdrop" *ngIf="detailEvent" (click)="closeModalOnOverlay($event)">
+  <div class="modal modal-detail" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    
+    <div class="modal-header">
+      <div>
+        <span class="modal-badge">Event Details</span>
+        <h2>{{ detailEvent.title }}</h2>
       </div>
-      <button class="btn-x" (click)="closeModal()">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-    <div class="detail-img-wrap" *ngIf="detailEvent.imageUrl">
-      <img [src]="detailEvent.imageUrl" [alt]="detailEvent.title" (error)="onImgError($event)" />
-    </div>
-    <p class="detail-desc" *ngIf="detailEvent.description">{{ detailEvent.description }}</p>
-    <div class="detail-grid">
-      <div class="drow" *ngIf="detailEvent.locationName"><span class="dkey">Location</span><span class="dval">{{ detailEvent.locationName }}</span></div>
-      <div class="drow" *ngIf="detailEvent.startDate || detailEvent.date">
-        <span class="dkey">Date</span>
-        <span class="dval">{{ (detailEvent.startDate || detailEvent.date) | date:'fullDate' }}</span>
-      </div>
-      <div class="drow" *ngIf="detailEvent.endDate"><span class="dkey">End Date</span><span class="dval">{{ detailEvent.endDate | date:'fullDate' }}</span></div>
-      <div class="drow" *ngIf="detailEvent.capacity">
-        <span class="dkey">Capacity</span>
-        <span class="dval">{{ detailEvent.participantsCount || 0 }} / {{ detailEvent.capacity }} participants</span>
-      </div>
-      <div class="drow" *ngIf="detailEvent.category"><span class="dkey">Category</span><span class="dval">{{ detailEvent.category }}</span></div>
-      <div class="drow" *ngIf="detailEvent.status">
-        <span class="dkey">Status</span>
-        <span class="dval"><span class="status-chip" [attr.data-s]="detailEvent.status">{{ detailEvent.status }}</span></span>
-      </div>
+      <button class="modal-close" (click)="closeModal()" aria-label="Close modal">✕</button>
     </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="closeModal()">Close</button>
-      <ng-container [ngSwitch]="getEventButtonState(detailEvent)">
-        <button class="btn btn-join" *ngSwitchCase="'join'" (click)="openJoin(detailEvent)">Join Event</button>
-        <button class="btn btn-waiting-list" *ngSwitchCase="'full'" (click)="openJoin(detailEvent)">🔔 Join Waiting List</button>
-        <button class="btn btn-on-waiting" *ngSwitchCase="'waiting'" disabled>⏳ On Waiting List</button>
-        <button class="btn btn-edit-p" *ngSwitchCase="'registered'" (click)="openEdit(detailEvent.id)">Edit My Registration</button>
-      </ng-container>
+    <div class="modal-body">
+      
+      <!-- Event Image -->
+      <div class="detail-image" *ngIf="detailEvent.imageUrl">
+        <img [src]="detailEvent.imageUrl" [alt]="detailEvent.title" (error)="onImgError($event)" />
+      </div>
+
+      <!-- Event Description -->
+      <div class="detail-description" *ngIf="detailEvent.description">
+        <p>{{ detailEvent.description }}</p>
+      </div>
+
+      <!-- Event Information Grid -->
+      <div class="detail-grid">
+        
+        <div class="detail-row">
+          <span class="detail-label">📋 Type</span>
+          <span class="detail-value">
+            <span class="type-badge" [class.online]="detailEvent.eventType === 'ONLINE'" [class.offline]="detailEvent.eventType !== 'ONLINE'">
+              {{ detailEvent.eventType === 'ONLINE' ? '🎥 Online Event' : '📍 In-Person Event' }}
+            </span>
+          </span>
+        </div>
+        
+        <div class="detail-row" *ngIf="detailEvent.locationName && detailEvent.eventType !== 'ONLINE'">
+          <span class="detail-label">📍 Location</span>
+          <span class="detail-value">{{ detailEvent.locationName }}</span>
+        </div>
+        
+        <div class="detail-row" *ngIf="detailEvent.startDate">
+          <span class="detail-label">📅 Date</span>
+          <span class="detail-value">{{ detailEvent.startDate | date:'EEEE, MMMM d, y' }}</span>
+        </div>
+        
+        <div class="detail-row" *ngIf="detailEvent.endDate">
+          <span class="detail-label">🏁 End Date</span>
+          <span class="detail-value">{{ detailEvent.endDate | date:'EEEE, MMMM d, y' }}</span>
+        </div>
+        
+        <div class="detail-row" *ngIf="detailEvent.capacity">
+          <span class="detail-label">👥 Capacity</span>
+          <span class="detail-value">
+            {{ detailEvent.participantsCount || 0 }} / {{ detailEvent.capacity }} seats
+          </span>
+        </div>
+        
+        <div class="detail-row" *ngIf="detailEvent.category">
+          <span class="detail-label">🏷️ Category</span>
+          <span class="detail-value">{{ detailEvent.category }}</span>
+        </div>
+        
+        <div class="detail-row" *ngIf="detailEvent.status">
+          <span class="detail-label">📊 Status</span>
+          <span class="detail-value">
+            <span class="status-chip" [ngClass]="detailEvent.status.toLowerCase()">
+              {{ detailEvent.status }}
+            </span>
+          </span>
+          
+        </div>
+      </div>
+
+      <!-- Online Meeting Link -->
+      <div class="meeting-link-box" *ngIf="detailEvent.eventType === 'ONLINE' && detailEvent.meetingUrl">
+        <div class="meeting-link-content">
+          <span class="meeting-link-icon">🔗</span>
+          <div class="meeting-link-info">
+            <span class="meeting-link-label">Online Meeting</span>
+            <a [href]="detailEvent.meetingUrl" target="_blank" rel="noopener" class="meeting-link-url">
+              Join Meeting Room →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Recommendation Info (if applicable) -->
+      <div class="ai-recommendation-box" *ngIf="isParticipationRecommended(detailEvent.id)">
+        <div class="ai-rec-header">
+          <span class="ai-rec-icon">🤖</span>
+          <span class="ai-rec-title">AI Recommendation</span>
+        </div>
+        <p class="ai-rec-message">{{ getParticipationDecisionMessage(detailEvent.id) }}</p>
+        <div class="ai-rec-score">
+          <span class="ai-rec-label">Match Score:</span>
+          <span class="ai-rec-value">{{ getParticipationScore(detailEvent.id) }}%</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="detail-actions">
+        <button class="btn btn-outline" (click)="closeModal()">Close</button>
+        
+        <ng-container [ngSwitch]="getEventButtonState(detailEvent)">
+          
+          <!-- Already Registered -->
+          <ng-container *ngSwitchCase="'registered'">
+            <a *ngIf="detailEvent.eventType === 'ONLINE' && detailEvent.meetingUrl"
+               class="btn btn-primary" 
+               [href]="detailEvent.meetingUrl" 
+               target="_blank"
+               rel="noopener">
+              🎥 Join Meeting
+            </a>
+            <button class="btn btn-outline" (click)="openEdit(detailEvent.id)">
+              ✏️ Edit Registration
+            </button>
+          </ng-container>
+          
+          <!-- Available to Join -->
+          <button *ngSwitchCase="'join'" class="btn btn-primary" (click)="openJoin(detailEvent)">
+            ✨ Register Now
+          </button>
+          
+          <!-- Event Full -->
+          <button *ngSwitchCase="'full'" class="btn btn-warning" (click)="openJoin(detailEvent)">
+            📋 Join Waiting List
+          </button>
+          
+          <!-- On Waiting List -->
+          <button *ngSwitchCase="'waiting'" class="btn btn-waiting-state" disabled>
+            ⏳ On Waiting List
+          </button>
+          
+          <!-- Event Completed -->
+          <button *ngSwitchCase="'completed'" class="btn btn-completed-state" disabled>
+            ✓ Event Completed
+          </button>
+          
+        </ng-container>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL CONFIRM CANCEL -->
-<div class="modal-overlay confirm-overlay" *ngIf="confirmDeleteParticipationId" (click)="cancelDeleteParticipation()">
-  <div class="confirm-box" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
-    <div class="confirm-icon-wrap warn">
-      <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+<!-- Cancel Confirmation Modal -->
+<div class="modal-backdrop confirm-backdrop" *ngIf="confirmDeleteParticipationId" (click)="cancelDeleteParticipation()">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()" role="alertdialog">
+    <div class="confirm-icon danger-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
     </div>
-    <div class="confirm-title">Cancel Participation?</div>
-    <p class="confirm-body">This will remove your registration. You can reactivate it later if spots are available.</p>
+    <h3 class="confirm-title">Cancel Registration?</h3>
+    <p class="confirm-message">
+      Your spot will be released. You can register again later if seats are still available.
+    </p>
     <div class="confirm-actions">
-      <button class="btn btn-ghost" (click)="cancelDeleteParticipation()">Keep Registration</button>
-      <button class="btn btn-cancel-confirm" (click)="confirmDeleteParticipation()">Yes, Cancel</button>
+      <button class="btn btn-outline" (click)="cancelDeleteParticipation()">Keep Registration</button>
+      <button class="btn btn-danger" (click)="confirmDeleteParticipation()">Yes, Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- POPUP SUCCESS -->
-<div class="popup-overlay" *ngIf="showSuccessPopup" (click)="closeSuccessPopup()">
-  <div class="popup-box popup-success" (click)="$event.stopPropagation()">
-    <div class="popup-icon-wrap success">
-      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-    </div>
-    <div class="popup-content">
-      <div class="popup-title">Registration Confirmed!</div>
-      <p class="popup-event-name" *ngIf="successEventTitle">{{ successEventTitle }}</p>
-      <p class="popup-message">{{ successMessage }}</p>
-      <p class="popup-sms-note">📱 A confirmation SMS has been sent to your phone.</p>
-    </div>
-    <button class="btn btn-popup-ok" (click)="closeSuccessPopup()">Great, thanks!</button>
+
+<!-- ══════════════════════════════════════════════════════════
+     SUCCESS / ERROR POPUPS
+══════════════════════════════════════════════════════════ -->
+
+<!-- Success Popup -->
+<div class="popup-backdrop" *ngIf="showSuccessPopup" (click)="closeSuccessPopup()">
+  <div class="popup-dialog popup-success" (click)="$event.stopPropagation()">
+    <div class="popup-icon success-icon">✓</div>
+    <h3 class="popup-title">Registration Confirmed!</h3>
+    <p class="popup-event-name" *ngIf="successEventTitle">{{ successEventTitle }}</p>
+    <p class="popup-message">{{ successMessage }}</p>
+    <p class="popup-sms-note">📱 A confirmation SMS has been sent to your phone.</p>
+    <button class="btn btn-primary btn-full" (click)="closeSuccessPopup()">Done</button>
   </div>
 </div>
 
-<!-- POPUP WAITING LIST -->
-<div class="popup-overlay" *ngIf="showWaitingPopup" (click)="closeWaitingPopup()">
-  <div class="popup-box popup-waiting" (click)="$event.stopPropagation()">
-    <div class="popup-icon-wrap waiting">
-      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10"/>
-        <polyline points="12 6 12 12 16 14"/>
-      </svg>
-    </div>
-    <div class="popup-content">
-      <div class="popup-title">Added to Waiting List</div>
-      <p class="popup-event-name" *ngIf="successEventTitle">{{ successEventTitle }}</p>
-      <p class="popup-message">This event is currently full. You've been added to the waiting list and will be notified by SMS when a spot opens.</p>
-    </div>
-    <button class="btn btn-popup-ok waiting-ok" (click)="closeWaitingPopup()">Got it</button>
+<!-- Waiting List Popup -->
+<div class="popup-backdrop" *ngIf="showWaitingPopup" (click)="closeWaitingPopup()">
+  <div class="popup-dialog popup-waiting" (click)="$event.stopPropagation()">
+    <div class="popup-icon waiting-icon">⏳</div>
+    <h3 class="popup-title">Added to Waiting List</h3>
+    <p class="popup-event-name" *ngIf="successEventTitle">{{ successEventTitle }}</p>
+    <p class="popup-message">You'll be notified by SMS as soon as a spot becomes available.</p>
+    <button class="btn btn-warning btn-full" (click)="closeWaitingPopup()">Got it</button>
   </div>
 </div>
 
-<!-- POPUP ERROR -->
-<div class="popup-overlay" *ngIf="showErrorPopup" (click)="closeErrorPopup()">
-  <div class="popup-box popup-error" (click)="$event.stopPropagation()">
-    <div class="popup-icon-wrap error">
-      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-      </svg>
+<!-- Error Popup -->
+<div class="popup-backdrop" *ngIf="showErrorPopup" (click)="closeErrorPopup()">
+  <div class="popup-dialog popup-error" (click)="$event.stopPropagation()">
+    <div class="popup-icon error-icon">✕</div>
+    <h3 class="popup-title">Something went wrong</h3>
+    <p class="popup-message">{{ errorMessage }}</p>
+    <button class="btn btn-danger btn-full" (click)="closeErrorPopup()">Close</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     AI ASSISTANT WIDGET
+══════════════════════════════════════════════════════════ -->
+
+<div class="ai-widget">
+  
+  <!-- Widget Launcher Button -->
+  <button 
+    class="widget-launcher"
+    [class.widget-launcher--active]="assistantWidgetOpen && !assistantWidgetMinimized"
+    [class.widget-launcher--listening]="isListeningToAssistant"
+    (click)="toggleAssistantWidget()"
+    title="AI Assistant">
+    <span class="widget-launcher__orb"></span>
+    <span class="widget-launcher__icon">AI</span>
+    <span class="widget-launcher__text">
+      <strong>{{ assistantLauncherLabel }}</strong>
+      <small>{{ assistantStatusLabel }}</small>
+    </span>
+  </button>
+
+  <!-- Widget Panel -->
+  <div 
+    class="widget-panel" 
+    *ngIf="assistantWidgetOpen" 
+    [class.widget-panel--minimized]="assistantWidgetMinimized">
+    
+    <!-- Panel Header -->
+    <div class="widget-panel__header">
+      <div class="widget-panel__brand">
+        <div class="widget-avatar">
+          <span class="widget-avatar__icon">🤖</span>
+          <span class="widget-avatar__status"></span>
+        </div>
+        <div class="widget-brand-info">
+          <h4 class="widget-brand-name">Smart Events AI</h4>
+          <p class="widget-brand-desc">Your event assistant</p>
+          <span class="widget-status" [class.widget-status--ready]="smartParticipationRecommendations.length > 0">
+            {{ smartParticipationRecommendations.length > 0 ? 'Ready' : 'Analyzing...' }}
+          </span>
+        </div>
+      </div>
+      <div class="widget-panel__controls">
+        <button class="widget-btn-icon" (click)="toggleAssistantWidget()" [title]="assistantWidgetMinimized ? 'Expand' : 'Minimize'">
+          {{ assistantWidgetMinimized ? '□' : '−' }}
+        </button>
+        <button class="widget-btn-icon" (click)="closeAssistantWidget()" title="Close">✕</button>
+      </div>
     </div>
-    <div class="popup-content">
-      <div class="popup-title">Something went wrong</div>
-      <p class="popup-message">{{ errorMessage }}</p>
+
+    <!-- Panel Body -->
+    <div class="widget-panel__body" *ngIf="!assistantWidgetMinimized">
+      
+      <!-- Quick Action Prompts -->
+      <div class="widget-prompts">
+        <button 
+          class="widget-prompt-btn" 
+          *ngFor="let p of assistantQuickPrompts" 
+          (click)="sendAssistantMessage(p.query)">
+          {{ p.label }}
+        </button>
+      </div>
+
+      <!-- Chat Messages -->
+      <div class="widget-messages">
+        <div 
+          class="widget-message" 
+          *ngFor="let m of assistantMessages" 
+          [class.widget-message--user]="m.role === 'user'">
+          <div class="widget-bubble">
+            <span class="widget-bubble__icon" *ngIf="m.role === 'assistant'">🤖</span>
+            <span class="widget-bubble__text">{{ m.text }}</span>
+            <span class="widget-bubble__icon" *ngIf="m.role === 'user'">👤</span>
+          </div>
+        </div>
+        
+        <!-- Typing Indicator -->
+        <div class="widget-message" *ngIf="assistantTyping">
+          <div class="widget-bubble widget-bubble--typing">
+            <span class="widget-bubble__icon">🤖</span>
+            <span class="widget-bubble__text">Preparing response...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="widget-input-area">
+        <div class="widget-input-row">
+          <input 
+            class="widget-input"
+            [(ngModel)]="assistantQuery"
+            (keydown.enter)="sendAssistantMessage()"
+            placeholder="Ask about event recommendations..." />
+          
+          <button 
+            class="widget-tool-btn"
+            *ngIf="voiceAssistantSupported"
+            [class.widget-tool-btn--active]="isListeningToAssistant"
+            [class.widget-tool-btn--error]="voiceErrorMessage && !isListeningToAssistant"
+            [disabled]="voicePermissionDenied"
+            (click)="toggleVoiceInput()" 
+            [title]="isListeningToAssistant ? 'Stop listening' : (voicePermissionDenied ? 'Microphone permission denied' : 'Voice input')">
+            {{ isListeningToAssistant ? '🔴' : '🎤' }}
+          </button>
+          
+          <button 
+            class="widget-tool-btn"
+            *ngIf="voiceAssistantSupported && voiceRepliesEnabled !== undefined"
+            [class.widget-tool-btn--active]="voiceRepliesEnabled"
+            (click)="toggleVoiceReplies()" 
+            title="Toggle voice replies">
+            {{ voiceRepliesEnabled ? '🔊' : '🔇' }}
+          </button>
+          
+          <button 
+            class="widget-send-btn"
+            (click)="sendAssistantMessage()" 
+            [disabled]="!assistantQuery.trim() || assistantTyping">
+            ➤
+          </button>
+        </div>
+
+        <!-- Voice Error Message -->
+        <div class="widget-error-message" *ngIf="voiceErrorMessage">
+          <span class="error-icon">⚠️</span>
+          <span class="error-text">{{ voiceErrorMessage }}</span>
+          <button class="error-close" (click)="voiceErrorMessage = ''" title="Dismiss">✕</button>
+        </div>
+      </div>
+
+      <!-- Voice Status Hint -->
+      <p class="widget-voice-hint" *ngIf="voiceAssistantSupported && !voiceErrorMessage">
+        {{ isListeningToAssistant ? '🎤 Listening... Speak now' : '💡 Click the microphone for voice input' }}
+      </p>
     </div>
-    <button class="btn btn-popup-ok error-ok" (click)="closeErrorPopup()">Close</button>
   </div>
 </div>

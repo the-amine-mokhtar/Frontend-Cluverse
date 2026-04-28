@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -17,9 +17,10 @@ export interface Campaign {
   imageUrl?: string;
   targetAudience?: string;
   visibility: 'PUBLIC' | 'SHARED' | 'PRIVATE';
-  status: 'PLANNED' | 'ACTIVE' | 'FINISHED' | 'CANCELLED';
+  status: 'PLANNED' | 'ACTIVE' | 'LOCKED' | 'DISABLED' | 'ARCHIVED' | 'FINISHED' | 'CANCELLED';
   maxParticipants?: number;
   currentParticipants: number;
+  eventsCount?: number;
   views: number;
   featured: boolean;
   createdAt: string;
@@ -37,7 +38,7 @@ export interface CampaignRequest {
   endDate: string;
   visibility?: 'PUBLIC' | 'SHARED' | 'PRIVATE';
   maxParticipants?: number;
-  status?: 'PLANNED' | 'ACTIVE' | 'FINISHED' | 'CANCELLED';
+  status?: 'PLANNED' | 'ACTIVE' | 'LOCKED' | 'DISABLED' | 'ARCHIVED' | 'FINISHED' | 'CANCELLED';
   imageUrl?: string;
   featured: boolean;
 }
@@ -50,7 +51,7 @@ export interface Participant {
   registrationDate: string;
 }
 
-export type CampaignPermission = 'VIEW' | 'ADD_EVENT' | 'MANAGE';
+export type CampaignPermission = 'VIEW' | 'ADD_EVENT' | 'MANAGE' | 'DELETE' | 'EDIT';
 
 export interface CampaignAccess {
   id: number;
@@ -81,6 +82,13 @@ export interface Event {
   clubName?: string;
   imageUrl?: string;
 }
+export interface DeleteCampaignResult {
+  campaignId?: number;
+  title?: string;
+  totalParticipants?: number;
+  totalEvents?: number;
+  message?: string;
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SERVICE
@@ -92,6 +100,16 @@ export class CampaignApiService {
   private clubsUrl = `${environment.apiUrl}/api/clubs`;
 
   constructor(private http: HttpClient) {}
+
+  private normalizeCampaignAccess(raw: any): CampaignAccess {
+    return {
+      id: Number(raw?.id ?? 0),
+      campaignId: Number(raw?.campaignId ?? raw?.campaign?.id ?? 0),
+      clubId: Number(raw?.clubId ?? raw?.club?.id ?? 0),
+      clubName: raw?.clubName ?? raw?.club?.name ?? '',
+      permissions: Array.isArray(raw?.permissions) ? raw.permissions : [],
+    };
+  }
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
@@ -165,9 +183,26 @@ export class CampaignApiService {
   }
 
   // ── DELETE
-  deleteCampaign(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
+  deleteCampaign(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
+      tap(r => console.log('[Campaign] Deleted successfully', r)),
       catchError(err => { console.error('Error deleting campaign:', err); return throwError(() => err); })
+    );
+  }
+
+  // ── CANCEL CAMPAIGN (Set status to CANCELLED + notify Event Managers)
+  cancelCampaign(id: number): Observable<Campaign> {
+    return this.http.post<Campaign>(`${this.apiUrl}/${id}/cancel`, {}, { headers: this.getHeaders() }).pipe(
+      tap(r => console.log('[Campaign] Cancelled and notifications sent:', r)),
+      catchError(err => { console.error('Error cancelling campaign:', err); return throwError(() => err); })
+    );
+  }
+
+  // ── UPDATE STATUS
+  updateCampaignStatus(id: number, status: string): Observable<Campaign> {
+    return this.http.put<Campaign>(`${this.apiUrl}/${id}/status?status=${status}`, {}, { headers: this.getHeaders() }).pipe(
+      tap(r => console.log('[Campaign] Status updated:', r)),
+      catchError(err => { console.error('[Campaign] Status update error:', err); return throwError(() => err); })
     );
   }
 
@@ -212,20 +247,32 @@ export class CampaignApiService {
 
   // ── PERMISSIONS
   getCampaignPermissions(campaignId: number): Observable<CampaignAccess[]> {
-    return this.http.get<CampaignAccess[]>(`${this.apiUrl}/${campaignId}/permissions`, { headers: this.getHeaders() }).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/${campaignId}/permissions`, { headers: this.getHeaders() }).pipe(
+      map(list => (list || [])
+        .map(item => this.normalizeCampaignAccess(item))
+        .filter(item => Number.isFinite(item.clubId) && item.clubId > 0)),
       catchError(err => throwError(() => err))
     );
   }
 
   grantPermission(campaignId: number, clubId: number, permission: CampaignPermission): Observable<CampaignAccess> {
+    if (!Number.isFinite(clubId) || clubId <= 0) {
+      return throwError(() => new Error('Invalid clubId for grantPermission'));
+    }
     const params = new HttpParams().set('permission', permission);
-    return this.http.post<CampaignAccess>(
+    return this.http.post<any>(
       `${this.apiUrl}/${campaignId}/permissions/${clubId}`, {},
       { headers: this.getHeaders(), params }
-    ).pipe(catchError(err => throwError(() => err)));
+    ).pipe(
+      map(item => this.normalizeCampaignAccess(item)),
+      catchError(err => throwError(() => err))
+    );
   }
 
   revokePermission(campaignId: number, clubId: number, permission: CampaignPermission): Observable<void> {
+    if (!Number.isFinite(clubId) || clubId <= 0) {
+      return throwError(() => new Error('Invalid clubId for revokePermission'));
+    }
     const params = new HttpParams().set('permission', permission);
     return this.http.delete<void>(
       `${this.apiUrl}/${campaignId}/permissions/${clubId}`,
@@ -295,4 +342,123 @@ export class CampaignApiService {
       })
     );
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CAMPAIGN STATUS UTILITIES
+// ══════════════════════════════════════════════════════════════════════════════
+
+export type CampaignStatusType = 'PLANNED' | 'ACTIVE' | 'LOCKED' | 'DISABLED' | 'ARCHIVED' | 'FINISHED' | 'CANCELLED';
+
+export const CAMPAIGN_STATUS_CONFIG: Record<CampaignStatusType, { label: string; color: string; icon: string; description: string }> = {
+  PLANNED: {
+    label: 'Planifiée',
+    color: '#9E9E9E',  // Grey
+    icon: 'schedule',
+    description: 'Campagne en cours de planification'
+  },
+  ACTIVE: {
+    label: 'Active',
+    color: '#4CAF50',  // Green
+    icon: 'check_circle',
+    description: 'Campagne active - événements possibles'
+  },
+  LOCKED: {
+    label: 'Verrouillée',
+    color: '#FF9800',  // Orange
+    icon: 'lock',
+    description: 'Campagne verrouillée - contient des participants'
+  },
+  DISABLED: {
+    label: 'Désactivée',
+    color: '#F44336',  // Red
+    icon: 'block',
+    description: 'Campagne désactivée par un administrateur'
+  },
+  ARCHIVED: {
+    label: 'Archivée',
+    color: '#607D8B',  // Blue Grey
+    icon: 'archive',
+    description: 'Campagne archivée - lecture seule'
+  },
+  FINISHED: {
+    label: 'Terminée',
+    color: '#795548',  // Brown
+    icon: 'done_all',
+    description: 'Campagne terminée'
+  },
+  CANCELLED: {
+    label: 'Annulée',
+    color: '#9E9E9E',  // Grey
+    icon: 'cancel',
+    description: 'Campagne annulée'
+  }
+};
+
+export function getCampaignStatusLabel(status: CampaignStatusType): string {
+  return CAMPAIGN_STATUS_CONFIG[status]?.label || status;
+}
+
+export function getCampaignStatusColor(status: CampaignStatusType): string {
+  return CAMPAIGN_STATUS_CONFIG[status]?.color || '#9E9E9E';
+}
+
+export function getCampaignStatusIcon(status: CampaignStatusType): string {
+  return CAMPAIGN_STATUS_CONFIG[status]?.icon || 'help';
+}
+
+export function isCampaignDeletable(status: CampaignStatusType): boolean {
+  // Can only delete if: NO EVENTS with participants
+  // This is checked on backend, but we show the status
+  return status !== 'LOCKED' && status !== 'DISABLED' && status !== 'ARCHIVED';
+}
+
+export function isCampaignEditable(status: CampaignStatusType): boolean {
+  return status === 'PLANNED' || status === 'ACTIVE';
+}
+
+export function canAddEventToCampaign(status: CampaignStatusType): boolean {
+  return status === 'ACTIVE' || status === 'PLANNED';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CAMPAIGN LOCKED HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+
+export function isCampaignLocked(status: CampaignStatusType): boolean {
+  return status === 'LOCKED';
+}
+
+export function getLockedMessage(campaign: Campaign): string {
+  if (campaign.eventsCount && campaign.eventsCount > 0) {
+    return `Cette campagne contient ${campaign.eventsCount} événement(s) avec des participants. `
+      + `Elle a été verrouillée pour protéger les données.`;
+  }
+  return 'Cette campagne est verrouillée et ne peut pas être supprimée.';
+}
+
+export function canDeleteCampaign(campaign: Campaign): boolean {
+  // Can only delete if: NO EVENTS with participants
+  return !isCampaignLocked(campaign.status as CampaignStatusType) 
+    && campaign.status !== 'DISABLED' 
+    && campaign.status !== 'ARCHIVED';
+}
+
+export function getCampaignSummary(campaign: Campaign): string {
+  const parts: string[] = [];
+  
+  if (campaign.eventsCount && campaign.eventsCount > 0) {
+    parts.push(`${campaign.eventsCount} événement(s)`);
+  }
+  
+  if (campaign.currentParticipants > 0) {
+    parts.push(`${campaign.currentParticipants} participant(s)`);
+  }
+  
+  if (campaign.views > 0) {
+    parts.push(`${campaign.views} vue(s)`);
+  }
+  
+  return parts.length > 0 ? parts.join(' • ') : 'Aucune activité';
 }

@@ -1,6 +1,5 @@
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
-import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 
 // Fix Leaflet default icon paths to point to node_modules bundled images

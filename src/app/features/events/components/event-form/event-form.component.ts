@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EventApiService, EventRequestPayload, EventItem } from '../../services/event-api.service';
+import { EventApiService, EventRequestPayload, EventItem, EventType } from '../../services/event-api.service';
 import { CampaignApiService } from '../../services/campaign-api.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 import { EventStatusChangeService } from '../../services/event-status-change.service';
@@ -12,6 +12,10 @@ import { EventStatusChangeService } from '../../services/event-status-change.ser
   styleUrls: ['./event-form.component.scss']
 })
 export class EventFormComponent implements OnInit {
+  readonly eventTypes: Array<{ value: EventType; label: string; description: string }> = [
+    { value: 'OFFLINE', label: 'Offline', description: 'Physical event with location and map' },
+    { value: 'ONLINE', label: 'Online', description: 'Virtual event with Jitsi Meet link' }
+  ];
 
   eventForm!: FormGroup;
   isEditMode = false;
@@ -44,6 +48,16 @@ export class EventFormComponent implements OnInit {
 
   showCustomCategoryInput = false;
   customCategory = '';
+
+  // ─── Campaign status validation ───────────────────────────────────────────
+  canAddEventToCampaign = true;
+  campaignStatusMessage = '';
+
+  // Statuts qui permettent l'ajout d'événements
+  private readonly ALLOWED_CAMPAIGN_STATUSES = ['PLANNED', 'ACTIVE'];
+
+  // Statuts qui interdisent l'ajout d'événements
+  private readonly BLOCKED_CAMPAIGN_STATUSES = ['LOCKED', 'DISABLED', 'ARCHIVED', 'FINISHED', 'CANCELLED'];
 
   // ─── Statut avant édition (pour notifier le changement) ───────────────────
   private previousStatus: string = '';
@@ -79,7 +93,10 @@ export class EventFormComponent implements OnInit {
         const campaignId = +queryParams['campaignId'];
         this.eventForm.patchValue({ campaignId });
         this.campaignService.getCampaignById(campaignId).subscribe({
-          next: (campaign) => { this.selectedCampaign = campaign; },
+          next: (campaign) => { 
+            this.selectedCampaign = campaign;
+            this.checkCampaignStatus(campaignId);
+          },
           error: (err) => { console.error('Error loading campaign:', err); }
         });
       }
@@ -90,42 +107,46 @@ export class EventFormComponent implements OnInit {
     this.eventForm = this.fb.group({
       title:       ['', [Validators.required, Validators.minLength(3), this.validateNoProfanity]],
       description: ['', [this.validateNoProfanity]],
+      eventType:   ['OFFLINE' as EventType, Validators.required],
       location:    ['', [Validators.required, this.validateNoProfanity]],
       latitude:    [''],
       longitude:   [''],
+      meetingUrl:  [''],
       startDate:   ['', [Validators.required, this.validateStartDate]],
       endDate:     ['', [Validators.required, this.validateEndDate]],
       category:    ['WORKSHOP', Validators.required],
       capacity:    [null, Validators.min(1)],
       imageUrl:    [''],
       status:      ['PLANNED'],
-      isPaid:      [false, Validators.required],
-      price:       [null],
       campaignId:  [null]
-    });
-
-    this.eventForm.get('isPaid')?.valueChanges.subscribe(isPaid => {
-      const priceControl = this.eventForm.get('price');
-      if (isPaid === true) {
-        priceControl?.setValidators([Validators.required, Validators.min(0.01)]);
-      } else {
-        priceControl?.clearValidators();
-        priceControl?.setValue(null);
-      }
-      priceControl?.updateValueAndValidity();
     });
 
     this.eventForm.get('campaignId')?.valueChanges.subscribe(campaignId => {
       if (campaignId) {
         this.loadCampaignEvents(campaignId);
+        this.checkCampaignStatus(campaignId);
       } else {
         this.campaignEvents = [];
+        this.canAddEventToCampaign = true;
+        this.campaignStatusMessage = '';
       }
     });
 
     this.eventForm.get('startDate')?.valueChanges.subscribe(() => {
       this.eventForm.get('endDate')?.updateValueAndValidity();
     });
+
+    this.eventForm.get('eventType')?.valueChanges.subscribe(eventType => {
+      this.applyEventTypeRules(eventType as EventType);
+    });
+
+    this.eventForm.get('title')?.valueChanges.subscribe(() => {
+      if (this.isOnlineEventMode) {
+        this.syncMeetingUrlPreview();
+      }
+    });
+
+    this.applyEventTypeRules(this.eventForm.get('eventType')?.value as EventType);
   }
 
   // ─── Charger les campagnes ─────────────────────────────────────────────────
@@ -161,6 +182,35 @@ export class EventFormComponent implements OnInit {
     });
   }
 
+  // ─── Validate campaign status for adding events ───────────────────────────
+  checkCampaignStatus(campaignId: number): void {
+    const campaign = this.campaigns.find(c => c.id === campaignId);
+    if (!campaign) {
+      this.canAddEventToCampaign = true;
+      this.campaignStatusMessage = '';
+      return;
+    }
+
+    const status = campaign.status;
+    if (this.ALLOWED_CAMPAIGN_STATUSES.includes(status)) {
+      this.canAddEventToCampaign = true;
+      this.campaignStatusMessage = '';
+    } else if (this.BLOCKED_CAMPAIGN_STATUSES.includes(status)) {
+      this.canAddEventToCampaign = false;
+      const statusLabels: { [key: string]: string } = {
+        'LOCKED': 'Verrouillée',
+        'DISABLED': 'Désactivée',
+        'ARCHIVED': 'Archivée',
+        'FINISHED': 'Terminée',
+        'CANCELLED': 'Annulée'
+      };
+      this.campaignStatusMessage = `L'ajout d'événements est interdit car la campagne est dans un état "${statusLabels[status] || status}". Seuls les événements peuvent être créés dans les campagnes "Planifiée" ou "Active".`;
+    } else {
+      this.canAddEventToCampaign = true;
+      this.campaignStatusMessage = '';
+    }
+  }
+
   getMinDateTime(): string {
     const now = new Date();
     const y = now.getFullYear();
@@ -194,7 +244,61 @@ export class EventFormComponent implements OnInit {
     return badWords.some(w => value.includes(w)) ? { hasProfanity: true } : null;
   };
 
+  get isOnlineEventMode(): boolean {
+    return this.eventForm?.get('eventType')?.value === 'ONLINE';
+  }
+
+  get generatedMeetingUrl(): string {
+    const title = this.eventForm?.get('title')?.value || 'cluverse-event';
+    return `https://meet.jit.si/${this.slugify(title)}-preview`;
+  }
+
+  private applyEventTypeRules(eventType: EventType): void {
+    const locationControl = this.eventForm.get('location');
+    const latitudeControl = this.eventForm.get('latitude');
+    const longitudeControl = this.eventForm.get('longitude');
+    const meetingUrlControl = this.eventForm.get('meetingUrl');
+
+    if (!locationControl || !latitudeControl || !longitudeControl || !meetingUrlControl) {
+      return;
+    }
+
+    if (eventType === 'ONLINE') {
+      locationControl.clearValidators();
+      locationControl.setValue('', { emitEvent: false });
+      latitudeControl.setValue('', { emitEvent: false });
+      longitudeControl.setValue('', { emitEvent: false });
+      meetingUrlControl.setValue(this.generatedMeetingUrl, { emitEvent: false });
+    } else {
+      locationControl.setValidators([Validators.required, this.validateNoProfanity]);
+      meetingUrlControl.setValue('', { emitEvent: false });
+    }
+
+    locationControl.updateValueAndValidity({ emitEvent: false });
+    meetingUrlControl.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private syncMeetingUrlPreview(): void {
+    const meetingUrlControl = this.eventForm.get('meetingUrl');
+    if (meetingUrlControl) {
+      meetingUrlControl.setValue(this.generatedMeetingUrl, { emitEvent: false });
+    }
+  }
+
+  private slugify(value: string): string {
+    const slug = value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    return slug || 'cluverse-event';
+  }
+
   onLocationSelected(coords: { lat: number; lng: number }): void {
+    if (this.isOnlineEventMode) {
+      return;
+    }
     const { lat, lng } = coords;
     fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
       .then(res => res.json())
@@ -212,6 +316,9 @@ export class EventFormComponent implements OnInit {
   }
 
   selectSuggestion(s: any): void {
+    if (this.isOnlineEventMode) {
+      return;
+    }
     const lat = parseFloat(s.lat);
     const lon = parseFloat(s.lon);
     this.eventForm.patchValue({ location: s.display_name, latitude: lat, longitude: lon });
@@ -223,6 +330,10 @@ export class EventFormComponent implements OnInit {
   }
 
   onLocationInput(event: any): void {
+    if (this.isOnlineEventMode) {
+      this.suggestions = [];
+      return;
+    }
     const query = event.target.value;
     if (query.length > 2) {
       fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`)
@@ -257,11 +368,38 @@ export class EventFormComponent implements OnInit {
       }
       return;
     }
+
+    // Check campaign status before submitting
+    const campaignId = this.eventForm.get('campaignId')?.value;
+    if (campaignId) {
+      this.checkCampaignStatus(campaignId);
+      if (!this.canAddEventToCampaign) {
+        this.hasError = true;
+        this.errorMessage = this.campaignStatusMessage;
+        return;
+      }
+    }
+
     this.isSubmitting = true;
     this.hasError = false;
     this.errorMessage = '';
 
-    const payload: EventRequestPayload = { ...this.eventForm.value };
+    const payload: EventRequestPayload = {
+      title: this.eventForm.value.title,
+      description: this.eventForm.value.description,
+      location: this.isOnlineEventMode ? undefined : this.eventForm.value.location,
+      latitude: this.isOnlineEventMode ? undefined : this.eventForm.value.latitude,
+      longitude: this.isOnlineEventMode ? undefined : this.eventForm.value.longitude,
+      eventType: this.eventForm.value.eventType,
+      meetingUrl: this.isOnlineEventMode ? this.eventForm.value.meetingUrl : null,
+      startDate: this.eventForm.value.startDate,
+      endDate: this.eventForm.value.endDate,
+      status: this.eventForm.value.status,
+      capacity: this.eventForm.value.capacity,
+      campaignId: this.eventForm.value.campaignId,
+      imageUrl: this.eventForm.value.imageUrl,
+      category: this.eventForm.value.category,
+    };
     const request$ = this.isEditMode && this.eventId
       ? this.eventService.updateEvent(this.eventId, payload)
       : this.eventService.createEvent(payload);
@@ -291,41 +429,43 @@ export class EventFormComponent implements OnInit {
           this.router.navigate(['/dashboard/events']);
         }, 500);
       },
-      error: (err) => { 
-        console.error('❌ Failed to save event:', err);
-        
-        // Extraire le message d'erreur du serveur
-        let errorMsg = 'Failed to save event';
-        
-        if (err.status === 400 || err.status === 422) {
-          // Erreur de validation
-          if (err.error?.message) {
-            errorMsg = err.error.message;
-          } else if (err.error?.errors) {
-            errorMsg = Object.values(err.error.errors).join(', ');
-          } else {
-            errorMsg = 'Validation error. Please check all fields.';
-          }
-        } else if (err.status === 403) {
-          errorMsg = 'You do not have permission to edit this event.';
-        } else if (err.status === 404) {
-          errorMsg = 'Event not found.';
-        } else if (err.status === 0) {
-          errorMsg = 'Network error. Please check your connection.';
-        }
-        
-        this.errorMessage = errorMsg;
-        this.hasError = true;
-        this.isSubmitting = false;
-        
-        // Scroll vers le message d'erreur
-        setTimeout(() => {
-          const errorElement = document.querySelector('.form-error');
-          if (errorElement) {
-            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
-      }
+      // Dans la méthode submit(), remplacer le bloc error: par :
+error: (err) => { 
+  console.error('❌ Failed to save event:', err);
+  
+  let errorMsg = 'Failed to save event';
+  
+  if (err.status === 409) {
+    // ✅ Conflit terrain — message du backend directement
+    errorMsg = err.error?.message || 'Ce terrain est déjà réservé sur ce créneau.';
+  } else if (err.status === 400 || err.status === 422) {
+    if (err.error?.message) {
+      errorMsg = err.error.message;
+    } else if (err.error?.errors) {
+      errorMsg = Object.values(err.error.errors).join(', ');
+    } else {
+      errorMsg = 'Validation error. Please check all fields.';
+    }
+  } else if (err.status === 403) {
+    errorMsg = 'You do not have permission to edit this event.';
+  } else if (err.status === 404) {
+    errorMsg = 'Event not found.';
+  } else if (err.status === 0) {
+    errorMsg = 'Network error. Please check your connection.';
+  }
+  
+  this.errorMessage = errorMsg;
+  this.hasError = true;
+  this.isSubmitting = false;
+  
+  setTimeout(() => {
+    const errorElement = document.querySelector('.form-error');
+    if (errorElement) {
+      errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 100);
+}
+      
     });
   }
 
@@ -389,17 +529,17 @@ export class EventFormComponent implements OnInit {
         this.eventForm.patchValue({
           title:       event.title ?? '',
           description: event.description ?? '',
+          eventType:   event.eventType ?? 'OFFLINE',
           location:    event.locationName ?? '',
           latitude:    event.locationLatitude ?? '',
           longitude:   event.locationLongitude ?? '',
+          meetingUrl:  event.meetingUrl ?? '',
           startDate:   formatDateForInput(event.startDate),
           endDate:     formatDateForInput(event.endDate),
           category:    event.category ?? 'WORKSHOP',
           capacity:    event.capacity ?? null,
           imageUrl:    event.imageUrl ?? '',
           status:      event.status ?? 'PLANNED',
-          isPaid:      event.isPaid ?? false,
-          price:       event.price ?? null,
           campaignId:  event.campaignId ?? null
         });
 
@@ -409,6 +549,7 @@ export class EventFormComponent implements OnInit {
 
         // Trouver la campagne dans la liste chargée
         this.selectedCampaign = this.campaigns.find(c => c.id === event.campaignId) || null;
+        this.applyEventTypeRules((event.eventType as EventType) ?? 'OFFLINE');
 
         // Si la campagne est expirée, la désélectionner
         if (this.selectedCampaign) {
@@ -433,6 +574,23 @@ export class EventFormComponent implements OnInit {
 
   getCurrentEventForMap(): EventItem[] {
     const v = this.eventForm.value;
+    if (this.isOnlineEventMode) {
+      return [{
+        id: this.eventId || 0,
+        title: v.title || 'New Event',
+        description: v.description || '',
+        locationName: 'Online meeting',
+        startDate: v.startDate || new Date().toISOString(),
+        endDate: v.endDate || new Date().toISOString(),
+        category: v.category || 'WORKSHOP',
+        capacity: v.capacity || 0,
+        participantsCount: 0,
+        status: 'PLANNED',
+        imageUrl: v.imageUrl || '',
+        eventType: 'ONLINE',
+        meetingUrl: v.meetingUrl || this.generatedMeetingUrl,
+      }];
+    }
     if (v.latitude && v.longitude) {
       return [{
         id:              this.eventId || 0,
@@ -448,8 +606,7 @@ export class EventFormComponent implements OnInit {
         participantsCount: 0,
         status:          'PLANNED',
         imageUrl:        v.imageUrl || '',
-        isPaid:          v.isPaid || false,
-        price:           v.price || 0
+        eventType:       'OFFLINE',
       }];
     }
     return [];
