@@ -1,0 +1,77 @@
+<div class="elections animate-fade-in" style="max-width: 800px;">
+  <div class="elections__header">
+    <div>
+      <h2 class="elections__title">
+        {{ isEditMode ? 'Edit Election' : 'Create New Election' }}
+      </h2>
+      <p class="elections__subtitle">Manage the details and lifecycle of standard voting rounds.</p>
+    </div>
+  </div>
+
+  <div class="elections__card">
+    <form [formGroup]="electionForm" (ngSubmit)="onSubmit()" class="elections__form">
+
+      <div *ngIf="errorMessage" class="elections__error-alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="elections__form-field">
+        <label>Title <span style="color: var(--e-danger);">*</span></label>
+        <input type="text" formControlName="title" placeholder="e.g. Student Council 2026">
+        <div *ngIf="electionForm.get('title')?.invalid && electionForm.get('title')?.touched" class="e-error-text">
+          Title is required.
+        </div>
+      </div>
+
+      <div class="elections__form-field">
+        <label>Description</label>
+        <textarea formControlName="description" rows="3" style="resize: none;" placeholder="Brief description..."></textarea>
+      </div>
+
+      <div class="elections__form-grid">
+        <div class="elections__form-field">
+          <label>Start Date <span style="color: var(--e-danger);">*</span></label>
+          <input type="date" formControlName="startDate">
+        </div>
+        <div class="elections__form-field">
+          <label>End Date <span style="color: var(--e-danger);">*</span></label>
+          <input type="date" formControlName="endDate">
+        </div>
+      </div>
+
+      <div class="elections__form-grid">
+        <div class="elections__form-field">
+          <label>Target Position <span style="color: var(--e-danger);">*</span></label>
+          <select formControlName="positionId">
+            <option [ngValue]="null">Select the position</option>
+            <option *ngFor="let pos of availablePositions" [ngValue]="pos.id">{{ pos.name || 'Position ' + pos.id }}</option>
+          </select>
+          <div *ngIf="electionForm.get('positionId')?.invalid && electionForm.get('positionId')?.touched" class="e-error-text">
+            Position is required.
+          </div>
+        </div>
+        <div class="elections__form-field" *ngIf="isEditMode">
+          <label>Status <span style="color: var(--e-danger);">*</span></label>
+          <select formControlName="status">
+            <option value="OPEN">OPEN</option>
+            <option value="CLOSED">CLOSED</option>
+            <option value="ARCHIVED">ARCHIVED</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="elections__form-actions">
+        <a routerLink="/dashboard/elections/list" class="elections__btn elections__btn--secondary">
+          Cancel
+        </a>
+        <button type="submit" [disabled]="isSubmitting || electionForm.invalid" class="elections__btn elections__btn--primary">
+          {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Election' : 'Create Election') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

@@ -17,10 +17,21 @@ const routes: Routes = [
       import('./features/auth/auth.module').then(m => m.AuthModule)
   },
   {
+    path: 'logistics',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/logistics/logistics.module').then(m => m.LogisticsModule)
+  },
+  {
     path: 'dashboard',
     canActivate: [AuthGuard],
     loadChildren: () =>
       import('./features/dashboard/dashboard.module').then(m => m.DashboardModule)
+  },
+  {
+    path: 'donate',
+    loadChildren: () =>
+      import('./features/donate/donate.module').then(m => m.DonateModule)
   },
   {
     path: 'apply',
@@ -31,6 +42,21 @@ const routes: Routes = [
     path: 'verify',
     loadChildren: () =>
       import('./features/verify/verify.module').then(m => m.VerifyModule),
+  },
+  {
+    path: 'sponsor-response',
+    loadChildren: () =>
+      import('./features/sponsor-response/sponsor-response.module').then(m => m.SponsorResponseModule)
+  },
+  {
+    path: 'sponsor-payment',
+    loadChildren: () =>
+      import('./features/sponsor-payment/sponsor-payment.module').then(m => m.SponsorPaymentModule)
+  },
+  {
+    path: 'interview',
+    loadChildren: () =>
+      import('./features/interview/interview.module').then(m => m.InterviewModule)
   },
   {
     path: 'not-found',

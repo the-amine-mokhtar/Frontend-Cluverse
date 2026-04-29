@@ -1,0 +1,743 @@
+<section class="sd-shell" [class.sd-shell--member]="isMemberRole">
+  <!-- ambient glows -->
+  <div class="sd-glow sd-glow--top" aria-hidden="true"></div>
+  <div class="sd-glow sd-glow--bottom" aria-hidden="true"></div>
+
+  <!-- ── topbar ──────────────────────────────────────────────────────── -->
+  <header class="sd-topbar">
+    <div class="sd-topbar__left">
+      <p class="sd-eyebrow">Competencies</p>
+      <h2 class="sd-title">Sessions</h2>
+    </div>
+    <div class="sd-topbar__right">
+      <span class="sd-role-badge" [class.sd-role-badge--member]="isMemberRole">
+        <span class="sd-role-badge__dot"></span>
+        {{ isMemberRole ? 'Member Area' : 'Admin Area' }}
+      </span>
+      <button *ngIf="!isMemberRole" type="button" class="sd-btn sd-btn--primary" (click)="openScheduleDialog()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/>
+        </svg>
+        Plan a session
+      </button>
+    </div>
+  </header>
+
+  <!-- ── alerts ─────────────────────────────────────────────────────── -->
+  <div *ngIf="errorMessage" class="sd-alert sd-alert--error" role="alert">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-.75 3.5h1.5v5h-1.5v-5zm0 6h1.5v1.5h-1.5V10.5z"/></svg>
+    {{ errorMessage }}
+  </div>
+  <div *ngIf="successMessage" class="sd-alert sd-alert--success" role="status">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm3.28 5.28l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 011.06-1.06L6.75 8.69l3.47-3.47a.75.75 0 011.06 1.06z"/></svg>
+    {{ successMessage }}
+  </div>
+
+  <!-- ── métriques admin ────────────────────────────────────────────── -->
+  <section *ngIf="!isMemberRole" class="sd-kpis">
+    <article class="sd-kpi">
+      <div class="sd-kpi__icon sd-kpi__icon--neutral">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 8h12v8H4V8z"/></svg>
+      </div>
+      <div class="sd-kpi__body">
+        <span class="sd-kpi__label">Total sessions</span>
+        <strong class="sd-kpi__value">{{ adminMetrics.totalSessions }}</strong>
+      </div>
+    </article>
+    <article class="sd-kpi sd-kpi--accent">
+      <div class="sd-kpi__icon sd-kpi__icon--accent">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 4.5v4.25l3.25 1.95-.75 1.25-3.75-2.25A1 1 0 019 10.5V6.5h2z"/></svg>
+      </div>
+      <div class="sd-kpi__body">
+        <span class="sd-kpi__label">Upcoming</span>
+        <strong class="sd-kpi__value">{{ adminMetrics.upcomingSessions }}</strong>
+      </div>
+    </article>
+    <article class="sd-kpi sd-kpi--success">
+      <div class="sd-kpi__icon sd-kpi__icon--success">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm3.78 6.28l-4.5 4.5a.75.75 0 01-1.06 0l-2-2a.75.75 0 011.06-1.06L8.75 11.19l3.97-3.97a.75.75 0 011.06 1.06z"/></svg>
+      </div>
+      <div class="sd-kpi__body">
+        <span class="sd-kpi__label">Completed this month</span>
+        <strong class="sd-kpi__value">{{ adminMetrics.completedThisMonth }}</strong>
+      </div>
+    </article>
+    <article class="sd-kpi sd-kpi--danger">
+      <div class="sd-kpi__icon sd-kpi__icon--danger">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm-.75 4.5h1.5v5h-1.5v-5zm0 6.5h1.5v1.5h-1.5V13z"/></svg>
+      </div>
+      <div class="sd-kpi__body">
+        <span class="sd-kpi__label">Cancelled</span>
+        <strong class="sd-kpi__value">{{ adminMetrics.cancelledSessions }}</strong>
+      </div>
+    </article>
+  </section>
+
+  <!-- ── métriques membre ───────────────────────────────────────────── -->
+  <section *ngIf="isMemberRole" class="sd-kpis sd-kpis--member">
+    <article class="sd-kpi sd-kpi--accent">
+      <div class="sd-kpi__icon sd-kpi__icon--accent">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 4.5v4.25l3.25 1.95-.75 1.25-3.75-2.25A1 1 0 019 10.5V6.5h2z"/></svg>
+      </div>
+      <div class="sd-kpi__body">
+        <span class="sd-kpi__label">Upcoming sessions</span>
+        <strong class="sd-kpi__value">{{ memberMetrics.upcomingSessions }}</strong>
+      </div>
+    </article>
+    <article class="sd-kpi sd-kpi--success">
+      <div class="sd-kpi__icon sd-kpi__icon--success">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm3.78 6.28l-4.5 4.5a.75.75 0 01-1.06 0l-2-2a.75.75 0 011.06-1.06L8.75 11.19l3.97-3.97a.75.75 0 011.06 1.06z"/></svg>
+      </div>
+      <div class="sd-kpi__body">
+        <span class="sd-kpi__label">Completed</span>
+        <strong class="sd-kpi__value">{{ memberMetrics.completedSessions }}</strong>
+      </div>
+    </article>
+    <article class="sd-kpi">
+      <div class="sd-kpi__icon sd-kpi__icon--neutral">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+      </div>
+      <div class="sd-kpi__body">
+        <span class="sd-kpi__label">Competencies worked on</span>
+        <strong class="sd-kpi__value">{{ memberMetrics.competenciesWorked }}</strong>
+      </div>
+    </article>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- VUE ADMIN                                                        -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section *ngIf="!isMemberRole" class="sd-board">
+
+    <!-- filtres -->
+    <div class="sd-board__filters">
+      <div class="sd-chips">
+        <button
+          *ngFor="let s of adminStatusFilters"
+          type="button"
+          class="sd-chip"
+          [class.sd-chip--active]="selectedStatus === s"
+          (click)="setStatusFilter(s)">
+          {{ s === 'ALL' ? 'All' : statusLabel(s) }}
+        </button>
+      </div>
+      <div class="sd-filter-row">
+        <div class="sd-select-wrap">
+          <svg class="sd-select-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a5 5 0 110 10A5 5 0 018 3zm0 2a1 1 0 00-1 1v2.586l-1.293 1.293a1 1 0 001.414 1.414l1.586-1.586A1 1 0 009 11V8a1 1 0 00-1-1z"/></svg>
+          <select [(ngModel)]="selectedCompetencyId" (change)="applyAdminFilters()">
+            <option [ngValue]="null">All competencies</option>
+            <option *ngFor="let c of competencies" [ngValue]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="sd-select-wrap">
+          <svg class="sd-select-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6a5 5 0 0110 0H3z"/></svg>
+          <select [(ngModel)]="selectedCoachUserId" (change)="applyAdminFilters()">
+            <option [ngValue]="null">All coaches</option>
+            <option *ngFor="let m of members" [ngValue]="m.userId">{{ memberDisplayName(m.userId) }}</option>
+          </select>
+        </div>
+        <div class="sd-search-wrap">
+          <svg class="sd-search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+          <input
+            type="search"
+            class="sd-search"
+            placeholder="Search for a session…"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchInput()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="sd-board__body">
+
+      <!-- ── colonne gauche : backlog + calendrier ──────────────────── -->
+      <div class="sd-calendar-col">
+
+        <!-- nav calendrier -->
+        <div class="sd-cal-head">
+          <div class="sd-cal-head__left">
+            <p class="sd-section-label">
+              <svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 1a1 1 0 00-1 1v1H3a2 2 0 00-2 2v9a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2h-1V2a1 1 0 10-2 0v1H6V2a1 1 0 00-1-1zM3 7h10v7H3V7z"/></svg>
+              Calendar
+            </p>
+            <strong class="sd-cal-month">{{ calendarMonthLabel }}</strong>
+          </div>
+          <div class="sd-cal-nav">
+            <button type="button" class="sd-cal-nav__btn" (click)="previousCalendarMonth()" aria-label="Previous month">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8 10,13"/></svg>
+            </button>
+            <button type="button" class="sd-cal-nav__btn" (click)="nextCalendarMonth()" aria-label="Next month">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,3 11,8 6,13"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- toggles statut -->
+        <div class="sd-status-toggles">
+          <button
+            *ngFor="let s of adminStatusChecks"
+            type="button"
+            class="sd-status-toggle"
+            [class.sd-status-toggle--active]="activeAdminStatuses.has(s)"
+            (click)="toggleAdminStatusCheck(s)">
+            <span class="sd-status-dot" [ngClass]="statusClass(s)"></span>
+            {{ statusLabel(s) }}
+          </button>
+        </div>
+
+        <!-- grille calendrier -->
+        <div class="sd-cal-grid-wrap">
+          <div class="sd-cal-weekdays">
+            <span *ngFor="let wd of weekDays">{{ wd }}</span>
+          </div>
+          <div class="sd-cal-days">
+            <div
+              *ngFor="let day of calendarDays; let i = index"
+              class="sd-cal-day"
+              [class.sd-cal-day--empty]="!day"
+              [class.sd-cal-day--today]="day && isToday(day)"
+              [class.sd-cal-day--selected]="day && isSelectedCalendarDay(day)"
+              [class.sd-cal-day--has-events]="day && hasSessionsOnDay(day)"
+              cdkDropList
+              [id]="dayDropListId(i)"
+              [cdkDropListData]="day ? sessionsOnDay(day) : []"
+              [cdkDropListConnectedTo]="calendarDropListIds"
+              [cdkDropListSortingDisabled]="true"
+              [cdkDropListDisabled]="!day || saving"
+              (cdkDropListDropped)="onCalendarDrop($event, day)"
+              (click)="day && openDayInfoDialog(day)">
+              <ng-container *ngIf="day">
+                <span class="sd-cal-day__num">{{ day.getDate() }}</span>
+                <div class="sd-cal-day__chips" *ngIf="sessionsOnDay(day).length > 0">
+                  <div
+                    *ngFor="let session of sessionsOnDay(day).slice(0, 2); trackBy: trackBySessionId"
+                    class="sd-cal-chip"
+                    [ngClass]="'sd-cal-chip--' + session.status.toLowerCase()"
+                    (click)="$event.stopPropagation(); openSessionDetails(session)">
+                    <span class="sd-cal-chip__title">{{ session.title }}</span>
+                  </div>
+                  <span class="sd-cal-day__more" *ngIf="sessionsOnDay(day).length > 2">
+                    +{{ sessionsOnDay(day).length - 2 }}
+                  </span>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- VUE MEMBRE                                                       -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section *ngIf="isMemberRole" class="sd-member-cal">
+    <div class="sd-cal-head">
+      <div class="sd-cal-head__left">
+        <p class="sd-section-label">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 1a1 1 0 00-1 1v1H3a2 2 0 00-2 2v9a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2h-1V2a1 1 0 10-2 0v1H6V2a1 1 0 00-1-1zM3 7h10v7H3V7z"/></svg>
+          Calendar
+        </p>
+        <strong class="sd-cal-month">{{ calendarMonthLabel }}</strong>
+      </div>
+      <div class="sd-cal-nav">
+        <button type="button" class="sd-cal-nav__btn" (click)="previousCalendarMonth()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8 10,13"/></svg>
+        </button>
+        <button type="button" class="sd-cal-nav__btn" (click)="nextCalendarMonth()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,3 11,8 6,13"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="sd-cal-grid-wrap">
+      <div class="sd-cal-weekdays">
+        <span *ngFor="let wd of weekDays">{{ wd }}</span>
+      </div>
+      <div class="sd-cal-days">
+        <button
+          *ngFor="let day of calendarDays"
+          type="button"
+          class="sd-cal-day"
+          [disabled]="!day"
+          [class.sd-cal-day--today]="day && isToday(day)"
+          [class.sd-cal-day--selected]="day && isSelectedCalendarDay(day)"
+          [class.sd-cal-day--has-events]="day && hasSessionsOnDay(day)"
+          [class.sd-cal-day--empty]="!day"
+          (click)="day && openDayInfoDialog(day)">
+          <ng-container *ngIf="day">
+            <span class="sd-cal-day__num">{{ day.getDate() }}</span>
+            <div class="sd-cal-day__chips" *ngIf="sessionsOnDay(day).length > 0">
+              <div
+                *ngFor="let session of sessionsOnDay(day).slice(0, 2); trackBy: trackBySessionId"
+                class="sd-cal-chip sd-cal-chip--readonly"
+                [ngClass]="'sd-cal-chip--' + session.status.toLowerCase()">
+                <span class="sd-cal-chip__title">{{ session.title }}</span>
+              </div>
+              <span class="sd-cal-day__more" *ngIf="sessionsOnDay(day).length > 2">
+                +{{ sessionsOnDay(day).length - 2 }}
+              </span>
+            </div>
+          </ng-container>
+        </button>
+      </div>
+    </div>
+
+    <div class="sd-day-details" *ngIf="selectedCalendarDate">
+      <p class="sd-day-details__title">{{ formatDate(selectedCalendarDate.toISOString()) }}</p>
+      <div class="sd-detail__empty" *ngIf="selectedDaySessions.length === 0">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="10" width="32" height="32" rx="4"/><line x1="16" y1="6" x2="16" y2="14"/><line x1="32" y1="6" x2="32" y2="14"/><line x1="8" y1="22" x2="40" y2="22"/></svg>
+        <p>No sessions on this day.</p>
+      </div>
+      <ul *ngIf="selectedDaySessions.length > 0" class="sd-day-list">
+        <li *ngFor="let session of selectedDaySessions; trackBy: trackBySessionId" class="sd-day-list__item">
+          <div class="sd-day-list__info">
+            <div class="sd-day-list__title-row">
+              <strong>{{ session.title }}</strong>
+              <span class="sd-status-badge" [ngClass]="statusClass(session.status)">{{ statusLabel(session.status) }}</span>
+            </div>
+            <p>{{ session.competencyName }} · {{ formatDate(session.startsAt) }}</p>
+          </div>
+          <button
+            *ngIf="session.meetLink && (session.status === 'SCHEDULED' || session.status === 'ONGOING')"
+            type="button"
+            class="sd-btn sd-btn--meet"
+            (click)="joinMeet(session)">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/></svg>
+            Join
+          </button>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- upcoming + past membres -->
+  <section *ngIf="isMemberRole" class="sd-member-sections">
+    <p class="sd-section-label">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm1 4.5v3.75l2.5 1.5-.75 1.25-3-1.8A1 1 0 017 9.25V5.5h2z"/></svg>
+      Upcoming
+    </p>
+
+    <div *ngIf="loading" class="sd-loading">
+      <div class="sd-spinner"></div>
+      <span>Loading…</span>
+    </div>
+
+    <div *ngIf="!loading && memberUpcomingSessions.length === 0" class="sd-empty">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="10" width="32" height="32" rx="4"/><line x1="16" y1="6" x2="16" y2="14"/><line x1="32" y1="6" x2="32" y2="14"/><line x1="8" y1="22" x2="40" y2="22"/><line x1="16" y1="30" x2="32" y2="30"/></svg>
+      <p>No upcoming sessions for now.</p>
+    </div>
+
+    <div *ngFor="let session of memberUpcomingSessions; trackBy: trackBySessionId" class="sd-upcoming-card">
+      <div class="sd-upcoming-card__left">
+        <span *ngIf="dayLabel(session.startsAt)" class="sd-day-badge">{{ dayLabel(session.startsAt) }}</span>
+        <h4>{{ session.title }}</h4>
+        <p>{{ session.competencyName }} · Coach : {{ session.coachName }}</p>
+      </div>
+      <div class="sd-upcoming-card__right">
+        <strong>{{ formatDate(session.startsAt) }}</strong>
+        <button *ngIf="session.meetLink" type="button" class="sd-btn sd-btn--meet" (click)="joinMeet(session)">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/></svg>
+          Join Meet
+        </button>
+      </div>
+    </div>
+
+    <p class="sd-section-label" style="margin-top: 0.5rem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>
+      Past sessions
+    </p>
+    <div *ngIf="!loading && memberPastSessions.length === 0" class="sd-empty">
+      <p>No past sessions.</p>
+    </div>
+
+    <div *ngFor="let session of memberPastSessions; trackBy: trackBySessionId" class="sd-past-wrap">
+      <div class="sd-past-row">
+        <strong>{{ session.title }}</strong>
+        <span class="sd-col-pill">{{ session.competencyName }}</span>
+        <span>{{ formatDate(session.startsAt) }}</span>
+        <span class="sd-status-badge" [ngClass]="statusClass(session.status)">{{ statusLabel(session.status) }}</span>
+        <span class="sd-attendance-badge"
+          [class.sd-attendance-badge--ok]="session.attended === true"
+          [class.sd-attendance-badge--ko]="session.attended === false">
+          {{ session.attended === true ? '✓ Present' : session.attended === false ? '✗ Absent' : '—' }}
+        </span>
+        <button *ngIf="shouldShowViewReport(session)" class="sd-link-btn" (click)="viewReport(session)">
+          {{ expandedReportSessionId === session.id ? 'Hide' : 'Report' }}
+        </button>
+      </div>
+      <div *ngIf="expandedReportSessionId === session.id" class="sd-report-panel">
+        {{ session.reportSummary }}
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DIALOG — Info jour                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showDayInfoDialog" class="sd-backdrop" (click)="closeDayInfoDialog()"></div>
+<div *ngIf="showDayInfoDialog" class="sd-dialog sd-dialog--wide" (click)="$event.stopPropagation()">
+  <div class="sd-dialog__header">
+    <div>
+      <p class="sd-dialog__eyebrow">Calendar</p>
+      <h3>{{ selectedCalendarDateLabel }}</h3>
+    </div>
+    <button type="button" class="sd-dialog__close" (click)="closeDayInfoDialog()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+    </button>
+  </div>
+
+  <div *ngIf="selectedDaySessions.length === 0" class="sd-empty">
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="10" width="32" height="32" rx="4"/><line x1="16" y1="6" x2="16" y2="14"/><line x1="32" y1="6" x2="32" y2="14"/><line x1="8" y1="22" x2="40" y2="22"/></svg>
+    <p>No sessions scheduled for this date.</p>
+  </div>
+
+  <div class="sd-day-info-list" *ngIf="selectedDaySessions.length > 0">
+    <article class="sd-day-info-item" *ngFor="let session of selectedDaySessions; trackBy: trackBySessionId">
+      <div class="sd-day-info-item__body">
+        <div class="sd-day-list__title-row">
+          <strong>{{ session.title }}</strong>
+          <span class="sd-status-badge" [ngClass]="statusClass(session.status)">{{ statusLabel(session.status) }}</span>
+        </div>
+        <p>{{ session.competencyName }} · {{ formatDate(session.startsAt) }}</p>
+        <p>Coach: {{ session.coachName }} · {{ session.participantCount }} participant{{ session.participantCount > 1 ? 's' : '' }}</p>
+      </div>
+      <div class="sd-day-info-item__actions">
+        <button
+          *ngIf="session.meetLink && (session.status === 'SCHEDULED' || session.status === 'ONGOING')"
+          type="button"
+          class="sd-btn sd-btn--meet"
+          (click)="joinMeet(session)">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/></svg>
+          Join
+        </button>
+        <button
+          *ngIf="!isMemberRole && (session.status === 'SCHEDULED' || session.status === 'ONGOING')"
+          type="button"
+          class="sd-action-btn"
+          (click)="openSessionDetails(session)">
+          View details
+        </button>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DIALOG — Détail session                                             -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showSessionDetailsDialog" class="sd-backdrop" (click)="closeSessionDetailsDialog()"></div>
+<div *ngIf="showSessionDetailsDialog" class="sd-dialog sd-dialog--wide" (click)="$event.stopPropagation()">
+  <div class="sd-dialog__header">
+    <div>
+      <p class="sd-dialog__eyebrow">Sessions</p>
+      <h3>Session Details</h3>
+    </div>
+    <button type="button" class="sd-dialog__close" (click)="closeSessionDetailsDialog()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+    </button>
+  </div>
+
+  <div *ngIf="sessionDetailsTarget as session" class="sd-detail-card">
+    <div class="sd-detail-card__header">
+      <h3>{{ session.title }}</h3>
+      <span class="sd-status-badge" [ngClass]="statusClass(session.status)">{{ statusLabel(session.status) }}</span>
+    </div>
+
+    <div class="sd-detail-card__meta">
+      <div class="sd-meta-row">
+        <span class="sd-meta-icon sd-meta-icon--accent">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+        </span>
+        <div>
+          <small>Competency</small>
+          <span>{{ session.competencyName }}</span>
+        </div>
+      </div>
+      <div class="sd-meta-row">
+        <span class="sd-meta-icon sd-meta-icon--success">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6a5 5 0 0110 0H3z"/></svg>
+        </span>
+        <div>
+          <small>Coach</small>
+          <span>{{ session.coachName }}</span>
+        </div>
+      </div>
+      <div class="sd-meta-row">
+        <span class="sd-meta-icon sd-meta-icon--warn">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm1 4.5v3.75l2.5 1.5-.75 1.25-3-1.8A1 1 0 017 9.25V5.5h2z"/></svg>
+        </span>
+        <div>
+          <small>Date</small>
+          <span>{{ formatDate(session.startsAt) }}</span>
+        </div>
+      </div>
+      <div class="sd-meta-row">
+        <span class="sd-meta-icon sd-meta-icon--neutral">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z"/></svg>
+        </span>
+        <div>
+          <small>Participants</small>
+          <span>{{ session.participantCount }} participant{{ session.participantCount > 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sd-detail-actions">
+      <button
+        *ngIf="session.meetLink && (session.status === 'SCHEDULED' || session.status === 'ONGOING')"
+        type="button"
+        class="sd-btn sd-btn--meet"
+        (click)="joinMeet(session)">
+        Join Meet
+      </button>
+      <button
+        *ngIf="session.status === 'SCHEDULED' || session.status === 'ONGOING'"
+        type="button"
+        class="sd-action-btn"
+        (click)="openParticipantsDialog(session)">
+        Participants
+      </button>
+      <button
+        *ngIf="session.status === 'SCHEDULED' || session.status === 'ONGOING'"
+        type="button"
+        class="sd-action-btn"
+        (click)="openRescheduleDialog(session)">
+        Reschedule
+      </button>
+      <button
+        *ngIf="session.status === 'SCHEDULED' || session.status === 'ONGOING'"
+        type="button"
+        class="sd-action-btn"
+        (click)="openCloseDialog(session)">
+        Close
+      </button>
+      <button
+        *ngIf="shouldShowViewReport(session)"
+        type="button"
+        class="sd-action-btn"
+        (click)="viewReport(session)">
+        {{ expandedReportSessionId === session.id ? 'Hide report' : 'View report' }}
+      </button>
+      <button
+        *ngIf="session.status === 'SCHEDULED' || session.status === 'ONGOING'"
+        type="button"
+        class="sd-action-btn sd-action-btn--danger"
+        (click)="openCancelDialog(session)">
+        Cancel
+      </button>
+    </div>
+
+    <div *ngIf="expandedReportSessionId === session.id && session.reportSummary" class="sd-report-panel">
+      {{ session.reportSummary }}
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DIALOG — Planifier                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showScheduleDialog" class="sd-backdrop" (click)="closeScheduleDialog()"></div>
+<div *ngIf="showScheduleDialog" class="sd-dialog" (click)="$event.stopPropagation()">
+  <div class="sd-dialog__header">
+    <div>
+      <p class="sd-dialog__eyebrow">Sessions</p>
+      <h3>Schedule a session</h3>
+    </div>
+    <button type="button" class="sd-dialog__close" (click)="closeScheduleDialog()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+    </button>
+  </div>
+  <form [formGroup]="scheduleForm" (ngSubmit)="submitSchedule()" class="sd-form">
+    <div class="sd-field">
+      <span>Session title</span>
+      <input type="text" formControlName="title" placeholder="Ex: Advanced Leadership session" />
+    </div>
+    <div class="sd-field">
+      <span>Compétence</span>
+      <select formControlName="competencyId">
+        <option [ngValue]="0">Select a competency</option>
+        <option *ngFor="let c of competencies" [ngValue]="c.id">{{ c.name }}</option>
+      </select>
+    </div>
+    <div class="sd-field">
+      <span>Coach</span>
+      <select formControlName="coachUserId">
+        <option [ngValue]="0">Select a coach</option>
+        <option *ngFor="let m of members" [ngValue]="m.userId">{{ memberDisplayName(m.userId) }}</option>
+      </select>
+    </div>
+    <div class="sd-field">
+      <span>Start date and time</span>
+      <input type="datetime-local" formControlName="startsAt" />
+    </div>
+    <div class="sd-field">
+      <span>Meet link <em>(optional)</em></span>
+      <input type="url" formControlName="meetLink" placeholder="https://meet.google.com/…" />
+    </div>
+    <div class="sd-participant-selector">
+      <p class="sd-participant-selector__label">Participants</p>
+      <div class="sd-participants-grid">
+        <label *ngFor="let m of members" class="sd-participant-item">
+          <input type="checkbox" [checked]="isMemberSelected(m.userId)" (change)="toggleMemberSelection(m.userId)" />
+          <span>{{ memberDisplayName(m.userId) }}</span>
+        </label>
+      </div>
+    </div>
+    <div class="sd-form__actions">
+      <button type="button" class="sd-btn sd-btn--ghost" (click)="closeScheduleDialog()">Cancel</button>
+      <button type="submit" class="sd-btn sd-btn--primary" [disabled]="saving">
+        <svg *ngIf="saving" class="sd-spinner-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a5 5 0 110 10A5 5 0 018 3z" opacity=".3"/><path d="M8 1a7 7 0 017 7h-2a5 5 0 00-5-5V1z"/></svg>
+        {{ saving ? 'Saving…' : 'Schedule' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DIALOG — Clôturer                                                   -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showCloseDialog" class="sd-backdrop" (click)="closeCloseDialog()"></div>
+<div *ngIf="showCloseDialog" class="sd-dialog" (click)="$event.stopPropagation()">
+  <div class="sd-dialog__header">
+    <div>
+      <p class="sd-dialog__eyebrow">Sessions</p>
+      <h3>Close session</h3>
+    </div>
+    <button type="button" class="sd-dialog__close" (click)="closeCloseDialog()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+    </button>
+  </div>
+  <form [formGroup]="closeForm" (ngSubmit)="submitCloseSession()" class="sd-form">
+    <div class="sd-field">
+      <span>Session report</span>
+      <textarea rows="4" formControlName="reportSummary" placeholder="Results, key points, feedback…"></textarea>
+    </div>
+    <label class="sd-switch-row">
+      <input type="checkbox" formControlName="autoGenerateReport" />
+      <span>Auto-generate AI report (Whisper + GPT-4)</span>
+    </label>
+    <div class="sd-field" *ngIf="closeForm.controls.autoGenerateReport.value">
+      <span>Speech Session ID</span>
+      <input type="text" formControlName="speechSessionId" placeholder="Ex: session_2026_04_21_abc" />
+    </div>
+    <div class="sd-participant-selector">
+      <p class="sd-participant-selector__label">Attendance</p>
+      <div class="sd-participants-grid">
+        <label *ngFor="let item of closeDialogParticipants" class="sd-participant-item">
+          <input type="checkbox" [(ngModel)]="item.attended" [ngModelOptions]="{standalone: true}" />
+          <span>{{ item.fullName || item.email }}</span>
+        </label>
+      </div>
+    </div>
+    <div class="sd-form__actions">
+      <button type="button" class="sd-btn sd-btn--ghost" (click)="closeCloseDialog()">Cancel</button>
+      <button type="submit" class="sd-btn sd-btn--primary" [disabled]="saving">
+        {{ saving ? 'Saving…' : 'Close' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DIALOG — Participants                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showParticipantsDialog" class="sd-backdrop" (click)="closeParticipantsDialog()"></div>
+<div *ngIf="showParticipantsDialog" class="sd-dialog" (click)="$event.stopPropagation()">
+  <div class="sd-dialog__header">
+    <div>
+      <p class="sd-dialog__eyebrow">Sessions</p>
+      <h3>Manage participants</h3>
+    </div>
+    <button type="button" class="sd-dialog__close" (click)="closeParticipantsDialog()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+    </button>
+  </div>
+
+  <div class="m-modal-body">
+    <p class="m-state" *ngIf="participantsTargetSession">
+      Session: <strong>{{ participantsTargetSession?.title }}</strong>
+    </p>
+  </div>
+
+  <div class="sd-participant-selector">
+    <p class="sd-participant-selector__label">Invite members</p>
+    <div class="sd-participants-grid">
+      <label *ngFor="let m of members" class="sd-participant-item">
+        <input type="checkbox" [checked]="isInvitedMemberSelected(m.userId)" (change)="toggleInvitedMemberSelection(m.userId)" />
+        <span>{{ memberDisplayName(m.userId) }}</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="sd-form__actions">
+    <button type="button" class="sd-btn sd-btn--ghost" (click)="closeParticipantsDialog()">Close</button>
+    <button type="button" class="sd-btn sd-btn--primary" (click)="submitParticipantsUpdate()" [disabled]="saving">
+      {{ saving ? 'Saving…' : 'Update' }}
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DIALOG — Replanifier                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showRescheduleDialog" class="sd-backdrop" (click)="closeRescheduleDialog()"></div>
+<div *ngIf="showRescheduleDialog" class="sd-dialog sd-dialog--sm" (click)="$event.stopPropagation()">
+  <div class="sd-dialog__header">
+    <div>
+      <p class="sd-dialog__eyebrow">Sessions</p>
+      <h3>Reschedule</h3>
+    </div>
+    <button type="button" class="sd-dialog__close" (click)="closeRescheduleDialog()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+    </button>
+  </div>
+  <form [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()" class="sd-form">
+    <div class="sd-field">
+      <span>New date and time</span>
+      <input type="datetime-local" formControlName="startsAt" />
+    </div>
+    <div class="sd-form__actions">
+      <button type="button" class="sd-btn sd-btn--ghost" (click)="closeRescheduleDialog()">Cancel</button>
+      <button type="submit" class="sd-btn sd-btn--primary" [disabled]="saving">
+        {{ saving ? 'Saving…' : 'Confirm' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DIALOG — Annuler session                                            -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showCancelDialog" class="sd-backdrop" (click)="closeCancelDialog()"></div>
+<div *ngIf="showCancelDialog" class="sd-dialog sd-dialog--sm" (click)="$event.stopPropagation()">
+  <div class="sd-dialog__header">
+    <div>
+      <p class="sd-dialog__eyebrow sd-dialog__eyebrow--danger">Warning</p>
+      <h3>Cancel session</h3>
+    </div>
+    <button type="button" class="sd-dialog__close" (click)="closeCancelDialog()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+    </button>
+  </div>
+  <div class="m-modal-body" *ngIf="cancelTargetSession">
+    <p>Confirm cancellation of <strong>{{ cancelTargetSession?.title }}</strong> ? This action is irreversible.</p>
+  </div>
+  <form [formGroup]="cancelForm" (ngSubmit)="submitCancelSession()" class="sd-form">
+    <div class="sd-field">
+      <span>Cancellation reason <span class="sd-required">*</span></span>
+      <textarea rows="3" formControlName="reason" placeholder="Ex: Coach unavailable, room booked…"></textarea>
+      <span class="sd-field-error" *ngIf="cancelForm.controls.reason.touched && cancelForm.controls.reason.invalid">
+        Reason is required.
+      </span>
+    </div>
+    <div class="sd-form__actions">
+      <button type="button" class="sd-btn sd-btn--ghost" (click)="closeCancelDialog()">Back</button>
+      <button type="submit" class="sd-btn sd-btn--danger" [disabled]="saving">
+        {{ saving ? 'Cancelling…' : "Confirm Cancellation" }}
+      </button>
+    </div>
+  </form>
+</div>

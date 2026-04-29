@@ -20,6 +20,55 @@ export class FormBuilderComponent implements OnInit {
   // Options
   QUESTION_TYPES = ['TEXT', 'TEXTAREA', 'MULTIPLE_CHOICE', 'FILE', 'DATE', 'YES_NO', 'RATING'];
 
+  // AI Modal State
+  showAiModal = false;
+  isGenerating = false;
+  aiForm = {
+    questionCount: 5,
+    themes: [] as string[],
+    additionalInstructions: ''
+  };
+  availableThemes = ['Motivation', 'Disponibilité', 'Compétences', 'Expérience', 'Valeurs', 'Objectifs', 'Travail en équipe'];
+
+  toggleTheme(theme: string): void {
+    const index = this.aiForm.themes.indexOf(theme);
+    if (index >= 0) {
+      this.aiForm.themes.splice(index, 1);
+    } else {
+      this.aiForm.themes.push(theme);
+    }
+  }
+
+  isThemeSelected(theme: string): boolean {
+    return this.aiForm.themes.includes(theme);
+  }
+
+  generateWithAI(): void {
+    if (this.aiForm.themes.length === 0) return;
+    this.isGenerating = true;
+    this.api.generateQuestions(this.campaignId, this.aiForm).subscribe({
+      next: (questions: any[]) => {
+        questions.forEach((q, index) => {
+          const newQuestion = {
+            label: q.label,
+            type: q.type,
+            required: q.required,
+            options: q.options ? JSON.stringify(q.options) : null,
+            orderIndex: this.questions.length + index
+          };
+          this.api.addQuestion(this.campaignId, newQuestion).subscribe({
+            next: (saved) => this.questions.push(saved),
+            error: () => {}
+          });
+        });
+        this.isGenerating = false;
+        this.showAiModal = false;
+        this.aiForm = { questionCount: 5, themes: [], additionalInstructions: '' };
+      },
+      error: () => { this.isGenerating = false; }
+    });
+  }
+
   // Inline Form State
   showForm = false;
   isEditMode = false;
@@ -148,7 +197,7 @@ export class FormBuilderComponent implements OnInit {
     this.formError = '';
 
     // Convert options to JSON string
-    let finalOptionsPattern = null;
+    let finalOptionsPattern: string | null = null;
     if (this.formData.type === 'MULTIPLE_CHOICE') {
       const arr = this.formData.options.split(',').map((o: string) => o.trim()).filter((o: string) => o.length > 0);
       finalOptionsPattern = JSON.stringify(arr);

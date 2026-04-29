@@ -1,0 +1,279 @@
+@import 'leaflet/dist/leaflet.css';
+
+:host {
+  display: block;
+}
+
+// Map wrapper with explicit dimensions
+.map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: white;
+
+  .leaflet-map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: #f3f4f6;
+    z-index: 1;
+  }
+}
+
+// Core Leaflet container styles
+.leaflet-map-container {
+  &.leaflet-container,
+  .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+}
+
+::ng-deep {
+  // Overlay and ensure map visibility
+  .leaflet-map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    &.leaflet-container {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  }
+
+  // Core Leaflet container
+  .leaflet-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    font-size: 14px;
+    background: #f3f4f6 !important;
+    color: #1f2937;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+
+    // Better tile rendering
+    .leaflet-tile {
+      filter: brightness(1.1) contrast(1.15);
+    }
+  }
+
+  // Map panes - ensure they're visible
+  .leaflet-pane {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: auto;
+  }
+
+  .leaflet-tile-pane,
+  .leaflet-shadow-pane,
+  .leaflet-overlay-pane,
+  .leaflet-marker-pane,
+  .leaflet-tooltip-pane,
+  .leaflet-popup-pane {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+
+  .leaflet-tile-pane {
+    z-index: 200 !important;
+  }
+
+  .leaflet-overlay-pane {
+    z-index: 400 !important;
+  }
+
+  .leaflet-shadow-pane {
+    z-index: 500 !important;
+  }
+
+  .leaflet-marker-pane {
+    z-index: 600 !important;
+  }
+
+  .leaflet-tooltip-pane {
+    z-index: 650 !important;
+  }
+
+  .leaflet-popup-pane {
+    z-index: 700 !important;
+  }
+
+  // Improve popups visibility
+  .leaflet-popup-content-wrapper {
+    background-color: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3) !important;
+    border: 4px solid #4f46e5 !important;
+    padding: 0 !important;
+    position: relative;
+    z-index: 1000;
+  }
+
+  .leaflet-popup-content {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #1f2937 !important;
+    padding: 18px 24px !important;
+    margin: 0 !important;
+    line-height: 1.6;
+  }
+
+  .leaflet-popup-tip {
+    background-color: #ffffff !important;
+    border-top: 4px solid #4f46e5 !important;
+    box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  // Improve markers visibility
+  .leaflet-marker-icon {
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+    height: 41px !important;
+    width: 25px !important;
+    display: block !important;
+    position: absolute !important;
+
+    &:hover {
+      filter: drop-shadow(0 7px 14px rgba(0, 0, 0, 0.4));
+      z-index: 1001;
+    }
+  }
+
+  .leaflet-marker-shadow {
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+    display: block !important;
+  }
+
+  // Better zoom controls
+  .leaflet-control-zoom {
+    border: 3px solid #4f46e5 !important;
+    border-radius: 10px !important;
+    background-color: white !important;
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2) !important;
+    overflow: hidden;
+    z-index: 1010;
+  }
+
+  .leaflet-control-zoom-in,
+  .leaflet-control-zoom-out {
+    font-size: 26px !important;
+    font-weight: 900 !important;
+    color: #4f46e5 !important;
+    background-color: white !important;
+    border: none !important;
+    line-height: 40px !important;
+    height: 44px !important;
+    width: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    user-select: none !important;
+
+    &:hover {
+      background-color: #f3f4f6 !important;
+      color: #4338ca !important;
+    }
+
+    &:active {
+      background-color: #e5e7eb !important;
+    }
+
+    &:first-child {
+      border-bottom: 3px solid #e5e7eb !important;
+    }
+  }
+
+  // Attribution text visibility
+  .leaflet-control-attribution {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 10px 12px !important;
+    border-radius: 6px !important;
+    backdrop-filter: blur(4px);
+    z-index: 1020;
+
+    a {
+      color: #4f46e5 !important;
+      font-weight: 700 !important;
+      text-decoration: none;
+
+      &:hover {
+        color: #4338ca !important;
+        text-decoration: underline !important;
+      }
+    }
+  }
+
+  // Path/polyline styling
+  .leaflet-pane svg {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  path {
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  // Ensure tiles are visible
+  .leaflet-tile-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .leaflet-objects-pane {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  // Control position
+  .leaflet-control {
+    position: absolute !important;
+    z-index: 1000 !important;
+  }
+
+  .leaflet-top,
+  .leaflet-bottom {
+    position: absolute !important;
+    z-index: 1000 !important;
+  }
+
+  .leaflet-left {
+    left: 10px !important;
+  }
+
+  .leaflet-right {
+    right: 10px !important;
+  }
+
+  .leaflet-top {
+    top: 10px !important;
+  }
+
+  .leaflet-bottom {
+    bottom: 10px !important;
+  }
+}
+

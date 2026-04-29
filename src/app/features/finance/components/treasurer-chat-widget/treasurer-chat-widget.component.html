@@ -1,0 +1,45 @@
+<section class="treasurer-chat">
+  <header class="treasurer-chat__header">
+    <div>
+      <h3>Treasurer AI Copilot</h3>
+      <p>Human approval is required before any transaction or budget write.</p>
+    </div>
+  </header>
+
+  <div class="treasurer-chat__messages">
+    <article
+      *ngFor="let message of messages"
+      class="treasurer-chat__message"
+      [class.treasurer-chat__message--user]="message.role === 'user'"
+      [class.treasurer-chat__message--assistant]="message.role === 'assistant'"
+      [class.treasurer-chat__message--system]="message.role === 'system'">
+      {{ message.content }}
+    </article>
+  </div>
+
+  <div class="treasurer-chat__pending" *ngIf="pendingApprovals.length > 0">
+    <h4>Pending Approvals</h4>
+    <article class="treasurer-chat__approval" *ngFor="let approval of pendingApprovals">
+      <div>
+        <strong>{{ approval.actionName }}</strong>
+        <p>{{ approval.summary }}</p>
+      </div>
+      <div class="treasurer-chat__approval-actions">
+        <button type="button" class="btn btn--primary" (click)="approve(approval)" [disabled]="isLoading">Approve</button>
+        <button type="button" class="btn btn--secondary" (click)="reject(approval)" [disabled]="isLoading">Reject</button>
+      </div>
+    </article>
+  </div>
+
+  <div class="treasurer-chat__composer">
+    <input
+      type="text"
+      [(ngModel)]="draftMessage"
+      [disabled]="isLoading"
+      (keyup.enter)="send()"
+      placeholder="Ask about treasury, forecasts, or propose a transaction update..." />
+    <button type="button" class="btn btn--primary" [disabled]="isLoading || !draftMessage.trim()" (click)="send()">
+      {{ isLoading ? 'Sending...' : 'Send' }}
+    </button>
+  </div>
+</section>

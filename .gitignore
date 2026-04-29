@@ -40,3 +40,14 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# OAuth client secrets
+client_secret*.json
+
+# Uploaded sponsor files
+/src/assets/sponsorfiles/**
+!/src/assets/sponsorfiles/.gitkeep
+
+
+.early.coverage
+speech-analyzer/.venv/

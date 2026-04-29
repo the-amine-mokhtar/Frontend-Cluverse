@@ -70,12 +70,18 @@
               "node_modules/leaflet/dist/leaflet.css",
               "node_modules/cesium/Build/Cesium/Widgets/widgets.css",
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/leaflet/dist/leaflet.css"
             ],
             "scripts": []
           },
           "configurations": {
             "production": {
+              "optimization": {
+                "scripts": true,
+                "styles": true,
+                "fonts": false
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -84,8 +90,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "24kb",
-                  "maximumError": "48kb"
+                  "maximumWarning": "30kb",
+                  "maximumError": "64kb"
                 }
               ],
               "outputHashing": "all"

@@ -1,0 +1,111 @@
+<div class="space-y-4">
+  <!-- Analyze Button -->
+  <button
+    type="button"
+    [disabled]="!departureLocationId || !arrivalLocationId || !scheduledDate"
+    (click)="analyze()"
+    class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200">
+    <span *ngIf="!isLoading">Analyser ce trajet</span>
+    <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
+      ⏳ Analyse en cours...
+    </span>
+  </button>
+
+  <!-- Error Message -->
+  <div
+    *ngIf="errorMessage"
+    class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Prediction Card -->
+  <div
+    *ngIf="prediction && !isLoading"
+    [class]="'border ' + getRiskBgClass() + ' rounded-lg p-4 space-y-4'">
+    
+    <!-- Header with Brain Icon and Confidence Badge -->
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        🧠 Analyse IA du trajet
+      </h3>
+      <span
+        [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getConfidenceBadgeClass()">
+        {{ getConfidenceLabel() }}
+      </span>
+    </div>
+
+    <!-- Risk Gauge Bar -->
+    <div class="space-y-2">
+      <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+        <div
+          [class]="getRiskColor()"
+          [style.width.%]="prediction.congestionRisk"
+          class="h-4 rounded-full transition-all duration-700">
+        </div>
+      </div>
+      <p class="text-sm text-gray-700 font-medium">
+        Risque de congestion : <span class="font-bold">{{ prediction.congestionRisk }}%</span>
+      </p>
+    </div>
+
+    <!-- Info Grid (2 columns) -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p class="text-xs text-gray-600 uppercase tracking-wide">Durée estimée</p>
+        <p class="text-lg font-bold text-gray-800">{{ prediction.predictedDurationMinutes }} min</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-600 uppercase tracking-wide">Créneau</p>
+        <p class="text-lg font-bold text-gray-800">{{ getTimeSlotLabel() }}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-600 uppercase tracking-wide">Jour</p>
+        <p class="text-lg font-bold text-gray-800">{{ getDayLabel() }}</p>
+      </div>
+      <div *ngIf="prediction.distanceKm && prediction.distanceKm > 0">
+        <p class="text-xs text-gray-600 uppercase tracking-wide">Distance</p>
+        <p class="text-lg font-bold text-gray-800">{{ prediction.distanceKm }} km</p>
+      </div>
+      <div *ngIf="!prediction.distanceKm || prediction.distanceKm <= 0">
+        <p class="text-xs text-gray-600 uppercase tracking-wide">Trajets analysés</p>
+        <p class="text-lg font-bold text-gray-800">{{ prediction.historicalTripsAnalyzed }}</p>
+      </div>
+    </div>
+
+    <!-- Recommendation Box -->
+    <div [class]="'border-l-4 p-4 rounded-r-lg ' + getRiskBgClass()">
+      <p class="text-sm text-gray-800">
+        {{ prediction.recommendation }}
+      </p>
+    </div>
+
+    <!-- Model Information Section -->
+    <div class="mt-4 pt-3 border-t border-gray-100">
+      
+      <!-- When model is LINEAR_REGRESSION -->
+      <div *ngIf="prediction.modelType === 'LINEAR_REGRESSION'" 
+           class="flex items-center gap-2">
+        <span class="text-lg">🤖</span>
+        <div>
+          <p class="text-xs font-medium text-gray-700">
+            Modèle IA — Régression Linéaire
+          </p>
+          <p class="text-xs text-gray-500">
+            Entraîné sur {{ prediction.trainingDataSize }} trajets réels 
+            (Dataset GTFS Tunisie — Réseau Banlieue)
+          </p>
+        </div>
+      </div>
+
+      <!-- When fallback RULE_BASED -->
+      <div *ngIf="prediction.modelType === 'RULE_BASED'"
+           class="flex items-center gap-2">
+        <span class="text-lg">📋</span>
+        <p class="text-xs text-gray-500">
+          Prédiction par règles de trafic (modèle en cours de chargement)
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
