@@ -1,0 +1,132 @@
+<div class="calendar-container">
+
+  <!-- NAV BAR -->
+  <div class="cal-topbar">
+    <div class="cal-topbar__left">
+      <div class="cal-nav-controls">
+        <button class="cal-nav-btn" (click)="prevMonth()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15,18 9,12 15,6"/></svg>
+        </button>
+        <span class="cal-month-label">{{ currentMonthLabel }}</span>
+        <button class="cal-nav-btn" (click)="nextMonth()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9,18 15,12 9,6"/></svg>
+        </button>
+      </div>
+      <button class="cal-today-btn" (click)="goToToday()">Today</button>
+    </div>
+    <div class="cal-topbar__right">
+      <div class="cal-legend">
+        <span class="legend-item legend-conference"><span class="legend-dot"></span>Conference</span>
+        <span class="legend-item legend-workshop"><span class="legend-dot"></span>Workshop</span>
+        <span class="legend-item legend-hackathon"><span class="legend-dot"></span>Hackathon</span>
+        <span class="legend-item legend-other"><span class="legend-dot"></span>Other</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cal-body">
+    <!-- LEFT: Calendar Grid -->
+    <div class="cal-grid-panel">
+
+      <!-- Day headers -->
+      <div class="cal-day-headers">
+        <div class="cal-day-hdr" *ngFor="let d of dayLabels">{{ d }}</div>
+      </div>
+
+      <!-- Cells -->
+      <div class="cal-grid">
+        <div
+          *ngFor="let cell of calendarCells"
+          class="cal-cell"
+          [class.other-month]="!cell.isCurrentMonth"
+          [class.today]="cell.isToday"
+          [class.selected]="cell.date && selectedDate && isSameDay(cell.date, selectedDate)"
+          [class.has-events]="cell.events && cell.events.length > 0"
+          (click)="selectDay(cell)"
+        >
+          <div class="cal-cell__num">{{ cell.day }}</div>
+
+          <!-- Event dots / mini chips -->
+          <div class="cal-cell__events" *ngIf="cell.events && cell.events.length > 0">
+            <div
+              *ngFor="let ev of cell.events.slice(0, 3)"
+              class="cal-event-chip"
+              [attr.data-cat]="ev.category"
+              [title]="ev.title"
+            >
+              <span class="chip-dot"></span>
+              <span class="chip-text">{{ ev.title }}</span>
+            </div>
+            <div *ngIf="cell.events.length > 3" class="cal-more-badge">
+              +{{ cell.events.length - 3 }} more
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Events Panel -->
+    <div class="cal-events-panel">
+      <div class="panel-header" *ngIf="selectedDate">
+        <div class="panel-date">
+          <span class="panel-day-num">{{ selectedDate | date:'d' }}</span>
+          <div class="panel-date-text">
+            <span class="panel-weekday">{{ selectedDate | date:'EEEE' }}</span>
+            <span class="panel-month">{{ selectedDate | date:'MMMM yyyy' }}</span>
+          </div>
+        </div>
+        <div class="panel-count" *ngIf="selectedDayEvents.length > 0">
+          {{ selectedDayEvents.length }} event{{ selectedDayEvents.length > 1 ? 's' : '' }}
+        </div>
+      </div>
+
+      <p class="panel-no-select" *ngIf="!selectedDate">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Select a date to see events
+      </p>
+
+      <div class="panel-events-list" *ngIf="selectedDate">
+
+        <div *ngIf="selectedDayEvents.length === 0" class="panel-empty">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          <p>No events scheduled</p>
+        </div>
+
+        <div
+          *ngFor="let event of selectedDayEvents"
+          class="panel-event-card"
+          [attr.data-cat]="event.category"
+        >
+          <div class="pec-accent"></div>
+          <div class="pec-body">
+            <div class="pec-top">
+              <span class="pec-category" [attr.data-cat]="event.category">{{ event.category || 'General' }}</span>
+              <span class="pec-status" [attr.data-status]="event.status">{{ event.status }}</span>
+            </div>
+            <h4 class="pec-title">{{ event.title }}</h4>
+            <p class="pec-desc" *ngIf="event.description">{{ event.description }}</p>
+            <div class="pec-meta">
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                {{ event.startDate | date:'HH:mm' }} – {{ event.endDate | date:'HH:mm' }}
+              </span>
+              <span *ngIf="event.locationName">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ event.locationName }}
+              </span>
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                {{ event.participantsCount || 0 }} / {{ event.capacity || '∞' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

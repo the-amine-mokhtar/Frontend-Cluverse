@@ -1,0 +1,1000 @@
+// ── Fonts ──────────────────────────────────────────────────────
+// @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap');
+
+// ── Design Tokens ──────────────────────────────────────────────
+$white:        #ffffff;
+$bg:           #f7f8fa;
+$bg-hover:     #f0f2f5;
+$surface:      #ffffff;
+
+$border:       #e4e7ed;
+$border-md:    #d1d5db;
+$border-focus: #2563eb;
+
+$text-900:     #0f172a;
+$text-700:     #374151;
+$text-500:     #6b7280;
+$text-400:     #9ca3af;
+
+$blue:         #2563eb;
+$blue-50:      #eff6ff;
+$blue-100:     #dbeafe;
+$blue-600:     #1d4ed8;
+
+$emerald:      #059669;
+$emerald-50:   #ecfdf5;
+$emerald-100:  #d1fae5;
+
+$amber:        #d97706;
+$amber-50:     #fffbeb;
+$amber-100:    #fef3c7;
+
+$rose:         #e11d48;
+$rose-50:      #fff1f2;
+$rose-100:     #ffe4e6;
+
+$violet:       #7c3aed;
+$violet-50:    #f5f3ff;
+$violet-100:   #ede9fe;
+
+$r-sm:   5px;
+$r-md:   8px;
+$r-lg:   12px;
+$r-xl:   16px;
+$r-2xl:  22px;
+
+$font-display: 'Instrument Serif', Georgia, serif;
+$font-body:    'Geist', 'Inter', system-ui, sans-serif;
+
+$shadow-sm:  0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+$shadow-md:  0 4px 12px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
+$shadow-lg:  0 12px 32px rgba(15,23,42,0.10), 0 4px 8px rgba(15,23,42,0.05);
+$shadow-xl:  0 24px 64px rgba(15,23,42,0.14), 0 8px 16px rgba(15,23,42,0.06);
+
+// ── Mixins ─────────────────────────────────────────────────────
+@mixin card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $r-2xl;
+  box-shadow: $shadow-sm;
+}
+
+@mixin label-sm {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: $text-400;
+}
+
+
+// ── Back / Close button ───────────────────────────────────────
+.btn-back {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 200;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid $border-md;
+  background: $white;
+  color: $text-500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: $shadow-md;
+  transition: all 0.18s ease;
+
+  &:hover {
+    background: $rose-50;
+    border-color: $rose-100;
+    color: $rose;
+    transform: scale(1.08) rotate(90deg);
+    box-shadow: $shadow-lg;
+  }
+
+  &:active {
+    transform: scale(0.95) rotate(90deg);
+  }
+}
+
+// ── Page wrapper ───────────────────────────────────────────────
+.page-wrapper {
+  background: $bg;
+  min-height: 100vh;
+  font-family: $font-body;
+  color: $text-900;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+// ── Container ──────────────────────────────────────────────────
+.reservation-form-container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 5rem;
+}
+
+// ── Page header ─────────────────────────────────────────────── (optional)
+.page-header {
+  margin-bottom: 2.5rem;
+
+  .eyebrow {
+    @include label-sm;
+    color: $blue;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-family: $font-display;
+    font-size: 2.2rem;
+    font-weight: 400;
+    color: $text-900;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 0 0 0.5rem;
+
+    em {
+      font-style: italic;
+      color: $blue;
+    }
+  }
+
+  p {
+    color: $text-500;
+    font-size: 0.93rem;
+    margin: 0;
+  }
+}
+
+// ── Top bar: existing reservations ────────────────────────────
+.existing-reservations-section {
+  @include card;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  border-left: 3px solid $emerald;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+
+  span {
+    font-family: $font-body;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $text-500;
+  }
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $emerald;
+    flex-shrink: 0;
+  }
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: $border;
+  }
+}
+
+.reservation-search-bar {
+  margin-bottom: 1.25rem;
+
+  input {
+    width: 100%;
+    max-width: 340px;
+    padding: 0.6rem 1rem;
+    border: 1px solid $border-md;
+    border-radius: $r-lg;
+    font-family: $font-body;
+    font-size: 0.88rem;
+    color: $text-900;
+    background: $bg;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &::placeholder { color: $text-400; }
+
+    &:focus {
+      outline: none;
+      border-color: $blue;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+      background: $white;
+    }
+  }
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: $text-400;
+  font-size: 0.85rem;
+  padding: 1rem 0;
+
+  &::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border: 2px solid $border-md;
+    border-top-color: $blue;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    flex-shrink: 0;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.existing-reservations-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.875rem;
+}
+
+.reservation-item {
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: $r-lg;
+  padding: 1rem 1.125rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: $border-md;
+    box-shadow: $shadow-sm;
+  }
+}
+
+.reservation-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.reservation-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.resource-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: $text-900;
+  line-height: 1.3;
+}
+
+.reservation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.81rem;
+  color: $text-500;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+}
+
+.empty-reservations {
+  background: $emerald-50;
+  border: 1px dashed rgba($emerald, 0.3);
+  border-radius: $r-lg;
+  padding: 1.25rem;
+  text-align: center;
+  color: $emerald;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  p { margin: 0; }
+}
+
+// ── Status badge ───────────────────────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+
+  &.status-confirmed, &.status-approved {
+    background: $emerald-100;
+    color: darken($emerald, 5%);
+  }
+  &.status-pending {
+    background: $amber-100;
+    color: $amber;
+  }
+  &.status-cancelled {
+    background: $rose-100;
+    color: $rose;
+  }
+  &.status-completed {
+    background: $blue-100;
+    color: $blue-600;
+  }
+}
+
+// ── Intro cards ────────────────────────────────────────────────
+.reservation-intro {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.intro-card {
+  @include card;
+  padding: 2rem 2.25rem;
+  position: relative;
+  overflow: hidden;
+
+  // Geometric accent
+  &::after {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, $blue-50 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.75rem;
+    background: $blue-50;
+    color: $blue;
+    border: 1px solid $blue-100;
+    border-radius: 99px;
+    font-size: 0.67rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+
+    &::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: $blue;
+    }
+  }
+
+  h2 {
+    font-family: $font-display;
+    font-size: 1.7rem;
+    font-weight: 400;
+    color: $text-900;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0 0 0.65rem;
+
+    em {
+      font-style: italic;
+      color: $blue;
+    }
+  }
+
+  p {
+    color: $text-500;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 380px;
+  }
+}
+
+.hint-card {
+  @include card;
+  padding: 1.75rem 2rem;
+  background: linear-gradient(145deg, $blue-50 0%, #fafbff 100%);
+  border-color: $blue-100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+
+  .hint-icon {
+    width: 36px;
+    height: 36px;
+    background: $blue-100;
+    border-radius: $r-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $blue;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: $blue-600;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  p {
+    color: $text-700;
+    font-size: 0.87rem;
+    line-height: 1.7;
+    margin: 0;
+  }
+}
+
+// ── Main grid ──────────────────────────────────────────────────
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+// ── Subsection heading ─────────────────────────────────────────
+.subsection-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: $text-400;
+  margin-bottom: 0.875rem;
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: $border;
+  }
+}
+
+// ── Form card ──────────────────────────────────────────────────
+.reservation-form {
+  @include card;
+  padding: 2rem 2.25rem;
+  box-shadow: $shadow-md;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+label {
+  display: block;
+  font-size: 0.77rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: $text-700;
+  margin-bottom: 0.4rem;
+  text-transform: none;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid $border-md;
+  border-radius: $r-md;
+  font-family: $font-body;
+  font-size: 0.9rem;
+  color: $text-900;
+  background: $white;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+
+  &::placeholder { color: $text-400; }
+
+  &:hover:not(:disabled) {
+    border-color: darken($border-md, 8%);
+    background: $white;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $blue;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    background: $white;
+  }
+
+  &:disabled {
+    background: $bg;
+    color: $text-400;
+    cursor: not-allowed;
+  }
+}
+
+select.form-control {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.4rem;
+}
+
+textarea.form-control {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  color: $rose;
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-top: 0.35rem;
+  line-height: 1.4;
+
+  &::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: $rose-100;
+    font-size: 0.6rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+// ── Resource info panel ───────────────────────────────────────
+.resource-info {
+  background: linear-gradient(135deg, $emerald-50, #f0fdf8);
+  border: 1px solid $emerald-100;
+  border-radius: $r-lg;
+  padding: 1rem 1.125rem;
+  margin-bottom: 1.25rem;
+
+  h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $text-900;
+    margin: 0 0 0.25rem;
+  }
+
+  .desc {
+    font-size: 0.83rem;
+    color: $text-500;
+    line-height: 1.55;
+    margin: 0 0 0.5rem;
+  }
+
+  .availability {
+    font-size: 0.81rem;
+    color: $text-700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    &::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: $emerald;
+      flex-shrink: 0;
+    }
+
+    strong { color: $emerald; font-weight: 700; }
+  }
+}
+
+// ── Form actions ──────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid $border;
+}
+
+// ── Cart panel ────────────────────────────────────────────────
+.cart-items {
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $r-xl;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1rem;
+  margin-bottom: 0.875rem;
+  max-height: 460px;
+  overflow-y: auto;
+  box-shadow: inset 0 1px 3px rgba(15,23,42,0.04);
+
+  &::-webkit-scrollbar        { width: 4px; }
+  &::-webkit-scrollbar-track  { background: $bg; border-radius: 99px; }
+  &::-webkit-scrollbar-thumb  { background: $border-md; border-radius: 99px; }
+}
+
+.cart-item {
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: $r-lg;
+  padding: 0.875rem 1rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  animation: slideDown 0.2s ease;
+
+  &:hover {
+    border-color: $border-md;
+    box-shadow: $shadow-sm;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.cart-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $text-900;
+}
+
+.cart-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: $text-500;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  strong { color: $text-900; }
+}
+
+// ── Cart footer ───────────────────────────────────────────────
+.cart-footer {
+  background: linear-gradient(145deg, $blue-50 0%, #fafbff 100%);
+  border: 1px solid $blue-100;
+  border-radius: $r-xl;
+  padding: 1.25rem 1.5rem;
+}
+
+.cart-summary {
+  font-size: 0.77rem;
+  color: $text-400;
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cart-total {
+  font-family: $font-display;
+  font-size: 1.55rem;
+  color: $text-900;
+  font-weight: 400;
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+
+  span {
+    color: $blue;
+    font-style: italic;
+  }
+}
+
+.cart-actions {
+  display: flex;
+  gap: 0.625rem;
+}
+
+// ── Buttons ───────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.68rem 1.25rem;
+  border-radius: $r-md;
+  border: 1px solid transparent;
+  font-family: $font-body;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled)  { transform: translateY(-1px); }
+  &:active:not(:disabled) { transform: translateY(0) scale(0.99); }
+  &:disabled              { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+}
+
+.btn-primary {
+  background: $blue;
+  color: $white;
+  border-color: $blue;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+
+  &:hover:not(:disabled) {
+    background: $blue-600;
+    border-color: $blue-600;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+  }
+}
+
+.btn-blue {
+  background: $text-900;
+  color: $white;
+  border-color: $text-900;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+
+  &:hover:not(:disabled) {
+    background: lighten($text-900, 8%);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.22);
+  }
+}
+
+.btn-secondary {
+  background: $white;
+  color: $text-700;
+  border-color: $border-md;
+  box-shadow: $shadow-sm;
+
+  &:hover:not(:disabled) {
+    background: $bg-hover;
+    border-color: darken($border-md, 8%);
+    color: $text-900;
+  }
+}
+
+.btn-cancel-res {
+  background: $amber-50;
+  color: $amber;
+  border-color: $amber-100;
+
+  &:hover:not(:disabled) {
+    background: $amber-100;
+    border-color: rgba($amber, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+  }
+}
+
+.btn-danger {
+  background: $rose-50;
+  color: $rose;
+  border-color: $rose-100;
+
+  &:hover:not(:disabled) {
+    background: $rose-100;
+    border-color: rgba($rose, 0.3);
+  }
+}
+
+.btn-sm {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.76rem;
+  border-radius: $r-sm;
+}
+
+// ── Empty state ───────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  border: 1.5px dashed $border-md;
+  border-radius: $r-xl;
+  min-height: 220px;
+  color: $text-500;
+  font-size: 0.875rem;
+  text-align: center;
+  background: $bg;
+
+  &.small {
+    padding: 1.75rem 1.25rem;
+    min-height: auto;
+  }
+
+  p { margin: 0; line-height: 1.6; }
+}
+
+.empty-icon {
+  font-size: 1.6rem;
+  opacity: 0.5;
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-dialog {
+  width: 100%;
+  max-width: 460px;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $r-2xl;
+  box-shadow: $shadow-xl;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlide 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modalSlide {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 1.75rem;
+  border-bottom: 1px solid $border;
+  background: $bg;
+
+  h3 {
+    margin: 0;
+    font-family: $font-display;
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: $text-900;
+    letter-spacing: -0.01em;
+  }
+
+  .modal-close {
+    background: $white;
+    border: 1px solid $border-md;
+    color: $text-500;
+    width: 28px;
+    height: 28px;
+    border-radius: $r-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: $bg-hover;
+      border-color: $border-md;
+      color: $text-900;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem 1.75rem;
+  max-height: 55vh;
+  overflow-y: auto;
+
+  .confirmation-message {
+    margin: 0;
+    font-size: 0.9rem;
+    color: $text-700;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+}
+
+.modal-footer {
+  display: flex;
+  gap: 0.625rem;
+  justify-content: flex-end;
+  padding: 1.25rem 1.75rem;
+  border-top: 1px solid $border;
+  background: $bg;
+
+  .btn { min-width: 90px; }
+}
+
+// ── Responsive ────────────────────────────────────────────────
+@media (max-width: 960px) {
+  .reservation-intro,
+  .main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hint-card { min-height: auto; }
+}
+
+@media (max-width: 640px) {
+  .reservation-form-container {
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .reservation-form,
+  .intro-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+    .btn { flex: 1; }
+  }
+
+  .cart-actions {
+    flex-direction: column;
+    .btn { width: 100%; }
+  }
+
+  .existing-reservations-list {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-dialog {
+    border-radius: $r-xl;
+  }
+}

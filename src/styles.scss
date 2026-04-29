@@ -1,3 +1,13 @@
+// Fix Leaflet map display issues in all contexts
+.app-event-map-3d-fix,
+.app-event-map-3d-fix > .map-container,
+.app-event-map-3d-fix > .map-container > .map {
+  min-height: 400px !important;
+  height: 400px !important;
+  width: 100% !important;
+  display: block !important;
+  background: #eaf2fa;
+}
 /* ═══════════════════════════════════════════════════════════
    GLOBAL STYLES — Cluverse
    ═══════════════════════════════════════════════════════════ */
@@ -336,5 +346,19 @@ body.light-mode ::-webkit-scrollbar-thumb {
   width: auto !important;
   min-width: 80px !important;
   padding: 0 12px !important;
+}
+
+/* Leaflet map tiles must not inherit generic image resets. */
+.leaflet-container {
+  background: #e5eef5;
+  font: inherit;
+}
+
+.leaflet-container img,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  max-width: none !important;
+  max-height: none !important;
 }
 

@@ -329,14 +329,22 @@ export class FinanceService {
   }
 
   createStripePaymentIntent(payload: CreateStripePaymentIntentPayload): Observable<CreateStripePaymentIntentResponse> {
-    return this.http.post<CreateStripePaymentIntentResponse>(`${this.baseUrl}/api/stripe/create-payment-intent`, payload, {
-      headers: this.authHeaders()
-    });
+    return this.http.post<CreateStripePaymentIntentResponse>(`${this.baseUrl}/api/stripe/create-payment-intent`, payload);
   }
 
   getStripePublicConfig(): Observable<StripePublicConfigResponse> {
-    return this.http.get<StripePublicConfigResponse>(`${this.baseUrl}/api/stripe/public-config`, {
-      headers: this.authHeaders()
+    return this.http.get<StripePublicConfigResponse>(`${this.baseUrl}/api/stripe/public-config`);
+  }
+
+  getSponsorPaymentPageContext(token: string): Observable<SponsorPaymentPageContextDto> {
+    return this.http.get<SponsorPaymentPageContextDto>(`${this.baseUrl}/api/sponsorships/respond/payment-context`, {
+      params: new HttpParams().set('token', token)
+    });
+  }
+
+  completeSponsorPaymentByToken(token: string, payload: CompleteSponsorPaymentByTokenPayload): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/api/sponsorships/respond/payment`, payload, {
+      params: new HttpParams().set('token', token)
     });
   }
 

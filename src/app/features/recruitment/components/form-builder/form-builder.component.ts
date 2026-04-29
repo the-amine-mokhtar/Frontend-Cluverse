@@ -197,7 +197,7 @@ export class FormBuilderComponent implements OnInit {
     this.formError = '';
 
     // Convert options to JSON string
-    let finalOptionsPattern = null;
+    let finalOptionsPattern: string | null = null;
     if (this.formData.type === 'MULTIPLE_CHOICE') {
       const arr = this.formData.options.split(',').map((o: string) => o.trim()).filter((o: string) => o.length > 0);
       finalOptionsPattern = JSON.stringify(arr);

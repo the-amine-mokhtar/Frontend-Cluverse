@@ -7,9 +7,10 @@ import { CompetenciesHomeComponent } from './components/competencies-home/compet
 import { CompetenciesInsightsComponent } from './components/competencies-insights/competencies-insights.component';
 import { MemberCompetenciesComponent } from './components/member-competencies/member-competencies.component';
 import { SessionsDashboardComponent } from './components/sessions-dashboard/sessions-dashboard.component';
+import { BaseChartDirective } from 'ng2-charts';
 
 @NgModule({
   declarations: [CompetenciesEntryComponent, CompetenciesHomeComponent, CompetenciesInsightsComponent, MemberCompetenciesComponent, SessionsDashboardComponent],
-  imports: [SharedModule, CompetenciesRoutingModule, DragDropModule]
+  imports: [SharedModule, CompetenciesRoutingModule, DragDropModule, BaseChartDirective]
 })
 export class CompetenciesModule { }
