@@ -31,6 +31,16 @@ export interface TransactionDto {
   sponsorshipId?: number | null;
 }
 
+export interface SponsorPaymentPageContextDto {
+  sponsorshipId: number;
+  sponsorName: string;
+  sponsorEmail: string;
+  eventName: string;
+  agreedAmount: number;
+  paidAmount: number;
+  currency: string;
+}
+
 export type ForecastHorizon = 1 | 3 | 6;
 
 export interface ForecastFactor {
@@ -177,6 +187,15 @@ export interface CreateStripePaymentIntentResponse {
 
 export interface StripePublicConfigResponse {
   publishableKey: string;
+}
+
+export interface CompleteSponsorPaymentByTokenPayload {
+  amountEur: number;
+  amountTnd: number;
+  conversionRate: number;
+  paymentIntentId: string;
+  reference: string;
+  sponsorPhone: string;
 }
 
 export interface BudgetAlertEmailItemPayload {
