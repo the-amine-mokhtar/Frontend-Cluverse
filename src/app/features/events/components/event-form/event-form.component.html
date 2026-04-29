@@ -1,0 +1,478 @@
+<div class="page">
+
+  <!-- ══════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        {{ isEditMode ? 'Edit mode' : 'New event' }}
+      </div>
+      <h1 class="page-title">{{ isEditMode ? 'Update event' : 'Create event' }}</h1>
+      <p class="page-sub">
+        {{ isEditMode ? 'Modify the event details below.' : 'Fill in the details to publish a new event.' }}
+      </p>
+    </div>
+
+    <button class="btn btn-ghost" type="button" (click)="cancel()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back
+    </button>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       SECTION 01 — EVENT DETAILS
+  ══════════════════════════════════════ -->
+  <div class="section-label">
+    <span class="section-num">01</span>
+    <span class="section-text">Event details</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="card">
+    <form [formGroup]="eventForm" class="form">
+
+      <!-- GENERAL ERROR MESSAGE - FORM VALIDATION -->
+      <div class="form-error" *ngIf="eventForm.invalid && eventForm.touched">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Please correct the errors below before submitting the form.
+      </div>
+
+      <!-- SERVER ERROR MESSAGE -->
+      <div class="form-error" *ngIf="hasError && errorMessage" style="background-color: #fee; border-color: #f88;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span><strong>Error:</strong> {{ errorMessage }}</span>
+      </div>
+
+      <!-- TITLE -->
+      <div class="field">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h8M4 18h12"/>
+          </svg>
+          Title <span class="req">*</span>
+        </label>
+        <div class="input-wrap">
+          <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h8M4 18h12"/>
+          </svg>
+          <input type="text" formControlName="title" placeholder="e.g. Football Tournament" />
+        </div>
+        <div class="field-error" *ngIf="eventForm.get('title')?.invalid && eventForm.get('title')?.touched">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span *ngIf="eventForm.get('title')?.errors?.['required']">Title is required</span>
+          <span *ngIf="eventForm.get('title')?.errors?.['minlength']">Title must be at least 3 characters</span>
+          <span *ngIf="eventForm.get('title')?.errors?.['hasProfanity']">Title contains inappropriate language</span>
+        </div>
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="field">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Description
+        </label>
+        <div class="input-wrap input-wrap--ta">
+          <svg class="input-icon input-icon--top" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <textarea formControlName="description" rows="4" placeholder="Describe your event…"></textarea>
+        </div>
+        <div class="field-error" *ngIf="eventForm.get('description')?.invalid && eventForm.get('description')?.touched">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span *ngIf="eventForm.get('description')?.errors?.['hasProfanity']">Description contains inappropriate language</span>
+        </div>
+      </div>
+
+      <!-- EVENT TYPE -->
+      <div class="field">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+          </svg>
+          Event mode <span class="req">*</span>
+        </label>
+        <div class="grid-2">
+          <label class="upload-zone" *ngFor="let type of eventTypes" [class.selected]="eventForm.value.eventType === type.value">
+            <input type="radio" formControlName="eventType" [value]="type.value" />
+            <span class="upload-text">{{ type.label }}</span>
+            <span class="upload-hint">{{ type.description }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- LOCATION WITH AUTOCOMPLETE -->
+      <div class="field field--suggest" *ngIf="!isOnlineEventMode">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Location
+        </label>
+        <div class="input-wrap">
+          <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <input
+            type="text"
+            formControlName="location"
+            (input)="onLocationInput($event)"
+            autocomplete="off"
+            placeholder="Search for a location…"
+          />
+        </div>
+        <ul class="suggestions" *ngIf="suggestions.length > 0">
+          <li *ngFor="let s of suggestions" (click)="selectSuggestion(s)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            {{ s.display_name }}
+          </li>
+        </ul>
+        <div class="field-error" *ngIf="eventForm.get('location')?.invalid && eventForm.get('location')?.touched">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span *ngIf="eventForm.get('location')?.errors?.['required']">Location is required</span>
+          <span *ngIf="eventForm.get('location')?.errors?.['hasProfanity']">Location contains inappropriate language</span>
+        </div>
+      </div>
+
+      <div class="field" *ngIf="isOnlineEventMode">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+          </svg>
+          Online meeting
+        </label>
+        <div class="field-warning" style="margin-top: 0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12a10 10 0 1 1-10-10"/><path d="M22 2 12 12"/>
+          </svg>
+          <span>Jitsi Meet link will be generated automatically when this event is saved.</span>
+        </div>
+        <div class="input-wrap" style="margin-top: 12px;">
+          <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07L11.8 5"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07L12.2 19"/>
+          </svg>
+          <input type="text" formControlName="meetingUrl" readonly placeholder="Jitsi link preview" />
+        </div>
+      </div>
+
+      <!-- MAP -->
+      <div class="field" *ngIf="!isOnlineEventMode">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+            <line x1="8" y1="2" x2="8" y2="18"/>
+            <line x1="16" y1="6" x2="16" y2="22"/>
+          </svg>
+          Location preview
+        </label>
+        <div class="map-block">
+          <app-event-map-3d
+            mode="select"
+            (locationSelected)="onLocationSelected($event)">
+          </app-event-map-3d>
+          <div class="map-hint">🗺️ Click on the map to pin the location</div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       SECTION 02 — SCHEDULING & SETTINGS
+  ══════════════════════════════════════ -->
+  <div class="section-label">
+    <span class="section-num">02</span>
+    <span class="section-text">Scheduling &amp; settings</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="card">
+    <form [formGroup]="eventForm" (ngSubmit)="submit()" class="form">
+
+      <!-- START / END DATE -->
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            </svg>
+            Start date <span class="req">*</span>
+          </label>
+          <div class="input-wrap">
+            <input type="datetime-local" formControlName="startDate" [min]="minStartDate" />
+          </div>
+          <div class="field-error" *ngIf="eventForm.get('startDate')?.invalid && eventForm.get('startDate')?.touched">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span *ngIf="eventForm.get('startDate')?.errors?.['required']">Start date is required</span>
+            <span *ngIf="eventForm.get('startDate')?.errors?.['startDateInPast']">Start date cannot be in the past</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            </svg>
+            End date
+          </label>
+          <div class="input-wrap">
+            <input type="datetime-local" formControlName="endDate" [min]="eventForm.get('startDate')?.value" />
+          </div>
+          <div class="field-error" *ngIf="eventForm.get('endDate')?.invalid && eventForm.get('endDate')?.touched">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span *ngIf="eventForm.get('endDate')?.errors?.['required']">End date is required</span>
+            <span *ngIf="eventForm.get('endDate')?.errors?.['endDateBeforeStart']">End date must be after start date</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPAIGN SELECTION -->
+      <div class="field">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          Campaign <span class="req">*</span>
+        </label>
+        <div class="input-wrap">
+          <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          <select formControlName="campaignId">
+            <option value="">Select a campaign</option>
+            <option *ngFor="let campaign of campaigns" [value]="campaign.id">{{ campaign.title }}</option>
+          </select>
+          <svg class="select-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="field-error" *ngIf="eventForm.get('campaignId')?.invalid && eventForm.get('campaignId')?.touched">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span *ngIf="eventForm.get('campaignId')?.errors?.['required']">Campaign selection is required</span>
+        </div>
+
+        <!-- Campaign Status Warning -->
+        <div class="field-warning" *ngIf="!canAddEventToCampaign && campaignStatusMessage">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>{{ campaignStatusMessage }}</span>
+        </div>
+      </div>
+
+      <!-- CAMPAIGN EVENTS LIST -->
+      <div class="field" *ngIf="eventForm.get('campaignId')?.value">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+          Events in this campaign
+        </label>
+        
+        <div class="campaign-events-block">
+          <!-- Loading state -->
+          <div *ngIf="loadingCampaignEvents" class="events-loading">
+            <div class="spinner"></div>
+            <p>Loading events...</p>
+          </div>
+
+          <!-- Empty state -->
+          <div *ngIf="!loadingCampaignEvents && campaignEvents.length === 0" class="events-empty">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            <p>No events in this campaign yet</p>
+          </div>
+
+          <!-- Events list -->
+          <div *ngIf="!loadingCampaignEvents && campaignEvents.length > 0" class="events-list">
+            <div *ngFor="let event of campaignEvents" class="event-item">
+              <div class="event-item-header">
+                <strong>{{ event.title }}</strong>
+                <span class="event-status" [ngClass]="'status-' + (event.status || 'PLANNED').toLowerCase()">
+                  {{ event.status || 'PLANNED' }}
+                </span>
+              </div>
+              <div class="event-item-meta">
+                <span class="meta-row">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  {{ event.startDate | date:'dd MMM yyyy' }}
+                </span>
+                <span class="meta-row">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  </svg>
+                  {{ event.currentParticipants }}/{{ event.capacity || '∞' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- CAPACITY / CATEGORY / EVENT TYPE -->
+      <div class="grid-3">
+        <div class="field">
+          <label class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Capacity
+          </label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+            </svg>
+            <input type="number" formControlName="capacity" placeholder="Max participants" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            Category
+          </label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            </svg>
+            <select formControlName="category" (change)="onCategoryChange($event)">
+              <option *ngFor="let cat of eventCategories" [value]="cat.value">{{ cat.label }}</option>
+              <option value="ADD_NEW">+ Ajouter une nouvelle catégorie</option>
+            </select>
+            <svg class="select-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Custom Category Input -->
+        <div class="field" *ngIf="showCustomCategoryInput">
+          <label class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+            </svg>
+            Nouvelle catégorie
+          </label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+            </svg>
+            <input 
+              type="text" 
+              [(ngModel)]="customCategory"
+              (keydown.enter)="addCustomCategory()"
+              placeholder="e.g. Retreat, Workshop avancé..."
+              class="custom-input"
+            />
+          </div>
+          <div class="custom-category-actions">
+            <button type="button" class="btn btn-primary btn-sm" (click)="addCustomCategory()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Ajouter
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="cancelCustomCategory()">
+              Annuler
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- IMAGE UPLOAD -->
+      <div class="field">
+        <label class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Event image
+        </label>
+        <label class="upload-zone">
+          <input type="file" (change)="onFileChange($event)" accept="image/*" />
+          <div class="upload-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <span class="upload-text">Click to upload or drag &amp; drop</span>
+          <span class="upload-hint">PNG, JPG, WEBP · max 10 MB</span>
+        </label>
+        <div class="preview-wrap" *ngIf="eventForm.value.imageUrl">
+          <img [src]="eventForm.value.imageUrl" alt="Event image preview" class="preview-img" />
+          <span class="preview-tag">Preview</span>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="eventForm.invalid || isSubmitting || !canAddEventToCampaign">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          {{ isEditMode ? 'Update event' : 'Save event' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="cancel()">Cancel</button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
