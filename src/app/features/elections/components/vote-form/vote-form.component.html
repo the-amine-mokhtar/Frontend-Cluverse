@@ -40,7 +40,18 @@
     <p *ngIf="view === 'candidates'">No candidates available for this election.</p>
   </div>
 
-  <div class="vote-pie__chart-shell" *ngIf="slices.length > 0">
+  <div class="vote-pie__tabs" *ngIf="view === 'candidates' && candidates.length > 0" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--e-border); padding-bottom: 0;">
+    <button [style.borderBottom]="activeTab === 'vote' ? '3px solid #4f46e5' : '3px solid transparent'"
+            [style.color]="activeTab === 'vote' ? 'var(--e-text)' : 'var(--e-muted)'"
+            style="padding: 0.8rem 1.25rem; background: transparent; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s ease;"
+            (click)="activeTab = 'vote'">Vote</button>
+    <button [style.borderBottom]="activeTab === 'insights' ? '3px solid #4f46e5' : '3px solid transparent'"
+            [style.color]="activeTab === 'insights' ? 'var(--e-text)' : 'var(--e-muted)'"
+            style="padding: 0.8rem 1.25rem; background: transparent; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s ease;"
+            (click)="activeTab = 'insights'">Insights</button>
+  </div>
+
+  <div class="vote-pie__chart-shell" *ngIf="slices.length > 0 && (view === 'elections' || activeTab === 'vote')">
     <svg class="vote-pie__chart" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
       <g *ngFor="let slice of slices; let i = index"
          class="vote-pie__slice"
@@ -77,7 +88,7 @@
     </svg>
   </div>
 
-  <article *ngIf="view === 'candidates' && selectedCandidate" class="vote-pie__profile">
+  <article *ngIf="view === 'candidates' && selectedCandidate && activeTab === 'vote'" class="vote-pie__profile">
     <aside class="vote-pie__profile-sidebar">
       <div class="vote-pie__avatar"
            [style.background]="palette[candidates.indexOf(selectedCandidate) % palette.length] + '22'"
@@ -134,6 +145,69 @@
       </div>
     </section>
   </article>
+
+  <div class="insights-container" *ngIf="view === 'candidates' && activeTab === 'insights'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div class="leaderboard" style="background: var(--e-bg-card); border: 1px solid var(--e-border); border-radius: 1rem; padding: 1.25rem;">
+      <h3 style="margin: 0 0 1rem; font-size: 1.05rem; font-weight: 800; border-bottom: 1px solid var(--e-border); padding-bottom: 0.5rem; color: var(--e-text);">Membership Duration</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div *ngFor="let candidate of membershipLeaderboard; let i = index" 
+             style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; background: var(--e-bg-input); border-radius: 0.75rem; border: 1px solid var(--e-border);">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="font-size: 1rem; font-weight: 800; color: var(--e-muted); width: 1.5rem;">#{{ i + 1 }}</div>
+            <div style="display: flex; align-items: center; justify-content: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: {{ getCandidateColor(candidate.userName) }}22; color: {{ getCandidateColor(candidate.userName) }}; font-weight: 700; font-size: 0.8rem;">
+              {{ getInitials(candidate.userName) }}
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-size: 0.85rem; font-weight: 700; color: var(--e-text);">{{ candidate.userName || 'Unknown' }}</span>
+            </div>
+          </div>
+          <div style="font-size: 0.8rem; font-weight: 600; color: var(--e-muted); background: var(--e-bg-card); padding: 0.3rem 0.6rem; border-radius: 999px; border: 1px solid var(--e-border);">
+            {{ candidate.joinDateStr | date:'mediumDate' }} ({{ candidate.durationDays }} days)
+          </div>
+        </div>
+        <div *ngIf="membershipLeaderboard.length === 0" style="text-align: center; color: var(--e-muted); padding: 1rem; font-size: 0.85rem;">
+          No data available
+        </div>
+      </div>
+    </div>
+
+    <div class="leaderboard" style="background: var(--e-bg-card); border: 1px solid var(--e-border); border-radius: 1rem; padding: 1.25rem;">
+      <h3 style="margin: 0 0 1rem; font-size: 1.05rem; font-weight: 800; border-bottom: 1px solid var(--e-border); padding-bottom: 0.5rem; color: var(--e-text);">Competency Matches</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div *ngFor="let candidate of competencyLeaderboard; let i = index" 
+             style="padding: 0.8rem; background: var(--e-bg-input); border-radius: 0.75rem; border: 1px solid var(--e-border);">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div style="font-size: 1rem; font-weight: 800; color: var(--e-muted); width: 1.5rem;">#{{ i + 1 }}</div>
+              <div style="display: flex; align-items: center; justify-content: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: {{ getCandidateColor(candidate.userName) }}22; color: {{ getCandidateColor(candidate.userName) }}; font-weight: 700; font-size: 0.8rem;">
+                {{ getInitials(candidate.userName) }}
+              </div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--e-text);">{{ candidate.userName || 'Unknown' }}</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.2rem;">
+              <span style="font-size: 0.8rem; font-weight: 800; color: var(--e-success); background: var(--e-success-bg); border: 1px solid var(--e-success-border); padding: 0.3rem 0.6rem; border-radius: 999px;">
+                {{ candidate.matchCount }} matches
+              </span>
+            </div>
+          </div>
+          <div *ngIf="candidate.matchedSkills && candidate.matchedSkills.length > 0" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; padding-left: 2.25rem;">
+            <span *ngFor="let skill of candidate.matchedSkills" style="font-size: 0.7rem; font-weight: 600; color: var(--e-text); background: var(--e-bg-card); border: 1px solid var(--e-border); padding: 0.2rem 0.5rem; border-radius: 0.5rem; display: inline-flex; align-items: center; gap: 0.2rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 20 20" fill="var(--e-success)">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              {{ skill }}
+            </span>
+          </div>
+        </div>
+        <div *ngIf="competencyLeaderboard.length === 0" style="text-align: center; color: var(--e-muted); padding: 1rem; font-size: 0.85rem;">
+          No required competencies or no matches
+        </div>
+      </div>
+    </div>
+  </div>
+
 </section>
 
 <div class="compare-overlay" *ngIf="showCompareReport" (click)="closeReport()">
