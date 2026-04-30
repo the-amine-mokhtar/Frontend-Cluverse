@@ -1,0 +1,112 @@
+<div class="faw">
+
+  <!-- Floating bot bubble -->
+  <button
+    class="faw__bubble"
+    [class.faw__bubble--open]="isOpen"
+    [class.faw__bubble--hover]="isHovered"
+    (click)="togglePanel()"
+    (mouseenter)="isHovered = true"
+    (mouseleave)="isHovered = false"
+    aria-label="Open Finance AI Assistant"
+    type="button">
+    <img class="faw__bot-face" src="assets/logos/CluverseMascott.png" alt="Cluverse AI" />
+    <span class="faw__pulse" *ngIf="!isOpen"></span>
+  </button>
+
+  <!-- Chat panel -->
+  <div class="faw__panel" [class.faw__panel--visible]="isOpen" role="dialog" aria-label="Finance AI Agent">
+
+    <!-- Header -->
+    <header class="faw__header">
+      <div class="faw__header-bot">
+        <img class="faw__header-avatar" src="assets/logos/CluverseMascott.png" alt="Cluverse AI" />
+        <div class="faw__header-info">
+          <h3 class="faw__header-title">Finance AI</h3>
+          <span class="faw__header-status">
+            <span class="faw__status-dot"></span>
+            {{ isTyping ? (lang === 'fr' ? 'En train d\'écrire...' : 'Typing...') : (lang === 'fr' ? 'En ligne' : 'Online') }}
+          </span>
+        </div>
+      </div>
+      <div class="faw__header-controls">
+        <button class="faw__ctrl-btn" type="button" (click)="toggleLang()" [title]="lang === 'en' ? 'Switch to French' : 'Passer en anglais'">
+          {{ lang === 'en' ? 'FR' : 'EN' }}
+        </button>
+        <button class="faw__ctrl-btn faw__ctrl-btn--close" type="button" (click)="togglePanel()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Welcome card -->
+    <div class="faw__welcome-card">
+      <p class="faw__welcome-text">
+        {{ lang === 'fr' ? 'Bonjour! Que puis-je faire pour vous aujourd\'hui?' : 'Hi! What do you want to do today?' }}
+      </p>
+    </div>
+
+    <!-- Messages -->
+    <div class="faw__messages" #messagesEl>
+      <div
+        *ngFor="let msg of messages"
+        class="faw__msg"
+        [class.faw__msg--user]="msg.role === 'user'"
+        [class.faw__msg--bot]="msg.role === 'bot'">
+        <div class="faw__msg-bubble">{{ msg.content }}</div>
+        <span class="faw__msg-time">{{ msg.time }}</span>
+      </div>
+
+      <!-- Typing indicator -->
+      <div class="faw__typing" *ngIf="isTyping">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="faw__quick">
+      <button
+        *ngFor="let action of quickActions"
+        class="faw__quick-btn"
+        type="button"
+        (click)="sendQuick(action)">
+        {{ action.label }}
+      </button>
+    </div>
+
+    <!-- Composer -->
+    <div class="faw__composer">
+      <input
+        class="faw__input"
+        type="text"
+        [(ngModel)]="draft"
+        [disabled]="isTyping"
+        (keyup.enter)="send()"
+        [placeholder]="lang === 'fr' ? 'Décrivez votre tâche...' : 'Describe your task or ask a question'"
+        autocomplete="off" />
+      <button
+        class="faw__voice-btn"
+        type="button"
+        [class.faw__voice-btn--active]="isListening"
+        (click)="toggleVoice()"
+        [title]="lang === 'fr' ? 'Saisie vocale' : 'Voice input'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="11" rx="3"/>
+          <path d="M19 10a7 7 0 0 1-14 0"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+      <button
+        class="faw__send-btn"
+        type="button"
+        [disabled]="!draft.trim() || isTyping"
+        (click)="send()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+</div>

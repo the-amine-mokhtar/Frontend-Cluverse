@@ -1,0 +1,94 @@
+<section class="payment-page">
+  <div class="payment-page__frame">
+    <header class="payment-page__header">
+      <h1>Secure Sponsor Payment</h1>
+      <p *ngIf="eventName">For: {{ eventName }}</p>
+    </header>
+
+    <section class="payment-shell">
+      <article class="payment-card">
+        <div class="payment-card__visa">VISA</div>
+        <div class="payment-card__chip" aria-hidden="true"></div>
+        <div class="payment-card__number">{{ formattedCardNumber }}</div>
+        <div class="payment-card__row">
+          <div>
+            <span class="payment-card__label">FULL NAME</span>
+            <strong>{{ sponsorName || 'Sponsor Name' }}</strong>
+          </div>
+          <div>
+            <span class="payment-card__label">EXPIRES</span>
+            <strong>MM / YY</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="payment-form">
+        <h2 class="payment-form__title">Payment Information</h2>
+
+        <div class="payment-form__amount-line">
+          <span>Amount in Stripe</span>
+          <strong>{{ formatCurrencyEur(amountEur ?? 0) }}</strong>
+        </div>
+
+        <div class="form-grid">
+          <label class="field field--full">
+            <span class="field__label">Sponsor Full Name</span>
+            <input class="field__control" type="text" placeholder="John Doe" [(ngModel)]="sponsorName" [readonly]="isPageReady" />
+          </label>
+
+          <label class="field field--full">
+            <span class="field__label">Sponsor Email</span>
+            <input class="field__control" type="email" placeholder="sponsor@company.com" [(ngModel)]="sponsorEmail" [readonly]="isPageReady" />
+          </label>
+
+          <label class="field">
+            <span class="field__label">Amount (EUR)</span>
+            <input class="field__control" type="number" min="1" step="0.01" placeholder="250" [(ngModel)]="amountEur" [readonly]="isPageReady" />
+          </label>
+
+          <label class="field">
+            <span class="field__label">EUR -> TND Rate</span>
+            <input class="field__control" type="number" min="0.0001" step="0.0001" [(ngModel)]="conversionRate" />
+          </label>
+
+          <label class="field">
+            <span class="field__label">Phone (optional)</span>
+            <input class="field__control" type="text" placeholder="+216 ..." [(ngModel)]="sponsorPhone" />
+          </label>
+
+          <label class="field field--full">
+            <span class="field__label">Card number preview</span>
+            <input class="field__control" type="text" placeholder="1234 5678 9012 3456" maxlength="19" [(ngModel)]="cardDigits" />
+          </label>
+        </div>
+
+        <div class="conversion-preview">
+          <span>Converted amount to store in Transactions (INCOME)</span>
+          <strong>{{ formatCurrencyTnd(amountTndPreview) }}</strong>
+        </div>
+
+        <label class="field field--full">
+          <span class="field__label">Secure card details (Stripe)</span>
+          <div class="stripe-card-wrap" [class.stripe-card-wrap--ready]="isStripeReady">
+            <div #stripeCardElement class="stripe-card-element"></div>
+          </div>
+        </label>
+
+        <p class="payment-note">{{ stripeInfoMessage }}</p>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="isSubmitting || !isStripeReady || !isPageReady"
+            (click)="payWithStripeEmbedded()">
+            {{ isSubmitting ? 'Processing payment...' : 'Pay now (Stripe API)' }}
+          </button>
+        </div>
+
+        <p class="status status--success" *ngIf="successMessage">{{ successMessage }}</p>
+        <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      </article>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,1023 @@
+<!-- ╔═══════════════════════════════════════════════════════════╗ -->
+<!-- ║        CAMPAIGN HOME — CORRECTED (EN + FIXES)           ║ -->
+<!-- ╚═══════════════════════════════════════════════════════════╝ -->
+<div class="campaign-shell">
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <header class="page-header">
+    <div class="header-left">
+      <button *ngIf="viewMode !== 'list'" mat-icon-button class="back-btn" (click)="showList()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-brand">
+        <div class="header-logo">
+          <mat-icon>campaign</mat-icon>
+        </div>
+        <div class="header-title-block">
+          <span class="header-eyebrow">Management</span>
+          <h1 class="header-title">
+            <ng-container [ngSwitch]="viewMode">
+              <ng-container *ngSwitchCase="'list'">Campaigns</ng-container>
+              <ng-container *ngSwitchCase="'dashboard'">Analytics</ng-container>
+              <ng-container *ngSwitchCase="'form'">{{ isEditMode ? 'Edit Campaign' : 'New Campaign' }}</ng-container>
+              <ng-container *ngSwitchCase="'detail'">{{ selectedCampaign?.title }}</ng-container>
+            </ng-container>
+          </h1>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button *ngIf="viewMode === 'list'" mat-icon-button class="btn-dashboard" (click)="showDashboard()" title="Analytics">
+        <mat-icon>bar_chart</mat-icon>
+      </button>
+      <button *ngIf="viewMode === 'list' && isAdmin" mat-flat-button class="btn-create" (click)="showCreate()">
+        <mat-icon>add</mat-icon> Create
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════════ CONTENT ══════════════ -->
+  <main class="page-content">
+
+    <!-- ─────────────── LIST ─────────────── -->
+    <ng-container *ngIf="viewMode === 'list'">
+
+      <div class="list-toolbar">
+        <div class="search-wrap">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input class="search-input" placeholder="Search campaigns…" [formControl]="searchControl" />
+        </div>
+        <div class="filter-chips">
+          <button *ngFor="let f of filters" class="chip"
+            [class.chip--active]="activeFilter === f.value"
+            (click)="setFilter(f.value)">{{ f.label }}</button>
+        </div>
+      </div>
+
+      <!-- KPI STRIP -->
+      <div *ngIf="!isLoading" class="kpi-strip">
+        <div class="kpi-strip-card">
+          <div class="kpi-strip-icon kpi-icon--total"><mat-icon>campaign</mat-icon></div>
+          <div class="kpi-strip-body">
+            <span class="kpi-strip-value">{{ dashStats.totalCampaigns }}</span>
+            <span class="kpi-strip-label">Total</span>
+          </div>
+        </div>
+        <div class="kpi-strip-card">
+          <div class="kpi-strip-icon kpi-icon--active"><mat-icon>play_circle</mat-icon></div>
+          <div class="kpi-strip-body">
+            <span class="kpi-strip-value">{{ dashStats.activeCampaigns }}</span>
+            <span class="kpi-strip-label">Active</span>
+          </div>
+        </div>
+        <div class="kpi-strip-card">
+          <div class="kpi-strip-icon kpi-icon--participants"><mat-icon>people</mat-icon></div>
+          <div class="kpi-strip-body">
+            <span class="kpi-strip-value">{{ dashStats.totalParticipants | number }}</span>
+            <span class="kpi-strip-label">Participants</span>
+          </div>
+        </div>
+        <div class="kpi-strip-card">
+          <div class="kpi-strip-icon kpi-icon--views"><mat-icon>visibility</mat-icon></div>
+          <div class="kpi-strip-body">
+            <span class="kpi-strip-value">{{ dashStats.totalViews | number }}</span>
+            <span class="kpi-strip-label">Views</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skeleton -->
+      <div *ngIf="isLoading" class="skeleton-grid">
+        <div class="skeleton-card" *ngFor="let _ of [1,2,3,4,5,6]"></div>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!isLoading && filteredCampaigns.length === 0" class="empty-state">
+        <div class="empty-icon-wrap"><mat-icon class="empty-icon">campaign</mat-icon></div>
+        <p class="empty-title">No campaigns found</p>
+        <p class="empty-sub">Adjust your search or create a new campaign.</p>
+        <button *ngIf="isAdmin" mat-flat-button class="btn-create" (click)="showCreate()">
+          <mat-icon>add</mat-icon> Create Campaign
+        </button>
+      </div>
+
+      <!-- Grid -->
+      <div *ngIf="!isLoading && filteredCampaigns.length > 0" class="campaign-grid">
+        <article *ngFor="let c of filteredCampaigns; trackBy: trackById" class="campaign-card" (click)="showDetail(c)">
+          <div class="card-visual" [style.backgroundImage]="c.imageUrl ? 'url('+c.imageUrl+')' : null">
+            <div class="card-visual-overlay"></div>
+            <div class="card-badges">
+              <span class="badge" [ngClass]="getStatusClass(c.status)">
+                <mat-icon class="badge-icon">{{ getStatusIcon(c.status) }}</mat-icon>{{ getStatusLabel(c.status) }}
+              </span>
+              <span class="badge" [ngClass]="getVisibilityClass(c.visibility)">
+                <mat-icon class="badge-icon">{{ getVisibilityIcon(c.visibility) }}</mat-icon>{{ getVisibilityLabel(c.visibility) }}
+              </span>
+              <span *ngIf="c.featured" class="badge badge-featured"><mat-icon class="badge-icon">star</mat-icon>Featured</span>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <h3 class="card-title">{{ c.title }}</h3>
+            <p class="card-desc">{{ (c.description || '') | slice:0:100 }}{{ (c.description || '').length > 100 ? '…' : '' }}</p>
+            <div class="card-meta">
+              <span class="meta-item"><mat-icon>calendar_today</mat-icon>{{ c.startDate | date:'dd MMM yyyy' }}</span>
+              <span *ngIf="c.targetAudience" class="meta-item"><mat-icon>people</mat-icon>{{ c.targetAudience }}</span>
+            </div>
+            <div *ngIf="c.maxParticipants" class="capacity-wrap">
+              <div class="capacity-labels">
+                <span>{{ c.currentParticipants }} / {{ c.maxParticipants }}</span>
+                <span class="capacity-pct">{{ getCapacityPercent(c) }}%</span>
+              </div>
+              <div class="capacity-track"><div class="capacity-fill" [style.width.%]="getCapacityPercent(c)"></div></div>
+            </div>
+            <div *ngIf="!c.maxParticipants" class="capacity-no-limit">
+              <mat-icon>group</mat-icon>{{ c.currentParticipants }} participants · unlimited
+            </div>
+            <div class="card-stats">
+              <div class="stat-item"><mat-icon>visibility</mat-icon><span>{{ c.views | number }}</span></div>
+              <div class="stat-item"><mat-icon>event</mat-icon><span>{{ c.eventsCount || 0 }} events</span></div>
+            </div>
+          </div>
+
+          <div class="card-footer" (click)="$event.stopPropagation()">
+            <div class="card-actions-right">
+              <!-- ✅ FIX: Permissions button only for SHARED campaigns -->
+              <button *ngIf="isAdmin && c.visibility === 'SHARED'" mat-icon-button class="action-btn action-permissions"
+                [title]="'Manage permissions for ' + c.title"
+                (click)="togglePermissionsPanel(c); $event.stopPropagation()">
+                <mat-icon>security</mat-icon>
+              </button>
+              <!-- Tooltip for non-SHARED campaigns -->
+              <button *ngIf="isAdmin && c.visibility !== 'SHARED'" mat-icon-button class="action-btn action-permissions disabled"
+                [title]="'Permissions available only for SHARED campaigns (current: ' + c.visibility + ')'"
+                disabled>
+                <mat-icon>security</mat-icon>
+              </button>
+              <button *ngIf="isAdmin" mat-icon-button class="action-btn action-edit"
+                (click)="showEdit(c); $event.stopPropagation()">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button *ngIf="isAdmin" mat-icon-button class="action-btn action-delete"
+                (click)="openDeleteModal(c); $event.stopPropagation()">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- PERMISSIONS OVERLAY — inside the list ng-container                 -->
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <div *ngIf="showPermissionsPanel && selectedCampaign && isAdmin"
+           class="perm-overlay">
+
+        <!-- Backdrop -->
+        <div class="perm-backdrop" (click)="closePanel()"></div>
+
+        <!-- Modal -->
+        <div class="perm-modal">
+
+          <div class="permissions-modal-header">
+            <div class="permissions-modal-title">
+              <mat-icon>security</mat-icon>
+              <h2>Manage Permissions</h2>
+            </div>
+            <button mat-icon-button (click)="closePanel()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <div class="permissions-modal-body">
+            <div class="permissions-campaign-name">
+              <mat-icon>campaign</mat-icon>
+              {{ selectedCampaign.title }}
+              <span class="perm-visibility-badge" [ngClass]="getVisibilityClass(selectedCampaign.visibility)">
+                {{ getVisibilityLabel(selectedCampaign.visibility) }}
+              </span>
+            </div>
+
+            <!-- ── ADD NEW CLUB SECTION ─────────────────────────── -->
+            <div class="perm-add-section">
+              <h4 class="perm-add-title"><mat-icon>person_add</mat-icon>Grant Access to a Club</h4>
+
+              <!-- Club search / selector -->
+              <div class="perm-club-search-wrap">
+                <div class="perm-club-search-input-row">
+                  <mat-icon class="perm-search-icon">search</mat-icon>
+                  <input
+                    class="perm-club-search-input"
+                    placeholder="Search clubs by name…"
+                    [formControl]="clubSearchControl"
+                    (focus)="filterClubs(clubSearchControl.value ?? '')"
+                    autocomplete="off" />
+                  <mat-spinner *ngIf="allClubsLoading" diameter="16" class="perm-loader"></mat-spinner>
+                </div>
+
+                <!-- Dropdown results -->
+                <div class="perm-club-dropdown"
+                  *ngIf="filteredClubs.length > 0 && !selectedClubForPermission">
+                  <div *ngFor="let club of filteredClubs; trackBy: trackByClubId"
+                    class="perm-club-option"
+                    (click)="selectClubForPermission(club)">
+                    <div class="perm-club-avatar">{{ (club.name || 'C')[0].toUpperCase() }}</div>
+                    <div class="perm-club-info">
+                      <span class="perm-club-name">{{ club.name }}</span>
+                      <span class="perm-club-id">#{{ club.id }}</span>
+                    </div>
+                    <mat-icon class="perm-club-add-icon">add_circle_outline</mat-icon>
+                  </div>
+                </div>
+
+                <!-- No clubs message -->
+                <div class="perm-no-clubs"
+                  *ngIf="!allClubsLoading && clubSearchControl.value && filteredClubs.length === 0 && !selectedClubForPermission">
+                  <mat-icon>search_off</mat-icon>
+                  <span>No clubs found or all clubs already have access</span>
+                </div>
+              </div>
+
+              <!-- Selected club + permission toggles -->
+              <div *ngIf="selectedClubForPermission" class="perm-selected-club">
+                <div class="perm-selected-club-header">
+                  <div class="perm-selected-avatar">{{ (selectedClubForPermission.name || 'C')[0].toUpperCase() }}</div>
+                  <div class="perm-selected-info">
+                    <strong>{{ selectedClubForPermission.name }}</strong>
+                    <span>#{{ selectedClubForPermission.id }}</span>
+                  </div>
+                  <button class="perm-deselect-btn"
+                    (click)="selectedClubForPermission = null; clubSearchControl.setValue('')">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+
+                <div class="perm-permission-toggles">
+                  <span class="perm-toggle-label">Permissions to grant:</span>
+                  <div class="perm-toggle-chips">
+                    <button
+                      *ngFor="let perm of permissionsOptions"
+                      class="perm-toggle-chip"
+                      [class.active]="isPendingPermission(perm)"
+                      (click)="togglePendingPermission(perm)">
+                      <mat-icon>{{ perm === 'VIEW' ? 'visibility' : perm === 'ADD_EVENT' ? 'add_circle' : 'manage_accounts' }}</mat-icon>
+                      {{ perm }}
+                    </button>
+                  </div>
+                </div>
+
+                <button class="perm-grant-btn" (click)="grantAccessToClub()"
+                  [disabled]="pendingPermissions.size === 0">
+                  <mat-icon>check</mat-icon>
+                  Grant Access
+                </button>
+              </div>
+            </div>
+
+            <div class="perm-divider"><span>Existing Access</span></div>
+
+            <!-- ── EXISTING PERMISSIONS LIST ──────────────────── -->
+            <div *ngIf="permissionsLoading" class="permissions-loading">
+              <mat-spinner [diameter]="30"></mat-spinner>
+              <p>Loading permissions…</p>
+            </div>
+
+            <div *ngIf="!permissionsLoading && campaignPermissions.length === 0" class="permissions-empty">
+              <mat-icon>lock_open</mat-icon>
+              <p>No club has been granted access yet.</p>
+            </div>
+
+            <div *ngIf="!permissionsLoading && campaignPermissions.length > 0" class="permissions-list">
+              <div *ngFor="let access of campaignPermissions" class="permission-item">
+                <div class="permission-club">
+                  <div class="permission-club-avatar">{{ (access.clubName || 'C')[0] }}</div>
+                  <div class="permission-club-details">
+                    <strong>{{ access.clubName || 'Club #' + access.clubId }}</strong>
+                    <span class="perm-club-id-small">#{{ access.clubId }}</span>
+                  </div>
+                </div>
+
+                <div class="permission-perms">
+                  <mat-chip-set>
+                    <mat-chip
+                      *ngFor="let perm of ['VIEW', 'ADD_EVENT', 'MANAGE']"
+                      [class.selected]="hasPermission(access, perm)"
+                      (click)="hasPermission(access, perm)
+                        ? revokePermissionFromClub(selectedCampaign!.id, access.clubId, perm)
+                        : grantPermissionToClub(selectedCampaign!.id, access.clubId, perm)">
+                      {{ perm }}
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
+
+                <button class="perm-revoke-all-btn" title="Remove all access"
+                  (click)="revokeAllFromClub(selectedCampaign!.id, access)">
+                  <mat-icon>person_remove</mat-icon>
+                </button>
+              </div>
+            </div>
+
+          </div><!-- /permissions-modal-body -->
+        </div><!-- /perm-modal -->
+      </div><!-- /perm-overlay -->
+
+    </ng-container><!-- /viewMode === 'list' -->
+
+    <!-- ─────────────── FORM WIZARD ─────────────── -->
+    <ng-container *ngIf="viewMode === 'form'">
+      <form [formGroup]="campaignForm" (ngSubmit)="onSubmit()" novalidate class="cfw-root">
+        <div class="cfw-layout">
+
+          <!-- SIDEBAR -->
+          <aside class="cfw-sidebar">
+            <div class="cfw-sidebar-header">
+              <span class="cfw-sidebar-eyebrow">Form</span>
+              <h2 class="cfw-sidebar-title">{{ isEditMode ? 'Edit' : 'New Campaign' }}</h2>
+            </div>
+
+            <nav class="cfw-steps">
+              <div *ngFor="let step of wizardSteps; trackBy: trackByStepId"
+                class="cfw-step"
+                [class.is-active]="isStepActive(step.id)"
+                [class.is-done]="isStepDone(step.id)"
+                [class.is-clickable]="isStepClickable(step.id)"
+                (click)="jumpToStep(step.id)">
+                <div class="cfw-step-num">
+                  <mat-icon *ngIf="isStepDone(step.id)" class="done-icon">check</mat-icon>
+                  <span *ngIf="!isStepDone(step.id)">{{ step.id + 1 }}</span>
+                </div>
+                <div class="cfw-step-info">
+                  <span class="cfw-step-name">{{ step.name }}</span>
+                  <span class="cfw-step-sub">{{ step.sub }}</span>
+                </div>
+              </div>
+            </nav>
+
+            <div class="cfw-progress">
+              <div class="cfw-progress-header">
+                <span>Progress</span>
+                <span class="cfw-progress-pct">{{ progressPercent }}%</span>
+              </div>
+              <div class="cfw-progress-track">
+                <div class="cfw-progress-fill" [style.width.%]="progressPercent"></div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- MAIN -->
+          <div class="cfw-main">
+
+            <!-- Topbar -->
+            <div class="cfw-topbar">
+              <div class="cfw-topbar-left">
+                <span class="cfw-topbar-num">{{ currentStep + 1 }}</span>
+                <span class="cfw-topbar-sep">/</span>
+                <span class="cfw-topbar-total">{{ wizardSteps.length }}</span>
+                <span class="cfw-topbar-name">{{ wizardSteps[currentStep].name }}</span>
+              </div>
+              <div class="cfw-topbar-drafts">
+                <button type="button" class="cfw-draft-btn" (click)="saveDraft()">
+                  <mat-icon>save_as</mat-icon> Draft
+                </button>
+                <button type="button" class="cfw-restore-btn" (click)="restoreDraft()">
+                  <mat-icon>restore</mat-icon> Restore
+                </button>
+              </div>
+            </div>
+
+            <!-- Panels -->
+            <div class="cfw-body">
+
+              <!-- STEP 0 — Identity -->
+              <div *ngIf="currentStep === 0" class="cfw-panel" [@stepSlide]>
+                <div class="cfw-panel-header">
+                  <h3 class="cfw-panel-title">Identity</h3>
+                  <p class="cfw-panel-desc">Title and description are the first things participants will see.</p>
+                </div>
+                <div class="cfw-fields">
+
+                  <div class="cfw-field">
+                    <label class="cfw-label" for="f-title">Title <span class="cfw-req">*</span></label>
+                    <input id="f-title" class="cfw-input" formControlName="title"
+                      placeholder="e.g. Open Day 2025" maxlength="100"
+                      [class.is-error]="f['title'].invalid && f['title'].touched" />
+                    <div class="cfw-field-footer">
+                      <div class="cfw-errors">
+                        <span *ngIf="f['title'].touched && f['title'].hasError('required')" class="cfw-error">Title is required.</span>
+                        <span *ngIf="f['title'].touched && f['title'].hasError('minlength')" class="cfw-error">Minimum 3 characters.</span>
+                        <span *ngIf="f['title'].touched && f['title'].hasError('maxlength')" class="cfw-error">Maximum 100 characters.</span>
+                      </div>
+                      <span class="cfw-char">{{ f['title'].value?.length || 0 }}/100</span>
+                    </div>
+                  </div>
+
+                  <div class="cfw-field">
+                    <label class="cfw-label" for="f-desc">Description <span class="cfw-req">*</span></label>
+                    <textarea id="f-desc" class="cfw-textarea" formControlName="description" rows="5"
+                      maxlength="500" placeholder="Describe the goals and content…"
+                      [class.is-error]="f['description'].invalid && f['description'].touched"></textarea>
+                    <div class="cfw-field-footer">
+                      <div class="cfw-errors">
+                        <span *ngIf="f['description'].touched && f['description'].hasError('required')" class="cfw-error">Description is required.</span>
+                        <span *ngIf="f['description'].touched && f['description'].hasError('minlength')" class="cfw-error">Minimum 10 characters.</span>
+                      </div>
+                      <span class="cfw-char">{{ f['description'].value?.length || 0 }}/500</span>
+                    </div>
+                  </div>
+
+                  <div class="cfw-field">
+                    <label class="cfw-label" for="f-audience">Target Audience <span class="cfw-opt">(optional)</span></label>
+                    <input id="f-audience" class="cfw-input" formControlName="targetAudience"
+                      placeholder="e.g. Students, Professionals…" />
+                    <span class="cfw-hint">Helps target communications.</span>
+                  </div>
+
+                  <div class="cfw-field">
+                    <label class="cfw-label">Visibility <span class="cfw-req">*</span></label>
+                    <div class="cfw-visibility-group">
+                      <label *ngFor="let opt of visibilityOptions"
+                        class="cfw-visibility-option"
+                        [class.is-selected]="f['visibility'].value === opt.value">
+                        <input type="radio" formControlName="visibility" [value]="opt.value" class="cfw-radio-hidden" />
+                        <mat-icon>{{ opt.icon }}</mat-icon>
+                        <div class="cfw-vis-text">
+                          <span>{{ opt.label }}</span>
+                          <small>{{ opt.hint }}</small>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- STEP 1 — Visual -->
+              <div *ngIf="currentStep === 1" class="cfw-panel" [@stepSlide]>
+                <div class="cfw-panel-header">
+                  <h3 class="cfw-panel-title">Visual</h3>
+                  <p class="cfw-panel-desc">Add a cover image for your campaign.</p>
+                </div>
+                <div class="cfw-fields">
+                  <div class="cfw-field">
+                    <label class="cfw-label" for="f-imageUrl">Cover Image</label>
+                    <div class="cfw-file-upload">
+                      <input type="file" id="f-imageUrl" class="cfw-file-input" accept="image/*" (change)="onFileSelected($event)" />
+                      <div class="cfw-file-dropzone" [class.has-file]="selectedFile">
+                        <div class="cfw-file-content">
+                          <mat-icon class="cfw-file-icon">cloud_upload</mat-icon>
+                          <div class="cfw-file-text">
+                            <span class="cfw-file-primary">{{ selectedFile ? selectedFile.name : 'Click or drag an image here' }}</span>
+                            <span class="cfw-file-secondary">PNG, JPG, GIF up to 5 MB</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="cfw-img-preview">
+                      <ng-container *ngIf="imagePreviewUrl && !imageError; else imgPlaceholder">
+                        <img [src]="imagePreviewUrl" alt="Preview" (error)="onImageError()" class="cfw-img-preview-img" />
+                      </ng-container>
+                      <ng-template #imgPlaceholder>
+                        <div class="cfw-img-placeholder">
+                          <mat-icon>image</mat-icon>
+                          <span>{{ imageError ? 'Image not found' : 'Image preview' }}</span>
+                        </div>
+                      </ng-template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- STEP 2 — Dates & Setup -->
+              <div *ngIf="currentStep === 2" class="cfw-panel" [@stepSlide]>
+                <div class="cfw-panel-header">
+                  <h3 class="cfw-panel-title">Dates & Setup</h3>
+                  <p class="cfw-panel-desc">Set the schedule, capacity, and display options.</p>
+                </div>
+                <div class="cfw-fields">
+
+                  <div class="cfw-row">
+                    <div class="cfw-field">
+                      <label class="cfw-label" for="f-start">Start Date <span class="cfw-req">*</span></label>
+                      <input id="f-start" type="date" class="cfw-input" formControlName="startDate"
+                        [class.is-error]="f['startDate'].invalid && f['startDate'].touched" />
+                      <div class="cfw-errors">
+                        <span *ngIf="f['startDate'].touched && f['startDate'].hasError('required')" class="cfw-error">Required.</span>
+                        <span *ngIf="f['startDate'].touched && f['startDate'].hasError('minDate')" class="cfw-error">Start date cannot be in the past.</span>
+                      </div>
+                    </div>
+                    <div class="cfw-field">
+                      <label class="cfw-label" for="f-start-time">Start Time</label>
+                      <input id="f-start-time" type="time" class="cfw-input" formControlName="startTime" />
+                    </div>
+                  </div>
+
+                  <div class="cfw-row">
+                    <div class="cfw-field">
+                      <label class="cfw-label" for="f-end">End Date <span class="cfw-req">*</span></label>
+                      <input id="f-end" type="date" class="cfw-input" formControlName="endDate"
+                        [class.is-error]="f['endDate'].invalid && f['endDate'].touched" />
+                      <span *ngIf="f['endDate'].touched && f['endDate'].hasError('required')" class="cfw-error">Required.</span>
+                    </div>
+                    <div class="cfw-field">
+                      <label class="cfw-label" for="f-end-time">End Time</label>
+                      <input id="f-end-time" type="time" class="cfw-input" formControlName="endTime" />
+                    </div>
+                  </div>
+                  <span *ngIf="campaignForm.hasError('dateRange')" class="cfw-error cfw-error--form">End date must be after start date.</span>
+
+                  <div class="cfw-field">
+                    <label class="cfw-label" for="f-capacity">Capacity <span class="cfw-opt">(optional)</span></label>
+                    <input id="f-capacity" type="number" class="cfw-input" formControlName="capacity"
+                      placeholder="Leave empty for unlimited" min="1"
+                      [class.is-error]="f['capacity'].invalid && f['capacity'].touched" />
+                    <span *ngIf="f['capacity'].touched && f['capacity'].hasError('min')" class="cfw-error">Minimum 1.</span>
+                    <span class="cfw-hint">Leave empty for unlimited capacity.</span>
+                  </div>
+
+                  <div class="cfw-separator"></div>
+
+                  <div class="cfw-toggles">
+                    <div class="cfw-toggle-row">
+                      <div class="cfw-toggle-label">
+                        <span class="cfw-toggle-name"><mat-icon>star</mat-icon>Featured Campaign</span>
+                        <span class="cfw-toggle-desc">Highlighted on the home page</span>
+                      </div>
+                      <mat-slide-toggle formControlName="featured" color="primary"></mat-slide-toggle>
+                    </div>
+                    <div class="cfw-toggle-row">
+                      <div class="cfw-toggle-label">
+                        <span class="cfw-toggle-name"><mat-icon>public</mat-icon>Public Registration</span>
+                        <span class="cfw-toggle-desc">Visible without login required</span>
+                      </div>
+                      <mat-slide-toggle formControlName="publicRegistration" color="primary"></mat-slide-toggle>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- STEP 3 — Summary -->
+              <div *ngIf="currentStep === 3" class="cfw-panel" [@stepSlide]>
+                <div class="cfw-panel-header">
+                  <h3 class="cfw-panel-title">Summary</h3>
+                  <p class="cfw-panel-desc">Review all information before {{ isEditMode ? 'updating' : 'creating' }} the campaign.</p>
+                </div>
+
+                <div class="cfw-review-grid">
+
+                  <div class="cfw-review-card">
+                    <div class="cfw-review-card-header">
+                      <span class="cfw-review-card-title"><mat-icon>badge</mat-icon>Identity</span>
+                      <button type="button" class="cfw-edit-link" (click)="jumpToStep(0)">Edit</button>
+                    </div>
+                    <div class="cfw-review-rows">
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Title</span>
+                        <span class="cfw-rv" [class.empty]="!f['title'].value">{{ f['title'].value || 'Not set' }}</span>
+                      </div>
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Description</span>
+                        <span class="cfw-rv" [class.empty]="!f['description'].value">
+                          {{ f['description'].value ? ((f['description'].value | slice:0:80) + (f['description'].value.length > 80 ? '…' : '')) : 'Not set' }}
+                        </span>
+                      </div>
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Audience</span>
+                        <span class="cfw-rv" [class.empty]="!f['targetAudience'].value">{{ f['targetAudience'].value || 'Not set' }}</span>
+                      </div>
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Visibility</span>
+                        <span class="cfw-rv">
+                          <span class="badge badge-sm" [ngClass]="getVisibilityClass(f['visibility'].value)">
+                            <mat-icon class="badge-icon" style="font-size:11px;height:11px;width:11px;">{{ getVisibilityIcon(f['visibility'].value) }}</mat-icon>
+                            {{ getVisibilityLabel(f['visibility'].value) }}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="cfw-review-card">
+                    <div class="cfw-review-card-header">
+                      <span class="cfw-review-card-title"><mat-icon>image</mat-icon>Visual</span>
+                      <button type="button" class="cfw-edit-link" (click)="jumpToStep(1)">Edit</button>
+                    </div>
+                    <div class="cfw-review-rows">
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Image</span>
+                        <span class="cfw-rv" [class.empty]="!f['imageUrl'].value">{{ f['imageUrl'].value ? 'Image provided' : 'None' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="cfw-review-card">
+                    <div class="cfw-review-card-header">
+                      <span class="cfw-review-card-title"><mat-icon>event</mat-icon>Dates & Setup</span>
+                      <button type="button" class="cfw-edit-link" (click)="jumpToStep(2)">Edit</button>
+                    </div>
+                    <div class="cfw-review-rows">
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Start</span>
+                        <span class="cfw-rv" [class.empty]="!f['startDate'].value">{{ f['startDate'].value ? formatDateTime(f['startDate'].value, f['startTime'].value) : 'Not set' }}</span>
+                      </div>
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">End</span>
+                        <span class="cfw-rv" [class.empty]="!f['endDate'].value">{{ f['endDate'].value ? formatDateTime(f['endDate'].value, f['endTime'].value) : 'Not set' }}</span>
+                      </div>
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Status (auto)</span>
+                        <span class="cfw-rv">
+                          <span class="badge badge-sm" [ngClass]="getStatusClass(previewCampaign.status)">
+                            <mat-icon class="badge-icon" style="font-size:11px;height:11px;width:11px;">{{ getStatusIcon(previewCampaign.status) }}</mat-icon>
+                            {{ getStatusLabel(previewCampaign.status) }}
+                          </span>
+                        </span>
+                      </div>
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Capacity</span>
+                        <span class="cfw-rv">{{ f['capacity'].value ? f['capacity'].value + ' max' : 'Unlimited' }}</span>
+                      </div>
+                      <div class="cfw-review-row">
+                        <span class="cfw-rk">Featured</span>
+                        <span class="cfw-rv">{{ f['featured'].value ? 'Yes' : 'No' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="cfw-review-card cfw-review-preview">
+                    <div class="cfw-review-card-header">
+                      <span class="cfw-review-card-title"><mat-icon>preview</mat-icon>Card Preview</span>
+                    </div>
+                    <div class="cfw-preview-wrap">
+                      <div class="campaign-card campaign-card--preview">
+                        <div class="card-visual" [style.backgroundImage]="previewCampaign.imageUrl ? 'url('+previewCampaign.imageUrl+')' : null">
+                          <div class="card-visual-overlay"></div>
+                          <div class="card-badges">
+                            <span class="badge" [ngClass]="getStatusClass(previewCampaign.status)">
+                              <mat-icon class="badge-icon">{{ getStatusIcon(previewCampaign.status) }}</mat-icon>{{ getStatusLabel(previewCampaign.status) }}
+                            </span>
+                            <span class="badge" [ngClass]="getVisibilityClass(previewCampaign.visibility)">
+                              <mat-icon class="badge-icon">{{ getVisibilityIcon(previewCampaign.visibility) }}</mat-icon>{{ getVisibilityLabel(previewCampaign.visibility) }}
+                            </span>
+                            <span *ngIf="previewCampaign.featured" class="badge badge-featured"><mat-icon class="badge-icon">star</mat-icon>Featured</span>
+                          </div>
+                        </div>
+                        <div class="card-body">
+                          <h3 class="card-title">{{ previewCampaign.title }}</h3>
+                          <p class="card-desc">{{ (previewCampaign.description || '') | slice:0:80 }}{{ (previewCampaign.description || '').length > 80 ? '…' : '' }}</p>
+                          <div class="card-meta">
+                            <span class="meta-item"><mat-icon>calendar_today</mat-icon>{{ previewCampaign.startDate | date:'dd MMM yyyy' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div><!-- /cfw-body -->
+
+            <!-- Footer -->
+            <div class="cfw-footer">
+              <button type="button" class="cfw-back-btn"
+                [style.visibility]="currentStep === 0 ? 'hidden' : 'visible'"
+                (click)="goBack()">
+                <mat-icon>arrow_back</mat-icon> Back
+              </button>
+              <button type="button" class="cfw-next-btn"
+                [disabled]="isSaving || (currentStep < wizardSteps.length - 1 && !isCurrentStepValidForUI())"
+                (click)="goNext()">
+                <mat-spinner *ngIf="isSaving" diameter="16"></mat-spinner>
+                <span>{{ isSaving
+                  ? 'Saving…'
+                  : (currentStep === wizardSteps.length - 1
+                      ? (isEditMode ? 'Update Campaign' : 'Create Campaign')
+                      : 'Continue') }}</span>
+                <mat-icon *ngIf="!isSaving && currentStep < wizardSteps.length - 1">arrow_forward</mat-icon>
+                <mat-icon *ngIf="!isSaving && currentStep === wizardSteps.length - 1">check</mat-icon>
+              </button>
+            </div>
+
+          </div><!-- /cfw-main -->
+        </div><!-- /cfw-layout -->
+      </form>
+    </ng-container><!-- /viewMode === 'form' -->
+
+    <!-- ─────────────── DETAIL ─────────────── -->
+    <ng-container *ngIf="viewMode === 'detail' && selectedCampaign">
+      <div class="detail-shell">
+
+        <div class="detail-hero" [style.backgroundImage]="selectedCampaign.imageUrl ? 'url('+selectedCampaign.imageUrl+')' : null">
+          <div class="detail-hero-overlay"></div>
+          <div class="detail-hero-content">
+            <div class="detail-badges">
+              <span class="badge" [ngClass]="getStatusClass(selectedCampaign.status)">
+                <mat-icon>{{ getStatusIcon(selectedCampaign.status) }}</mat-icon>{{ getStatusLabel(selectedCampaign.status) }}
+              </span>
+              <span class="badge" [ngClass]="getVisibilityClass(selectedCampaign.visibility)">
+                <mat-icon>{{ getVisibilityIcon(selectedCampaign.visibility) }}</mat-icon>{{ getVisibilityLabel(selectedCampaign.visibility) }}
+              </span>
+              <span *ngIf="selectedCampaign.featured" class="badge badge-featured"><mat-icon>star</mat-icon>Featured</span>
+            </div>
+            <h2 class="detail-title">{{ selectedCampaign.title }}</h2>
+            <div class="detail-meta-row">
+              <span class="detail-meta-item"><mat-icon>calendar_today</mat-icon>{{ selectedCampaign.startDate | date:'dd MMM yyyy' }} → {{ selectedCampaign.endDate | date:'dd MMM yyyy' }}</span>
+              <span *ngIf="selectedCampaign.targetAudience" class="detail-meta-item"><mat-icon>group</mat-icon>{{ selectedCampaign.targetAudience }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-stats-band">
+          <div class="dstat"><mat-icon>people</mat-icon><span class="dstat-num">{{ selectedCampaign.currentParticipants }}</span><span class="dstat-lbl">Participants</span></div>
+          <div class="dstat"><mat-icon>visibility</mat-icon><span class="dstat-num">{{ selectedCampaign.views | number }}</span><span class="dstat-lbl">Views</span></div>
+          <div class="dstat"><mat-icon>event</mat-icon><span class="dstat-num">{{ selectedCampaign.eventsCount || campaignEvents.length || 0 }}</span><span class="dstat-lbl">Events</span></div>
+          <div *ngIf="selectedCampaign.maxParticipants" class="dstat"><mat-icon>donut_large</mat-icon><span class="dstat-num">{{ getEngagementRate(selectedCampaign) }}%</span><span class="dstat-lbl">Engagement</span></div>
+        </div>
+
+        <div class="detail-tabs">
+          <button class="tab-btn" [class.tab-btn--active]="detailTab==='overview'" (click)="setDetailTab('overview')"><mat-icon>info</mat-icon>Overview</button>
+          <button class="tab-btn" [class.tab-btn--active]="detailTab==='events'" (click)="setDetailTab('events')"><mat-icon>event</mat-icon>Events</button>
+        </div>
+
+        <div class="detail-panel">
+
+          <!-- Overview -->
+          <div *ngIf="detailTab === 'overview'" class="panel-overview">
+            <div class="overview-grid">
+              <div class="overview-main">
+                <h4 class="panel-subtitle">Description</h4>
+                <p class="panel-text">{{ selectedCampaign.description }}</p>
+                <ng-container *ngIf="selectedCampaign.maxParticipants">
+                  <h4 class="panel-subtitle">Capacity</h4>
+                  <div class="capacity-wrap capacity-wrap--lg">
+                    <div class="capacity-labels"><span>{{ selectedCampaign.currentParticipants }} / {{ selectedCampaign.maxParticipants }}</span><span class="capacity-pct">{{ getCapacityPercent(selectedCampaign) }}%</span></div>
+                    <div class="capacity-track"><div class="capacity-fill" [style.width.%]="getCapacityPercent(selectedCampaign)"></div></div>
+                  </div>
+                </ng-container>
+              </div>
+              <aside class="overview-aside">
+                <div class="aside-card">
+                  <h4 class="panel-subtitle">Details</h4>
+                  <ul class="info-list">
+                    <li><mat-icon>calendar_today</mat-icon><span><strong>Start:</strong> {{ selectedCampaign.startDate | date:'dd MMMM yyyy' }}</span></li>
+                    <li><mat-icon>event_available</mat-icon><span><strong>End:</strong> {{ selectedCampaign.endDate | date:'dd MMMM yyyy' }}</span></li>
+                    <li *ngIf="selectedCampaign.targetAudience"><mat-icon>group</mat-icon><span><strong>Audience:</strong> {{ selectedCampaign.targetAudience }}</span></li>
+                    <li><mat-icon>schedule</mat-icon><span><strong>Created:</strong> {{ selectedCampaign.createdAt | date:'dd MMM yyyy' }}</span></li>
+                    <li><mat-icon>{{ getVisibilityIcon(selectedCampaign.visibility) }}</mat-icon><span><strong>Visibility:</strong> {{ getVisibilityLabel(selectedCampaign.visibility) }}</span></li>
+                  </ul>
+                </div>
+                <div *ngIf="!isAdmin" class="register-block">
+                  <button mat-flat-button class="btn-register"
+                    [class.btn-register--out]="isRegistered"
+                    [disabled]="isRegistering"
+                    (click)="toggleRegistration()">
+                    <mat-spinner *ngIf="isRegistering" diameter="18"></mat-spinner>
+                    <mat-icon *ngIf="!isRegistering">{{ isRegistered ? 'person_remove' : 'person_add' }}</mat-icon>
+                    {{ isRegistering ? '…' : (isRegistered ? 'Unregister' : 'Register') }}
+                  </button>
+                </div>
+                <div *ngIf="isAdmin" class="admin-actions-aside">
+                  <button mat-stroked-button class="btn-edit-aside" (click)="showEdit(selectedCampaign)"><mat-icon>edit</mat-icon>Edit</button>
+                </div>
+              </aside>
+            </div>
+          </div>
+
+          <!-- Events -->
+          <div *ngIf="detailTab === 'events'" class="panel-events">
+            <div *ngIf="!campaignEvents.length" class="panel-empty"><mat-icon>event_busy</mat-icon><p>No events linked yet.</p></div>
+            <div *ngIf="campaignEvents.length" class="events-list">
+              <div *ngFor="let evt of campaignEvents" class="event-row">
+                <div class="event-dot"></div>
+                <div class="event-info">
+                  <span class="event-name">{{  evt.title || 'Event' }}</span>
+                  <span *ngIf="evt.startDate" class="event-date"><mat-icon>calendar_today</mat-icon>{{ evt.startDate | date:'dd MMM yyyy' }}</span>
+                </div>
+                <span *ngIf="evt.status" class="badge" [ngClass]="getStatusClass(evt.status)">{{ getStatusLabel(evt.status) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Participants -->
+          <div *ngIf="detailTab === 'participants'" class="panel-participants">
+            <div *ngIf="isParticipantsLoading" class="loading-wrap"><mat-spinner diameter="40"></mat-spinner></div>
+            <div *ngIf="!isParticipantsLoading && participants.length === 0" class="panel-empty"><mat-icon>people_outline</mat-icon><p>No participants yet.</p></div>
+            <div *ngIf="!isParticipantsLoading && participants.length > 0" class="participants-grid">
+              <div *ngFor="let p of participants" class="participant-card">
+                <div class="participant-avatar">
+                  <img *ngIf="p.profilePicture" [src]="p.profilePicture" [alt]="p.name" />
+                  <span *ngIf="!p.profilePicture">{{ getInitials(p.name) }}</span>
+                </div>
+                <div class="participant-info">
+                  <span class="participant-name">{{ p.name }}</span>
+                  <span class="participant-email">{{ p.email }}</span>
+                  <span class="participant-date"><mat-icon>schedule</mat-icon>{{ p.registrationDate | date:'dd MMM yyyy' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </ng-container><!-- /viewMode === 'detail' -->
+
+    <!-- ─────────────── DASHBOARD ─────────────── -->
+    <ng-container *ngIf="viewMode === 'dashboard'">
+      <div class="dash-root">
+
+        <div class="dash-section-header">
+          <div class="dash-section-title">
+            <mat-icon>bar_chart</mat-icon>
+            <span>Overview</span>
+          </div>
+          <span class="dash-section-sub">{{ dashStats.totalCampaigns }} campaign(s) registered</span>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="dash-kpi-grid">
+          <div class="dash-kpi-card">
+            <div class="dash-kpi-icon dash-kpi-icon--total"><mat-icon>campaign</mat-icon></div>
+            <div class="dash-kpi-content">
+              <span class="dash-kpi-value">{{ dashStats.totalCampaigns }}</span>
+              <span class="dash-kpi-label">Total Campaigns</span>
+              <span class="dash-kpi-trend dash-kpi-trend--up">All periods</span>
+            </div>
+          </div>
+          <div class="dash-kpi-card">
+            <div class="dash-kpi-icon dash-kpi-icon--active"><mat-icon>play_circle</mat-icon></div>
+            <div class="dash-kpi-content">
+              <span class="dash-kpi-value">{{ dashStats.activeCampaigns }}</span>
+              <span class="dash-kpi-label">Active Campaigns</span>
+              <span class="dash-kpi-trend dash-kpi-trend--up">Ongoing</span>
+            </div>
+          </div>
+          <div class="dash-kpi-card">
+            <div class="dash-kpi-icon dash-kpi-icon--participants"><mat-icon>people</mat-icon></div>
+            <div class="dash-kpi-content">
+              <span class="dash-kpi-value">{{ dashStats.totalParticipants | number }}</span>
+              <span class="dash-kpi-label">Total Participants</span>
+              <span class="dash-kpi-trend dash-kpi-trend--up">All campaigns</span>
+            </div>
+          </div>
+          <div class="dash-kpi-card">
+            <div class="dash-kpi-icon dash-kpi-icon--views"><mat-icon>visibility</mat-icon></div>
+            <div class="dash-kpi-content">
+              <span class="dash-kpi-value">{{ dashStats.totalViews | number }}</span>
+              <span class="dash-kpi-label">Total Views</span>
+              <span class="dash-kpi-trend dash-kpi-trend--up">Cumulated</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Row -->
+        <div class="dash-analytics-row">
+
+          <div class="dash-panel">
+            <div class="dash-panel-header">
+              <div class="dash-panel-title"><mat-icon>pie_chart</mat-icon>Status Breakdown</div>
+            </div>
+            <div class="dash-panel-body">
+              <div class="status-bars">
+                <div *ngFor="let s of statusBreakdown" class="status-bar-row">
+                  <div class="sbar-header">
+                    <div class="sbar-label">
+                      <mat-icon class="sbar-icon" [ngClass]="'icon-' + s.key.toLowerCase()">{{ s.icon }}</mat-icon>
+                      {{ s.label }}
+                    </div>
+                    <div class="sbar-count">
+                      <strong>{{ dashStats.byStatus[s.key] }}</strong>
+                      <span class="sbar-pct">/ {{ dashStats.totalCampaigns }} ({{ getStatusBarWidth(s.key) }}%)</span>
+                    </div>
+                  </div>
+                  <div class="sbar-track">
+                    <div class="sbar-fill" [ngClass]="s.cls" [style.width.%]="getStatusBarWidth(s.key)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-panel">
+            <div class="dash-panel-header">
+              <div class="dash-panel-title"><mat-icon>leaderboard</mat-icon>Top 5 Campaigns</div>
+              <span class="dash-panel-sub">Featured · Views · Date</span>
+            </div>
+            <div class="dash-panel-body">
+              <div *ngIf="topCampaignsLoading" class="loading-wrap"><mat-spinner diameter="30"></mat-spinner></div>
+              <div *ngIf="!topCampaignsLoading && topCampaigns.length === 0" class="panel-empty">
+                <mat-icon>bar_chart</mat-icon><p>No data available.</p>
+              </div>
+              <ol *ngIf="!topCampaignsLoading && topCampaigns.length > 0" class="top-list">
+                <li *ngFor="let c of topCampaigns; let i = index" class="top-item" (click)="showDetail(c)">
+                  <span class="top-rank"
+                    [class.top-rank--gold]="i===0"
+                    [class.top-rank--silver]="i===1"
+                    [class.top-rank--bronze]="i===2">{{ i+1 }}</span>
+                  <div class="top-info">
+                    <span class="top-name">{{ c.title }}</span>
+                    <span *ngIf="c.featured" class="top-featured-badge"><mat-icon>star</mat-icon></span>
+                    <span class="badge badge-sm" [ngClass]="getStatusClass(c.status)">{{ getStatusLabel(c.status) }}</span>
+                  </div>
+                  <div class="top-stats">
+                    <span><mat-icon>people</mat-icon>{{ c.currentParticipants }}</span>
+                    <span><mat-icon>visibility</mat-icon>{{ c.views | number }}</span>
+                    <span><mat-icon>event</mat-icon>{{ c.eventsCount || 0 }}</span>
+                  </div>
+                </li>
+              </ol>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Full table -->
+        <div class="dash-panel dash-panel--full">
+          <div class="dash-panel-header">
+            <div class="dash-panel-title"><mat-icon>table_chart</mat-icon>All Campaigns</div>
+            <span class="dash-panel-sub">{{ filteredCampaigns.length }} campaign(s)</span>
+          </div>
+          <div class="dash-panel-body dash-panel-body--flush">
+            <div class="table-wrap">
+              <table class="data-table" *ngIf="filteredCampaigns.length > 0">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Visibility</th>
+                    <th>Participants</th>
+                    <th>Views</th>
+                    <th>Events</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let c of filteredCampaigns" class="table-row" (click)="showDetail(c)">
+                    <td class="td-title">
+                      <span *ngIf="c.featured" class="star-icon">★</span>
+                      {{ c.title }}
+                    </td>
+                    <td><span class="badge badge-sm" [ngClass]="getStatusClass(c.status)">{{ getStatusLabel(c.status) }}</span></td>
+                    <td><span class="badge badge-sm" [ngClass]="getVisibilityClass(c.visibility)">{{ getVisibilityLabel(c.visibility) }}</span></td>
+                    <td class="td-num">{{ c.currentParticipants }}</td>
+                    <td class="td-num">{{ c.views | number }}</td>
+                    <td class="td-num">{{ c.eventsCount || 0 }}</td>
+                    <td class="td-date">{{ c.startDate | date:'dd MMM yy' }}</td>
+                    <td class="td-date">{{ c.endDate | date:'dd MMM yy' }}</td>
+                    <td class="td-actions">
+                      <button *ngIf="c.canAddEvent" mat-icon-button class="action-btn"
+                        (click)="addEventToCampaign(c); $event.stopPropagation()" title="Add Event">
+                        <mat-icon>add</mat-icon>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div *ngIf="filteredCampaigns.length === 0" class="panel-empty">
+                <mat-icon>table_rows</mat-icon><p>No campaigns.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </ng-container><!-- /viewMode === 'dashboard' -->
+
+  </main>
+
+  <!-- ══════════════ DELETE MODAL ══════════════ -->
+  <div class="modal" *ngIf="showDeleteModal">
+    <div class="modal__box modal__box--sm">
+      <div class="modal__stripe modal__stripe--red"></div>
+      <div class="modal__header">
+        <div class="modal__danger-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </div>
+        <button class="modal__close" (click)="closeDeleteModal()">×</button>
+      </div>
+      <div class="modal__body">
+        <h2 class="modal__title">Cancel Campaign</h2>
+        <div class="modal__desc">
+          <p>Cancel <strong>{{ selectedCampaignToDelete?.title }}</strong>?</p>
+          <p style="margin-top: 12px; font-size: 13px;">This action will:</p>
+          <ul style="margin-top: 8px; padding-left: 20px; font-size: 13px;">
+            <li>✓ Change status to CANCELLED</li>
+            <li>✓ Notify all Event Managers via email</li>
+          </ul>
+          <p style="margin-top: 12px;"><span class="text-danger">This action cannot be undone.</span></p>
+        </div>
+        <div class="modal__actions">
+          <button class="btn btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+          <button class="btn btn-danger" (click)="confirmDelete()">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            Cancel Campaign
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

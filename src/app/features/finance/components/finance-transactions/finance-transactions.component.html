@@ -6,7 +6,6 @@
     </div>
 
     <div class="finance-page__actions">
-      <a class="btn btn--secondary" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
       <button type="button" class="btn btn--secondary" (click)="exportTransactionsToExcel()">Export Excel</button>
       <button type="button" class="btn btn--primary" (click)="openCreateTransactionForm()">Add Transaction</button>
     </div>
@@ -16,7 +15,9 @@
     <a class="finance-nav__item" routerLink="/dashboard/finance/home">Dashboard</a>
     <a class="finance-nav__item" routerLink="/dashboard/finance/budgets">Budgets</a>
     <a class="finance-nav__item finance-nav__item--active" routerLink="/dashboard/finance/transactions">Transactions</a>
-    <a class="finance-nav__item" routerLink="/dashboard/finance/sponsor-payment">Sponsor Payment</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/reports">Reports</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/dues">Member Dues</a>
+    <a class="finance-nav__item" routerLink="/dashboard/finance/alerts">Alerts</a>
   </nav>
 
   <section class="form-panel" *ngIf="showCreateTransactionForm">
@@ -28,6 +29,22 @@
         <select class="field__control" [(ngModel)]="newTransaction.type" name="transactionType">
           <option value="income">Income</option>
           <option value="expense">Expense</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Scope</span>
+        <select class="field__control" [(ngModel)]="newTransaction.scope" name="transactionScope" (ngModelChange)="onFormScopeChange()">
+          <option value="club">Club-wide (e.g. sponsor donation)</option>
+          <option value="event">Event-specific</option>
+        </select>
+      </label>
+
+      <label class="field" *ngIf="newTransaction.scope === 'event'">
+        <span class="field__label">Event</span>
+        <select class="field__control" [(ngModel)]="newTransaction.eventId" name="transactionEventId">
+          <option [ngValue]="null">— Select event —</option>
+          <option *ngFor="let event of clubEvents" [ngValue]="event.id">{{ event.title }}</option>
         </select>
       </label>
 
@@ -67,33 +84,19 @@
         class="transactions-toolbar__search"
         placeholder="Search transactions..."
         [(ngModel)]="searchTerm"
+        (ngModelChange)="resetTransactionPage()"
       />
 
-      <div class="transactions-toolbar__filters" role="tablist" aria-label="Transaction filters">
-        <button
-          type="button"
-          class="filter-btn"
-          [class.filter-btn--active]="activeFilter === 'all'"
-          (click)="setFilter('all')"
-        >
-          All
-        </button>
-        <button
-          type="button"
-          class="filter-btn"
-          [class.filter-btn--active]="activeFilter === 'income'"
-          (click)="setFilter('income')"
-        >
-          Income
-        </button>
-        <button
-          type="button"
-          class="filter-btn"
-          [class.filter-btn--active]="activeFilter === 'expense'"
-          (click)="setFilter('expense')"
-        >
-          Expenses
-        </button>
+      <div class="transactions-toolbar__filters" role="tablist" aria-label="Transaction type filters">
+        <button type="button" class="filter-btn" [class.filter-btn--active]="activeFilter === 'all'" (click)="setFilter('all')">All</button>
+        <button type="button" class="filter-btn" [class.filter-btn--active]="activeFilter === 'income'" (click)="setFilter('income')">Income</button>
+        <button type="button" class="filter-btn" [class.filter-btn--active]="activeFilter === 'expense'" (click)="setFilter('expense')">Expenses</button>
+      </div>
+
+      <div class="transactions-toolbar__filters" role="tablist" aria-label="Transaction scope filters">
+        <button type="button" class="filter-btn" [class.filter-btn--active]="scopeFilter === 'all'" (click)="setScopeFilter('all')">All Sources</button>
+        <button type="button" class="filter-btn" [class.filter-btn--active]="scopeFilter === 'club'" (click)="setScopeFilter('club')">Club-Level</button>
+        <button type="button" class="filter-btn" [class.filter-btn--active]="scopeFilter === 'event'" (click)="setScopeFilter('event')">Events</button>
       </div>
     </div>
 
@@ -102,6 +105,7 @@
         <thead>
           <tr>
             <th>Type</th>
+            <th>Source</th>
             <th>Description</th>
             <th>Date</th>
             <th class="align-right">Amount</th>
@@ -110,10 +114,15 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let transaction of filteredTransactions">
+          <tr *ngFor="let transaction of pagedTransactions">
             <td>
               <span class="pill" [class.pill--income]="transaction.type === 'income'" [class.pill--expense]="transaction.type === 'expense'">
                 {{ transaction.type }}
+              </span>
+            </td>
+            <td>
+              <span class="pill" [class.pill--club]="transaction.scope === 'CLUB'" [class.pill--event]="transaction.scope === 'EVENT'">
+                {{ transaction.scope === 'EVENT' ? 'Event' : 'Club' }}
               </span>
             </td>
             <td class="description">{{ transaction.description }}</td>
@@ -128,10 +137,16 @@
           </tr>
 
           <tr *ngIf="!isLoading && filteredTransactions.length === 0">
-            <td colspan="5" class="empty-state">No transactions found for the selected filter.</td>
+            <td colspan="6" class="empty-state">No transactions found for the selected filter.</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination" *ngIf="transactionTotalPages > 1">
+      <button class="pagination__btn" (click)="transactionPrev()" [disabled]="transactionPage === 0">&#8249;</button>
+      <span class="pagination__info">{{ transactionPage + 1 }} / {{ transactionTotalPages }}</span>
+      <button class="pagination__btn" (click)="transactionNext()" [disabled]="transactionPage === transactionTotalPages - 1">&#8250;</button>
     </div>
   </section>
 </section>

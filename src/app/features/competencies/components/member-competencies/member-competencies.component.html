@@ -2,161 +2,1814 @@
   <header class="member-hero">
     <div>
       <p class="member-eyebrow">Competencies</p>
-      <h2>{{ currentUserFullName || 'Member' }} profile</h2>
-      <p>Personal overview of progression, AI priorities, badges, and the latest Speech Analyzer signal.</p>
+      <h2>{{ getMemberLabel(isMemberRole ? currentUserId : selectedMemberUserId) || 'Member profile' }}</h2>
+      <p>Personal overview of progression, AI priorities, and AI Speech Studio.</p>
     </div>
     <div class="member-hero-actions">
+      <!-- CV Upload -->
+      <div class="cv-upload-wrapper" *ngIf="isMemberRole">
+        <input type="file" #cvInput (change)="onCVFileSelected($event)" accept=".pdf,.doc,.docx" style="display: none;">
+        <button type="button" class="m-btn m-btn--primary" (click)="cvInput.click()" [disabled]="isAnalyzingCV">
+          <span *ngIf="!isAnalyzingCV">Import CV (AI)</span>
+          <span *ngIf="isAnalyzingCV" class="analyzing-spinner">
+            <svg class="spinner" viewBox="0 0 50 50">
+              <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+            </svg>
+            Analyzing...
+          </span>
+        </button>
+      </div>
+
+      <!-- Admin Member Selector -->
+      <div class="m-field" *ngIf="!isMemberRole && members.length > 0">
+        <select class="m-select" [(ngModel)]="selectedMemberUserId" (change)="onMemberChange()">
+          <option [value]="0">-- Select a Member to view --</option>
+          <option *ngFor="let m of members" [value]="m.userId">
+            {{ m.firstName }} {{ m.lastName }} ({{ m.email }})
+          </option>
+        </select>
+      </div>
+
       <a class="m-btn m-btn--ghost" routerLink="/dashboard/competencies/sessions">Sessions</a>
       <button type="button" class="m-btn m-btn--ghost" (click)="loadInitialData()" [disabled]="loading">Refresh</button>
     </div>
   </header>
 
+  <!-- Tab Navigation -->
+  <nav class="m-tabs-nav">
+    <button (click)="setTab('overview')" [class.active]="activeTab === 'overview'">Overview</button>
+    <button (click)="setTab('inventory')" [class.active]="activeTab === 'inventory'">My Inventory</button>
+    <button (click)="setTab('path')" [class.active]="activeTab === 'path'">Learning Path</button>
+    <button (click)="setTab('mentorship')" [class.active]="activeTab === 'mentorship'">Mentorship</button>
+  </nav>
+
   <div *ngIf="errorMessage" class="m-alert m-alert--error">{{ errorMessage }}</div>
   <div *ngIf="successMessage" class="m-alert m-alert--success">{{ successMessage }}</div>
 
-  <section class="metric-grid">
-    <article class="metric-card">
-      <span>Tracked skills</span>
-      <strong>{{ totalSkillsCount }}</strong>
-      <small>Competencies tracked on your profile</small>
-    </article>
-    <article class="metric-card">
-      <span>Current level</span>
-      <strong>{{ averageCurrentLevel }}</strong>
-      <small>Average current level /5</small>
-    </article>
-    <article class="metric-card">
-      <span>Target level</span>
-      <strong>{{ averageTargetLevel }}</strong>
-      <small>Average target level /5</small>
-    </article>
-    <article class="metric-card metric-card--accent">
-      <span>Readiness score</span>
-      <strong>{{ readinessScore }}</strong>
-      <small>Average gap: {{ averageGapLevel }}</small>
-    </article>
-  </section>
+  <!-- TABS CONTENT AREA -->
+  <div class="tabs-content-area">
 
-  <section *ngIf="clubStats" class="metric-grid">
-    <article class="metric-card">
-      <span>Club members</span>
-      <strong>{{ clubStats.totalMembers }}</strong>
-      <small>Members with competency tracking</small>
-    </article>
-    <article class="metric-card">
-      <span>Club avg level</span>
-      <strong>{{ clubStats.avgLevelAcrossAll }}</strong>
-      <small>Across all member competencies</small>
-    </article>
-    <article class="metric-card">
-      <span>Total gaps</span>
-      <strong>{{ clubStats.totalGaps }}</strong>
-      <small>Current level below target</small>
-    </article>
-    <article class="metric-card metric-card--accent">
-      <span>Critical gaps</span>
-      <strong>{{ clubStats.criticalGaps }}</strong>
-      <small>Gap >= 2 levels</small>
-    </article>
-  </section>
-
-  <div class="dashboard-grid">
-    <article class="m-card radar-card">
-      <h3>Competency radar</h3>
-      <div *ngIf="radarSkills.length > 0; else noRadar" class="radar-wrap">
-        <svg viewBox="0 0 220 220" class="radar-svg" role="img" aria-label="Radar competencies">
-          <g class="radar-grid">
-            <polygon points="110,25 190,70 190,150 110,195 30,150 30,70" />
-            <polygon points="110,43 174,79 174,141 110,177 46,141 46,79" />
-            <polygon points="110,61 158,88 158,132 110,159 62,132 62,88" />
-            <polygon points="110,79 142,97 142,123 110,141 78,123 78,97" />
-          </g>
-          <polygon [attr.points]="radarTargetPoints" class="radar-target" />
-          <polygon [attr.points]="radarCurrentPoints" class="radar-current" />
-        </svg>
-        <ul class="radar-labels">
-          <li *ngFor="let axis of radarSkills">
-            <strong>{{ axis.name }}</strong>
-            <span>{{ axis.current }} / {{ axis.target }}</span>
-          </li>
-        </ul>
-      </div>
-      <ng-template #noRadar>
-        <p class="m-state">No competency data available for the radar.</p>
-      </ng-template>
-    </article>
-
-    <article class="m-card progress-card">
-      <h3>Skill progress and AI tips</h3>
-      <div *ngIf="skillTips.length === 0" class="m-state">No progress data available.</div>
-      <ul *ngIf="skillTips.length > 0" class="skill-list">
-        <li *ngFor="let skill of skillTips" [ngClass]="'gap-' + gapSeverityById(skill.id)">
-          <div class="skill-head">
-            <strong>{{ skill.skillName }}</strong>
-            <span>{{ skill.current }}/{{ skill.target }}</span>
+    <!-- OVERVIEW TAB -->
+    <ng-container *ngIf="activeTab === 'overview'">
+      <section class="overview-section">
+        <!-- Header -->
+        <header class="learning-path-hero">
+          <div class="hero-content">
+            <div class="hero-title-group">
+              <svg class="hero-icon" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                <path d="M12 6v6l4.5 2.7.75-1.23-3.75-2.22V6z"/>
+              </svg>
+              <div>
+                <p class="hero-eyebrow">Professional Development</p>
+                <h1>Overview Dashboard</h1>
+              </div>
+            </div>
           </div>
-          <div class="bar-track">
-            <div class="bar-fill" [style.width.%]="skill.progress"></div>
-          </div>
-          <p class="skill-gap">Gap: {{ gapDisplayById(skill.id) }}</p>
-          <p class="skill-tip">{{ skill.tip }}</p>
-        </li>
-      </ul>
-    </article>
+        </header>
 
-    <article class="m-card path-card">
-      <h3>Learning path</h3>
-      <ul class="path-list" *ngIf="learningPath.length > 0; else noPath">
-        <li *ngFor="let step of learningPath" [class]="'step-' + step.state">
-          <div class="path-title-row">
-            <strong>{{ step.title }}</strong>
-            <span>{{ step.state | uppercase }}</span>
-          </div>
-          <div class="bar-track bar-track--thin">
-            <div class="bar-fill" [style.width.%]="step.progress"></div>
-          </div>
-          <p>{{ step.summary }}</p>
-        </li>
-      </ul>
-      <ng-template #noPath>
-        <p class="m-state">Learning path unavailable.</p>
-      </ng-template>
-    </article>
+        <!-- KPI Cards - Same design as other sections -->
+        <section class="stats-section">
+          <article class="stat-card stat-card--skills">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Total Skills</span>
+              <span class="stat-value">{{ totalSkillsCount }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="skillsProgress"></div>
+            </div>
+          </article>
 
-    <article class="m-card badge-card">
-      <h3>Badge gallery</h3>
-      <div class="badge-grid">
-        <div *ngFor="let badge of memberBadges" class="member-badge" [class.member-badge--locked]="!badge.unlocked">
-          <div class="member-badge__icon">{{ badge.icon }}</div>
-          <strong>{{ badge.title }}</strong>
-          <small>{{ badge.unlocked ? 'Unlocked' : 'Locked' }}</small>
-          <p>{{ badge.hint }}</p>
+          <article class="stat-card stat-card--current">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20V10" />
+                <path d="M18 20V4" />
+                <path d="M6 20v-4" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Current Level</span>
+              <span class="stat-value">{{ averageCurrentLevel }}<span class="stat-suffix">/5</span></span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(averageCurrentLevel / 5) * 100"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--target">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="6" />
+                <circle cx="12" cy="12" r="2" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Target Level</span>
+              <span class="stat-value">{{ averageTargetLevel }}<span class="stat-suffix">/5</span></span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(averageTargetLevel / 5) * 100"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--readiness">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Readiness</span>
+              <span class="stat-value">{{ readinessScore }}<span class="stat-suffix">%</span></span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="readinessScore"></div>
+            </div>
+          </article>
+        </section>
+
+        <!-- Content wrapper - same as Inventory section -->
+        <div class="overview-content">
+
+      <div class="dashboard-layout">
+        <!-- Section Header: Speech Analyzer -->
+        <div class="section-title-row">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 1 3 3v14a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+            AI Speech Analyzer
+          </h2>
+          <p class="section-subtitle">Practice your communication skills with AI-powered feedback</p>
+        </div>
+
+        <!-- Top Row: Speech Studio + Skill Progress -->
+        <div class="dashboard-top">
+          <!-- AI Speech Studio -->
+          <article class="card card--studio card--featured" [class.recording]="isRecordingSpeech">
+            <div class="card-header">
+              <h3>AI Speech Studio</h3>
+              <div class="studio-status">
+                <span class="status-dot" *ngIf="isRecordingSpeech"></span>
+                <span>{{ latestSpeechSummary.status }}</span>
+              </div>
+            </div>
+
+            <div class="studio-visual">
+              <div class="waveform" [class.active]="isRecordingSpeech">
+                <div class="wave-bar" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12]"></div>
+              </div>
+              <div class="score-display">
+                <span class="score-value">{{ liveScore }}</span>
+                <span class="score-label">Score</span>
+              </div>
+            </div>
+
+            <div class="studio-stats">
+              <div class="stat-item">
+                <span class="stat-label">Pace</span>
+                <span class="stat-value">{{ liveSpeechRate }} <small>wpm</small></span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Fluency</span>
+                <span class="stat-value">{{ liveConfidence > 0 ? (100 - livePausesPerMinute * 5 | number:'1.0-0') : 0 }} <small>%</small></span>
+              </div>
+            </div>
+
+            <div class="studio-feedback" *ngIf="speechTestFeedback || latestSpeechSummary.feedback">
+              <p>{{ speechTestFeedback || latestSpeechSummary.feedback }}</p>
+            </div>
+
+            <div class="studio-controls">
+              <select class="studio-select" [(ngModel)]="selectedSpeechMemberCompetencyId" [disabled]="isRecordingSpeech">
+                <option [value]="0">Select skill to practice</option>
+                <option *ngFor="let comp of softSkillsForSpeech" [value]="comp.id">{{ comp.skillName }}</option>
+              </select>
+              <div class="studio-buttons">
+                <button class="btn btn--primary" [disabled]="isRecordingSpeech || selectedSpeechMemberCompetencyId === 0" (click)="startSpeechTest()">
+                  {{ isRecordingSpeech ? 'Recording...' : 'Start' }}
+                </button>
+                <button class="btn btn--danger" *ngIf="isRecordingSpeech" (click)="stopSpeechTest()">Stop</button>
+                <button class="btn btn--success" *ngIf="latestSpeechSummary.status === 'ready-to-sync' && !speechSyncingId && latestSpeechSummary.score > 0" (click)="syncSpeechReportFromPanel()">
+                  Sync
+                </button>
+              </div>
+            </div>
+
+            <div class="sync-progress" *ngIf="syncProgress > 0">
+              <div class="sync-bar">
+                <div class="sync-fill" [style.width.%]="syncProgress"></div>
+              </div>
+              <span class="sync-text">AI analyzing... {{ syncProgress | number:'1.0-0' }}%</span>
+            </div>
+          </article>
+
+          <!-- Skill Progress Card -->
+          <article class="card card--progress">
+            <div class="card-header">
+              <h3>Skill Progress</h3>
+              <span class="card-count">Top 3 of {{ skillTips.length }}</span>
+            </div>
+            <div *ngIf="skillTips.length === 0" class="empty-state">No progress data yet</div>
+            <div *ngIf="skillTips.length > 0" class="skill-items">
+              <div *ngFor="let skill of skillTips | slice:0:3" class="skill-item" [ngClass]="'gap-' + gapSeverityById(skill.id)">
+                <div class="skill-info">
+                  <span class="skill-name">{{ skill.skillName }}</span>
+                  <span class="skill-level">{{ skill.current }}/{{ skill.target }}</span>
+                </div>
+                <div class="skill-bar">
+                  <div class="skill-progress" [style.width.%]="skill.progress"></div>
+                </div>
+                <p class="skill-advice">{{ skill.tip }}</p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Middle Row: Competency Radar + Goals -->
+        <div class="dashboard-middle">
+          <!-- Competency Radar -->
+          <article class="card card--radar">
+            <div class="card-header">
+              <h3>Competency Radar</h3>
+              <span class="card-count">{{ radarSkills.length }} Skills</span>
+            </div>
+            <div *ngIf="radarChartData.labels && radarChartData.labels.length > 0; else noRadar" class="radar-container">
+              <canvas baseChart [data]="radarChartData" [options]="radarChartOptions" [type]="radarChartType"></canvas>
+            </div>
+            <ng-template #noRadar>
+              <div class="empty-state">Add skills to see your radar</div>
+            </ng-template>
+          </article>
+
+          <!-- Goals Tracking -->
+          <article class="card card--goals">
+            <div class="card-header">
+              <h3>Goals</h3>
+              <span class="card-count">{{ completedGoalsCount }}/{{ goals.length }}</span>
+            </div>
+            <div class="goals-overview">
+              <div class="goals-progress-bar">
+                <div class="goals-progress-fill" [style.width.%]="goalProgress"></div>
+              </div>
+              <span class="goals-progress-text">{{ goalProgress }}% Complete</span>
+            </div>
+            <div class="goals-list">
+              <div *ngFor="let goal of goals" class="goal-item" [class.completed]="goal.completed">
+                <div class="goal-header">
+                  <span class="goal-category">{{ goal.category }}</span>
+                  <span class="goal-type">{{ goal.type }}</span>
+                </div>
+                <div class="goal-progress">
+                  <span class="goal-current">{{ goal.current }}</span>
+                  <span class="goal-separator">/</span>
+                  <span class="goal-target">{{ goal.target }} {{ goal.unit }}</span>
+                </div>
+                <div class="goal-bar">
+                  <div class="goal-bar-fill" [style.width.%]="(goal.current / goal.target) * 100"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Bottom Row: Achievements + Activity -->
+        <div class="dashboard-bottom">
+          <!-- Badge Gallery -->
+          <article class="card card--badges">
+            <div class="card-header">
+              <h3>Achievements</h3>
+              <span class="card-count">{{ unlockedBadgesCount }}/{{ memberBadges.length }}</span>
+            </div>
+            <div class="badges-grid">
+              <div *ngFor="let badge of memberBadges" class="badge-card" [class.locked]="!badge.unlocked" [class.newly-unlocked]="glowingBadgeId === badge.id">
+                <div class="badge-icon-wrapper" [class.glowing]="glowingBadgeId === badge.id">
+                  <div class="badge-icon">{{ badge.icon }}</div>
+                  <div class="badge-shine"></div>
+                </div>
+                <div class="badge-details">
+                  <span class="badge-title">{{ badge.title }}</span>
+                  <span class="badge-hint">{{ badge.hint }}</span>
+                </div>
+                <div class="badge-status-badge">
+                  <span *ngIf="badge.unlocked" class="status-unlocked"><svg viewBox="0 0 24 24" width="16" height="16"><path attr.d="{{ getIconSvg('unlock') }}"/></svg></span>
+                  <span *ngIf="!badge.unlocked" class="status-locked"><svg viewBox="0 0 24 24" width="16" height="16"><path attr.d="{{ getIconSvg('lock') }}"/></svg></span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Recent Activity -->
+          <article class="card card--activity">
+            <div class="card-header">
+              <h3>Recent Activity</h3>
+              <span class="card-count">{{ recentActivities.length }}</span>
+            </div>
+            <div class="activity-timeline">
+              <div *ngFor="let activity of recentActivities" class="activity-item">
+                <div class="activity-icon" [style.background-color]="activity.iconColor">
+                  {{ activity.icon }}
+                </div>
+                <div class="activity-content">
+                  <span class="activity-title">{{ activity.title }}</span>
+                  <span class="activity-desc">{{ activity.description }}</span>
+                  <span *ngIf="activity.skillName" class="activity-skill">{{ activity.skillName }}</span>
+                  <span class="activity-time">{{ getActivityTimeAgo(activity.timestamp) }}</span>
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
-    </article>
 
-    <article class="m-card speech-summary-card">
-      <h3>Latest Speech Analyzer session</h3>
-      <div class="speech-summary">
-        <p><strong>Status:</strong> {{ latestSpeechSummary.status }}</p>
-        <p><strong>Score:</strong> {{ latestSpeechSummary.score }} ({{ latestSpeechSummary.level }})</p>
-        <p><strong>Confidence:</strong> {{ latestSpeechSummary.confidence }}%</p>
-        <p><strong>Pace:</strong> {{ latestSpeechSummary.pace }} words/min</p>
-        <p *ngIf="latestSpeechSummary.updatedAt"><strong>Updated:</strong> {{ latestSpeechSummary.updatedAt | date:'medium' }}</p>
-        <p class="speech-feedback">{{ latestSpeechSummary.feedback }}</p>
+      <!-- Mentorship Chat Modal -->
+      <div *ngIf="showMentorshipPanel" class="modal-overlay" (click)="closeMentorshipPanel()">
+        <div class="mentorship-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Mentorship Session</h3>
+            <button class="modal-close" (click)="closeMentorshipPanel()"><svg viewBox="0 0 24 24" width="20" height="20"><path attr.d="{{ getIconSvg('close') }}"/></svg></button>
+          </div>
+          <div class="modal-body">
+            <div class="chat-container">
+              <div class="chat-messages">
+                <div class="message message--system">
+                  <div class="message-content">
+                    <p>Welcome to your mentorship session! Use this space to discuss skills, share resources, and help each other grow.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="chat-input-area">
+                <input type="text" placeholder="Type your message..." class="chat-input" />
+                <button class="btn btn--primary btn--send">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="speech-actions">
-        <button type="button" class="m-btn m-btn--primary" (click)="pickRandomTopic()">AI topic</button>
-        <button
-          type="button"
-          class="m-btn m-btn--primary"
-          [disabled]="isRecordingSpeech || selectedSpeechMemberCompetencyId === 0 || !speechTopic.trim()"
-          (click)="startSpeechTest()"
-        >
-          Start voice test
-        </button>
-        <button type="button" class="m-btn" [disabled]="!isRecordingSpeech" (click)="stopSpeechTest()">Stop</button>
       </div>
-    </article>
+    </section>
+  </ng-container>
+
+  <!-- INVENTORY TAB -->
+    <ng-container *ngIf="activeTab === 'inventory'">
+      <section class="inventory-section" style="margin-top: 0;">
+        <!-- Header -->
+        <header class="learning-path-hero">
+          <div class="hero-content">
+            <div class="hero-title-group">
+              <svg class="hero-icon" viewBox="0 0 24 24" focusable="false">
+                <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+              </svg>
+              <div>
+                <p class="hero-eyebrow">Professional Development</p>
+                <h1>My Inventory</h1>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Inventory Statistics KPIs - Same design as Overview section -->
+        <section class="stats-section" *ngIf="filteredPersonalCompetencies.length > 0">
+          <article class="stat-card stat-card--attention">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Need Attention</span>
+              <span class="stat-value">{{ getInventoryStats().skillsNeedingAttention }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(getInventoryStats().skillsNeedingAttention / getInventoryStats().total) * 100"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--gap">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <polyline points="19 12 12 19 5 12"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Avg Gap to Target</span>
+              <span class="stat-value">{{ getInventoryStats().averageGapToTarget }}<span class="stat-suffix">/5</span></span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(getInventoryStats().averageGapToTarget / 5) * 100"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--recent">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Recently Updated</span>
+              <span class="stat-value">{{ getInventoryStats().recentlyUpdated }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(getInventoryStats().recentlyUpdated / getInventoryStats().total) * 100"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--mastery">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Mastered Skills</span>
+              <span class="stat-value">{{ getInventoryStats().maxLevelSkills }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(getInventoryStats().maxLevelSkills / getInventoryStats().total) * 100"></div>
+            </div>
+          </article>
+        </section>
+
+        <div class="inventory-content">
+          <div class="section-header">
+            <div class="header-left">
+              <h3>Full Competencies Inventory</h3>
+              <span class="badge badge--neutral">{{ getFilteredInventoryItems().length }} Total Competencies</span>
+            </div>
+            <div class="view-toggle">
+            <button 
+              [class.active]="inventoryViewMode === 'grid'" 
+              (click)="setInventoryView('grid')"
+              title="Grid View">
+              <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z"/></svg>
+            </button>
+            <button 
+              [class.active]="inventoryViewMode === 'list'" 
+              (click)="setInventoryView('list')"
+              title="List View">
+              <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="category-filter-chips">
+          <button 
+            [class.active]="inventoryCategoryFilter === 'ALL'"
+            (click)="setInventoryCategoryFilter('ALL')"
+            class="filter-chip">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+            All
+            <span class="chip-count">{{ filteredPersonalCompetencies.length }}</span>
+          </button>
+          <button 
+            [class.active]="inventoryCategoryFilter === 'SOFT'"
+            (click)="setInventoryCategoryFilter('SOFT')"
+            class="filter-chip chip--soft">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            Soft Skills
+            <span class="chip-count">{{ getCategoryCount('SOFT') }}</span>
+          </button>
+          <button 
+            [class.active]="inventoryCategoryFilter === 'HARD'"
+            (click)="setInventoryCategoryFilter('HARD')"
+            class="filter-chip chip--hard">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+            Hard Skills
+            <span class="chip-count">{{ getCategoryCount('HARD') }}</span>
+          </button>
+          <button 
+            [class.active]="inventoryCategoryFilter === 'TECHNICAL'"
+            (click)="setInventoryCategoryFilter('TECHNICAL')"
+            class="filter-chip chip--technical">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+            Technical
+            <span class="chip-count">{{ getCategoryCount('TECHNICAL') }}</span>
+          </button>
+        </div>
+
+        <div class="skills-inventory-container" [class.list-view]="inventoryViewMode === 'list'">
+          <article *ngFor="let item of getPaginatedInventoryItems(); let i = index" 
+                   class="inventory-card"
+                   [class.level-complete]="item.currentLevel >= item.targetLevel"
+                   [style.animation-delay]="i * 0.05 + 's'">
+            
+            <div class="card-avatar" [style.background]="getCategoryColor(item.category)">
+              <svg class="avatar-icon" viewBox="0 0 24 24" width="28" height="28">
+                <path [attr.d]="getCategoryIconSvg(item.category)"/>
+              </svg>
+              <div class="avatar-glow"></div>
+            </div>
+            
+            <div class="card-content">
+              <div class="card-top">
+                <div class="category-wrapper">
+                  <svg class="category-icon-svg" viewBox="0 0 24 24" width="16" height="16">
+                    <path [attr.d]="getCategoryIconSvg(item.category)"/>
+                  </svg>
+                  <span class="category-tag" [class]="'tag--' + (item.category || 'HARD').toLowerCase()">{{ item.category || 'HARD' }}</span>
+                </div>
+                <span [class]="sourceBadgeClass(item.lastUpdatedBy)">{{ sourceLabel(item.lastUpdatedBy) }}</span>
+              </div>
+              
+              <h4>{{ item.skillName }}</h4>
+              
+              <div class="level-display">
+                <div class="level-stars">
+                  <span *ngFor="let star of [1,2,3,4,5]" 
+                        class="star" 
+                        [class.filled]="star <= item.currentLevel"
+                        [class.pulse]="star === item.currentLevel && star < item.targetLevel">★</span>
+                </div>
+                <span class="level-badge" [class.complete]="item.currentLevel >= item.targetLevel">
+                  {{ item.currentLevel }}/5
+                </span>
+              </div>
+
+              <div class="progress-wrapper">
+                <div class="progress-labels">
+                  <span>Current</span>
+                  <span class="gap-indicator" *ngIf="item.targetLevel > item.currentLevel">
+                    +{{ item.targetLevel - item.currentLevel }} to target
+                  </span>
+                  <span class="complete-badge" *ngIf="item.currentLevel >= item.targetLevel">
+                    <svg viewBox="0 0 24 24" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    Target Reached
+                  </span>
+                </div>
+                <div class="progress-container">
+                  <div class="bar-track">
+                    <div class="bar-fill" [style.width.%]="(item.currentLevel / 5) * 100"></div>
+                  </div>
+                  <div class="target-marker" [style.left.%]="(item.targetLevel / 5) * 100" title="Target: {{ item.targetLevel }}"></div>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <small>Target: <strong>{{ item.targetLevel }}</strong></small>
+                <small class="last-updated">
+                  <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/></svg>
+                  {{ item.lastUpdated | date:'dd MMM yyyy' }}
+                </small>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Pagination -->
+        <div class="inventory-pagination" *ngIf="getInventoryTotalPages() > 1">
+          <button 
+            class="pagination-btn" 
+            [disabled]="inventoryCurrentPage === 1"
+            (click)="goToInventoryPage(inventoryCurrentPage - 1)">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            Previous
+          </button>
+          
+          <div class="pagination-pages">
+            <button 
+              *ngFor="let page of getInventoryPageNumbers()"
+              class="page-btn"
+              [class.active]="page === inventoryCurrentPage"
+              (click)="goToInventoryPage(page)">
+              {{ page }}
+            </button>
+          </div>
+          
+          <button 
+            class="pagination-btn" 
+            [disabled]="inventoryCurrentPage === getInventoryTotalPages()"
+            (click)="goToInventoryPage(inventoryCurrentPage + 1)">
+            Next
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </button>
+        </div>
+
+        <!-- Empty State -->
+        <div class="inventory-empty-state" *ngIf="getFilteredInventoryItems().length === 0">
+          <svg class="empty-icon" viewBox="0 0 24 24" width="64" height="64">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+          <p class="empty-title">No Competencies Found</p>
+          <p class="empty-subtitle">No {{ inventoryCategoryFilter.toLowerCase() }} skills in your inventory</p>
+        </div>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- PATH TAB -->
+    <ng-container *ngIf="activeTab === 'path'">
+      <section class="learning-path-shell">
+        <!-- Header -->
+        <header class="learning-path-hero">
+          <div class="hero-content">
+            <div class="hero-title-group">
+              <svg class="hero-icon" viewBox="0 0 24 24" focusable="false">
+                <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                <polyline points="13 2 13 9 20 9"/>
+              </svg>
+              <div>
+                <p class="hero-eyebrow">Professional Development</p>
+                <h1>Your Learning Path</h1>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- KPI Cards - Same design as Overview section -->
+        <section class="stats-section" *ngIf="learningPath.length > 0">
+          <article class="stat-card stat-card--progress">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="20" x2="12" y2="10"/>
+                <line x1="18" y1="20" x2="18" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="16"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Overall Progress</span>
+              <span class="stat-value">{{ readinessScore }}<span class="stat-suffix">%</span></span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="readinessScore"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--completed">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Skills Completed</span>
+              <span class="stat-value">{{ getCompletedSkills().length }}<span class="stat-suffix">/{{ totalSkillsCount }}</span></span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(getCompletedSkills().length / totalSkillsCount) * 100"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--active">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">In Progress</span>
+              <span class="stat-value">{{ getActiveSkills().length }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(getActiveSkills().length / totalSkillsCount) * 100"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--locked">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Locked</span>
+              <span class="stat-value">{{ getLockedSkills().length }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="(getLockedSkills().length / totalSkillsCount) * 100"></div>
+            </div>
+          </article>
+        </section>
+
+        <!-- Main Path Container -->
+        <article class="lp-card" *ngIf="learningPath.length > 0; else noPath">
+          <div class="lp-card-header">
+            <h2>Your Development Roadmap</h2>
+            <p class="lp-subtitle">Strategic skills to enhance your profile and club impact</p>
+          </div>
+
+          <div class="learning-path-timeline">
+            <div class="timeline-line"></div>
+
+            <div class="timeline-step" *ngFor="let step of learningPath; let i = index" 
+              [class]="'step-' + step.state"
+              [class.step-highlight]="step.state === 'active'">
+              
+              <!-- Step Marker -->
+              <div class="step-marker-wrapper">
+                <div class="step-marker" [class]="'marker-' + step.state">
+                  <span class="marker-dot"></span>
+                  <span class="marker-icon" [ngSwitch]="step.state">
+                    <svg *ngSwitchCase="'done'" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                    <svg *ngSwitchCase="'active'" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2l-2.81 6.63L2 9.24l5.46 4.73L5.82 21 12 17.27z"/></svg>
+                    <svg *ngSwitchCase="'locked'" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Step Content -->
+              <div class="step-card">
+                <div class="card-top">
+                  <div class="card-title-group">
+                    <span class="step-badge" [class]="'badge-' + step.state">
+                      <i>{{ i + 1 }}</i> {{ step.state | titlecase }}
+                    </span>
+                    <h3 class="step-title">{{ step.title }}</h3>
+                  </div>
+                  
+                  <div class="card-level">
+                    <span class="level-badge">Level {{ step.current }}/5</span>
+                  </div>
+                </div>
+
+                <p class="step-description">{{ step.summary }}</p>
+
+                <!-- Option B: Impact Score + Completion Date -->
+                <div class="step-metrics">
+                  <div class="metric-item">
+                    <span class="metric-label">
+                      <svg viewBox="0 0 24 24" focusable="false"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2l-2.81 6.63L2 9.24l5.46 4.73L5.82 21 12 17.27z"/></svg>
+                      Impact Score
+                    </span>
+                    <span class="metric-value impact-score" [class]="'impact-' + (step.impactScore > 8 ? 'high' : step.impactScore > 5 ? 'medium' : 'low')">
+                      {{ step.impactScore }}/13
+                    </span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">
+                      <svg viewBox="0 0 24 24" focusable="false"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 16H5V8h14v11z"/></svg>
+                      Completion Date
+                    </span>
+                    <span class="metric-value completion-date">{{ step.completionDate | date:'MMM d, yyyy' }}</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">
+                      <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                      Estimated Time
+                    </span>
+                    <span class="metric-value time-estimate">{{ step.estimatedHours }}h</span>
+                  </div>
+                </div>
+
+                <!-- Option B: Milestones -->
+                <div class="milestones-section">
+                  <span class="milestones-label">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v16.5A2.25 2.25 0 003.75 22.5h16.5a2.25 2.25 0 002.25-2.25V13.5M22.5 1.5l-8.25 8.25M22.5 1.5v6.75M13.5 10.5l8.25-8.25"/></svg>
+                    Progression Milestones
+                  </span>
+                  <div class="milestones-track">
+                    <div class="milestone" *ngFor="let m of step.milestones" [class.milestone-done]="m.completed">
+                      <span class="milestone-level">{{ m.level }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Option A: Personalized Advice -->
+                <div class="advice-card">
+                  <span class="advice-icon">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                  </span>
+                  <p class="advice-text">{{ step.personalizedAdvice }}</p>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-section">
+                  <div class="progress-header">
+                    <span class="progress-label">Learning Progress</span>
+                    <span class="progress-percentage">{{ step.progress }}%</span>
+                  </div>
+                  <div class="progress-bar-wrapper">
+                    <div class="progress-bar">
+                      <div class="progress-fill" 
+                        [style.width.%]="step.progress"
+                        [class.fill-done]="step.state === 'done'"
+                        [class.fill-active]="step.state === 'active'"
+                        [class.fill-locked]="step.state === 'locked'">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card-actions" *ngIf="step.state !== 'done'">
+                  <!-- Hard Skills Quiz -->
+                  <button type="button" class="lp-btn lp-btn--quiz" 
+                    *ngIf="isHardSkill(step.category)"
+                    (click)="startQuiz(step)">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    <span>Start Quiz</span>
+                  </button>
+
+                  <!-- Soft Skills Sessions -->
+                  <button type="button" class="lp-btn lp-btn--session" 
+                    *ngIf="!isHardSkill(step.category)"
+                    routerLink="/dashboard/competencies/sessions">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    <span>Book Session</span>
+                  </button>
+
+                  <!-- AI Resources -->
+                  <button type="button" class="lp-btn lp-btn--ai" 
+                    (click)="generatedResources[step.id] ? openStudyCenter(step) : generateResourcesForStep(step)"
+                    [disabled]="isGeneratingResources[step.id]">
+                    <svg *ngIf="!isGeneratingResources[step.id]" viewBox="0 0 24 24" focusable="false"><path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 18.5c-4.41 0-8-3.59-8-8.5V7.98l8-4 8 4V12c0 4.91-3.59 8.5-8 8.5z"/></svg>
+                    <svg *ngIf="isGeneratingResources[step.id]" class="spinner" viewBox="0 0 50 50"><circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle></svg>
+                    <span>{{ isGeneratingResources[step.id] ? 'Generating...' : (generatedResources[step.id] ? 'Study' : 'AI Resources') }}</span>
+                  </button>
+
+                  <!-- View History -->
+                  <button type="button" class="lp-btn lp-btn--history" 
+                    title="View Sessions"
+                    (click)="viewStepSessions(step)">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                    <span>History</span>
+                  </button>
+                </div>
+
+                <!-- Category Badge -->
+                <div class="card-meta">
+                  <span class="category-badge" [class]="'cat-' + (step.category | lowercase)">
+                    <svg viewBox="0 0 24 24" width="14" height="14"><path attr.d="{{ step.category === 'HARD' || step.category === 'TECHNICAL' ? getIconSvg('computer') : getIconSvg('chat') }}"/></svg> {{ step.category === 'HARD' || step.category === 'TECHNICAL' ? 'Technical' : 'Soft Skill' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Empty State -->
+        <ng-template #noPath>
+          <article class="lp-card lp-empty-state">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-5 9.5h-2v2h2v-2zm0-8h-2v6h2v-6z"/></svg>
+            </div>
+            <p class="empty-title">No Learning Path Available</p>
+            <p class="empty-subtitle">Set target competencies to generate your personalized learning roadmap</p>
+            <a class="lp-btn lp-btn--primary" routerLink="/dashboard/competencies" fragment="inventory">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              Add Competencies
+            </a>
+          </article>
+        </ng-template>
+      </section>
+    </ng-container>
+
+    <!-- MENTORSHIP TAB -->
+    <ng-container *ngIf="activeTab === 'mentorship'">
+      <div class="mentorship-shell">
+        <!-- Header -->
+        <header class="learning-path-hero">
+          <div class="hero-content">
+            <div class="hero-title-group">
+              <svg class="hero-icon" viewBox="0 0 24 24" focusable="false">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+              </svg>
+              <div>
+                <p class="hero-eyebrow">Professional Development</p>
+                <h1>Mentorship</h1>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- KPI Section - Same design as Overview section -->
+        <section class="stats-section">
+          <article class="stat-card stat-card--mentorship-active">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Active Mentorships</span>
+              <span class="stat-value">{{ activeConversations.length }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="activeConversations.length > 0 ? 75 : 0"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--mentorship-pending">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Pending Requests</span>
+              <span class="stat-value">{{ pendingSessionRequests.length }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="pendingSessionRequests.length > 0 ? 50 : 0"></div>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--mentorship-opportunities">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Opportunities</span>
+              <span class="stat-value">{{ mentorshipSuggestions.length }}</span>
+            </div>
+            <div class="stat-progress">
+              <div class="progress-bar" [style.width.%]="mentorshipSuggestions.length > 0 ? 60 : 0"></div>
+            </div>
+          </article>
+        </section>
+
+        <!-- Grid Layout -->
+        <div class="mentorship-grid">
+          <!-- Your Mentors/Mentees -->
+          <article class="mentorship-panel">
+            <div class="mentorship-panel__head">
+              <div>
+                <p class="mentorship-panel__eyebrow">Connections</p>
+                <h2>Active Conversations</h2>
+                <p class="mentorship-panel__desc">Your mentorship relationships</p>
+              </div>
+            </div>
+
+            <div *ngIf="activeConversations.length === 0" class="mentorship-empty">
+              <div class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('chat') }}"/></svg></div>
+              <p>No active conversations yet</p>
+            </div>
+
+            <ul *ngIf="activeConversations.length > 0" class="mentorship-list">
+              <li *ngFor="let conv of activeConversations" class="mentorship-list__item" (click)="openConversation(conv)">
+                <div class="mentorship-list__avatar">
+                  <span>{{ getConversationPartnerName(conv).charAt(0) }}</span>
+                  <span class="unread-indicator" *ngIf="hasUnreadMessages(conv)">{{ getUnreadCount(conv) }}</span>
+                </div>
+                <div class="mentorship-list__body">
+                  <div class="mentorship-list__name">{{ getConversationPartnerName(conv) }}</div>
+                  <div class="mentorship-list__skill">{{ conv.skillName }}</div>
+                  <div class="mentorship-list__preview">{{ getLastMessage(conv) }}</div>
+                </div>
+                <div class="mentorship-list__meta">
+                  <span class="mentorship-badge" [ngClass]="conv.mentorId === currentUserId ? 'mentor-badge' : 'mentee-badge'">
+                    {{ conv.mentorId === currentUserId ? 'Mentor' : 'Mentee' }}
+                  </span>
+                  <span class="mentorship-time">{{ getLastMessageTime(conv) }}</span>
+                </div>
+              </li>
+            </ul>
+          </article>
+
+          <!-- Pending Requests -->
+          <article class="mentorship-panel">
+            <div class="mentorship-panel__head">
+              <div>
+                <p class="mentorship-panel__eyebrow">Inbox</p>
+                <h2>Pending Requests</h2>
+                <p class="mentorship-panel__desc">Session requests awaiting your action</p>
+              </div>
+            </div>
+
+            <div *ngIf="pendingSessionRequests.length === 0" class="mentorship-empty">
+              <div class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('check') }}"/></svg></div>
+              <p>All caught up!</p>
+            </div>
+
+            <ul *ngIf="pendingSessionRequests.length > 0" class="mentorship-list">
+              <li *ngFor="let request of pendingSessionRequests" class="mentorship-list__item">
+                <div class="mentorship-list__avatar">
+                  <span>{{ request.requesterName.charAt(0) }}</span>
+                </div>
+                <div class="mentorship-list__body">
+                  <div class="mentorship-list__name">{{ request.requesterName }}</div>
+                  <div class="mentorship-list__skill">{{ formatDateTime(request.proposedDateTime) }}</div>
+                  <div class="mentorship-list__preview">{{ request.description }}</div>
+                </div>
+                <div class="mentorship-list__actions">
+                  <button type="button" class="mentorship-action-btn" (click)="openSessionResponseModal(request)">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                    Review
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <!-- Opportunities Section -->
+        <article class="mentorship-panel mentorship-panel--full">
+          <div class="mentorship-panel__head">
+            <div>
+              <p class="mentorship-panel__eyebrow">Discover</p>
+              <h2>Mentorship Opportunities</h2>
+              <p class="mentorship-panel__desc">Suggested matches based on skills and expertise</p>
+            </div>
+          </div>
+
+          <div *ngIf="mentorshipSuggestions.length === 0" class="mentorship-empty-large">
+            <div class="empty-icon">🤝</div>
+            <p class="empty-title">No suggestions yet</p>
+            <p class="empty-text">Build your skill profile to unlock mentorship opportunities</p>
+          </div>
+
+          <div *ngIf="mentorshipSuggestions.length > 0" class="mentorship-opportunities">
+            <div *ngFor="let suggestion of mentorshipSuggestions" class="opportunity-card">
+              <div class="opportunity-header">
+                <div class="match-badge">
+                  <span class="match-percent">{{ suggestion.matchScore }}%</span>
+                </div>
+                <div class="opportunity-participants">
+                  <div class="participant">
+                    <span class="label">Mentor</span>
+                    <span class="name">{{ suggestion.mentorName }}</span>
+                  </div>
+                  <svg class="arrow-icon" viewBox="0 0 24 24" focusable="false"><path d="M5 13h11.17l-4.88 4.88c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l6.59-6.59c.39-.39.39-1.02 0-1.41L12.7 4.7c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41L15.17 11H5c-.55 0-1 .45-1 1s.45 1 1 1z"/></svg>
+                  <div class="participant">
+                    <span class="label">Mentee</span>
+                    <span class="name">{{ suggestion.menteeName }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="opportunity-skill">
+                <svg class="skill-icon" viewBox="0 0 24 24" focusable="false"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                <div class="skill-info">
+                  <span class="skill-name">{{ suggestion.mentorSkill }}</span>
+                  <div class="levels">
+                    <span class="level mentor-level">Lvl {{ suggestion.mentorLevel }}</span>
+                    <span class="level-arrow">→</span>
+                    <span class="level mentee-level">Lvl {{ suggestion.menteeLevel }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <p class="opportunity-reason">{{ suggestion.reason }}</p>
+
+              <button class="opportunity-btn" (click)="startMentorshipSession(suggestion)">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M11 5h2v14h-2zM5 11h14v2H5z"/></svg>
+                Start Mentorship
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </ng-container>
   </div>
 </section>
+
+<!-- Sessions Modal -->
+<div class="m-modal-overlay" *ngIf="showSessionsModal" (click)="closeSessionsModal()">
+  <div class="m-modal-card" (click)="$event.stopPropagation()">
+    <div class="m-modal-header">
+      <div>
+        <h3>Session History</h3>
+        <p>{{ selectedStepForSessions?.title }}</p>
+      </div>
+      <button class="close-btn" (click)="closeSessionsModal()">&times;</button>
+    </div>
+
+    <div class="m-modal-body">
+      <div *ngIf="isSessionsLoading" class="modal-loading">
+        <div class="spinner"></div>
+        <p>Searching for sessions...</p>
+      </div>
+
+      <div *ngIf="!isSessionsLoading && stepSessions.length === 0" class="empty-sessions">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('calendar') }}"/></svg></div>
+        <p>No sessions found for this competency.</p>
+      </div>
+
+      <div class="session-list" *ngIf="stepSessions.length > 0">
+        <div class="session-item" *ngFor="let session of stepSessions">
+          <div class="session-date">
+            <strong>{{ session.startsAt | date:'dd' }}</strong>
+            <span>{{ session.startsAt | date:'MMM' }}</span>
+          </div>
+          <div class="session-info">
+            <h4>{{ session.title }}</h4>
+            <p>Coach: {{ session.coachName }}</p>
+          </div>
+          <div class="session-status">
+            <span class="status-badge" [class]="'status--' + session.status.toLowerCase()">{{ session.status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mentorship Chat Modal -->
+<div class="modal-overlay" *ngIf="showMentorshipPanel && selectedMentorshipSuggestion" (click)="closeMentorshipPanel()">
+  <div class="mentorship-chat-panel" (click)="$event.stopPropagation()">
+    <div class="mentorship-chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">
+          <span class="avatar-initials">{{ selectedMentorshipSuggestion.menteeName.charAt(0) }}</span>
+        </div>
+        <div class="chat-details">
+          <h3>{{ selectedMentorshipSuggestion.menteeName }}</h3>
+          <p>Mentoring in {{ selectedMentorshipSuggestion.mentorSkill }}</p>
+          <span class="chat-status" *ngIf="currentConversationId">● Active</span>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="icon-btn" title="View Goals" (click)="viewGoals()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </button>
+        <button class="icon-btn" title="View Certificate" (click)="viewCertificate()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="7"/>
+            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+          </svg>
+        </button>
+        <button class="icon-btn" title="Give Feedback" (click)="openFeedbackModal()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </button>
+        <button class="icon-btn" title="Schedule Session" (click)="openSessionRequestModal()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </button>
+        <button class="icon-btn" title="View Profile" (click)="viewMemberProfile(selectedMentorshipSuggestion.menteeId)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+        <button class="icon-btn close-btn" (click)="closeMentorshipPanel()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="mentorship-chat-messages" #messageContainer>
+      <div *ngIf="mentorshipMessages.length === 0" class="empty-chat">
+        <div class="empty-chat-icon"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('chat') }}"/></svg></div>
+        <p class="empty-chat-text">Start the conversation!</p>
+        <p class="empty-chat-subtext">Send a message to begin mentoring</p>
+      </div>
+      <div *ngFor="let msg of mentorshipMessages" class="chat-message" [ngClass]="'message--' + msg.sender">
+        <div class="message-sender" *ngIf="msg.sender !== 'me'">
+          <span class="sender-avatar" *ngIf="msg.sender === 'system'"><svg viewBox="0 0 24 24" width="20" height="20"><path attr.d="{{ getIconSvg('robot') }}"/></svg></span>
+          <span class="sender-avatar" *ngIf="msg.sender !== 'system'">{{ selectedMentorshipSuggestion.menteeName.charAt(0) }}</span>
+        </div>
+        <div class="message-content">
+          <p>{{ msg.message }}</p>
+          <span class="message-time">{{ msg.timestamp | date:'shortTime' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mentorship-chat-input">
+      <div class="input-actions">
+        <button class="icon-btn" title="Attach file">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
+        <button class="icon-btn" title="Emoji">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+          </svg>
+        </button>
+      </div>
+      <textarea 
+        [(ngModel)]="newMentorshipMessage" 
+        placeholder="Type your message..." 
+        (keydown.enter)="onEnterPress($event)"
+        rows="1"
+        (input)="autoResizeTextarea($event)"></textarea>
+      <button class="send-btn" (click)="sendMentorshipMessage()" [disabled]="!newMentorshipMessage.trim()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Session Request Modal -->
+<div class="modal-overlay" *ngIf="showSessionRequestModal" (click)="closeSessionRequestModal()">
+  <div class="session-request-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Schedule Mentorship Session</h3>
+      <button class="icon-btn close-btn" (click)="closeSessionRequestModal()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="sessionRequestForm" (ngSubmit)="submitSessionRequest()">
+        <div class="form-group">
+          <label>Proposed Date & Time</label>
+          <input type="datetime-local" formControlName="proposedDateTime" [min]="minDateTime">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea formControlName="description" rows="4" placeholder="Describe what you'd like to discuss in this session..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn--secondary" (click)="closeSessionRequestModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="sessionRequestForm.invalid || isSubmittingRequest">
+            <span *ngIf="!isSubmittingRequest">Send Request</span>
+            <span *ngIf="isSubmittingRequest" class="spinner-mini"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Session Request Response Modal -->
+<div class="modal-overlay" *ngIf="showSessionResponseModal && pendingSessionRequest" (click)="closeSessionResponseModal()">
+  <div class="session-response-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Session Request</h3>
+      <button class="icon-btn close-btn" (click)="closeSessionResponseModal()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="request-info">
+        <div class="request-header">
+          <div class="request-avatar">{{ pendingSessionRequest.requesterName.charAt(0) }}</div>
+          <div class="request-details">
+            <h4>{{ pendingSessionRequest.requesterName }}</h4>
+            <p>Requested a session on</p>
+            <strong>{{ formatDateTime(pendingSessionRequest.proposedDateTime) }}</strong>
+          </div>
+        </div>
+        <div class="request-description">
+          <label>Description:</label>
+          <p>{{ pendingSessionRequest.description }}</p>
+        </div>
+      </div>
+      <form [formGroup]="sessionResponseForm" (ngSubmit)="respondToSessionRequest(true)">
+        <div class="form-group">
+          <label>Your Response (optional)</label>
+          <textarea formControlName="responseMessage" rows="3" placeholder="Add a message to your response..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn--danger" (click)="respondToSessionRequest(false)" [disabled]="isResponding">
+            Decline
+          </button>
+          <button type="submit" class="btn btn--primary" [disabled]="isResponding">
+            <span *ngIf="!isResponding">Accept</span>
+            <span *ngIf="isResponding" class="spinner-mini"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal-overlay" *ngIf="showFeedbackModal" (click)="closeFeedbackModal()">
+  <div class="feedback-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Rate Your Mentorship Experience</h3>
+      <button class="icon-btn close-btn" (click)="closeFeedbackModal()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="feedbackForm" (ngSubmit)="submitFeedback()">
+        <div class="form-group">
+          <label>Rating</label>
+          <div class="star-rating">
+            <span *ngFor="let star of [1,2,3,4,5]" 
+                  class="star" 
+                  [class.filled]="feedbackForm.value.rating >= star"
+                  (click)="feedbackForm.patchValue({ rating: star })">
+              ★
+            </span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Comment (optional)</label>
+          <textarea formControlName="comment" rows="4" placeholder="Share your experience..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn--secondary" (click)="closeFeedbackModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="feedbackForm.invalid || isSubmittingFeedback">
+            <span *ngIf="!isSubmittingFeedback">Submit Feedback</span>
+            <span *ngIf="isSubmittingFeedback" class="spinner-mini"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Goals Modal -->
+<div class="modal-overlay" *ngIf="showGoalsModal" (click)="closeGoalsModal()">
+  <div class="goals-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Mentorship Goals</h3>
+      <button class="icon-btn close-btn" (click)="closeGoalsModal()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="conversationGoals.length === 0" class="empty-goals">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('target') }}"/></svg></div>
+        <p>No goals set yet. Create your first goal to track progress!</p>
+        <div class="create-goal-form">
+          <input [(ngModel)]="newGoalTitle" placeholder="Goal title" class="goal-input">
+          <textarea [(ngModel)]="newGoalDescription" placeholder="Description" class="goal-textarea"></textarea>
+          <button class="btn btn--primary" (click)="createGoal(newGoalTitle, newGoalDescription)">Create Goal</button>
+        </div>
+      </div>
+      <div *ngIf="conversationGoals.length > 0" class="goals-list">
+        <div *ngFor="let goal of conversationGoals" class="goal-item">
+          <div class="goal-header">
+            <h4>{{ goal.title }}</h4>
+            <span class="goal-progress">{{ goal.progress }}%</span>
+          </div>
+          <p>{{ goal.description }}</p>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="goal.progress"></div>
+          </div>
+          <div class="goal-actions">
+            <input type="range" min="0" max="100" [value]="goal.progress" (input)="onGoalProgressChange(goal.id, $event)">
+          </div>
+        </div>
+        <div class="create-goal-section">
+          <input [(ngModel)]="newGoalTitle" placeholder="New goal title" class="goal-input">
+          <textarea [(ngModel)]="newGoalDescription" placeholder="Description" class="goal-textarea"></textarea>
+          <button class="btn btn--primary" (click)="createGoal(newGoalTitle, newGoalDescription)">Add Goal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Certificate Modal -->
+<div class="modal-overlay" *ngIf="showCertificateModal" (click)="closeCertificateModal()">
+  <div class="certificate-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Mentorship Certificate</h3>
+      <button class="icon-btn close-btn" (click)="closeCertificateModal()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="conversationCertificate" class="certificate-view">
+        <div class="certificate-header">
+          <div class="certificate-icon"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('trophy') }}"/></svg></div>
+          <h2>Certificate of Completion</h2>
+        </div>
+        <div class="certificate-details">
+          <p><strong>Skill:</strong> {{ conversationCertificate.skillName }}</p>
+          <p><strong>Description:</strong> {{ conversationCertificate.description }}</p>
+          <p><strong>Mentee:</strong> {{ conversationCertificate.menteeName }}</p>
+          <p><strong>Mentor:</strong> {{ conversationCertificate.mentorName }}</p>
+          <p><strong>Issued:</strong> {{ conversationCertificate.issuedAt | date:'fullDate' }}</p>
+        </div>
+        <div class="certificate-actions">
+          <button class="btn btn--primary" (click)="downloadCertificatePdf()">
+            Download Certificate PDF
+          </button>
+        </div>
+      </div>
+      <div *ngIf="!conversationCertificate" class="no-certificate">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('scroll') }}"/></svg></div>
+        <p>No certificate generated yet.</p>
+        <p class="hint">Complete all goals to generate a certificate.</p>
+        <button class="btn btn--primary" (click)="generateCertificate()">Generate Certificate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Study Center Dashboard -->
+<div class="study-center-overlay" *ngIf="showStudyCenter && selectedStepForStudy" (click)="closeStudyCenter()">
+  <div class="study-center-panel" (click)="$event.stopPropagation()">
+    <div class="study-nav-bar">
+      <button class="back-btn" (click)="closeStudyCenter()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Path
+      </button>
+      <div class="nav-brand">AI Skill Hub</div>
+      <div class="nav-user">
+        <span class="user-status">Study Mode Active</span>
+      </div>
+    </div>
+
+    <header class="study-hero">
+      <div class="hero-content">
+        <span class="skill-category-badge">{{ selectedStepForStudy.category }}</span>
+        <h1>{{ selectedStepForStudy.title }}</h1>
+        <div class="hero-meta">
+          <span><svg viewBox="0 0 24 24" width="16" height="16"><path attr.d="{{ getIconSvg('calendar') }}"/></svg> {{ estimatedTimes[selectedStepForStudy.id] || 'Self-paced' }}</span>
+          <span><svg viewBox="0 0 24 24" width="16" height="16"><path attr.d="{{ getIconSvg('target') }}"/></svg> Goal: Level 5/5</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="study-content" [class.is-loading]="isGeneratingResources[selectedStepForStudy.id]">
+      <!-- Global Loading Overlay -->
+      <div class="study-loading-overlay" *ngIf="isGeneratingResources[selectedStepForStudy.id]">
+        <div class="spinner-v3"></div>
+        <p>AI is crafting your personalized learning path...</p>
+      </div>
+
+      <!-- Main Learning Area -->
+      <section class="learning-main">
+        <!-- Main Video Highlight or Placeholder -->
+        <div class="video-highlight-v3">
+          <div class="main-video-player" *ngIf="getFirstVideo(generatedResources[selectedStepForStudy.id]) as mainVideo" (click)="openVideo(mainVideo)">
+            <img *ngIf="mainVideo.youtubeId" [src]="'https://img.youtube.com/vi/' + mainVideo.youtubeId + '/maxresdefault.jpg'" class="yt-large-thumb"
+                 onerror="this.style.display='none'">
+            <div class="play-btn-overlay">
+              <div class="play-circle">▶</div>
+              <span>Start Learning</span>
+            </div>
+            <div class="video-title-strip">
+              <span>{{ mainVideo.title }}</span>
+              <a *ngIf="mainVideo.searchQuery" 
+                 [href]="'https://www.youtube.com/results?search_query=' + mainVideo.searchQuery" 
+                 target="_blank" (click)="$event.stopPropagation()" class="search-help-btn">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path attr.d="{{ getIconSvg('search') }}"/></svg> Video unavailable? Search on YouTube
+              </a>
+            </div>
+          </div>
+          
+          <!-- Fallback when no video is returned by AI -->
+          <div class="no-video-highlight" *ngIf="!getFirstVideo(generatedResources[selectedStepForStudy.id])">
+            <div class="placeholder-art"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('video') }}"/></svg></div>
+            <div class="placeholder-text">
+              <h4>No Featured Video Yet</h4>
+              <p>The AI suggests checking the Articles and Courses in the sidebar for this step.</p>
+              <button class="m-btn m-btn--primary m-btn--sm" (click)="generateResourcesForStep(selectedStepForStudy)">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path attr.d="{{ getIconSvg('refresh') }}"/></svg> Try Regenerating
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-curated-summary" *ngIf="selectedStepForStudy.summary">
+          <h3><span class="sparkle"><svg viewBox="0 0 24 24" width="20" height="20"><path attr.d="{{ getIconSvg('sparkle') }}"/></svg></span> AI Insights & Guidance</h3>
+          <p>{{ selectedStepForStudy.summary }}</p>
+        </div>
+
+        <div class="study-corner-simple">
+          <div class="simple-tools-grid">
+            <div class="simple-tool-box notes-box">
+              <div class="box-header">
+                <span><svg viewBox="0 0 24 24" width="16" height="16"><path attr.d="{{ getIconSvg('notes') }}"/></svg> Study Notes</span>
+                <span class="save-status" *ngIf="isSavingNotes">Saving...</span>
+              </div>
+              <textarea [(ngModel)]="studyNotes" (input)="saveNotes()" placeholder="Type your key takeaways here..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Resources List -->
+        <div class="secondary-videos" *ngIf="generatedResources[selectedStepForStudy.id]">
+          <h4 class="section-label">More Video Lessons</h4>
+          <div class="video-grid-simple">
+             <ng-container *ngFor="let res of generatedResources[selectedStepForStudy.id]">
+               <!-- Filter: Only videos AND not the one displayed at top -->
+               <div class="v-card-mini" 
+                    *ngIf="res.type.toUpperCase() === 'VIDEO' && res !== getFirstVideo(generatedResources[selectedStepForStudy.id])" 
+                    (click)="openVideo(res)">
+                  <img [src]="'https://img.youtube.com/vi/' + res.youtubeId + '/mqdefault.jpg'">
+                  <div class="v-mini-info">
+                    <h6>{{ res.title }}</h6>
+                    <a *ngIf="res.searchQuery" 
+                       [href]="'https://www.youtube.com/results?search_query=' + res.searchQuery" 
+                       target="_blank" (click)="$event.stopPropagation()" class="mini-search-link">
+                      <svg viewBox="0 0 24 24" width="14" height="14"><path attr.d="{{ getIconSvg('search') }}"/></svg> Search Alternative
+                    </a>
+                  </div>
+               </div>
+             </ng-container>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar: Progress & Coaching -->
+      <aside class="learning-sidebar">
+        <!-- Pretty Circular Pomodoro -->
+        <div class="sidebar-box circular-pomodoro-box" [class.active]="pomodoroRunning">
+          <h3>Focus Timer</h3>
+          <div class="circular-timer-container">
+            <svg viewBox="0 0 100 100">
+              <circle class="bg" cx="50" cy="50" r="45"></circle>
+              <circle class="progress" cx="50" cy="50" r="45" 
+                [style.stroke-dashoffset]="283 - (283 * pomodoroSeconds / (25*60))"></circle>
+            </svg>
+            <div class="timer-display">{{ formattedTime }}</div>
+          </div>
+          <div class="timer-controls">
+            <button class="m-btn m-btn--primary m-btn--sm" (click)="togglePomodoro()">
+              {{ pomodoroRunning ? 'Pause' : 'Start Focus' }}
+            </button>
+            <button class="m-btn m-btn--ghost m-btn--sm" (click)="resetPomodoro()">Reset</button>
+          </div>
+        </div>
+
+        <!-- Progress Tracking -->
+        <div class="sidebar-box progress-box">
+          <h3>Your Mastery Progress</h3>
+          <div class="progress-stats">
+            <div class="stat">
+              <span>Completion</span>
+              <strong>{{ checklistProgress }}%</strong>
+            </div>
+            <div class="stat">
+              <span>Target</span>
+              <strong>5/5</strong>
+            </div>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="bar-fill" [style.width.%]="checklistProgress"></div>
+          </div>
+          
+          <div class="simple-checklist">
+            <div class="check-row" *ngFor="let item of studyChecklist; let i = index" 
+                 (click)="toggleCheckItem(i)" [class.done]="item.done">
+              <div class="check-circle"></div>
+              <span class="check-text">{{ item.text }}</span>
+            </div>
+          </div>
+
+          <button class="m-btn m-btn--success validate-btn" (click)="startQuiz(selectedStepForStudy)">
+            Take Validation Quiz
+          </button>
+        </div>
+
+        <div class="sidebar-box resources-box">
+          <h3>Articles & Courses</h3>
+          <div class="res-list">
+            <ng-container *ngFor="let res of generatedResources[selectedStepForStudy.id]">
+              <a *ngIf="res.type !== 'VIDEO'" [href]="res.url" target="_blank" class="res-link-card">
+                <span class="type-icon"><svg viewBox="0 0 24 24" width="16" height="16"><path attr.d="{{ res.type === 'COURSE' ? getIconSvg('graduation') : getIconSvg('document') }}"/></svg></span>
+                <div class="res-info">
+                  <strong>{{ res.title }}</strong>
+                  <span>{{ res.platform }}</span>
+                </div>
+              </a>
+            </ng-container>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- CV Analysis Results Modal -->
+<div class="m-modal-overlay" *ngIf="showCVAnalysisModal" (click)="closeCVAnalysisModal()">
+  <div class="m-modal-card cv-analysis-modal" (click)="$event.stopPropagation()">
+    <div class="m-modal-header">
+      <div>
+        <h3>CV Analysis Insights</h3>
+        <p>AI-powered profile extraction</p>
+      </div>
+      <button class="close-btn" (click)="closeCVAnalysisModal()">&times;</button>
+    </div>
+
+    <div class="m-modal-body">
+      <!-- File Preview -->
+      <div class="cv-preview-card">
+        <div class="file-icon"><svg viewBox="0 0 24 24" width="48" height="48"><path attr.d="{{ getIconSvg('document') }}"/></svg></div>
+        <div class="file-info">
+          <h4>{{ analyzedFileName }}</h4>
+          <p>Document analysé avec succès</p>
+        </div>
+        <div style="margin-left: auto;">
+          <span class="badge badge--success">Processed</span>
+        </div>
+      </div>
+
+      <!-- AI Summary -->
+      <div class="ai-description-box" *ngIf="cvAnalysisResults?.overall_description">
+        <h4>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          AI Profile Summary
+        </h4>
+        <p>{{ cvAnalysisResults.overall_description }}</p>
+      </div>
+
+      <!-- Competencies Found -->
+      <div class="analysis-section">
+        <h4 style="font-size: 0.9rem; color: #64748b; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">
+          Competencies Identified & Updated
+        </h4>
+        
+        <div class="competencies-impact-grid">
+          <div class="impact-item" *ngFor="let item of cvAnalysisResults?.suggested_competencies">
+            <div class="impact-level">{{ item.level }}</div>
+            <div class="impact-content">
+              <div class="impact-header">
+                <strong>{{ item.name }}</strong>
+                <span>Level {{ item.level }}/5</span>
+              </div>
+              <p>{{ item.reason }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="m-btn m-btn--primary" (click)="closeCVAnalysisModal()">
+          Got it, thanks!
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz Modal -->
+<div class="m-modal-overlay" *ngIf="showQuizModal" (click)="quizResult ? closeQuizModal() : null">
+  <div class="m-modal-card quiz-modal" (click)="$event.stopPropagation()">
+    <div class="m-modal-header">
+      <div>
+        <h3>Interactive Skill Quiz</h3>
+        <p>{{ currentQuiz?.skill || 'Chargement...' }} - Niveau {{ currentQuiz?.level }}</p>
+      </div>
+      <button class="close-btn" (click)="closeQuizModal()">&times;</button>
+    </div>
+
+    <div class="m-modal-body">
+      <!-- Loading State -->
+      <div *ngIf="isQuizLoading" class="modal-loading">
+        <div class="spinner"></div>
+        <p>Génération du quiz par l'IA Groq...</p>
+      </div>
+
+      <!-- Quiz Content -->
+      <div *ngIf="!isQuizLoading && currentQuiz && !quizResult" class="quiz-content">
+        <div class="quiz-progress">
+          <div class="progress-info">Question {{ currentQuizQuestionIndex + 1 }} sur {{ currentQuiz.questions.length }}
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill"
+              [style.width.%]="((currentQuizQuestionIndex + 1) / currentQuiz.questions.length) * 100"></div>
+          </div>
+        </div>
+
+        <div class="question-box">
+          <h4>{{ currentQuiz.questions[currentQuizQuestionIndex].question }}</h4>
+          <div class="options-grid">
+            <button *ngFor="let opt of currentQuiz.questions[currentQuizQuestionIndex].options; let idx = index"
+              class="option-btn" [class.selected]="quizAnswers[currentQuizQuestionIndex] === idx"
+              (click)="selectQuizOption(idx)">
+              <span class="option-letter">{{ ['A','B','C','D'][idx] }}</span>
+              {{ opt }}
+            </button>
+          </div>
+        </div>
+
+        <div class="quiz-navigation">
+          <button class="m-btn m-btn--ghost" (click)="prevQuizQuestion()"
+            [disabled]="currentQuizQuestionIndex === 0">Précédent</button>
+
+          <button *ngIf="currentQuizQuestionIndex < currentQuiz.questions.length - 1" class="m-btn m-btn--primary"
+            (click)="nextQuizQuestion()" [disabled]="quizAnswers[currentQuizQuestionIndex] === null">
+            Suivant
+          </button>
+
+          <button *ngIf="currentQuizQuestionIndex === currentQuiz.questions.length - 1" class="m-btn m-btn--success"
+            (click)="submitQuiz()" [disabled]="quizAnswers[currentQuizQuestionIndex] === null">
+            Terminer le Quiz
+          </button>
+        </div>
+      </div>
+
+      <!-- Result State -->
+      <div *ngIf="quizResult && !showQuizReview" class="quiz-result-view">
+        <div class="result-score-circle" [class.passed]="quizResult.score >= 80">
+          <strong>{{ quizResult.score }}%</strong>
+          <span>Score Final</span>
+        </div>
+
+        <div class="result-message">
+          <h3 *ngIf="quizResult.score >= 80">Félicitations !</h3>
+          <h3 *ngIf="quizResult.score < 80">Pas mal !</h3>
+          <p *ngIf="quizResult.newLevel > quizResult.oldLevel">
+            Ton niveau est passé de <strong>{{ quizResult.oldLevel }}</strong> à <strong>{{ quizResult.newLevel
+              }}</strong> !
+          </p>
+          <p *ngIf="quizResult.newLevel === quizResult.oldLevel">
+            Continue de t'entraîner pour passer au niveau supérieur.
+          </p>
+        </div>
+
+        <div class="result-actions">
+          <button class="m-btn m-btn--ghost" (click)="toggleQuizReview()">Revoir les réponses</button>
+          <button class="m-btn m-btn--primary" (click)="closeQuizModal()">Fermer</button>
+        </div>
+      </div>
+
+      <!-- Review Mode -->
+      <div *ngIf="showQuizReview && currentQuiz" class="quiz-review-view">
+        <div class="quiz-progress">
+          <div class="progress-info">Révision: Question {{ currentQuizQuestionIndex + 1 }} sur {{
+            currentQuiz.questions.length }}</div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill"
+              [style.width.%]="((currentQuizQuestionIndex + 1) / currentQuiz.questions.length) * 100"></div>
+          </div>
+        </div>
+
+        <div class="question-box">
+          <h4>{{ currentQuiz.questions[currentQuizQuestionIndex].question }}</h4>
+          <div class="options-grid">
+            <div *ngFor="let opt of currentQuiz.questions[currentQuizQuestionIndex].options; let idx = index"
+              class="option-review"
+              [class.correct]="idx === currentQuiz.questions[currentQuizQuestionIndex].correct_answer"
+              [class.incorrect]="quizAnswers[currentQuizQuestionIndex] === idx && idx !== currentQuiz.questions[currentQuizQuestionIndex].correct_answer">
+              <span class="option-letter">{{ ['A','B','C','D'][idx] }}</span>
+              <span class="option-text">{{ opt }}</span>
+              <span class="option-status-icon"
+                *ngIf="idx === currentQuiz.questions[currentQuizQuestionIndex].correct_answer"><svg viewBox="0 0 24 24" width="18" height="18"><path attr.d="{{ getIconSvg('correct') }}"/></svg></span>
+              <span class="option-status-icon"
+                *ngIf="quizAnswers[currentQuizQuestionIndex] === idx && idx !== currentQuiz.questions[currentQuizQuestionIndex].correct_answer"><svg viewBox="0 0 24 24" width="18" height="18"><path attr.d="{{ getIconSvg('incorrect') }}"/></svg></span>
+            </div>
+          </div>
+
+          <div class="explanation-box">
+            <h5>Explication de l'IA :</h5>
+            <p>{{ currentQuiz.questions[currentQuizQuestionIndex].explanation }}</p>
+          </div>
+        </div>
+
+        <div class="quiz-navigation">
+          <button class="m-btn m-btn--ghost" (click)="prevQuizQuestion()"
+            [disabled]="currentQuizQuestionIndex === 0">Précédent</button>
+
+          <button *ngIf="currentQuizQuestionIndex < currentQuiz.questions.length - 1" class="m-btn m-btn--primary"
+            (click)="nextQuizQuestion()">
+            Suivant
+          </button>
+
+          <button *ngIf="currentQuizQuestionIndex === currentQuiz.questions.length - 1" class="m-btn m-btn--primary"
+            (click)="toggleQuizReview()">
+            Retour au score
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

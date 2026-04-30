@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ChartData, ChartOptions } from 'chart.js';
 import { catchError, forkJoin, of } from 'rxjs';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 import { ApiService } from '../../../../core/services/api.service';
@@ -14,6 +15,7 @@ import {
   SponsorshipDto,
   TransactionDto
 } from '../../../../core/services/finance.service';
+import { FraudAlert, FraudDetectionService, FraudSeverity } from '../../services/fraud-detection.service';
 
 interface BudgetItem {
   title: string;
@@ -106,17 +108,47 @@ export class FinanceHomeComponent implements OnInit {
   private readonly alertEmailPreferenceStorageKey = 'finance.budgetAlert.emailPreference';
   private readonly emailedAlertDeliveryStorageKey = 'finance.budgetAlert.emailDeliveryKeys';
   private emailedBudgetAlertDeliveryKeys = new Set<string>();
+  statsView: 'kpi' | 'pie' = 'kpi';
+
+  readonly pieChartOptions: ChartOptions<'pie'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: '#94a3b8', font: { size: 12, family: 'inherit' }, padding: 20 }
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${this.formatCurrency(ctx.raw as number)}`
+        }
+      }
+    }
+  };
+
+  trendPage = 0;
+  readonly trendPageSize = 4;
+  budgetPage = 0;
+  readonly budgetPageSize = 3;
+  transactionPage = 0;
+  readonly transactionPageSize = 5;
+
+  fraudAlerts: FraudAlert[] = [];
+  fraudAlertsLoading = false;
+  dismissingFraudId: number | null = null;
 
   constructor(
     private readonly financeService: FinanceService,
     private readonly authHelperService: AuthHelperService,
-    private readonly apiService: ApiService
+    private readonly apiService: ApiService,
+    private readonly fraudService: FraudDetectionService
   ) {}
 
   ngOnInit(): void {
     this.initializeBudgetAlertEmailSettings();
     this.loadEmailedBudgetAlertDeliveryKeys();
     this.loadDashboardData();
+    this.loadFraudAlerts();
   }
 
   get totalBudget(): number {
@@ -415,6 +447,27 @@ export class FinanceHomeComponent implements OnInit {
     return (this.expenseTotal / totalFlow) * 100;
   }
 
+  get pieChartData(): ChartData<'pie'> {
+    const clubExpenses = this.exerciseTransactions
+      .filter((t) => t.type === 'EXPENSE' && (t.scope === 'CLUB' || (!t.eventId && !t.budgetId)))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const eventExpenses = this.exerciseTransactions
+      .filter((t) => t.type === 'EXPENSE' && (t.scope === 'EVENT' || t.eventId != null))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return {
+      labels: ['Income', 'Club Expenses', 'Event Expenses'],
+      datasets: [{
+        data: [this.incomeTotal, clubExpenses, eventExpenses],
+        backgroundColor: ['rgba(74,222,128,0.85)', 'rgba(251,146,60,0.85)', 'rgba(167,139,250,0.85)'],
+        borderColor: ['#1a1a2e', '#1a1a2e', '#1a1a2e'],
+        borderWidth: 2,
+        hoverOffset: 8
+      }]
+    };
+  }
+
   get monthlyTrendRows(): MonthlyTrendRow[] {
     const rows: MonthlyTrendRow[] = [];
 
@@ -449,6 +502,49 @@ export class FinanceHomeComponent implements OnInit {
     return rows;
   }
 
+  get pagedTrendRows(): MonthlyTrendRow[] {
+    const start = this.trendPage * this.trendPageSize;
+    return this.monthlyTrendRows.slice(start, start + this.trendPageSize);
+  }
+
+  get trendTotalPages(): number {
+    return Math.ceil(this.monthlyTrendRows.length / this.trendPageSize);
+  }
+
+  trendPrev(): void {
+    if (this.trendPage > 0) this.trendPage--;
+  }
+
+  trendNext(): void {
+    if (this.trendPage < this.trendTotalPages - 1) this.trendPage++;
+  }
+
+  get pagedBudgetItems(): BudgetItem[] {
+    const start = this.budgetPage * this.budgetPageSize;
+    return this.filteredBudgetItems.slice(start, start + this.budgetPageSize);
+  }
+
+  get budgetTotalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredBudgetItems.length / this.budgetPageSize));
+  }
+
+  budgetPrev(): void { if (this.budgetPage > 0) this.budgetPage--; }
+  budgetNext(): void { if (this.budgetPage < this.budgetTotalPages - 1) this.budgetPage++; }
+  resetBudgetPage(): void { this.budgetPage = 0; }
+
+  get pagedRecentTransactions(): TransactionItem[] {
+    const start = this.transactionPage * this.transactionPageSize;
+    return this.filteredRecentTransactions.slice(start, start + this.transactionPageSize);
+  }
+
+  get transactionTotalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredRecentTransactions.length / this.transactionPageSize));
+  }
+
+  transactionPrev(): void { if (this.transactionPage > 0) this.transactionPage--; }
+  transactionNext(): void { if (this.transactionPage < this.transactionTotalPages - 1) this.transactionPage++; }
+  resetTransactionPage(): void { this.transactionPage = 0; }
+
   onExerciseYearChange(year: number | string): void {
     const parsed = Number(year);
     if (!Number.isFinite(parsed)) {
@@ -459,8 +555,52 @@ export class FinanceHomeComponent implements OnInit {
     this.refreshDashboardView();
   }
 
+  forecastTab: 'breakdown' | 'insights' = 'breakdown';
+
   setForecastHorizon(horizon: ForecastHorizon): void {
     this.selectedForecastHorizon = horizon;
+  }
+
+  setForecastTab(tab: 'breakdown' | 'insights'): void {
+    this.forecastTab = tab;
+  }
+
+  alertCountByLevel(level: AlertLevel): number {
+    return this.budgetUtilizationAlerts.filter(a => a.level === level).length;
+  }
+
+  fraudCountBySeverity(severity: FraudSeverity): number {
+    return this.fraudAlerts.filter(a => a.severity === severity).length;
+  }
+
+  fraudSeverityClass(severity: FraudSeverity): string {
+    return `badge badge--${severity}`;
+  }
+
+  fraudScoreBarClass(score: number): string {
+    if (score >= 80) return 'score-bar__fill--critical';
+    if (score >= 60) return 'score-bar__fill--high';
+    if (score >= 35) return 'score-bar__fill--medium';
+    return 'score-bar__fill--low';
+  }
+
+  formatFraudAmount(amount: number, currency: string): string {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
+  }
+
+  formatFraudDate(iso: string): string {
+    return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  dismissFraudAlert(alert: FraudAlert): void {
+    this.dismissingFraudId = alert.internalId;
+    this.fraudService.dismissAlert(alert.internalId).subscribe({
+      next: () => {
+        this.fraudAlerts = this.fraudAlerts.filter(a => a.internalId !== alert.internalId);
+        this.dismissingFraudId = null;
+      },
+      error: () => { this.dismissingFraudId = null; }
+    });
   }
 
   getConfidenceLabel(forecast: AiCashFlowProjection): string {
@@ -788,63 +928,63 @@ export class FinanceHomeComponent implements OnInit {
               </div>
             </div>
             <div class="meta">
-              <strong>Exercice:</strong> ${this.selectedExerciseYear}<br/>
-              <strong>Généré le:</strong> ${generatedAt.toLocaleString('fr-FR')}
+              <strong>Period:</strong> ${this.selectedExerciseYear}<br/>
+              <strong>Generated:</strong> ${generatedAt.toLocaleString('en-GB')}
             </div>
           </div>
 
-          <h2>Bilan Financier Synthétique</h2>
+          <h2>Balance Sheet Summary</h2>
           <div class="grid">
             <div class="card">
-              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Actifs</strong></div>
-              <div class="line"><span>Trésorerie disponible</span><strong>${this.formatCurrency(this.closingCash)}</strong></div>
-              <div class="line"><span>Créances</span><strong>N/A</strong></div>
+              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Assets</strong></div>
+              <div class="line"><span>Available cash</span><strong>${this.formatCurrency(this.closingCash)}</strong></div>
+              <div class="line"><span>Receivables</span><strong>N/A</strong></div>
             </div>
             <div class="card">
-              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Passifs</strong></div>
-              <div class="line"><span>Dettes</span><strong>N/A</strong></div>
-              <div class="line"><span>Fonds propres (estimé)</span><strong>${this.formatCurrency(this.equityTotal)}</strong></div>
+              <div class="line" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"><strong>Liabilities</strong></div>
+              <div class="line"><span>Debts</span><strong>N/A</strong></div>
+              <div class="line"><span>Equity (estimated)</span><strong>${this.formatCurrency(this.equityTotal)}</strong></div>
             </div>
           </div>
 
-          <h2>Compte de Résultat Simplifié</h2>
+          <h2>Simplified Income Statement</h2>
           <div class="card">
-            <div class="line"><span>Recettes Totales</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
-            <div class="line"><span>Dépenses Totales</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
+            <div class="line"><span>Total Revenue</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
+            <div class="line"><span>Total Expenses</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
             <div class="line" style="margin-top: 12px; padding-top: 12px; border-top: 2px dashed #cbd5e1;">
-              <span style="font-weight: 600; color: #0f172a;">Résultat Net</span>
+              <span style="font-weight: 600; color: #0f172a;">Net Result</span>
               <strong class="${this.netResult >= 0 ? 'income' : 'expense'}" style="font-size: 18px;">${netResultSign}${this.formatCurrency(this.absValue(this.netResult))}</strong>
             </div>
           </div>
 
-          <h2>Rapport de Trésorerie & Projections</h2>
+          <h2>Treasury Report & Projections</h2>
           <div class="card">
-            <div class="line"><span>Solde Initial</span><strong>${this.formatCurrency(this.openingCash)}</strong></div>
-            <div class="line"><span>Encaissements</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
-            <div class="line"><span>Décaissements</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
-            <div class="line" style="background:#f1f5f9; padding:8px 12px; border-radius:6px; margin-top:8px;"><span><strong>Solde Final Calculé</strong></span><strong style="color:${safePrimary}">${this.formatCurrency(this.closingCash)}</strong></div>
-            
-            <div class="line" style="margin-top:24px;"><span>Écart de rapprochement bancaire</span><strong>${reconciliationLabel}</strong></div>
-            <div class="line"><span>Projection Nette / Mois</span><strong class="${this.projectedNetFlow >= 0 ? 'income' : 'expense'}">${projectedNetSign}${this.formatCurrency(this.absValue(this.projectedNetFlow))}</strong></div>
-            <div class="line"><span>Solde Projeté à ${this.forecastMonths} mois</span><strong>${this.formatCurrency(this.projectedClosingCash)}</strong></div>
+            <div class="line"><span>Opening Balance</span><strong>${this.formatCurrency(this.openingCash)}</strong></div>
+            <div class="line"><span>Inflows</span><strong class="income">${this.formatCurrency(this.incomeTotal)}</strong></div>
+            <div class="line"><span>Outflows</span><strong class="expense">${this.formatCurrency(this.expenseTotal)}</strong></div>
+            <div class="line" style="background:#f1f5f9; padding:8px 12px; border-radius:6px; margin-top:8px;"><span><strong>Calculated Closing Balance</strong></span><strong style="color:${safePrimary}">${this.formatCurrency(this.closingCash)}</strong></div>
+
+            <div class="line" style="margin-top:24px;"><span>Bank reconciliation gap</span><strong>${reconciliationLabel}</strong></div>
+            <div class="line"><span>Net Projection / Month</span><strong class="${this.projectedNetFlow >= 0 ? 'income' : 'expense'}">${projectedNetSign}${this.formatCurrency(this.absValue(this.projectedNetFlow))}</strong></div>
+            <div class="line"><span>Projected Balance in ${this.forecastMonths} months</span><strong>${this.formatCurrency(this.projectedClosingCash)}</strong></div>
           </div>
 
-          <h2>Extrait des Dernières Transactions</h2>
+          <h2>Recent Transactions</h2>
           <table>
             <thead>
               <tr>
                 <th>Date</th>
                 <th>Type</th>
                 <th>Description</th>
-                <th style="text-align:right;">Montant</th>
+                <th style="text-align:right;">Amount</th>
               </tr>
             </thead>
             <tbody>
-              ${rowsHtml || '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Aucune transaction disponible sur cet exercice.</td></tr>'}
+              ${rowsHtml || '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">No transactions available for this period.</td></tr>'}
             </tbody>
           </table>
 
-          <div class="footer">Rapport généré automatiquement depuis le module Finance - Cluverse</div>
+          <div class="footer">Report automatically generated by the Finance module – Cluverse</div>
         </div>
       </body>
       </html>
@@ -855,6 +995,16 @@ export class FinanceHomeComponent implements OnInit {
     reportWindow.document.close();
     reportWindow.focus();
     reportWindow.print();
+  }
+
+  private loadFraudAlerts(): void {
+    this.fraudAlertsLoading = true;
+    this.fraudService.getAlerts({ dismissed: false, limit: 10 }).pipe(
+      catchError(() => of({ alerts: [] as FraudAlert[] }))
+    ).subscribe(({ alerts }) => {
+      this.fraudAlerts = alerts;
+      this.fraudAlertsLoading = false;
+    });
   }
 
   private loadDashboardData(): void {
@@ -939,6 +1089,7 @@ export class FinanceHomeComponent implements OnInit {
     }
 
     const payload: BudgetAlertEmailPayload = {
+      recipientEmail: this.authHelperService.getEmail() || undefined,
       recipientName: this.authHelperService.getFullName() || 'Finance Manager',
       clubName: this.clubName,
       exerciseYear: this.selectedExerciseYear,
@@ -1069,29 +1220,18 @@ export class FinanceHomeComponent implements OnInit {
   }
 
   private calculateSpentForBudget(budget: BudgetDto, transactions: TransactionDto[], year: number): number {
-    const expenseTransactions = transactions.filter((transaction) => {
-      if (transaction.type !== 'EXPENSE') {
+    return transactions
+      .filter((t) => {
+        if (t.type !== 'EXPENSE') return false;
+        const d = new Date(t.date);
+        if (Number.isNaN(d.getTime()) || d.getFullYear() !== year) return false;
+
+        if (t.budgetId != null) return t.budgetId === budget.id;
+        if (t.eventId != null && budget.eventId != null) return t.eventId === budget.eventId;
+        if (!budget.eventId) return !t.eventId && t.scope !== 'EVENT';
         return false;
-      }
-
-      const transactionDate = new Date(transaction.date);
-      return !Number.isNaN(transactionDate.getTime()) && transactionDate.getFullYear() === year;
-    });
-
-    const eventTitle = (budget.event?.title || '').trim().toLowerCase();
-    if (!eventTitle) {
-      return expenseTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-    }
-
-    const eventExpenses = expenseTransactions.filter((transaction) =>
-      (transaction.description || '').toLowerCase().includes(eventTitle)
-    );
-
-    if (eventExpenses.length === 0) {
-      return 0;
-    }
-
-    return eventExpenses.reduce((sum, transaction) => sum + transaction.amount, 0);
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
   }
 
   private toTransactionItem(transaction: TransactionDto): TransactionItem {

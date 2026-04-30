@@ -1,0 +1,12 @@
+    <div *ngIf="reminderStatus as rs"
+     class="reminder-status"
+     [ngClass]="getStatusClass()">
+  <!-- Indicateur visuel avec icône et label -->
+  <div class="reminder-indicator">
+    <span class="reminder-icon">{{ reminderStatus.icon }}</span>
+    <span class="reminder-label">{{ reminderStatus.label }}</span>
+  </div>
+
+  <!-- Description explicative au survol (title attribute) -->
+  <div class="reminder-tooltip" [title]="reminderStatus.description"></div>
+</div>

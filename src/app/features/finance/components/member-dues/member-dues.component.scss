@@ -1,0 +1,353 @@
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+:host {
+  display: block;
+  animation: fadeIn 0.4s ease both;
+}
+
+.finance-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 100%;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    animation: fadeSlideUp 0.5s ease both;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.85rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #ffffff 0%, #93c5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__subtitle {
+    margin: 0.3rem 0 0;
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+}
+
+.finance-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  background: rgba(23, 23, 23, 0.9);
+  border: 1px solid #2e2e2e;
+  border-radius: 14px;
+  padding: 0.35rem;
+  backdrop-filter: blur(8px);
+  animation: fadeSlideUp 0.5s 0.1s ease both;
+
+  &__item {
+    text-decoration: none;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+
+    &:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-1px);
+    }
+
+    &--active {
+      color: #ffffff;
+      background: linear-gradient(135deg, #2f6fec, #1d4ed8);
+      box-shadow: 0 2px 12px rgba(47, 111, 236, 0.4);
+    }
+  }
+}
+
+.btn {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  height: 2.4rem;
+  padding: 0 1.1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+
+  &:hover { transform: translateY(-2px); }
+  &:active { transform: translateY(0); }
+
+  &--primary {
+    background: linear-gradient(135deg, #2f6fec, #1d4ed8);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(47, 111, 236, 0.35);
+    &:hover { box-shadow: 0 6px 20px rgba(47, 111, 236, 0.5); }
+  }
+
+  &--secondary {
+    background: #1a1a1a;
+    border-color: #3a3a3a;
+    color: #e2e8f0;
+    &:hover { border-color: #2f6fec; color: #ffffff; }
+  }
+
+  &--sm {
+    height: 2rem;
+    padding: 0 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  &--danger {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    &:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.form-panel {
+  background: linear-gradient(145deg, #161616, #1a1f2e);
+  border: 1px solid #242433;
+  border-radius: 16px;
+  padding: 1.2rem;
+  animation: fadeSlideUp 0.5s 0.15s ease both;
+
+  &__title {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.01em;
+  }
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  &__label {
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__input {
+    height: 2.3rem;
+    border-radius: 10px;
+    border: 1px solid #2a2a3a;
+    background: #0f0f1a;
+    color: #f4f4f4;
+    font-size: 0.85rem;
+    padding: 0 0.75rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #2f6fec;
+      box-shadow: 0 0 0 2px rgba(47, 111, 236, 0.15);
+    }
+  }
+}
+
+.form-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+// ── Dues-specific ──────────────────────────────────────────
+
+.dues-table-wrap {
+  overflow-x: auto;
+  background: linear-gradient(145deg, #161616, #1a1f2e);
+  border: 1px solid #242433;
+  border-radius: 16px;
+  animation: fadeSlideUp 0.5s 0.2s ease both;
+}
+
+.dues-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #242433;
+  }
+
+  th {
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    background: rgba(15, 15, 26, 0.5);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(47, 111, 236, 0.05); }
+}
+
+.dues-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  &--paid    { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+  &--pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+  &--overdue { background: rgba(239, 68, 68, 0.15);  color: #f87171; }
+}
+
+.dues-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dues-error {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.dues-reminder-msg {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.dues-empty {
+  color: #6b7280;
+  padding: 3rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.dues-loading {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+// ── Light mode ─────────────────────────────────────────────
+
+:host-context(body.light-mode) {
+  .finance-page__title {
+    background: linear-gradient(120deg, #0f172a 0%, #1d4ed8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .finance-nav {
+    background: #ffffff;
+    border-color: #e2e8f0;
+  }
+
+  .finance-nav__item {
+    color: #64748b;
+    &:hover { color: #0f172a; }
+  }
+
+  .finance-nav__item--active { color: #ffffff; }
+
+  .form-panel {
+    background: #ffffff;
+    border-color: #e2e8f0;
+  }
+
+  .form-panel__title { color: #0f172a; }
+
+  .form-field__label { color: #64748b; }
+
+  .form-field__input {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #0f172a;
+  }
+
+  .btn--secondary {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #334155;
+  }
+
+  .dues-table-wrap {
+    background: #ffffff;
+    border-color: #e2e8f0;
+  }
+
+  .dues-table {
+    th, td { border-bottom-color: #e2e8f0; }
+    th { background: #f8fafc; color: #64748b; }
+    tr:hover td { background: #f1f5f9; }
+  }
+
+  .dues-badge {
+    &--paid    { background: #d1fae5; color: #065f46; }
+    &--pending { background: #fef3c7; color: #92400e; }
+    &--overdue { background: #fee2e2; color: #991b1b; }
+  }
+}
+
+@media (max-width: 768px) {
+  .finance-page__actions {
+    width: 100%;
+    .btn { flex: 1; }
+  }
+}
