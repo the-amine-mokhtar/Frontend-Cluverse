@@ -104,6 +104,28 @@
         <h4>Program</h4>
         <p>{{ selectedCandidate.program || 'No program statement yet.' }}</p>
       </div>
+      <div class="vote-pie__profile-section" *ngIf="matchedCompetencies.length > 0">
+        <h4>Required Competencies Match</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+          <div *ngFor="let comp of matchedCompetencies" 
+               style="display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid;"
+               [style.background]="comp.hasCompetency ? 'var(--e-success-bg)' : 'var(--e-bg-input)'"
+               [style.borderColor]="comp.hasCompetency ? 'var(--e-success-border)' : 'var(--e-border)'"
+               [style.color]="comp.hasCompetency ? 'var(--e-success)' : 'var(--e-muted)'">
+            
+            <svg *ngIf="comp.hasCompetency" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <svg *ngIf="!comp.hasCompetency" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            
+            {{ comp.name }}
+            
+            <span *ngIf="comp.hasCompetency" style="opacity: 0.8; font-size: 0.65rem;">(Lvl {{ comp.level }})</span>
+          </div>
+        </div>
+      </div>
       <div class="vote-pie__profile-actions">
         <button class="vote-pie__action-btn" [class]="voteButtonClass" [disabled]="isSubmitting" (click)="onVoteAction()">
           <span *ngIf="isSubmitting" class="vote-pie__spinner"></span>

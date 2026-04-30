@@ -5,6 +5,7 @@ import { VoteService } from '../../services/vote.service';
 import { ElectionService } from '../../services/election.service';
 import { CandidateService } from '../../services/candidate.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
+import { ApiService, MemberCompetencyResponse } from '../../../../core/services/api.service';
 import { catchError, forkJoin, of } from 'rxjs';
 
 interface PieSlice {
@@ -47,6 +48,8 @@ export class VoteFormComponent implements OnInit, OnDestroy {
 
   selectedElection: any = null;
   selectedCandidate: any = null;
+  candidateCompetencies: MemberCompetencyResponse[] = [];
+  matchedCompetencies: any[] = [];
   hoveredIndex: number = -1;
   userVote: any = null; 
   votedElectionIds = new Set<string>();
@@ -68,7 +71,8 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     private voteService: VoteService,
     private electionService: ElectionService,
     private candidateService: CandidateService,
-    private authHelper: AuthHelperService
+    private authHelper: AuthHelperService,
+    private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -292,6 +296,8 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   selectElection(election: any): void {
     this.selectedElection = election;
     this.selectedCandidate = null;
+    this.candidateCompetencies = [];
+    this.matchedCompetencies = [];
     this.hoveredIndex = -1;
     this.errorMessage = '';
 
@@ -307,6 +313,8 @@ export class VoteFormComponent implements OnInit, OnDestroy {
 
   goBackToElections(): void {
     this.selectedCandidate = null;
+    this.candidateCompetencies = [];
+    this.matchedCompetencies = [];
     this.hoveredIndex = -1;
     this.errorMessage = '';
 
@@ -324,6 +332,32 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   selectCandidate(candidate: any): void {
     this.selectedCandidate = candidate;
     this.errorMessage = '';
+    this.candidateCompetencies = [];
+    this.matchedCompetencies = [];
+    
+    if (candidate && candidate.userId) {
+      this.apiService.getMemberCompetenciesByUser(candidate.userId).subscribe({
+        next: (competencies) => {
+          this.candidateCompetencies = competencies || [];
+          this.calculateMatchedCompetencies();
+        },
+        error: (err) => console.error('Failed to load candidate competencies', err)
+      });
+    }
+  }
+
+  private calculateMatchedCompetencies(): void {
+    if (!this.selectedElection || !this.selectedElection.requiredCompetencies) return;
+    
+    const required = this.selectedElection.requiredCompetencies;
+    this.matchedCompetencies = required.map((req: any) => {
+      const match = this.candidateCompetencies.find(c => c.skillId === req.id);
+      return {
+        ...req,
+        hasCompetency: !!match,
+        level: match ? match.currentLevel : 0
+      };
+    });
   }
 
 
