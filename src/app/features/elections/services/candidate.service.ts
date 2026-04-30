@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
@@ -43,9 +43,10 @@ export class CandidateService {
   }
 
   compareCandidates(payload: {
-    candidates: { name: string; bio: string; program: string; status: string; voteCount: number; percentage: number }[];
+    candidates: { name: string; bio: string; program: string; status: string; voteCount: number; percentage: number; matchedSkills?: string[] }[];
     electionTitle?: string;
     positionName?: string;
+    requiredCompetencies?: string[];
   }): Observable<{ report: string; prompt: string }> {
     return this.http.post<{ report: string; prompt: string }>(`${this.bioGeneratorApiUrl}/compare-candidates`, payload);
   }

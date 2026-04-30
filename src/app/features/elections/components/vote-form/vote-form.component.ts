@@ -508,16 +508,21 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     this.showCompareReport = true;
 
     const payload = {
-      candidates: this.candidates.map((c: any) => ({
-        name: c.userName || 'Unknown',
-        bio: c.bio || '',
-        program: c.program || '',
-        status: c.status || '',
-        voteCount: c.voteCount || 0,
-        percentage: c.percentage || 0
-      })),
+      candidates: this.candidates.map((c: any) => {
+        const compData = this.competencyLeaderboard.find(cl => cl.userId === c.userId);
+        return {
+          name: c.userName || 'Unknown',
+          bio: c.bio || '',
+          program: c.program || '',
+          status: c.status || '',
+          voteCount: c.voteCount || 0,
+          percentage: c.percentage || 0,
+          matchedSkills: compData?.matchedSkills || []
+        };
+      }),
       electionTitle: this.selectedElection?.title || '',
-      positionName: this.selectedElection?.position?.name || ''
+      positionName: this.selectedElection?.position?.name || '',
+      requiredCompetencies: this.selectedElection?.requiredCompetencies?.map((r: any) => r.name || r.skillName) || []
     };
 
     this.candidateService.compareCandidates(payload).subscribe({
