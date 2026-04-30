@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
@@ -39,6 +39,14 @@ export class ElectionService {
 
   closeElection(id: number): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/${id}/close`, {}, { headers: this.getAuthHeaders() });
+  }
+
+  getNonVoterCount(id: number): Observable<{count: number}> {
+    return this.http.get<{count: number}>(`${this.apiUrl}/${id}/non-voters/count`, { headers: this.getAuthHeaders() });
+  }
+
+  mailNonVoters(id: number): Observable<{sent: number, message: string}> {
+    return this.http.post<{sent: number, message: string}>(`${this.apiUrl}/${id}/non-voters/mail`, {}, { headers: this.getAuthHeaders() });
   }
 
   getFacebookOAuthUrl(): Observable<any> {

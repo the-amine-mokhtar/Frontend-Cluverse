@@ -159,9 +159,21 @@
   </div>
 
   <section class="panel panel--focus" *ngIf="activeTab === 'elections' && hasSelectedElection">
-    <div class="panel__head">
-      <h2>{{ selectedElection?.title }}</h2>
-      <p>{{ selectedElection?.status }} • {{ selectedElection?.position?.name || 'No position assigned' }}</p>
+    <div class="panel__head" style="align-items: center;">
+      <div>
+        <h2>{{ selectedElection?.title }}</h2>
+        <p>{{ selectedElection?.status }} • {{ selectedElection?.position?.name || 'No position assigned' }}</p>
+      </div>
+      <div *ngIf="electionStatusIs(selectedElection, 'OPEN')">
+        <button 
+          class="manual-close-btn manual-close-btn--blue" 
+          type="button" 
+          (click)="mailAllNonVoters()"
+          [disabled]="isMailingNonVoters">
+          <span class="manual-close-btn__spinner" *ngIf="isMailingNonVoters"></span>
+          {{ isMailingNonVoters ? 'Mailing...' : 'Mail all non voters (' + nonVoterCount + ')' }}
+        </button>
+      </div>
     </div>
 
     <!-- Required Competencies -->

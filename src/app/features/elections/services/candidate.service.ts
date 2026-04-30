@@ -8,7 +8,7 @@ import { environment } from '../../../../environments/environment.development';
 })
 export class CandidateService {
   private apiUrl = `${environment.electionsApiUrl}/api/candidates`;
-  private bioGeneratorApiUrl = 'http://localhost:8091';
+  private bioGeneratorApiUrl = 'http://localhost:8093';
 
   constructor(private http: HttpClient) {}
 
