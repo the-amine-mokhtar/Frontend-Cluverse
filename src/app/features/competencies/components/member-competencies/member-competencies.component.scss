@@ -1,5 +1,29 @@
 :host {
+  --member-shell-bg: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+  --member-text-primary: #f8fafc;
+  --member-text-secondary: #94a3b8;
+  --member-card-bg: #1e293b;
+  --member-card-border: rgba(255, 255, 255, 0.1);
+  --member-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+  --member-hero-bg: rgba(30, 41, 59, 0.7);
+  --member-input-bg: #1e293b;
+  --member-input-text: #f8fafc;
+  --member-btn-ghost-bg: rgba(255, 255, 255, 0.05);
+
   display: block;
+}
+
+:host-context(body.light-mode) {
+  --member-shell-bg: linear-gradient(180deg, #f6f8fc 0%, #edf2f8 100%);
+  --member-text-primary: #0f172a;
+  --member-text-secondary: #64748b;
+  --member-card-bg: #ffffff;
+  --member-card-border: rgba(148, 163, 184, 0.1);
+  --member-card-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  --member-hero-bg: rgba(255, 255, 255, 0.72);
+  --member-input-bg: #ffffff;
+  --member-input-text: #0f172a;
+  --member-btn-ghost-bg: rgba(255, 255, 255, 0.8);
 }
 
 @import './mentorship-styles.scss';
@@ -12,11 +36,11 @@
   padding: 1.5rem;
   border-radius: 24px;
   overflow: hidden;
-  color: #0f172a;
+  color: var(--member-text-primary);
   background:
     radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 30%),
     radial-gradient(circle at bottom right, rgba(20, 184, 166, 0.1), transparent 28%),
-    linear-gradient(180deg, #f6f8fc 0%, #edf2f8 100%);
+    var(--member-shell-bg);
   font-family: 'Sora', 'Space Grotesk', 'Segoe UI', sans-serif;
 }
 
@@ -42,10 +66,10 @@
   align-items: flex-start;
   gap: 1rem;
   padding: 1.5rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--member-card-border);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  background: var(--member-hero-bg);
+  box-shadow: var(--member-card-shadow);
   backdrop-filter: blur(10px);
 
   h2 {
@@ -58,7 +82,7 @@
   p {
     margin: 0.75rem 0 0;
     max-width: 68ch;
-    color: #64748b;
+    color: var(--member-text-secondary);
     font-size: 0.98rem;
   }
 }
@@ -136,8 +160,8 @@
   padding: 0.78rem 1rem;
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.8);
-  color: #334155;
+  background: var(--member-btn-ghost-bg);
+  color: var(--member-text-secondary);
   font-size: 0.94rem;
   font-weight: 700;
   cursor: pointer;
@@ -177,7 +201,7 @@
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 10px;
   font-size: 0.88rem;
-  color: #334155;
+  color: var(--member-text-secondary);
   font-weight: 600;
   cursor: pointer;
   min-width: 220px;
@@ -220,9 +244,9 @@
   gap: 0.75rem;
   padding: 1.5rem;
   border-radius: 20px;
-  background: linear-gradient(135deg, #ffffff, #f8fafc);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  background: var(--member-card-bg);
+  border: 1px solid var(--member-card-border);
+  box-shadow: var(--member-card-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
@@ -414,8 +438,8 @@
   padding: 0.85rem 1rem;
   border-radius: 16px;
   border: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  background: var(--member-card-bg);
+  box-shadow: var(--member-card-shadow);
 
   .metric-header {
     display: flex;
@@ -465,11 +489,11 @@
     line-height: 1;
     letter-spacing: -0.04em;
     margin: 0.1rem 0;
-    color: #0f172a;
+    color: var(--member-text-primary);
   }
 
   small {
-    color: #64748b;
+    color: var(--member-text-secondary);
     font-size: 0.8rem;
     margin-top: 0.25rem;
   }
@@ -536,7 +560,7 @@
   gap: 0.75rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--member-text-primary);
   margin: 0;
 
   svg {
@@ -547,7 +571,7 @@
 
 .section-subtitle {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--member-text-secondary);
   margin: 0;
   margin-left: 2.25rem;
 }
@@ -619,13 +643,13 @@
 .ai-insight-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--member-text-primary);
   margin: 0;
 }
 
 .ai-insight-message {
   font-size: 0.9rem;
-  color: #475569;
+  color: var(--member-text-secondary);
   margin: 0;
   line-height: 1.4;
 }
@@ -657,7 +681,7 @@
 
   &:hover {
     background: rgba(255, 255, 255, 0.8);
-    color: #1e293b;
+    color: var(--member-text-primary);
     transform: scale(1.05);
   }
 }
@@ -718,9 +742,9 @@
 .card {
   border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 20px;
-  background: white;
+  background: var(--member-card-bg);
   padding: 1.5rem;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--member-card-shadow);
   transition: all 0.2s ease;
 
   &:hover {
@@ -738,7 +762,7 @@
     margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--member-text-primary);
     letter-spacing: -0.02em;
   }
 }
@@ -746,8 +770,8 @@
 .card-count {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--member-text-secondary);
+  background: var(--member-input-bg);
   padding: 0.25rem 0.6rem;
   border-radius: 8px;
 }
@@ -803,7 +827,7 @@
 
   .skill-name {
     font-weight: 600;
-    color: #1e293b;
+    color: var(--member-text-primary);
     font-size: 0.95rem;
   }
 
@@ -932,7 +956,7 @@
   .score-value {
     font-size: 2rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--member-text-primary);
     line-height: 1;
   }
 
@@ -969,7 +993,7 @@
   .stat-value {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--member-text-primary);
 
     small {
       font-size: 0.8rem;
@@ -1225,7 +1249,7 @@
 
   .badge-title {
     font-weight: 700;
-    color: #1e293b;
+    color: var(--member-text-primary);
     font-size: 0.9rem;
     letter-spacing: -0.01em;
   }
@@ -1299,7 +1323,7 @@
 
   .activity-title {
     font-weight: 700;
-    color: #1e293b;
+    color: var(--member-text-primary);
     font-size: 0.9rem;
   }
 
@@ -1396,7 +1420,7 @@
   .goal-category {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--member-text-primary);
     text-transform: capitalize;
   }
 
@@ -1420,7 +1444,7 @@
   .goal-current {
     font-size: 1.1rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--member-text-primary);
   }
 
   .goal-separator {
@@ -1509,7 +1533,7 @@
   .skill-name {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--member-text-primary);
   }
 
   .skill-levels {
@@ -1719,7 +1743,7 @@
 .skill-name {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--member-text-primary);
   display: block;
   margin-bottom: 0.25rem;
 }
@@ -2118,7 +2142,7 @@
 
     .message-content {
       background: #fff;
-      color: #1e293b;
+      color: var(--member-text-primary);
       border: 1px solid #e2e8f0;
       border-radius: 20px 20px 20px 4px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -2207,7 +2231,7 @@
   min-height: 48px;
   max-height: 120px;
   overflow-y: auto;
-  color: #1e293b;
+  color: var(--member-text-primary);
 
   &:focus {
     outline: none;
@@ -2952,7 +2976,7 @@
     font-size: 0.95rem;
     font-family: inherit;
     transition: all 0.2s ease;
-    color: #1e293b;
+    color: var(--member-text-primary);
 
     &:focus {
       outline: none;
@@ -3011,7 +3035,7 @@
     margin: 0 0 0.25rem 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--member-text-primary);
   }
 
   p {
@@ -3568,7 +3592,7 @@
     margin: 0 0 0.65rem;
     font-size: 1.05rem;
     letter-spacing: -0.02em;
-    color: #1e293b;
+    color: var(--member-text-primary);
     font-weight: 700;
   }
 }
@@ -4327,7 +4351,7 @@
   .metric-value {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--member-text-primary);
 
     &.impact-score {
       &.impact-high { color: #059669; }
@@ -4904,7 +4928,7 @@
     font-size: 0.75rem;
     font-weight: 700;
     line-height: 1.25;
-    color: #1e293b;
+    color: var(--member-text-primary);
   }
 }
 
@@ -5023,7 +5047,7 @@
 
 .speech-studio-card {
   background: #ffffff;
-  color: #1e293b;
+  color: var(--member-text-primary);
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.2);
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
@@ -6019,7 +6043,7 @@
     h4 { 
       margin: 0.5rem 0; 
       font-size: 1.15rem; 
-      color: #1e293b;
+      color: var(--member-text-primary);
       font-weight: 700;
     }
 

@@ -1,3 +1,25 @@
+:host {
+  --mentor-shell-bg: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+  --mentor-text-primary: #f8fafc;
+  --mentor-text-secondary: #94a3b8;
+  --mentor-card-bg: rgba(30, 41, 59, 0.8);
+  --mentor-card-border: rgba(255, 255, 255, 0.1);
+  --mentor-panel-bg: rgba(30, 41, 59, 0.7);
+  --mentor-item-bg: rgba(139, 92, 246, 0.1);
+  --mentor-item-hover: rgba(139, 92, 246, 0.2);
+}
+
+:host-context(body.light-mode) {
+  --mentor-shell-bg: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  --mentor-text-primary: #0f172a;
+  --mentor-text-secondary: #64748b;
+  --mentor-card-bg: rgba(255, 255, 255, 0.6);
+  --mentor-card-border: rgba(139, 92, 246, 0.1);
+  --mentor-panel-bg: rgba(255, 255, 255, 0.65);
+  --mentor-item-bg: rgba(139, 92, 246, 0.04);
+  --mentor-item-hover: rgba(139, 92, 246, 0.08);
+}
+
 // Mentorship Shell - Main Container
 .mentorship-shell {
   position: relative;
@@ -7,11 +29,11 @@
   padding: 1.5rem;
   border-radius: 24px;
   overflow: hidden;
-  color: #0f172a;
+  color: var(--mentor-text-primary);
   background:
     radial-gradient(circle at top left, rgba(139, 92, 246, 0.15), transparent 40%),
     radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 35%),
-    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    var(--mentor-shell-bg);
   animation: mentorship-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -57,8 +79,8 @@
   gap: 0.5rem;
   padding: 1.25rem;
   border-radius: 16px;
-  border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--mentor-card-border);
+  background: var(--mentor-card-bg);
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
@@ -98,12 +120,12 @@
   &__label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--mentor-text-secondary);
   }
 
   strong {
     font-size: 1.875rem;
-    color: #0f172a;
+    color: var(--mentor-text-primary);
     font-weight: 800;
   }
 
@@ -123,9 +145,9 @@
 // Mentorship Panel
 .mentorship-panel {
   padding: 1.5rem;
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  border: 1px solid var(--mentor-card-border);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.65);
+  background: var(--mentor-panel-bg);
   box-shadow: 0 10px 28px rgba(139, 92, 246, 0.06);
   backdrop-filter: blur(8px);
   animation: mentorship-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -141,7 +163,7 @@
       margin: 0.5rem 0 0;
       font-size: 1.5rem;
       font-weight: 800;
-      color: #0f172a;
+      color: var(--mentor-text-primary);
     }
   }
 
@@ -156,7 +178,7 @@
 
   &__desc {
     margin: 0.5rem 0 0;
-    color: #64748b;
+    color: var(--mentor-text-secondary);
     font-size: 0.9rem;
   }
 }
@@ -195,12 +217,12 @@
     margin: 0;
     font-size: 1.25rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--mentor-text-primary);
   }
 
   .empty-text {
     margin: 0.5rem 0 0;
-    color: #64748b;
+    color: var(--mentor-text-secondary);
     font-size: 0.95rem;
   }
 }
@@ -220,14 +242,14 @@
   gap: 1rem;
   padding: 1rem;
   border-radius: 14px;
-  background: rgba(139, 92, 246, 0.04);
-  border: 1px solid rgba(139, 92, 246, 0.08);
+  background: var(--mentor-item-bg);
+  border: 1px solid var(--mentor-card-border);
   transition: background 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
   align-items: flex-start;
 
   &:hover {
-    background: rgba(139, 92, 246, 0.08);
+    background: var(--mentor-item-hover);
     border-color: rgba(139, 92, 246, 0.16);
   }
 }
@@ -271,7 +293,7 @@
 
 .mentorship-list__name {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--mentor-text-primary);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -280,7 +302,7 @@
 
 .mentorship-list__skill {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--mentor-text-secondary);
   margin: 0.25rem 0 0;
   white-space: nowrap;
   overflow: hidden;
@@ -373,13 +395,13 @@
 .opportunity-card {
   padding: 1.5rem;
   border-radius: 16px;
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  background: rgba(139, 92, 246, 0.04);
+  border: 1px solid var(--mentor-card-border);
+  background: var(--mentor-item-bg);
   transition: all 0.2s ease;
 
   &:hover {
     border-color: rgba(139, 92, 246, 0.4);
-    background: rgba(139, 92, 246, 0.08);
+    background: var(--mentor-item-hover);
     box-shadow: 0 8px 16px rgba(139, 92, 246, 0.1);
   }
 }
@@ -437,7 +459,7 @@
   .name {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--mentor-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -456,7 +478,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--mentor-card-bg);
   border-radius: 12px;
   margin-bottom: 1rem;
 }
@@ -478,7 +500,7 @@
 .skill-name {
   display: block;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--mentor-text-primary);
   margin-bottom: 0.25rem;
 }
 
@@ -508,7 +530,7 @@
 
 .opportunity-reason {
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--mentor-text-secondary);
   margin: 1rem 0;
   line-height: 1.5;
 }

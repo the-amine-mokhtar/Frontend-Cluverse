@@ -230,6 +230,7 @@ export interface MemberPaymentDto {
 export class FinanceService {
   private readonly baseUrl = environment.financeApiUrl;
   private readonly eventsUrl = environment.eventsApiUrl;
+  private readonly financesUrl = environment.financeApiUrl;
   private readonly sponsorsUrl = environment.sponsorsApiUrl;
   private readonly userUrl = environment.userApiUrl;
   private readonly forecastApiUrl = environment.forecastApiUrl;
@@ -305,9 +306,8 @@ export class FinanceService {
   }
 
   getEvents(clubId: number): Observable<EventDto[]> {
-    return this.http.get<EventDto[]>(`${this.eventsUrl}/api/events`, {
-      headers: this.authHeaders(),
-      params: new HttpParams().set('clubId', String(clubId))
+    return this.http.get<EventDto[]>(`${this.eventsUrl}/api/events/my-club`, {
+      headers: this.authHeaders()
     }).pipe(
       map((events) => events.filter((item) => this.belongsToClub(item.club?.id, clubId)))
     );
@@ -384,7 +384,7 @@ export class FinanceService {
   }
 
   sendBudgetAlertEmail(payload: BudgetAlertEmailPayload): Observable<string> {
-    return this.http.post(`${this.userUrl}/api/notifications/budget-alert-email`, payload, {
+    return this.http.post(`${this.financesUrl}/api/notifications/budget-alert-email`, payload, {
       headers: this.authHeaders(),
       responseType: 'text'
     });

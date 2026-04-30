@@ -24,20 +24,20 @@
   </div>
 
 
-  <!-- ══════════════════════════════════════
-       SECTION 01 — EVENT DETAILS
-  ══════════════════════════════════════ -->
-  <div class="section-label">
-    <span class="section-num">01</span>
-    <span class="section-text">Event details</span>
-    <span class="section-line"></span>
-  </div>
+  <form [formGroup]="eventForm" (ngSubmit)="submit()" class="page-form">
+    <!-- ══════════════════════════════════════
+         SECTION 01 — EVENT DETAILS
+    ══════════════════════════════════════ -->
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <span class="section-text">Event details</span>
+      <span class="section-line"></span>
+    </div>
 
-  <div class="card">
-    <form [formGroup]="eventForm" class="form">
-
-      <!-- GENERAL ERROR MESSAGE - FORM VALIDATION -->
-      <div class="form-error" *ngIf="eventForm.invalid && eventForm.touched">
+    <div class="card">
+      <div class="form">
+        <!-- GENERAL ERROR MESSAGE - FORM VALIDATION -->
+        <div class="form-error" *ngIf="eventForm.invalid && eventForm.touched">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
@@ -198,21 +198,21 @@
         </div>
       </div>
 
-    </form>
-  </div>
+      </div>
+    </div>
 
 
-  <!-- ══════════════════════════════════════
-       SECTION 02 — SCHEDULING & SETTINGS
-  ══════════════════════════════════════ -->
-  <div class="section-label">
-    <span class="section-num">02</span>
-    <span class="section-text">Scheduling &amp; settings</span>
-    <span class="section-line"></span>
-  </div>
+    <!-- ══════════════════════════════════════
+         SECTION 02 — SCHEDULING & SETTINGS
+    ══════════════════════════════════════ -->
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <span class="section-text">Scheduling &amp; settings</span>
+      <span class="section-line"></span>
+    </div>
 
-  <div class="card">
-    <form [formGroup]="eventForm" (ngSubmit)="submit()" class="form">
+    <div class="card">
+      <div class="form">
 
       <!-- START / END DATE -->
       <div class="grid-2">
@@ -472,7 +472,8 @@
         <button class="btn btn-ghost" type="button" (click)="cancel()">Cancel</button>
       </div>
 
+        </div>
+      </div>
     </form>
-  </div>
 
 </div>

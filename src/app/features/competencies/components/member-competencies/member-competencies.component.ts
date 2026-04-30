@@ -2339,7 +2339,7 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
   }
 
   syncSpeechReportFromPanel(): void {
-    const selected = this.memberCompetencies.find(item => item.id === this.selectedSpeechMemberCompetencyId);
+    const selected = this.memberCompetencies.find(item => Number(item.id) === Number(this.selectedSpeechMemberCompetencyId));
     if (!selected) {
       this.errorMessage = 'Choisis une competency membre a synchroniser.';
       return;
@@ -2370,8 +2370,8 @@ export class MemberCompetenciesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const selected = this.memberCompetencies.find(item => item.id === this.selectedSpeechMemberCompetencyId);
-    if (!selected) {
+    const selected = this.memberCompetencies.find(item => Number(item.id) === Number(this.selectedSpeechMemberCompetencyId));
+    if (!selected || Number(this.selectedSpeechMemberCompetencyId) === 0) {
       this.errorMessage = 'Choisis une competency membre avant de demarrer le test vocal.';
       return;
     }
