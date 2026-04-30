@@ -2,6 +2,36 @@
 // COMPETENCIES INSIGHTS COMPONENT - ENHANCED DESIGN
 // ============================================================================
 
+:host {
+  --ins-shell-bg: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+  --ins-text-primary: #f8fafc;
+  --ins-text-secondary: #cbd5e1;
+  --ins-text-muted: #94a3b8;
+  --ins-card-bg: #1e293b;
+  --ins-card-border: rgba(255, 255, 255, 0.1);
+  --ins-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --ins-item-bg: rgba(255, 255, 255, 0.03);
+  --ins-btn-ghost-bg: rgba(255, 255, 255, 0.05);
+  --ins-border-hover: rgba(255, 255, 255, 0.2);
+  --ins-hero-title-gradient: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+  
+  display: block;
+}
+
+:host-context(body.light-mode) {
+  --ins-shell-bg: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+  --ins-text-primary: #0f172a;
+  --ins-text-secondary: #475569;
+  --ins-text-muted: #64748b;
+  --ins-card-bg: #ffffff;
+  --ins-card-border: rgba(148, 163, 184, 0.1);
+  --ins-card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --ins-item-bg: #f8fafc;
+  --ins-btn-ghost-bg: rgba(255, 255, 255, 0.7);
+  --ins-border-hover: rgba(148, 163, 184, 0.2);
+  --ins-hero-title-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
 // Color Palette
 $color-primary: #3b82f6;
 $color-primary-dark: #2563eb;
@@ -9,13 +39,13 @@ $color-secondary: #10b981;
 $color-accent: #8b5cf6;
 $color-warning: #f87171;
 $color-danger: #ef4444;
-$color-text-primary: #0f172a;
-$color-text-secondary: #475569;
-$color-text-muted: #64748b;
-$color-bg-light: #f8fafc;
-$color-bg-lighter: #f5f7fa;
-$color-border: rgba(148, 163, 184, 0.1);
-$color-border-hover: rgba(148, 163, 184, 0.2);
+$color-text-primary: var(--ins-text-primary);
+$color-text-secondary: var(--ins-text-secondary);
+$color-text-muted: var(--ins-text-muted);
+$color-bg-light: var(--ins-item-bg);
+$color-bg-lighter: var(--ins-item-bg);
+$color-border: var(--ins-card-border);
+$color-border-hover: var(--ins-border-hover);
 
 // Spacing
 $spacing-xs: 0.25rem;
@@ -106,7 +136,7 @@ $transition-slow: 0.5s ease;
 
 .ins-shell {
   padding: $spacing-xl;
-  background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+  background: var(--ins-shell-bg);
   border-radius: $radius-xl;
   color: $color-text-primary;
   font-family: 'Sora', 'Space Grotesk', 'Segoe UI', sans-serif;
@@ -142,7 +172,7 @@ $transition-slow: 0.5s ease;
     font-weight: 800;
     color: $color-text-primary;
     line-height: 1.2;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: var(--ins-hero-title-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -202,7 +232,7 @@ $transition-slow: 0.5s ease;
   }
 
   &--ghost {
-    background: rgba(255, 255, 255, 0.7);
+    background: var(--ins-btn-ghost-bg);
     color: $color-text-secondary;
     border: 1px solid $color-border;
     backdrop-filter: blur(10px);
@@ -281,10 +311,10 @@ $transition-slow: 0.5s ease;
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-lg;
-  background: white;
+  background: var(--ins-card-bg);
   border: 1px solid $color-border;
   border-radius: $radius-lg;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--ins-card-shadow);
   transition: all $transition-base;
   animation: fadeIn 0.6s ease backwards;
 
@@ -501,11 +531,11 @@ $transition-slow: 0.5s ease;
 }
 
 .chart-card {
-  background: white;
+  background: var(--ins-card-bg);
   border: 1px solid $color-border;
   border-radius: $radius-lg;
   padding: $spacing-lg;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--ins-card-shadow);
   transition: all $transition-base;
   animation: fadeIn 0.6s ease;
 
@@ -662,11 +692,11 @@ $transition-slow: 0.5s ease;
 }
 
 .stat-card {
-  background: white;
+  background: var(--ins-card-bg);
   border: 1px solid $color-border;
   border-radius: $radius-lg;
   padding: $spacing-lg;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--ins-card-shadow);
   transition: all $transition-base;
   animation: fadeIn 0.6s ease;
 

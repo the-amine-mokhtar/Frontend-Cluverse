@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { EMPTY, Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -40,7 +40,7 @@ export interface MaintenancePredictionResponse {
 
 @Injectable({ providedIn: 'root' })
 export class MaintenanceService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = environment.logisticsApiUrl;
   private readonly maintenanceEndpoint = `${this.baseUrl}/api/vehicle-maintenance`;
   private readonly predictionEndpoint = `${this.baseUrl}/api/maintenance-prediction`;
 

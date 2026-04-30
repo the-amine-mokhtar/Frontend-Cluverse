@@ -28,6 +28,7 @@
             <th (click)="sortBy('position')">Position</th>
             <th (click)="sortBy('dates')">Start &rarr; End</th>
             <th (click)="sortBy('status')">Status</th>
+            <th>Competencies</th>
             <th style="text-align: right">Actions</th>
           </tr>
         </thead>
@@ -53,6 +54,22 @@
                     }">
                 {{ election.status || 'UNKNOWN' }}
               </span>
+            </td>
+            <td>
+              <div *ngIf="election.requiredCompetencies?.length > 0" style="display: flex; flex-wrap: wrap; gap: 0.2rem; max-width: 180px;">
+                <span
+                  *ngFor="let comp of election.requiredCompetencies.slice(0, 3)"
+                  [style.background]="comp.category === 'TECHNICAL' ? 'var(--e-primary-bg)' : comp.category === 'SOFT' ? 'var(--e-success-bg)' : 'var(--e-secondary-bg)'"
+                  [style.color]="comp.category === 'TECHNICAL' ? 'var(--e-primary)' : comp.category === 'SOFT' ? 'var(--e-success)' : 'var(--e-secondary)'"
+                  style="border-radius: 999px; padding: 0.15rem 0.42rem; font-size: 0.62rem; font-weight: 700; white-space: nowrap;">
+                  {{ comp.name }}
+                </span>
+                <span *ngIf="election.requiredCompetencies.length > 3"
+                      style="color: var(--e-muted); font-size: 0.62rem; font-weight: 700; padding: 0.15rem 0.3rem;">
+                  +{{ election.requiredCompetencies.length - 3 }}
+                </span>
+              </div>
+              <span *ngIf="!election.requiredCompetencies || election.requiredCompetencies.length === 0" style="color: var(--e-muted); font-size: 0.72rem;">—</span>
             </td>
             <td>
               <div class="elections__actions-cell">
@@ -153,6 +170,21 @@
             {{ selectedElection.position.name || 'Position #' + selectedElection.position.id }}
           </p>
           <p *ngIf="!selectedElection.position" style="color: var(--e-muted);">Unassigned role</p>
+        </div>
+
+        <div class="detail-block" *ngIf="selectedElection.requiredCompetencies?.length > 0">
+          <label>Required Competencies</label>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem;">
+            <span
+              *ngFor="let comp of selectedElection.requiredCompetencies"
+              [style.background]="comp.category === 'TECHNICAL' ? 'var(--e-primary-bg)' : comp.category === 'SOFT' ? 'var(--e-success-bg)' : 'var(--e-secondary-bg)'"
+              [style.borderColor]="comp.category === 'TECHNICAL' ? 'var(--e-primary-border)' : comp.category === 'SOFT' ? 'var(--e-success-border)' : 'var(--e-secondary-border)'"
+              [style.color]="comp.category === 'TECHNICAL' ? 'var(--e-primary)' : comp.category === 'SOFT' ? 'var(--e-success)' : 'var(--e-secondary)'"
+              style="border: 1px solid; border-radius: 999px; padding: 0.28rem 0.62rem; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
+              <span style="font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8;">{{ comp.category }}</span>
+              {{ comp.name }}
+            </span>
+          </div>
         </div>
       </div>
       

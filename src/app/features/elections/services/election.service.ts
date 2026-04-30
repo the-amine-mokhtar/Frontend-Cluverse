@@ -7,7 +7,7 @@ import { environment } from '../../../../environments/environment.development';
   providedIn: 'root'
 })
 export class ElectionService {
-  private apiUrl = `${environment.apiUrl}/api/elections`;
+  private apiUrl = `${environment.electionsApiUrl}/api/elections`;
 
   constructor(private http: HttpClient) {}
 
@@ -41,11 +41,19 @@ export class ElectionService {
     return this.http.post<any>(`${this.apiUrl}/${id}/close`, {}, { headers: this.getAuthHeaders() });
   }
 
+  getNonVoterCount(id: number): Observable<{count: number}> {
+    return this.http.get<{count: number}>(`${this.apiUrl}/${id}/non-voters/count`, { headers: this.getAuthHeaders() });
+  }
+
+  mailNonVoters(id: number): Observable<{sent: number, message: string}> {
+    return this.http.post<{sent: number, message: string}>(`${this.apiUrl}/${id}/non-voters/mail`, {}, { headers: this.getAuthHeaders() });
+  }
+
   getFacebookOAuthUrl(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/api/social/facebook/oauth/url`, { headers: this.getAuthHeaders() });
+    return this.http.get<any>(`${environment.electionsApiUrl}/api/social/facebook/oauth/url`, { headers: this.getAuthHeaders() });
   }
 
   publishElectionResultToFacebook(payload: { message: string; imageBase64: string; privatePost: boolean }): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/api/social/facebook/publish`, payload, { headers: this.getAuthHeaders() });
+    return this.http.post<any>(`${environment.electionsApiUrl}/api/social/facebook/publish`, payload, { headers: this.getAuthHeaders() });
   }
 }

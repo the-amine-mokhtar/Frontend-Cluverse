@@ -701,7 +701,7 @@ export class CampaignHomeComponent implements OnInit, OnDestroy {
   }
 
   addEventToCampaign(campaign: Campaign): void {
-    this.router.navigate(['/events/create'], { queryParams: { campaignId: campaign.id } });
+    this.router.navigate(['/dashboard/events/create'], { queryParams: { campaignId: campaign.id } });
   }
 
   // ── Permissions panel ────────────────────────────────────────
