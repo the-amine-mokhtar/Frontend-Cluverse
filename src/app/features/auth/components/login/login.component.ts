@@ -152,7 +152,11 @@ export class LoginComponent implements OnInit {
   });
 }
 
-  submitLogin(event: Event): void {
+  goToForgotPassword(): void {
+  this.router.navigate(['/auth/forgot-password']);
+}
+
+submitLogin(event: Event): void {
   event.preventDefault();
   console.log('loginForm:', this.loginForm);
   this.apiService.login(

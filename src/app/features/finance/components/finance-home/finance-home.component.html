@@ -425,8 +425,13 @@
         <h2 class="panel__title">Financial Statistics</h2>
         <p class="panel__subtitle">Real-time KPIs based on budgets and transactions</p>
       </div>
+      <div class="stats-toggle">
+        <button class="stats-toggle__btn" [class.stats-toggle__btn--active]="statsView === 'kpi'" (click)="statsView = 'kpi'">A — KPIs</button>
+        <button class="stats-toggle__btn" [class.stats-toggle__btn--active]="statsView === 'pie'" (click)="statsView = 'pie'">B — Pie Chart</button>
+      </div>
     </header>
 
+    <ng-container *ngIf="statsView === 'kpi'">
     <div class="kpi-grid">
       <article class="kpi-card">
         <span class="kpi-card__label">Budget Consumption</span>
@@ -508,6 +513,11 @@
         <span class="trend-pagination__info">{{ trendPage + 1 }} / {{ trendTotalPages }}</span>
         <button class="trend-pagination__btn" (click)="trendNext()" [disabled]="trendPage === trendTotalPages - 1">&#8250;</button>
       </div>
+    </div>
+    </ng-container>
+
+    <div class="pie-wrap" *ngIf="statsView === 'pie'">
+      <canvas baseChart [data]="pieChartData" [options]="pieChartOptions" type="pie"></canvas>
     </div>
   </section>
 

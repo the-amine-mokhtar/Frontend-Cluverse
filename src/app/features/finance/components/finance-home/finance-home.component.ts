@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ChartData, ChartOptions } from 'chart.js';
 import { catchError, forkJoin, of } from 'rxjs';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 import { ApiService } from '../../../../core/services/api.service';
@@ -107,6 +108,24 @@ export class FinanceHomeComponent implements OnInit {
   private readonly alertEmailPreferenceStorageKey = 'finance.budgetAlert.emailPreference';
   private readonly emailedAlertDeliveryStorageKey = 'finance.budgetAlert.emailDeliveryKeys';
   private emailedBudgetAlertDeliveryKeys = new Set<string>();
+  statsView: 'kpi' | 'pie' = 'kpi';
+
+  readonly pieChartOptions: ChartOptions<'pie'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: '#94a3b8', font: { size: 12, family: 'inherit' }, padding: 20 }
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${this.formatCurrency(ctx.raw as number)}`
+        }
+      }
+    }
+  };
+
   trendPage = 0;
   readonly trendPageSize = 4;
   budgetPage = 0;
@@ -426,6 +445,27 @@ export class FinanceHomeComponent implements OnInit {
       return 0;
     }
     return (this.expenseTotal / totalFlow) * 100;
+  }
+
+  get pieChartData(): ChartData<'pie'> {
+    const clubExpenses = this.exerciseTransactions
+      .filter((t) => t.type === 'EXPENSE' && (t.scope === 'CLUB' || (!t.eventId && !t.budgetId)))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const eventExpenses = this.exerciseTransactions
+      .filter((t) => t.type === 'EXPENSE' && (t.scope === 'EVENT' || t.eventId != null))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return {
+      labels: ['Income', 'Club Expenses', 'Event Expenses'],
+      datasets: [{
+        data: [this.incomeTotal, clubExpenses, eventExpenses],
+        backgroundColor: ['rgba(74,222,128,0.85)', 'rgba(251,146,60,0.85)', 'rgba(167,139,250,0.85)'],
+        borderColor: ['#1a1a2e', '#1a1a2e', '#1a1a2e'],
+        borderWidth: 2,
+        hoverOffset: 8
+      }]
+    };
   }
 
   get monthlyTrendRows(): MonthlyTrendRow[] {
@@ -1180,29 +1220,18 @@ export class FinanceHomeComponent implements OnInit {
   }
 
   private calculateSpentForBudget(budget: BudgetDto, transactions: TransactionDto[], year: number): number {
-    const expenseTransactions = transactions.filter((transaction) => {
-      if (transaction.type !== 'EXPENSE') {
+    return transactions
+      .filter((t) => {
+        if (t.type !== 'EXPENSE') return false;
+        const d = new Date(t.date);
+        if (Number.isNaN(d.getTime()) || d.getFullYear() !== year) return false;
+
+        if (t.budgetId != null) return t.budgetId === budget.id;
+        if (t.eventId != null && budget.eventId != null) return t.eventId === budget.eventId;
+        if (!budget.eventId) return !t.eventId && t.scope !== 'EVENT';
         return false;
-      }
-
-      const transactionDate = new Date(transaction.date);
-      return !Number.isNaN(transactionDate.getTime()) && transactionDate.getFullYear() === year;
-    });
-
-    const eventTitle = (budget.event?.title || '').trim().toLowerCase();
-    if (!eventTitle) {
-      return expenseTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-    }
-
-    const eventExpenses = expenseTransactions.filter((transaction) =>
-      (transaction.description || '').toLowerCase().includes(eventTitle)
-    );
-
-    if (eventExpenses.length === 0) {
-      return 0;
-    }
-
-    return eventExpenses.reduce((sum, transaction) => sum + transaction.amount, 0);
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
   }
 
   private toTransactionItem(transaction: TransactionDto): TransactionItem {

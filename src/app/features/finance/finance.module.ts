@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { BaseChartDirective } from 'ng2-charts';
 import { SharedModule } from '../../shared/shared.module';
 import { FinanceRoutingModule } from './finance-routing.module';
 import { FinanceHomeComponent } from './components/finance-home/finance-home.component';
@@ -21,6 +22,6 @@ import { FinanceAlertsComponent } from './components/finance-alerts/finance-aler
     MemberDuesComponent,
     FinanceAlertsComponent
   ],
-  imports: [SharedModule, FinanceRoutingModule]
+  imports: [SharedModule, FinanceRoutingModule, BaseChartDirective]
 })
 export class FinanceModule { }

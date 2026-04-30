@@ -16,12 +16,29 @@ export interface BudgetDto {
   category?: BudgetCategory;
 }
 
+export type TransactionScope = 'CLUB' | 'EVENT';
+
 export interface TransactionDto {
   id: number;
   amount: number;
   date: string;
   description: string;
   type: TransactionType;
+  scope?: TransactionScope | null;
+  eventId?: number | null;
+  budgetId?: number | null;
+  sponsorId?: number | null;
+  sponsorshipId?: number | null;
+}
+
+export interface SponsorPaymentPageContextDto {
+  sponsorshipId: number;
+  sponsorName: string;
+  sponsorEmail: string;
+  eventName: string;
+  agreedAmount: number;
+  paidAmount: number;
+  currency: string;
 }
 
 export type ForecastHorizon = 1 | 3 | 6;
@@ -134,6 +151,9 @@ export interface CreateTransactionPayload {
   date: string;
   description: string;
   type: TransactionType;
+  scope?: TransactionScope | null;
+  eventId?: number | null;
+  budgetId?: number | null;
   sponsor?: { id: number };
   sponsorship?: { id: number };
 }
@@ -143,6 +163,9 @@ export interface UpdateTransactionPayload {
   date: string;
   description: string;
   type: TransactionType;
+  scope?: TransactionScope | null;
+  eventId?: number | null;
+  budgetId?: number | null;
   sponsor?: { id: number };
   sponsorship?: { id: number };
 }
@@ -166,6 +189,15 @@ export interface StripePublicConfigResponse {
   publishableKey: string;
 }
 
+export interface CompleteSponsorPaymentByTokenPayload {
+  amountEur: number;
+  amountTnd: number;
+  conversionRate: number;
+  paymentIntentId: string;
+  reference: string;
+  sponsorPhone: string;
+}
+
 export interface BudgetAlertEmailItemPayload {
   title: string;
   department: string;
@@ -183,23 +215,13 @@ export interface BudgetAlertEmailPayload {
   triggeredAt: string;
 }
 
-export interface SponsorPaymentPageContextDto {
-  sponsorshipId: number;
-  sponsorName: string;
-  sponsorEmail: string;
-  eventName: string;
-  agreedAmount: number;
-  paidAmount: number;
-  currency: string;
-}
+export type MemberPaymentStatus = 'PAID' | 'PENDING' | 'OVERDUE';
 
-export interface CompleteSponsorPaymentByTokenPayload {
-  amountEur: number;
-  amountTnd: number;
-  conversionRate: number;
-  paymentIntentId: string;
-  reference: string;
-  sponsorPhone: string;
+export interface MemberPaymentDto {
+  id: number;
+  amount: number;
+  status: MemberPaymentStatus;
+  dueDate: string;
 }
 
 @Injectable({
@@ -289,7 +311,13 @@ export class FinanceService {
   }
 
   createTransaction(clubId: number, payload: CreateTransactionPayload): Observable<TransactionDto> {
-    const body = { ...payload, club: { id: clubId } };
+    const { eventId, budgetId, ...rest } = payload;
+    const body = {
+      ...rest,
+      club: { id: clubId },
+      event: eventId ? { id: eventId } : null,
+      budget: budgetId ? { id: budgetId } : null
+    };
 
     return this.http.post<TransactionDto>(`${this.baseUrl}/api/transactions`, body, {
       headers: this.authHeaders(),
@@ -298,7 +326,13 @@ export class FinanceService {
   }
 
   updateTransaction(clubId: number, transactionId: number, payload: UpdateTransactionPayload): Observable<TransactionDto> {
-    const body = { ...payload, club: { id: clubId } };
+    const { eventId, budgetId, ...rest } = payload;
+    const body = {
+      ...rest,
+      club: { id: clubId },
+      event: eventId ? { id: eventId } : null,
+      budget: budgetId ? { id: budgetId } : null
+    };
 
     return this.http.put<TransactionDto>(`${this.baseUrl}/api/transactions/${transactionId}`, body, {
       headers: this.authHeaders(),
@@ -339,6 +373,13 @@ export class FinanceService {
     });
   }
 
+  getMemberPayments(clubId: number): Observable<MemberPaymentDto[]> {
+    return this.http.get<MemberPaymentDto[]>(`${this.baseUrl}/api/member-payments`, {
+      headers: this.authHeaders(),
+      params: new HttpParams().set('clubId', String(clubId))
+    });
+  }
+
   sendBudgetAlertEmail(payload: BudgetAlertEmailPayload): Observable<string> {
     return this.http.post(`${this.baseUrl}/api/notifications/budget-alert-email`, payload, {
       headers: this.authHeaders(),
@@ -355,21 +396,17 @@ export class FinanceService {
     return entityClubId === undefined || entityClubId === clubId;
   }
 
-  private normalizeYear(year: number | string): string {
+  private normalizeYear(year: number | string): number {
     if (typeof year === 'number') {
-      return `${year}-01-01`;
+      return year;
     }
 
     const parsed = new Date(year);
     if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toISOString().split('T')[0];
+      return parsed.getUTCFullYear();
     }
 
     const numericYear = Number(year);
-    if (Number.isFinite(numericYear)) {
-      return `${numericYear}-01-01`;
-    }
-
-    return `${new Date().getFullYear()}-01-01`;
+    return Number.isFinite(numericYear) ? numericYear : new Date().getFullYear();
   }
 }

@@ -40,6 +40,10 @@ export class MemberLoginComponent implements OnInit {
     this.loginErrors.backend = '';
   }
 
+  goToForgotPassword(): void {
+    this.router.navigate(['/auth/forgot-password']);
+  }
+
   submitLogin(event: Event): void {
     event.preventDefault();
     this.loginErrors.backend = '';
