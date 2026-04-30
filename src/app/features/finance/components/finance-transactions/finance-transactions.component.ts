@@ -2,8 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   CreateTransactionPayload,
+  EventDto,
   FinanceService,
   TransactionDto,
+  TransactionScope,
   TransactionType as ApiTransactionType,
   UpdateTransactionPayload
 } from '../../../../core/services/finance.service';
@@ -11,13 +13,16 @@ import { AuthHelperService } from '../../../../core/services/auth-helper.service
 
 type TransactionType = 'income' | 'expense';
 type TransactionFilter = 'all' | TransactionType;
+type ScopeFilter = 'all' | 'club' | 'event';
 
 interface TransactionItem {
   id: number;
   type: TransactionType;
+  scope: TransactionScope;
   description: string;
   date: string;
   amount: number;
+  eventId: number | null;
 }
 
 @Component({
@@ -28,6 +33,7 @@ interface TransactionItem {
 export class FinanceTransactionsComponent implements OnInit {
   searchTerm = '';
   activeFilter: TransactionFilter = 'all';
+  scopeFilter: ScopeFilter = 'all';
   transactionPage = 0;
   readonly transactionPageSize = 10;
   showCreateTransactionForm = false;
@@ -36,12 +42,15 @@ export class FinanceTransactionsComponent implements OnInit {
   formErrorMessage = '';
   errorMessage = '';
   editingTransactionId: number | null = null;
+  clubEvents: EventDto[] = [];
 
   newTransaction: {
     type: TransactionType;
+    scope: ScopeFilter;
     description: string;
     date: string;
     amount: number | null;
+    eventId: number | null;
   } = this.getInitialTransactionForm();
 
   transactions: TransactionItem[] = [];
@@ -53,10 +62,16 @@ export class FinanceTransactionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTransactions();
+    this.loadClubEvents();
   }
 
   setFilter(filter: TransactionFilter): void {
     this.activeFilter = filter;
+    this.transactionPage = 0;
+  }
+
+  setScopeFilter(scope: ScopeFilter): void {
+    this.scopeFilter = scope;
     this.transactionPage = 0;
   }
 
@@ -77,6 +92,10 @@ export class FinanceTransactionsComponent implements OnInit {
     this.newTransaction = this.getInitialTransactionForm();
   }
 
+  onFormScopeChange(): void {
+    this.newTransaction.eventId = null;
+  }
+
   createTransaction(): void {
     const description = this.newTransaction.description.trim();
     const amount = this.newTransaction.amount;
@@ -92,11 +111,14 @@ export class FinanceTransactionsComponent implements OnInit {
       return;
     }
 
+    const resolvedScope: TransactionScope = this.newTransaction.scope === 'event' ? 'EVENT' : 'CLUB';
     const payload: CreateTransactionPayload = {
       type: this.toApiType(this.newTransaction.type),
       description,
       date: this.newTransaction.date,
-      amount
+      amount,
+      scope: resolvedScope,
+      eventId: resolvedScope === 'EVENT' ? (this.newTransaction.eventId ?? null) : null
     };
 
     this.isSubmitting = true;
@@ -146,9 +168,11 @@ export class FinanceTransactionsComponent implements OnInit {
     this.showCreateTransactionForm = true;
     this.newTransaction = {
       type: transaction.type,
+      scope: transaction.scope === 'EVENT' ? 'event' : 'club',
       description: transaction.description,
       date: transaction.date,
-      amount: transaction.amount
+      amount: transaction.amount,
+      eventId: transaction.eventId
     };
   }
 
@@ -215,10 +239,13 @@ export class FinanceTransactionsComponent implements OnInit {
     const normalizedSearch = this.searchTerm.trim().toLowerCase();
 
     return this.transactions.filter(transaction => {
-      const filterMatch = this.activeFilter === 'all' || transaction.type === this.activeFilter;
+      const typeMatch = this.activeFilter === 'all' || transaction.type === this.activeFilter;
+      const scopeMatch = this.scopeFilter === 'all' ||
+        (this.scopeFilter === 'club' && transaction.scope === 'CLUB') ||
+        (this.scopeFilter === 'event' && transaction.scope === 'EVENT');
 
       if (!normalizedSearch) {
-        return filterMatch;
+        return typeMatch && scopeMatch;
       }
 
       const searchMatch = [
@@ -228,7 +255,7 @@ export class FinanceTransactionsComponent implements OnInit {
         transaction.type
       ].join(' ').toLowerCase().includes(normalizedSearch);
 
-      return filterMatch && searchMatch;
+      return typeMatch && scopeMatch && searchMatch;
     });
   }
 
@@ -320,14 +347,37 @@ export class FinanceTransactionsComponent implements OnInit {
     URL.revokeObjectURL(downloadLink.href);
   }
 
+  private inferScope(transaction: TransactionDto): TransactionScope {
+    if (transaction.scope) return transaction.scope;
+    if (transaction.eventId != null || transaction.budgetId != null) return 'EVENT';
+    if (transaction.sponsorId != null || transaction.sponsorshipId != null) return 'CLUB';
+    return 'CLUB';
+  }
+
   private toTransactionItem(transaction: TransactionDto): TransactionItem {
     return {
       id: transaction.id,
       type: this.fromApiType(transaction.type),
+      scope: this.inferScope(transaction),
       description: transaction.description,
       date: transaction.date,
-      amount: transaction.amount
+      amount: transaction.amount,
+      eventId: transaction.eventId ?? null
     };
+  }
+
+  private loadClubEvents(): void {
+    const clubId = this.authHelperService.getClubId();
+    if (!clubId) return;
+
+    this.financeService.getEvents(clubId).subscribe({
+      next: (events) => {
+        this.clubEvents = [...events].sort((a, b) => a.title.localeCompare(b.title));
+      },
+      error: () => {
+        this.clubEvents = [];
+      }
+    });
   }
 
   private toApiType(type: TransactionType): ApiTransactionType {
@@ -353,15 +403,19 @@ export class FinanceTransactionsComponent implements OnInit {
 
   private getInitialTransactionForm(): {
     type: TransactionType;
+    scope: ScopeFilter;
     description: string;
     date: string;
     amount: number | null;
+    eventId: number | null;
   } {
     return {
       type: 'expense',
+      scope: 'club',
       description: '',
       date: this.getTodayDate(),
-      amount: null
+      amount: null,
+      eventId: null
     };
   }
 

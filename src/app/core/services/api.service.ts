@@ -1154,6 +1154,16 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
       { headers: this.authHeaders() }
     ).pipe(catchError(this.handleError));
   }
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/api/auth/forgot-password`, { email }, { responseType: 'text' })
+      .pipe(catchError(this.handleError));
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/api/auth/reset-password`, { token, newPassword }, { responseType: 'text' })
+      .pipe(catchError(this.handleError));
+  }
 }
 
 

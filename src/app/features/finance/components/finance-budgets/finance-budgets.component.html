@@ -52,6 +52,27 @@
   <p class="status status--error" *ngIf="errorMessage">{{ errorMessage }}</p>
   <p class="status" *ngIf="isLoading">Loading budgets...</p>
 
+  <section class="club-budget-summary" *ngIf="!isLoading">
+    <h2 class="club-budget-summary__title">Club General Budget</h2>
+    <div class="club-budget-summary__cards">
+      <div class="club-budget-summary__card">
+        <span class="club-budget-summary__label">Total Received</span>
+        <strong class="club-budget-summary__value club-budget-summary__value--income">{{ formatCurrency(clubTotalIncome) }}</strong>
+        <span class="club-budget-summary__hint">Sponsor donations, member dues &amp; club-level income</span>
+      </div>
+      <div class="club-budget-summary__card">
+        <span class="club-budget-summary__label">Allocated to Events</span>
+        <strong class="club-budget-summary__value club-budget-summary__value--allocated">{{ formatCurrency(clubTotalAllocated) }}</strong>
+        <span class="club-budget-summary__hint">Sum of all event budgets</span>
+      </div>
+      <div class="club-budget-summary__card" [class.club-budget-summary__card--negative]="clubFreeBalance < 0">
+        <span class="club-budget-summary__label">Free Balance</span>
+        <strong class="club-budget-summary__value" [class.club-budget-summary__value--positive]="clubFreeBalance >= 0" [class.club-budget-summary__value--negative]="clubFreeBalance < 0">{{ formatCurrency(clubFreeBalance) }}</strong>
+        <span class="club-budget-summary__hint">Available to allocate</span>
+      </div>
+    </div>
+  </section>
+
   <div class="budgets-grid">
     <article class="budget-card" *ngFor="let item of pagedBudgetItems">
       <div class="budget-card__top">
