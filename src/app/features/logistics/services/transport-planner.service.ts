@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
@@ -6,7 +6,7 @@ import { TransportPlannerResponse } from '../models/transport-planner.model';
 
 @Injectable({ providedIn: 'root' })
 export class TransportPlannerService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = environment.logisticsApiUrl;
 
   constructor(private http: HttpClient) {}
 

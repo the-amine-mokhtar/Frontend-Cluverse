@@ -32,7 +32,7 @@ export interface SmsHistoryResponse {
 
 @Injectable({ providedIn: 'root' })
 export class SmsNotificationService {
-  private apiUrl = `${environment.apiUrl}/api/sms-notifications`;
+  private apiUrl = `${environment.eventsApiUrl}/api/sms-notifications`;
 
   constructor(private http: HttpClient) {}
 

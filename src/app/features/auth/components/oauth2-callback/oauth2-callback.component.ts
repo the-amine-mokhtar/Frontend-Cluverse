@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment.development';
@@ -219,7 +219,7 @@ export class OAuth2CallbackComponent implements OnInit, OnDestroy {
     });
 
     this.http.post<any>(
-      `${environment.apiUrl}/api/auth/oauth2-select-club`,
+      `${environment.userApiUrl}/api/auth/oauth2-select-club`,
       { clubId: club.clubId },
       { headers }
     ).subscribe({

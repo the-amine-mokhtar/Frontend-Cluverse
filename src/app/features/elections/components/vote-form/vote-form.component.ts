@@ -5,6 +5,7 @@ import { VoteService } from '../../services/vote.service';
 import { ElectionService } from '../../services/election.service';
 import { CandidateService } from '../../services/candidate.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
+import { ApiService, MemberCompetencyResponse } from '../../../../core/services/api.service';
 import { catchError, forkJoin, of } from 'rxjs';
 
 interface PieSlice {
@@ -39,6 +40,7 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   readonly innerRadius = 56;
 
   view: 'elections' | 'candidates' = 'elections';
+  activeTab: 'vote' | 'insights' = 'vote';
   animState: 'visible' | 'fading-out' | 'fading-in' = 'visible';
 
   elections: any[] = [];
@@ -47,6 +49,8 @@ export class VoteFormComponent implements OnInit, OnDestroy {
 
   selectedElection: any = null;
   selectedCandidate: any = null;
+  candidateCompetencies: MemberCompetencyResponse[] = [];
+  matchedCompetencies: any[] = [];
   hoveredIndex: number = -1;
   userVote: any = null; 
   votedElectionIds = new Set<string>();
@@ -64,11 +68,17 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   compareError = '';
   reportSections: { type: string; title: string; content: string }[] = [];
 
+  clubMembers: any[] = [];
+  clubCompetencies: MemberCompetencyResponse[] = [];
+  membershipLeaderboard: any[] = [];
+  competencyLeaderboard: any[] = [];
+
   constructor(
     private voteService: VoteService,
     private electionService: ElectionService,
     private candidateService: CandidateService,
-    private authHelper: AuthHelperService
+    private authHelper: AuthHelperService,
+    private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -96,13 +106,57 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   }
 
   loadCandidates(electionId: number): void {
-    this.candidateService.getCandidates(electionId).subscribe({
+    const clubId = this.authHelper.getClubId();
+    
+    forkJoin({
+      candidates: this.candidateService.getCandidates(electionId).pipe(catchError(() => of([]))),
+      members: this.apiService.getClubMembers(clubId).pipe(catchError(() => of([]))),
+      competencies: this.apiService.getMemberCompetenciesByClub(clubId).pipe(catchError(() => of([])))
+    }).subscribe({
       next: (data) => {
-        this.candidates = data || [];
+        this.candidates = data.candidates || [];
+        this.clubMembers = data.members || [];
+        this.clubCompetencies = data.competencies || [];
         this.loadMyVote(electionId);
+        this.buildInsights();
       },
-      error: () => this.errorMessage = 'Failed to load candidates'
+      error: () => this.errorMessage = 'Failed to load candidate data'
     });
+  }
+
+  private buildInsights(): void {
+    if (!this.candidates.length) {
+      this.membershipLeaderboard = [];
+      this.competencyLeaderboard = [];
+      return;
+    }
+
+    const memData = this.candidates.map(c => {
+      const member = this.clubMembers.find((m: any) => m.userId === c.userId);
+      const joinDate = member?.joinDate ? new Date(member.joinDate) : new Date();
+      const diffTime = new Date().getTime() - joinDate.getTime();
+      const durationDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+      return {
+        ...c,
+        joinDate: joinDate,
+        joinDateStr: member?.joinDate || 'Unknown',
+        durationDays: durationDays
+      };
+    });
+    this.membershipLeaderboard = memData.sort((a, b) => a.joinDate.getTime() - b.joinDate.getTime());
+
+    const required = this.selectedElection?.requiredCompetencies || [];
+    const compData = this.candidates.map(c => {
+      const cComps = this.clubCompetencies.filter(comp => comp.userId === c.userId);
+      const matches = required.map((req: any) => cComps.find(comp => comp.skillId === req.id)).filter(Boolean);
+      return {
+        ...c,
+        matchCount: matches.length,
+        matchedSkills: matches.map(m => m.skillName || m.competencyName || 'Unknown'),
+        totalRequired: required.length
+      };
+    });
+    this.competencyLeaderboard = compData.sort((a, b) => b.matchCount - a.matchCount);
   }
 
   private loadElectionVoteFlags(): void {
@@ -292,8 +346,11 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   selectElection(election: any): void {
     this.selectedElection = election;
     this.selectedCandidate = null;
+    this.candidateCompetencies = [];
+    this.matchedCompetencies = [];
     this.hoveredIndex = -1;
     this.errorMessage = '';
+    this.activeTab = 'vote';
 
 
     this.animState = 'fading-out';
@@ -307,6 +364,8 @@ export class VoteFormComponent implements OnInit, OnDestroy {
 
   goBackToElections(): void {
     this.selectedCandidate = null;
+    this.candidateCompetencies = [];
+    this.matchedCompetencies = [];
     this.hoveredIndex = -1;
     this.errorMessage = '';
 
@@ -324,6 +383,32 @@ export class VoteFormComponent implements OnInit, OnDestroy {
   selectCandidate(candidate: any): void {
     this.selectedCandidate = candidate;
     this.errorMessage = '';
+    this.candidateCompetencies = [];
+    this.matchedCompetencies = [];
+    
+    if (candidate && candidate.userId) {
+      this.apiService.getMemberCompetenciesByUser(candidate.userId).subscribe({
+        next: (competencies) => {
+          this.candidateCompetencies = competencies || [];
+          this.calculateMatchedCompetencies();
+        },
+        error: (err) => console.error('Failed to load candidate competencies', err)
+      });
+    }
+  }
+
+  private calculateMatchedCompetencies(): void {
+    if (!this.selectedElection || !this.selectedElection.requiredCompetencies) return;
+    
+    const required = this.selectedElection.requiredCompetencies;
+    this.matchedCompetencies = required.map((req: any) => {
+      const match = this.candidateCompetencies.find(c => c.skillId === req.id);
+      return {
+        ...req,
+        hasCompetency: !!match,
+        level: match ? match.currentLevel : 0
+      };
+    });
   }
 
 
@@ -423,16 +508,21 @@ export class VoteFormComponent implements OnInit, OnDestroy {
     this.showCompareReport = true;
 
     const payload = {
-      candidates: this.candidates.map((c: any) => ({
-        name: c.userName || 'Unknown',
-        bio: c.bio || '',
-        program: c.program || '',
-        status: c.status || '',
-        voteCount: c.voteCount || 0,
-        percentage: c.percentage || 0
-      })),
+      candidates: this.candidates.map((c: any) => {
+        const compData = this.competencyLeaderboard.find(cl => cl.userId === c.userId);
+        return {
+          name: c.userName || 'Unknown',
+          bio: c.bio || '',
+          program: c.program || '',
+          status: c.status || '',
+          voteCount: c.voteCount || 0,
+          percentage: c.percentage || 0,
+          matchedSkills: compData?.matchedSkills || []
+        };
+      }),
       electionTitle: this.selectedElection?.title || '',
-      positionName: this.selectedElection?.position?.name || ''
+      positionName: this.selectedElection?.position?.name || '',
+      requiredCompetencies: this.selectedElection?.requiredCompetencies?.map((r: any) => r.name || r.skillName) || []
     };
 
     this.candidateService.compareCandidates(payload).subscribe({

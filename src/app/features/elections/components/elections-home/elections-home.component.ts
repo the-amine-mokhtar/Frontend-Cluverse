@@ -36,12 +36,6 @@ import { Component } from '@angular/core';
           <h3>Positions</h3>
           <p>Configure election roles</p>
         </a>
-
-        <a routerLink="../vacant-positions" class="elections__card">
-          <div class="elections__card-icon">🎤</div>
-          <h3>Interviews</h3>
-          <p>AI Voice Interview Simulator</p>
-        </a>
       </div>
     </div>
   `,

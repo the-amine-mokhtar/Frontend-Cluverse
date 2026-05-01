@@ -193,8 +193,8 @@
 
             <div class="studio-controls">
               <select class="studio-select" [(ngModel)]="selectedSpeechMemberCompetencyId" [disabled]="isRecordingSpeech">
-                <option [value]="0">Select skill to practice</option>
-                <option *ngFor="let comp of softSkillsForSpeech" [value]="comp.id">{{ comp.skillName }}</option>
+                <option [ngValue]="0">Select skill to practice</option>
+                <option *ngFor="let comp of softSkillsForSpeech" [ngValue]="comp.id">{{ comp.skillName }}</option>
               </select>
               <div class="studio-buttons">
                 <button class="btn btn--primary" [disabled]="isRecordingSpeech || selectedSpeechMemberCompetencyId === 0" (click)="startSpeechTest()">

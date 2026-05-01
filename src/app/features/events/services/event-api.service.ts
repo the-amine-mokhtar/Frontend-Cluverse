@@ -340,7 +340,7 @@ export interface ParticipantAiDashboardResponse {
 @Injectable({ providedIn: 'root' })
 export class EventApiService {
 
-  private baseUrl = environment.apiUrl;
+  private baseUrl = environment.eventsApiUrl;
 
   constructor(private http: HttpClient) {}
 

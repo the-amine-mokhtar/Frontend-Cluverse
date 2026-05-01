@@ -143,6 +143,8 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
   showResultModal = false;
   resultImageUrl = '';
   closeResult: ElectionCloseResult | null = null;
+  nonVoterCount = 0;
+  isMailingNonVoters = false;
 
   constructor(
     private electionService: ElectionService,
@@ -549,6 +551,36 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
     this.showCloseToast('Image downloaded.', 'success');
   }
 
+  loadNonVoterCount(electionId: number): void {
+    this.electionService.getNonVoterCount(electionId).subscribe({
+      next: (res) => {
+        this.nonVoterCount = res.count;
+      },
+      error: (err) => {
+        console.error('Failed to load non-voter count', err);
+      }
+    });
+  }
+
+  mailAllNonVoters(): void {
+    if (!this.selectedElection || this.isMailingNonVoters) {
+      return;
+    }
+    
+    this.isMailingNonVoters = true;
+    this.electionService.mailNonVoters(this.selectedElection.id).subscribe({
+      next: (res) => {
+        this.isMailingNonVoters = false;
+        this.showCloseToast(res.message, 'success');
+      },
+      error: (err) => {
+        this.isMailingNonVoters = false;
+        const msg = err?.error?.message || 'Failed to send emails';
+        this.showCloseToast(msg, 'error');
+      }
+    });
+  }
+
   getVoteTime(vote: any): Date | null {
     const value = vote?.createdAt || vote?.timestamp;
     if (!value) {
@@ -591,10 +623,12 @@ export class ElectionDashboardComponent implements OnInit, OnDestroy, AfterViewI
       this.candidateBubbles = [];
       this.bubbleSimulation?.stop();
       this.bubbleSimulation = null;
+      this.nonVoterCount = 0;
       return;
     }
 
     const electionId = this.selectedElection.id;
+    this.loadNonVoterCount(electionId);
     this.selectedElectionCandidates = this.candidates.filter(c => this.resolveElectionId(c) === electionId);
     this.selectedElectionVotes = this.votes.filter(v => this.resolveElectionId(v) === electionId);
     this.recentVotes = [...this.selectedElectionVotes]

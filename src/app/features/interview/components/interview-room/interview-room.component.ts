@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, NgZone, ViewChild, ElementRef } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, NgZone, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment.development';
@@ -45,7 +45,7 @@ export class InterviewRoomComponent implements OnInit, OnDestroy {
     this.config = nav?.config;
 
     if (!this.config) {
-      this.http.get(`${environment.apiUrl}/api/interview-configs/link/${this.uniqueLink}`).subscribe({
+      this.http.get(`${environment.userApiUrl}/api/interview-configs/link/${this.uniqueLink}`).subscribe({
         next: (data: any) => { this.config = data; this.startInterview(); },
         error: () => this.router.navigate(['/interview', this.uniqueLink])
       });
@@ -87,7 +87,7 @@ export class InterviewRoomComponent implements OnInit, OnDestroy {
     const club = this.config?.application?.recruitmentCampaign?.club;
     const campaign = this.config?.application?.recruitmentCampaign;
 
-    this.http.post(`${environment.apiUrl}/api/ai-interview/start`, {
+    this.http.post(`${environment.userApiUrl}/api/ai-interview/start`, {
       clubName: club?.name || '',
       clubDescription: club?.description || '',
       campaignTitle: campaign?.title || '',
@@ -190,7 +190,7 @@ export class InterviewRoomComponent implements OnInit, OnDestroy {
     this.messages.push({ role: 'candidate', text: candidateText });
     this.stopListening();
 
-    this.http.post(`${environment.apiUrl}/api/ai-interview/turn`, {
+    this.http.post(`${environment.userApiUrl}/api/ai-interview/turn`, {
       sessionId: this.sessionId,
       candidateText,
       elapsedSec: this.elapsedSec
@@ -221,12 +221,12 @@ export class InterviewRoomComponent implements OnInit, OnDestroy {
     this.synth.cancel();
     clearInterval(this.timerInterval);
 
-    this.http.post(`${environment.apiUrl}/api/ai-interview/end`, {
+    this.http.post(`${environment.userApiUrl}/api/ai-interview/end`, {
       sessionId: this.sessionId,
       uniqueLink: this.uniqueLink
     }).subscribe({
       next: () => {
-        this.http.put(`${environment.apiUrl}/api/interview-configs/link/${this.uniqueLink}/status?status=TERMINE`, {}).subscribe();
+        this.http.put(`${environment.userApiUrl}/api/interview-configs/link/${this.uniqueLink}/status?status=TERMINE`, {}).subscribe();
         this.router.navigate(['/interview/done']);
       },
       error: () => this.router.navigate(['/interview/done'])

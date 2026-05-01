@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+﻿import { Component, Input } from '@angular/core';
 import { environment } from '../../../../../environments/environment.development';
 
 /**
@@ -14,8 +14,8 @@ export class OAuth2ButtonsComponent {
   @Input() title = 'Se connecter avec';
   @Input() showDivider = true;
 
-  googleAuthUrl = `${environment.apiUrl}/oauth2/authorization/google`;
-  githubAuthUrl = `${environment.apiUrl}/oauth2/authorization/github`;
+  googleAuthUrl = `${environment.userApiUrl}/oauth2/authorization/google`;
+  githubAuthUrl = `${environment.userApiUrl}/oauth2/authorization/github`;
 
   loginWithGoogle(): void {
     window.location.href = this.googleAuthUrl;

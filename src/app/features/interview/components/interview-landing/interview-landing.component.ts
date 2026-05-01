@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment.development';
@@ -18,7 +18,7 @@ export class InterviewLandingComponent implements OnInit {
 
   ngOnInit(): void {
     this.uniqueLink = this.route.snapshot.paramMap.get('uniqueLink')!;
-    this.http.get(`${environment.apiUrl}/api/interview-configs/link/${this.uniqueLink}`).subscribe({
+    this.http.get(`${environment.userApiUrl}/api/interview-configs/link/${this.uniqueLink}`).subscribe({
       next: (data: any) => {
         if (data.status === 'TERMINE') {
           this.error = 'Cet entretien a déjà été complété.';

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -7,7 +7,7 @@ import { Resource } from '../models/resource.model';
 
 @Injectable({ providedIn: 'root' })
 export class ResourceService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl = environment.logisticsApiUrl;
   private readonly endpoint = `${this.baseUrl}/api/resources`;
 
   constructor(private http: HttpClient) {}
