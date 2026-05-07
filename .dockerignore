@@ -1,0 +1,17 @@
+.git
+.gitignore
+.editorconfig
+.angular
+.vscode
+node_modules/
+dist/
+*.md
+*.log
+*.png
+*.jpg
+hs_err_pid*.log
+replay_pid*.log
+
+speech-analyzer/
+test-*.html
+test.html
