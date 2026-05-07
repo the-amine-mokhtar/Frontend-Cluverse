@@ -7,8 +7,8 @@ import { environment } from '../../../../environments/environment.development';
   providedIn: 'root'
 })
 export class CandidateService {
-  private apiUrl = `${environment.apiUrl}/api/candidates`;
-  private bioGeneratorApiUrl = 'http://localhost:8091';
+  private apiUrl = `${environment.electionsApiUrl}/api/candidates`;
+  private bioGeneratorApiUrl = 'http://localhost:8093';
 
   constructor(private http: HttpClient) {}
 
@@ -43,9 +43,10 @@ export class CandidateService {
   }
 
   compareCandidates(payload: {
-    candidates: { name: string; bio: string; program: string; status: string; voteCount: number; percentage: number }[];
+    candidates: { name: string; bio: string; program: string; status: string; voteCount: number; percentage: number; matchedSkills?: string[] }[];
     electionTitle?: string;
     positionName?: string;
+    requiredCompetencies?: string[];
   }): Observable<{ report: string; prompt: string }> {
     return this.http.post<{ report: string; prompt: string }>(`${this.bioGeneratorApiUrl}/compare-candidates`, payload);
   }

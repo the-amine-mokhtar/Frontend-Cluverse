@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ElectionService } from '../../services/election.service';
 import { PositionService } from '../../services/position.service';
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
+import { ApiService, CompetencyResponse } from '../../../../core/services/api.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -21,6 +22,7 @@ export class ElectionFormComponent implements OnInit {
   errorMessage: string = '';
   isSubmitting = false;
   availablePositions: any[] = [];
+  availableCompetencies: CompetencyResponse[] = [];
   clubId: number = 0;
 
   constructor(
@@ -28,6 +30,7 @@ export class ElectionFormComponent implements OnInit {
     private electionService: ElectionService,
     private positionService: PositionService,
     private authHelper: AuthHelperService,
+    private apiService: ApiService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -53,16 +56,18 @@ export class ElectionFormComponent implements OnInit {
       startDate: ['', [Validators.required]],
       endDate: ['', [Validators.required]],
       status: ['OPEN', [Validators.required]],
-      positionId: [null, [Validators.required]]
+      positionId: [null, [Validators.required]],
+      competencyIds: [[]]
     });
   }
 
   loadData(): void {
     forkJoin({
       positions: this.positionService.getByClubId(this.clubId),
-      elections: this.electionService.getElections(this.clubId)
+      elections: this.electionService.getElections(this.clubId),
+      competencies: this.apiService.getCompetencies(this.clubId)
     }).subscribe({
-      next: ({ positions, elections }) => {
+      next: ({ positions, elections, competencies }) => {
         const usedPositionIds = new Set(
           elections
             .filter((e: any) => String(e.status || '').toUpperCase() === 'OPEN')
@@ -72,6 +77,7 @@ export class ElectionFormComponent implements OnInit {
         this.availablePositions = positions.filter(
           (p: any) => p.electable && !usedPositionIds.has(p.id)
         );
+        this.availableCompetencies = competencies || [];
       },
       error: (err) => console.error('Failed to load data', err)
     });
@@ -92,6 +98,9 @@ export class ElectionFormComponent implements OnInit {
           if (!alreadyInList) {
             this.availablePositions.push(data.position);
           }
+        }
+        if (data.requiredCompetencies && data.requiredCompetencies.length > 0) {
+          data.competencyIds = data.requiredCompetencies.map((c: any) => c.id);
         }
         this.electionForm.patchValue(data);
       },
@@ -137,5 +146,20 @@ export class ElectionFormComponent implements OnInit {
         this.isSubmitting = false;
       }
     });
+  }
+
+  toggleCompetency(id: number): void {
+    const current: number[] = this.electionForm.get('competencyIds')?.value || [];
+    const idx = current.indexOf(id);
+    if (idx >= 0) {
+      current.splice(idx, 1);
+    } else {
+      current.push(id);
+    }
+    this.electionForm.patchValue({ competencyIds: [...current] });
+  }
+
+  isCompetencySelected(id: number): boolean {
+    return (this.electionForm.get('competencyIds')?.value || []).includes(id);
   }
 }

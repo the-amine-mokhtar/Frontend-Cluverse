@@ -63,6 +63,37 @@
         </div>
       </div>
 
+      <!-- Required Competencies Picker -->
+      <div class="elections__form-field" *ngIf="availableCompetencies.length > 0">
+        <label>Required Competencies</label>
+        <p style="color: var(--e-muted); font-size: 0.78rem; margin: 0 0 0.5rem;">Select competencies candidates should have for this election.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+          <button
+            *ngFor="let comp of availableCompetencies"
+            type="button"
+            (click)="toggleCompetency(comp.id)"
+            [style.background]="isCompetencySelected(comp.id)
+              ? (comp.category === 'TECHNICAL' ? 'var(--e-primary-bg)' : comp.category === 'SOFT' ? 'var(--e-success-bg)' : 'var(--e-secondary-bg)')
+              : 'var(--e-bg-input)'"
+            [style.borderColor]="isCompetencySelected(comp.id)
+              ? (comp.category === 'TECHNICAL' ? 'var(--e-primary-border)' : comp.category === 'SOFT' ? 'var(--e-success-border)' : 'var(--e-secondary-border)')
+              : 'var(--e-border)'"
+            [style.color]="isCompetencySelected(comp.id)
+              ? (comp.category === 'TECHNICAL' ? 'var(--e-primary)' : comp.category === 'SOFT' ? 'var(--e-success)' : 'var(--e-secondary)')
+              : 'var(--e-text)'"
+            style="border: 1.5px solid; border-radius: 999px; padding: 0.38rem 0.72rem; font-size: 0.76rem; font-weight: 700;
+                   cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.35rem;">
+            <span style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8;">{{ comp.category }}</span>
+            {{ comp.name }}
+            <span *ngIf="isCompetencySelected(comp.id)" style="font-size: 0.8rem;">✓</span>
+          </button>
+        </div>
+        <div *ngIf="electionForm.get('competencyIds')?.value?.length > 0"
+             style="margin-top: 0.4rem; color: var(--e-muted); font-size: 0.72rem; font-weight: 600;">
+          {{ electionForm.get('competencyIds')?.value?.length }} competenc{{ electionForm.get('competencyIds')?.value?.length === 1 ? 'y' : 'ies' }} selected
+        </div>
+      </div>
+
       <div class="elections__form-actions">
         <a routerLink="/dashboard/elections/list" class="elections__btn elections__btn--secondary">
           Cancel

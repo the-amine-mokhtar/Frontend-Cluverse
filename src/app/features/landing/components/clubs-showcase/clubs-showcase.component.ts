@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment.development';
 
@@ -15,7 +15,7 @@ export class ClubsShowcaseComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.http.get<any[]>(`${environment.apiUrl}/api/clubs`).subscribe({
+    this.http.get<any[]>(`${environment.userApiUrl}/api/clubs`).subscribe({
       next: (clubs) => {
         this.clubs = (clubs || []).filter(c => c.isClubVerified && c.status === 'Active');
         this.loadActiveCampaigns();
@@ -26,7 +26,7 @@ export class ClubsShowcaseComponent implements OnInit {
 
   loadActiveCampaigns(): void {
     const requests = this.clubs.map(club =>
-      this.http.get<any[]>(`${environment.apiUrl}/api/recruitment/campaigns/club/${club.id}`)
+      this.http.get<any[]>(`${environment.userApiUrl}/api/recruitment/campaigns/club/${club.id}`)
         .toPromise()
         .then(campaigns => (campaigns || []).filter(c => c.active).map(c => ({ ...c, club })))
         .catch(() => [])

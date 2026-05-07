@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
@@ -75,7 +75,7 @@ export interface GenerateSponsorshipProposalSummaryResponse {
   providedIn: 'root'
 })
 export class SponsorshipService {
-  private readonly baseUrl = `${environment.apiUrl}/api/sponsorships`;
+  private readonly baseUrl = `${environment.sponsorsApiUrl}/api/sponsorships`;
 
   constructor(private http: HttpClient) {}
 
@@ -110,7 +110,7 @@ export class SponsorshipService {
 
   generateProposalSummaryWithAi(payload: GenerateSponsorshipProposalSummaryRequest): Observable<GenerateSponsorshipProposalSummaryResponse> {
     return this.http.post<GenerateSponsorshipProposalSummaryResponse>(
-      `${environment.apiUrl}/api/ai/summary/sponsorship-proposal`,
+      `${environment.sponsorsApiUrl}/api/ai/summary/sponsorship-proposal`,
       payload,
       { headers: this.authHeaders() }
     );

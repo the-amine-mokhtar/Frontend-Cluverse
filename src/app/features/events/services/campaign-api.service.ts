@@ -96,7 +96,7 @@ export interface DeleteCampaignResult {
 
 @Injectable({ providedIn: 'root' })
 export class CampaignApiService {
-  private apiUrl = `${environment.apiUrl}/api/campaigns`;
+  private apiUrl = `${environment.eventsApiUrl}/api/campaigns`;
   private clubsUrl = `${environment.apiUrl}/api/clubs`;
 
   constructor(private http: HttpClient) {}

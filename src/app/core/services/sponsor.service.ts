@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
@@ -72,7 +72,7 @@ export interface SendSponsorEmailRequest {
   providedIn: 'root'
 })
 export class SponsorService {
-  private readonly baseUrl = `${environment.apiUrl}/api/sponsors`;
+  private readonly baseUrl = `${environment.sponsorsApiUrl}/api/sponsors`;
 
   constructor(private http: HttpClient) {}
 
