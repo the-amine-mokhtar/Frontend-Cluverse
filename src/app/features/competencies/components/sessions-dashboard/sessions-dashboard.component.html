@@ -658,7 +658,7 @@
 
   <div class="m-modal-body">
     <p class="m-state" *ngIf="participantsTargetSession">
-      Session: <strong>{{ participantsTargetSession?.title }}</strong>
+      Session: <strong>{{ participantsTargetSession.title }}</strong>
     </p>
   </div>
 
@@ -723,7 +723,7 @@
     </button>
   </div>
   <div class="m-modal-body" *ngIf="cancelTargetSession">
-    <p>Confirm cancellation of <strong>{{ cancelTargetSession?.title }}</strong> ? This action is irreversible.</p>
+    <p>Confirm cancellation of <strong>{{ cancelTargetSession.title }}</strong> ? This action is irreversible.</p>
   </div>
   <form [formGroup]="cancelForm" (ngSubmit)="submitCancelSession()" class="sd-form">
     <div class="sd-field">
