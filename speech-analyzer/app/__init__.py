@@ -1,1 +1,0 @@
-"""Speech Analyzer microservice package."""
