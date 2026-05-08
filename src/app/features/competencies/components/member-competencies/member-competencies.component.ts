@@ -23,6 +23,7 @@ import {
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 import { ConfettiService } from '../../services/confetti.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
+import { environment } from '../../../../../environments/environment';
 import { Subscription } from 'rxjs';
 
 type LearningState = 'done' | 'active' | 'locked';
