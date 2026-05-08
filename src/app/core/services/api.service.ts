@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -339,7 +339,7 @@ export class ApiService {
   private logisticsUrl = environment.logisticsApiUrl;
   private financeUrl = environment.financeApiUrl;
   private sponsorsUrl = environment.sponsorsApiUrl;
-  private speechUrl = (environment as any).speechUrl || 'http://localhost:8001';
+  private speechUrl = (environment as any).speechUrl || environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

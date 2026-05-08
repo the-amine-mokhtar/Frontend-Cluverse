@@ -125,7 +125,7 @@ interface MentorshipSuggestion {
   styleUrls: ['./member-competencies.component.scss']
 })
 export class MemberCompetenciesComponent implements OnInit, OnDestroy {
-  private readonly speechAnalyzerHttpBase = 'http://127.0.0.1:8001';
+  private readonly speechAnalyzerHttpBase = environment.apiUrl;
   
   // Chart.js Radar Properties
   public radarChartOptions: ChartConfiguration['options'] = {
