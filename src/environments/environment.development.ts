@@ -1,4 +1,4 @@
-const gatewayUrl = 'http://localhost:8080';
+const gatewayUrl = '';
 
 export const environment = {
   production: false,
