@@ -13,11 +13,11 @@ import { TransportService } from '../services/transport.service';
 import { VehicleMaintenanceAutoService } from '../services/vehicle-maintenance-auto.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
-  EventItem,
   LocationItem,
   LogisticsApiService,
   UserItem
 } from '../services/logistics-api.service';
+import { EventApiService, EventItem } from '../../events/services/event-api.service';
 
 import { TRANSPORT_STATUS_LABELS } from '../utils/status-labels';
 
@@ -74,7 +74,8 @@ export class TransportFormComponent implements OnInit, AfterViewInit {
     private transportService: TransportService,
     private maintenanceAutoService: VehicleMaintenanceAutoService,
     private toastService: ToastService,
-    private logisticsApi: LogisticsApiService
+    private logisticsApi: LogisticsApiService,
+    private eventApi: EventApiService
   ) {}
 
   ngOnInit(): void {
@@ -156,7 +157,7 @@ export class TransportFormComponent implements OnInit, AfterViewInit {
     forkJoin({
       vehicles: this.vehicleService.getAvailable(),
       users: this.logisticsApi.getUsers().pipe(defaultIfEmpty([] as UserItem[])),
-      events: this.logisticsApi.getEvents().pipe(defaultIfEmpty([] as EventItem[])),
+      events: this.eventApi.getAllEvents().pipe(defaultIfEmpty([] as EventItem[])),
       locations: this.logisticsApi.getLocations().pipe(defaultIfEmpty([] as LocationItem[]))
     }).subscribe({
       next: ({ vehicles, users, events, locations }) => {
@@ -186,7 +187,7 @@ export class TransportFormComponent implements OnInit, AfterViewInit {
       transport: this.transportService.getById(id).pipe(defaultIfEmpty(null)),
       vehicles: this.vehicleService.getAvailable(),
       users: this.logisticsApi.getUsers().pipe(defaultIfEmpty([] as UserItem[])),
-      events: this.logisticsApi.getEvents().pipe(defaultIfEmpty([] as EventItem[])),
+      events: this.eventApi.getAllEvents().pipe(defaultIfEmpty([] as EventItem[])),
       locations: this.logisticsApi.getLocations().pipe(defaultIfEmpty([] as LocationItem[]))
     }).subscribe({
       next: ({ transport, vehicles, users, events, locations }) => {
