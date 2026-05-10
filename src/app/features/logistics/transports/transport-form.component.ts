@@ -629,7 +629,7 @@ export class TransportFormComponent implements OnInit, AfterViewInit {
 
     const eventId = Number(transport.eventId ?? 0);
     if (eventId && !this.events.some((e) => Number(e.id) === eventId)) {
-      this.events = [{ id: eventId, name: `Événement #${eventId}` }, ...this.events];
+      this.events = [{ id: eventId, title: `Événement #${eventId}` } as any, ...this.events];
     }
   }
 
