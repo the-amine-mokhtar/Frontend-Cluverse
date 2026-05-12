@@ -10,19 +10,19 @@
     <div class="home__stats">
       <div class="home__stat-card">
         <span class="home__stat-label">Elections</span>
-        <span class="home__stat-value">—</span>
+        <span class="home__stat-value">{{ isLoading ? '—' : stats.elections }}</span>
       </div>
       <div class="home__stat-card">
         <span class="home__stat-label">Events</span>
-        <span class="home__stat-value">—</span>
+        <span class="home__stat-value">{{ isLoading ? '—' : stats.events }}</span>
       </div>
       <div class="home__stat-card">
         <span class="home__stat-label">Members</span>
-        <span class="home__stat-value">—</span>
+        <span class="home__stat-value">{{ isLoading ? '—' : stats.members }}</span>
       </div>
       <div class="home__stat-card">
         <span class="home__stat-label">Recruitments</span>
-        <span class="home__stat-value">—</span>
+        <span class="home__stat-value">{{ isLoading ? '—' : stats.recruitments }}</span>
       </div>
     </div>
   </div>
