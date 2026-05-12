@@ -62,25 +62,6 @@
     overflow: hidden;
   }
 
-  &__hero-glow {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    filter: blur(80px);
-
-    &--1 {
-      width: 280px; height: 280px;
-      top: -80px; left: -60px;
-      background: rgba(247, 185, 28, 0.12);
-    }
-
-    &--2 {
-      width: 200px; height: 200px;
-      bottom: -60px; right: 80px;
-      background: rgba(59, 130, 246, 0.1);
-    }
-  }
-
   &__hero-inner {
     position: relative;
     display: flex;
@@ -256,6 +237,38 @@
       &:hover { box-shadow: 0 8px 24px rgba(139,92,246,0.12); }
       .hd__kpi-icon { color: #8b5cf6; background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.2); }
       .hd__kpi-link { color: #8b5cf6; }
+    }
+
+    &--coral {
+      border-color: rgba(239,68,68,0.25);
+      &::before { background: linear-gradient(135deg, rgba(239,68,68,0.07) 0%, transparent 60%); }
+      &:hover { box-shadow: 0 8px 24px rgba(239,68,68,0.12); }
+      .hd__kpi-icon { color: #ef4444; background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.2); }
+      .hd__kpi-link { color: #ef4444; }
+    }
+
+    &--teal {
+      border-color: rgba(20,184,166,0.25);
+      &::before { background: linear-gradient(135deg, rgba(20,184,166,0.07) 0%, transparent 60%); }
+      &:hover { box-shadow: 0 8px 24px rgba(20,184,166,0.12); }
+      .hd__kpi-icon { color: #14b8a6; background: rgba(20,184,166,0.12); border-color: rgba(20,184,166,0.2); }
+      .hd__kpi-link { color: #14b8a6; }
+    }
+
+    &--pink {
+      border-color: rgba(236,72,153,0.25);
+      &::before { background: linear-gradient(135deg, rgba(236,72,153,0.07) 0%, transparent 60%); }
+      &:hover { box-shadow: 0 8px 24px rgba(236,72,153,0.12); }
+      .hd__kpi-icon { color: #ec4899; background: rgba(236,72,153,0.12); border-color: rgba(236,72,153,0.2); }
+      .hd__kpi-link { color: #ec4899; }
+    }
+
+    &--indigo {
+      border-color: rgba(99,102,241,0.25);
+      &::before { background: linear-gradient(135deg, rgba(99,102,241,0.07) 0%, transparent 60%); }
+      &:hover { box-shadow: 0 8px 24px rgba(99,102,241,0.12); }
+      .hd__kpi-icon { color: #6366f1; background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.2); }
+      .hd__kpi-link { color: #6366f1; }
     }
   }
 
@@ -445,6 +458,10 @@
     &--blue   { background: #3b82f6; }
     &--green  { background: #10b981; }
     &--purple { background: #8b5cf6; }
+    &--coral  { background: #f59e0b; }
+    &--teal   { background: #14b8a6; }
+    &--pink   { background: #ec4899; }
+    &--indigo { background: #6366f1; }
   }
 
   &__breakdown-pct {
@@ -690,9 +707,11 @@
   // ─── Overview Rings ────────────────────────────────────────────────────────
   &__overview-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
     margin-bottom: 1.25rem;
+
+    @media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
   }
 
   &__overview-item {
@@ -718,11 +737,11 @@
     justify-content: center;
     transition: background 0.6s ease;
 
-    $rings: (amber: #f7b91c, blue: #3b82f6, green: #10b981, purple: #8b5cf6);
+    $rings: (amber: #f7b91c, blue: #3b82f6, green: #10b981, purple: #8b5cf6, coral: #f59e0b, teal: #14b8a6, pink: #ec4899, indigo: #6366f1);
 
     @each $name, $color in $rings {
       &--#{$name} {
-        background: conic-gradient(#{$color} calc(var(--pct, 25) * 1%), var(--h-bg-inner) 0%);
+        background: conic-gradient(#{$color} calc(var(--pct, 12) * 1%), var(--h-bg-inner) 0%);
       }
     }
   }

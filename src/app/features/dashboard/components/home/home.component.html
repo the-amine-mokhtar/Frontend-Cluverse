@@ -2,8 +2,7 @@
 
   <!-- ── Hero ── -->
   <div class="hd__hero">
-    <div class="hd__hero-glow hd__hero-glow--1"></div>
-    <div class="hd__hero-glow hd__hero-glow--2"></div>
+
     <div class="hd__hero-inner">
       <div class="hd__hero-left">
         <div class="hd__greeting-row">
@@ -91,6 +90,66 @@
       </div>
       <a class="hd__kpi-link" routerLink="/dashboard/recruitment">View →</a>
     </article>
+
+    <article class="hd__kpi hd__kpi--coral">
+      <div class="hd__kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      </div>
+      <div class="hd__kpi-body">
+        <p class="hd__kpi-label">Logistics</p>
+        <h3 class="hd__kpi-value">
+          <span *ngIf="isLoading" class="hd__kpi-skeleton"></span>
+          <ng-container *ngIf="!isLoading">{{ stats.logistics }}</ng-container>
+        </h3>
+        <span class="hd__kpi-sub">Transport requests</span>
+      </div>
+      <a class="hd__kpi-link" routerLink="/dashboard/logistics">View →</a>
+    </article>
+
+    <article class="hd__kpi hd__kpi--teal">
+      <div class="hd__kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </div>
+      <div class="hd__kpi-body">
+        <p class="hd__kpi-label">Finance</p>
+        <h3 class="hd__kpi-value">
+          <span *ngIf="isLoading" class="hd__kpi-skeleton"></span>
+          <ng-container *ngIf="!isLoading">{{ stats.finance }}</ng-container>
+        </h3>
+        <span class="hd__kpi-sub">Transactions</span>
+      </div>
+      <a class="hd__kpi-link" routerLink="/dashboard/finance">View →</a>
+    </article>
+
+    <article class="hd__kpi hd__kpi--pink">
+      <div class="hd__kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+      </div>
+      <div class="hd__kpi-body">
+        <p class="hd__kpi-label">Sponsors</p>
+        <h3 class="hd__kpi-value">
+          <span *ngIf="isLoading" class="hd__kpi-skeleton"></span>
+          <ng-container *ngIf="!isLoading">{{ stats.sponsors }}</ng-container>
+        </h3>
+        <span class="hd__kpi-sub">Sponsorships</span>
+      </div>
+      <a class="hd__kpi-link" routerLink="/dashboard/sponsors">View →</a>
+    </article>
+
+    <article class="hd__kpi hd__kpi--indigo">
+      <div class="hd__kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      </div>
+      <div class="hd__kpi-body">
+        <p class="hd__kpi-label">Competencies</p>
+        <h3 class="hd__kpi-value">
+          <span *ngIf="isLoading" class="hd__kpi-skeleton"></span>
+          <ng-container *ngIf="!isLoading">{{ stats.competencies }}</ng-container>
+        </h3>
+        <span class="hd__kpi-sub">Tracked skills</span>
+      </div>
+      <a class="hd__kpi-link" routerLink="/dashboard/competencies">View →</a>
+    </article>
   </div>
 
   <!-- ── Mid Grid ── -->
@@ -133,6 +192,26 @@
             <span class="hd__legend-label">Recruitment</span>
             <span class="hd__legend-val">{{ isLoading ? '—' : stats.recruitments }}</span>
           </div>
+          <div class="hd__legend-item">
+            <span class="hd__legend-dot" style="background:#f59e0b;"></span>
+            <span class="hd__legend-label">Logistics</span>
+            <span class="hd__legend-val">{{ isLoading ? '—' : stats.logistics }}</span>
+          </div>
+          <div class="hd__legend-item">
+            <span class="hd__legend-dot" style="background:#14b8a6;"></span>
+            <span class="hd__legend-label">Finance</span>
+            <span class="hd__legend-val">{{ isLoading ? '—' : stats.finance }}</span>
+          </div>
+          <div class="hd__legend-item">
+            <span class="hd__legend-dot" style="background:#ec4899;"></span>
+            <span class="hd__legend-label">Sponsors</span>
+            <span class="hd__legend-val">{{ isLoading ? '—' : stats.sponsors }}</span>
+          </div>
+          <div class="hd__legend-item">
+            <span class="hd__legend-dot" style="background:#6366f1;"></span>
+            <span class="hd__legend-label">Competencies</span>
+            <span class="hd__legend-val">{{ isLoading ? '—' : stats.competencies }}</span>
+          </div>
         </div>
       </div>
       <div class="hd__breakdown">
@@ -163,6 +242,34 @@
             <div class="hd__breakdown-bar hd__breakdown-bar--purple" [style.width.%]="isLoading ? 0 : recruitmentsRatio"></div>
           </div>
           <span class="hd__breakdown-pct">{{ isLoading ? '—' : recruitmentsRatio + '%' }}</span>
+        </div>
+        <div class="hd__breakdown-row">
+          <span class="hd__breakdown-label">Logistics</span>
+          <div class="hd__breakdown-bar-wrap">
+            <div class="hd__breakdown-bar hd__breakdown-bar--coral" [style.width.%]="isLoading ? 0 : logisticsRatio"></div>
+          </div>
+          <span class="hd__breakdown-pct">{{ isLoading ? '—' : logisticsRatio + '%' }}</span>
+        </div>
+        <div class="hd__breakdown-row">
+          <span class="hd__breakdown-label">Finance</span>
+          <div class="hd__breakdown-bar-wrap">
+            <div class="hd__breakdown-bar hd__breakdown-bar--teal" [style.width.%]="isLoading ? 0 : financeRatio"></div>
+          </div>
+          <span class="hd__breakdown-pct">{{ isLoading ? '—' : financeRatio + '%' }}</span>
+        </div>
+        <div class="hd__breakdown-row">
+          <span class="hd__breakdown-label">Sponsors</span>
+          <div class="hd__breakdown-bar-wrap">
+            <div class="hd__breakdown-bar hd__breakdown-bar--pink" [style.width.%]="isLoading ? 0 : sponsorsRatio"></div>
+          </div>
+          <span class="hd__breakdown-pct">{{ isLoading ? '—' : sponsorsRatio + '%' }}</span>
+        </div>
+        <div class="hd__breakdown-row">
+          <span class="hd__breakdown-label">Competencies</span>
+          <div class="hd__breakdown-bar-wrap">
+            <div class="hd__breakdown-bar hd__breakdown-bar--indigo" [style.width.%]="isLoading ? 0 : competenciesRatio"></div>
+          </div>
+          <span class="hd__breakdown-pct">{{ isLoading ? '—' : competenciesRatio + '%' }}</span>
         </div>
       </div>
     </section>
@@ -319,6 +426,42 @@
             </div>
           </div>
           <span>Campaigns</span>
+        </div>
+        <div class="hd__overview-item">
+          <div class="hd__overview-ring hd__overview-ring--coral"
+               [style]="'--pct:' + (isLoading ? 0 : logisticsRatio)">
+            <div class="hd__overview-ring-inner">
+              <strong>{{ isLoading ? '—' : stats.logistics }}</strong>
+            </div>
+          </div>
+          <span>Logistics</span>
+        </div>
+        <div class="hd__overview-item">
+          <div class="hd__overview-ring hd__overview-ring--teal"
+               [style]="'--pct:' + (isLoading ? 0 : financeRatio)">
+            <div class="hd__overview-ring-inner">
+              <strong>{{ isLoading ? '—' : stats.finance }}</strong>
+            </div>
+          </div>
+          <span>Finance</span>
+        </div>
+        <div class="hd__overview-item">
+          <div class="hd__overview-ring hd__overview-ring--pink"
+               [style]="'--pct:' + (isLoading ? 0 : sponsorsRatio)">
+            <div class="hd__overview-ring-inner">
+              <strong>{{ isLoading ? '—' : stats.sponsors }}</strong>
+            </div>
+          </div>
+          <span>Sponsors</span>
+        </div>
+        <div class="hd__overview-item">
+          <div class="hd__overview-ring hd__overview-ring--indigo"
+               [style]="'--pct:' + (isLoading ? 0 : competenciesRatio)">
+            <div class="hd__overview-ring-inner">
+              <strong>{{ isLoading ? '—' : stats.competencies }}</strong>
+            </div>
+          </div>
+          <span>Skills</span>
         </div>
       </div>
       <div class="hd__platform-note">
