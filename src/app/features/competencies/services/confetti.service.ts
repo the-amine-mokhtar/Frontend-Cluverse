@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import * as confetti from 'canvas-confetti';
+import confetti from 'canvas-confetti';
 
 @Injectable({
   providedIn: 'root'

@@ -1,13 +1,26 @@
-// ─── Design Tokens ─────────────────────────────────────────────────────────────
-$bg-page:    #111111;
-$bg-card:    #171717;
-$bg-inner:   #1e1e1e;
-$border:     #2e2e2e;
-$text-main:  #ffffff;
-$text-muted: #676767;
-$accent:     #f7b91c;
-$danger:     #e05c5c;
-$success:    #3ecf8e;
+:host {
+  display: block;
+
+  // ─── Theme Variables (Default Dark) ───
+  --c-bg-page: #111111;
+  --c-bg-card: #171717;
+  --c-bg-inner: #1e1e1e;
+  --c-border: #2e2e2e;
+  --c-text: #ffffff;
+  --c-muted: #676767;
+  --c-accent: #f7b91c;
+  --c-danger: #e05c5c;
+  --c-success: #3ecf8e;
+}
+
+:host-context(body.light-mode) {
+  --c-bg-page: #f9f9f9;
+  --c-bg-card: #ffffff;
+  --c-bg-inner: #f3f4f6;
+  --c-border: #e5e7eb;
+  --c-text: #111827;
+  --c-muted: #6b7280;
+}
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }
@@ -18,14 +31,12 @@ $success:    #3ecf8e;
   to { transform: rotate(360deg); }
 }
 
-:host { display: block; }
-
 .campaigns {
   padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  color: $text-main;
+  color: var(--c-text);
 
   &__header {
     display: flex;
@@ -41,14 +52,14 @@ $success:    #3ecf8e;
   }
   &__subtitle {
     font-size: 0.85rem;
-    color: $text-muted;
+    color: var(--c-muted);
     margin: 0;
   }
 
   // ─── Inline Form ───
   &__form-card {
-    background: $bg-card;
-    border: 1px solid $border;
+    background: var(--c-bg-card);
+    border: 1px solid var(--c-border);
     border-radius: 12px;
     padding: 1.5rem;
     animation: fadeInUp 0.3s ease;
@@ -71,19 +82,19 @@ $success:    #3ecf8e;
 
     &--full { flex: 1 1 100%; }
 
-    label { font-size: 0.8rem; font-weight: 500; color: $text-muted; }
+    label { font-size: 0.8rem; font-weight: 500; color: var(--c-muted); }
     
     input, textarea {
-      background: $bg-inner;
-      border: 1px solid $border;
+      background: var(--c-bg-inner);
+      border: 1px solid var(--c-border);
       border-radius: 8px;
-      color: $text-main;
+      color: var(--c-text);
       padding: 0.6rem 0.85rem;
       font-size: 0.88rem;
       transition: border-color 0.2s;
       outline: none;
-      &::placeholder { color: $text-muted; opacity: 0.7; }
-      &:focus { border-color: $accent; }
+      &::placeholder { color: var(--c-muted); opacity: 0.7; }
+      &:focus { border-color: var(--c-accent); }
     }
     textarea { resize: vertical; }
   }
@@ -96,9 +107,9 @@ $success:    #3ecf8e;
   }
 
   &__error {
-    color: $danger;
-    background: rgba($danger, 0.1);
-    border: 1px solid rgba($danger, 0.3);
+    color: var(--c-danger);
+    background: rgba(224, 92, 92, 0.1);
+    border: 1px solid rgba(224, 92, 92, 0.3);
     padding: 0.5rem 1rem;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -112,14 +123,14 @@ $success:    #3ecf8e;
     align-items: center;
     gap: 10px;
     font-size: 0.9rem;
-    color: $text-muted;
+    color: var(--c-muted);
     padding: 2rem;
   }
 
   .spinner {
     width: 20px; height: 20px;
-    border: 2px solid $border;
-    border-top-color: $accent;
+    border: 2px solid var(--c-border);
+    border-top-color: var(--c-accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -127,10 +138,10 @@ $success:    #3ecf8e;
   &__empty {
     text-align: center;
     padding: 4rem 1rem;
-    color: $text-muted;
+    color: var(--c-muted);
     
     svg { margin-bottom: 1rem; opacity: 0.5; }
-    h4 { color: $text-main; font-size: 1.1rem; margin: 0 0 0.5rem; }
+    h4 { color: var(--c-text); font-size: 1.1rem; margin: 0 0 0.5rem; }
     p { font-size: 0.85rem; margin: 0; }
   }
 
@@ -142,20 +153,20 @@ $success:    #3ecf8e;
   }
 
   &__card {
-    background: $bg-card;
-    border: 1px solid $border;
+    background: var(--c-bg-card);
+    border: 1px solid var(--c-border);
     border-radius: 12px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.2s;
     
-    &:hover { border-color: rgba($text-muted, 0.6); }
+    &:hover { border-color: var(--c-muted); }
   }
 
   &__card-header {
     padding: 1.2rem;
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid var(--c-border);
   }
 
   &__card-title {
@@ -174,20 +185,20 @@ $success:    #3ecf8e;
     padding: 3px 8px;
     border-radius: 10px;
     white-space: nowrap;
-    background: rgba($text-muted, 0.15);
-    color: $text-muted;
-    border: 1px solid rgba($text-muted, 0.3);
+    background: rgba(103, 103, 103, 0.15);
+    color: var(--c-muted);
+    border: 1px solid rgba(103, 103, 103, 0.3);
 
     &--active {
-      background: rgba($success, 0.15);
-      color: $success;
-      border-color: rgba($success, 0.3);
+      background: rgba(62, 207, 142, 0.15);
+      color: var(--c-success);
+      border-color: rgba(62, 207, 142, 0.3);
     }
   }
 
   &__dates {
     font-size: 0.75rem;
-    color: $text-muted;
+    color: var(--c-muted);
     margin-top: 0.4rem;
   }
 
@@ -202,12 +213,13 @@ $success:    #3ecf8e;
   &__desc {
     font-size: 0.85rem;
     line-height: 1.5;
-    color: rgba($text-main, 0.85);
+    color: var(--c-text);
+    opacity: 0.85;
     margin: 0;
   }
 
   &__meta {
-    background: $bg-inner;
+    background: var(--c-bg-inner);
     border-radius: 8px;
     padding: 0.8rem;
     display: flex;
@@ -218,14 +230,14 @@ $success:    #3ecf8e;
     &-item {
       display: flex;
       justify-content: space-between;
-      color: $text-muted;
-      strong { color: $text-main; font-weight: 600; }
+      color: var(--c-muted);
+      strong { color: var(--c-text); font-weight: 600; }
     }
   }
 
   &__link-text {
-    color: $accent;
-    background: rgba($accent, 0.1);
+    color: var(--c-accent);
+    background: rgba(247, 185, 28, 0.1);
     padding: 2px 6px;
     border-radius: 4px;
     word-break: break-all;
@@ -247,7 +259,7 @@ $success:    #3ecf8e;
     &--admin {
       margin-top: 0.4rem;
       padding-top: 0.6rem;
-      border-top: 1px dashed $border;
+      border-top: 1px dashed var(--c-border);
       justify-content: flex-end;
     }
   }
@@ -269,44 +281,44 @@ $success:    #3ecf8e;
     &:disabled { opacity: 0.5; cursor: not-allowed; }
 
     &--primary {
-      background: $accent;
+      background: var(--c-accent);
       color: #000;
       &:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
     }
 
     &--secondary {
-      background: $bg-inner;
-      border-color: $border;
-      color: $text-main;
+      background: var(--c-bg-inner);
+      border-color: var(--c-border);
+      color: var(--c-text);
       flex: 1;
-      &:hover:not(:disabled) { background: rgba($text-main, 0.05); }
+      &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); }
     }
 
     &--outline {
       background: transparent;
-      border-color: $border;
-      color: $text-main;
-      &:hover:not(:disabled) { background: rgba($text-main, 0.05); }
+      border-color: var(--c-border);
+      color: var(--c-text);
+      &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); }
     }
 
     &--danger {
-      background: $danger;
+      background: var(--c-danger);
       color: #fff;
       &:hover:not(:disabled) { opacity: 0.9; }
     }
 
     &--text {
       background: transparent;
-      color: $text-muted;
+      color: var(--c-muted);
       padding: 0.3rem 0.5rem;
       font-size: 0.75rem;
-      &:hover:not(:disabled) { color: $text-main; }
-      &-danger:hover:not(:disabled) { color: $danger; background: rgba($danger, 0.1); }
+      &:hover:not(:disabled) { color: var(--c-text); }
+      &-danger:hover:not(:disabled) { color: var(--c-danger); background: rgba(224, 92, 92, 0.1); }
     }
 
     &--full { width: 100%; }
 
-    .text-success { color: $success; }
+    .text-success { color: var(--c-success); }
   }
 
   // ─── Dialog ───
@@ -319,17 +331,17 @@ $success:    #3ecf8e;
   }
 
   &__dialog {
-    background: $bg-card; border: 1px solid $border;
+    background: var(--c-bg-card); border: 1px solid var(--c-border);
     border-radius: 12px; padding: 2rem;
     width: min(400px, 90vw); text-align: center;
 
     h3 { margin: 0 0 0.5rem; font-size: 1.2rem; }
-    p { color: $text-muted; font-size: 0.85rem; margin: 0 0 1.5rem; line-height: 1.5; strong { color: $text-main; } }
+    p { color: var(--c-muted); font-size: 0.85rem; margin: 0 0 1.5rem; line-height: 1.5; strong { color: var(--c-text); } }
   }
 
   &__dialog-icon {
     width: 48px; height: 48px; border-radius: 50%;
-    background: rgba($danger, 0.1); color: $danger;
+    background: rgba(224, 92, 92, 0.1); color: var(--c-danger);
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 1rem;
   }
@@ -337,24 +349,4 @@ $success:    #3ecf8e;
   &__dialog-actions {
     display: flex; gap: 0.75rem; justify-content: center;
   }
-}
-
-// ─── Light Mode ───
-body.light-mode .campaigns {
-  color: #111;
-  &__form-card, &__card { background: #fdfdfd; border-color: #dcdcdc; }
-  &__subtitle, &__empty, &__dates, &__desc, .btn--text { color: #555; }
-  
-  .campaigns__meta { background: #f5f5f5; }
-  .campaigns__meta-item { color: #666; strong { color: #111; } }
-
-  &__form-col label { color: #555; }
-  &__form-col input, &__form-col textarea {
-    background: #fff; border-color: #ccc; fill: #111; color: #111;
-    &:focus { border-color: #f7b91c; }
-  }
-
-  .btn--secondary, .btn--outline { background: #fff; border-color: #dcdcdc; color: #111; &:hover:not(:disabled) { background: #f0f0f0; } }
-  
-  &__dialog { background: #fff; border-color: #dcdcdc; h3 { color: #111; } p { color: #444; strong { color: #111; } } }
 }

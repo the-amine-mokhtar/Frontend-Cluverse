@@ -26,7 +26,7 @@ export class VerifyComponent implements OnInit {
       return;
     }
 
-    this.http.get<any>(`http://localhost:8081/api/clubs/verify?code=${code}`)
+    this.http.get<any>(`/api/clubs/verify?code=${code}`)
       .subscribe({
         next: (res) => {
           this.message = res.message;

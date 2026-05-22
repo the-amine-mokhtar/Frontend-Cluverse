@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -339,7 +339,7 @@ export class ApiService {
   private logisticsUrl = environment.logisticsApiUrl;
   private financeUrl = environment.financeApiUrl;
   private sponsorsUrl = environment.sponsorsApiUrl;
-  private speechUrl = (environment as any).speechUrl || 'http://localhost:8001';
+  private speechUrl = (environment as any).speechUrl || environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -629,16 +629,20 @@ getCampaignByPublicLink(publicLink: string): Observable<any> {
 
   // ─── Elections Voice Interview ─── //
 
+  getElections(clubId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.electionsUrl}/api/elections?clubId=${clubId}`, { headers: this.authHeaders() });
+  }
+
   getVacantPositions(clubId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.electionsUrl}/api/elections/positions?clubId=${clubId}`, { headers: this.authHeaders() });
+    return this.http.get<any[]>(`${this.electionsUrl}/api/positions?clubId=${clubId}`, { headers: this.authHeaders() });
   }
 
   getVacantPosition(id: number): Observable<any> {
-    return this.http.get<any>(`${this.electionsUrl}/api/elections/positions/${id}`, { headers: this.authHeaders() });
+    return this.http.get<any>(`${this.electionsUrl}/api/positions/${id}`, { headers: this.authHeaders() });
   }
 
   createVacantPosition(clubId: number, position: any): Observable<any> {
-    return this.http.post<any>(`${this.electionsUrl}/api/elections/positions?clubId=${clubId}`, position, { headers: this.authHeaders() });
+    return this.http.post<any>(`${this.electionsUrl}/api/positions?clubId=${clubId}`, position, { headers: this.authHeaders() });
   }
 
   startInterview(data: any): Observable<any> {

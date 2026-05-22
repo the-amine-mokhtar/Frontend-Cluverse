@@ -54,7 +54,7 @@ export class FinancialAgentWidgetComponent implements OnInit, OnDestroy {
   isListening = false;
   draft = '';
   lang: 'en' | 'fr' = 'en';
-  sessionId: string = crypto.randomUUID();
+  sessionId: string = this.generateUUID();
 
   private transactions: TransactionDto[] = [];
   private budgets: BudgetDto[] = [];
@@ -221,6 +221,18 @@ export class FinancialAgentWidgetComponent implements OnInit, OnDestroy {
 
   private now(): string {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  private generateUUID(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    // Simple fallback UUID generator
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 
   ngOnDestroy(): void {

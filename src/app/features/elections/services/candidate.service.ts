@@ -8,7 +8,7 @@ import { environment } from '../../../../environments/environment.development';
 })
 export class CandidateService {
   private apiUrl = `${environment.electionsApiUrl}/api/candidates`;
-  private bioGeneratorApiUrl = 'http://localhost:8093';
+  private bioGeneratorApiUrl = ''; // Relative to host, proxied by Nginx
 
   constructor(private http: HttpClient) {}
 

@@ -23,6 +23,7 @@ import {
 import { AuthHelperService } from '../../../../core/services/auth-helper.service';
 import { ConfettiService } from '../../services/confetti.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
+import { environment } from '../../../../../environments/environment';
 import { Subscription } from 'rxjs';
 
 type LearningState = 'done' | 'active' | 'locked';
@@ -125,7 +126,7 @@ interface MentorshipSuggestion {
   styleUrls: ['./member-competencies.component.scss']
 })
 export class MemberCompetenciesComponent implements OnInit, OnDestroy {
-  private readonly speechAnalyzerHttpBase = 'http://127.0.0.1:8001';
+  private readonly speechAnalyzerHttpBase = environment.apiUrl;
   
   // Chart.js Radar Properties
   public radarChartOptions: ChartConfiguration['options'] = {

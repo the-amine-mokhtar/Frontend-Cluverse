@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -657,7 +657,7 @@ export class LogisticsApiService {
 
   getEvents(): Observable<EventItem[]> {
     return this.getArrayWithFallback<EventItem>(
-      ['/api/events', '/api/logistics/events'],
+      ['/api/events/all', '/api/logistics/events'],
       ['events']
     );
   }

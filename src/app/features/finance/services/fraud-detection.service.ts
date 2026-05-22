@@ -34,7 +34,7 @@ export interface FraudAlertStats {
 
 @Injectable({ providedIn: 'root' })
 export class FraudDetectionService {
-  private readonly baseUrl = 'http://localhost:8092';
+  private readonly baseUrl = '';
 
   constructor(private readonly http: HttpClient) {}
 

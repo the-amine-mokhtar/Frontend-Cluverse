@@ -1,15 +1,31 @@
-// ─── Design Tokens ─────────────────────────────────────────────────────────────
-$bg-page:    #111111;
-$bg-card:    #171717;
-$bg-inner:   #1e1e1e;
-$border:     #2e2e2e;
-$text-main:  #ffffff;
-$text-muted: #676767;
-$accent:     #f7b91c;
-$danger:     #e05c5c;
-$success:    #3ecf8e;
+:host {
+  display: block;
 
-// ─── Animations ────────────────────────────────────────────────────────────────
+  // ─── Theme Variables (Default Dark) ───
+  --m-bg-page: #111111;
+  --m-bg-card: #171717;
+  --m-bg-inner: #1e1e1e;
+  --m-border: #2e2e2e;
+  --m-text: #ffffff;
+  --m-muted: #676767;
+  --m-accent: #f7b91c;
+  --m-danger: #e05c5c;
+  --m-success: #3ecf8e;
+  --m-row-hover: rgba(255, 255, 255, 0.025);
+  --m-skeleton-grad: linear-gradient(90deg, #222 25%, #2e2e2e 50%, #222 75%);
+}
+
+:host-context(body.light-mode) {
+  --m-bg-page: #f9f9f9;
+  --m-bg-card: #ffffff;
+  --m-bg-inner: #f3f4f6;
+  --m-border: #e5e7eb;
+  --m-text: #111827;
+  --m-muted: #6b7280;
+  --m-row-hover: rgba(0, 0, 0, 0.025);
+  --m-skeleton-grad: linear-gradient(90deg, #ddd 25%, #eee 50%, #ddd 75%);
+}
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -23,9 +39,6 @@ $success:    #3ecf8e;
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
-// ─── Host ──────────────────────────────────────────────────────────────────────
-:host { display: block; }
 
 .members {
   padding: 2rem;
@@ -45,22 +58,22 @@ $success:    #3ecf8e;
   &__title {
     font-size: 1.35rem;
     font-weight: 700;
-    color: $text-main;
+    color: var(--m-text);
     margin: 0 0 0.2rem;
   }
 
   &__subtitle {
     font-size: 0.85rem;
-    color: $text-muted;
+    color: var(--m-muted);
     margin: 0;
   }
 
   &__count {
     font-size: 0.8rem;
     font-weight: 600;
-    color: $accent;
-    background: rgba($accent, 0.1);
-    border: 1px solid rgba($accent, 0.25);
+    color: var(--m-accent);
+    background: rgba(247, 185, 28, 0.1);
+    border: 1px solid rgba(247, 185, 28, 0.25);
     border-radius: 20px;
     padding: 4px 12px;
     white-space: nowrap;
@@ -69,8 +82,8 @@ $success:    #3ecf8e;
 
   // ─── Card ────────────────────────────────────────────────────────────────────
   &__card {
-    background: $bg-card;
-    border: 1px solid $border;
+    background: var(--m-bg-card);
+    border: 1px solid var(--m-border);
     border-radius: 16px;
     overflow: hidden;
 
@@ -84,9 +97,9 @@ $success:    #3ecf8e;
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba($danger, 0.10);
-    border: 1px solid rgba($danger, 0.3);
-    color: $danger;
+    background: rgba(224, 92, 92, 0.10);
+    border: 1px solid rgba(224, 92, 92, 0.3);
+    color: var(--m-danger);
     border-radius: 8px;
     padding: 0.65rem 1rem;
     font-size: 0.85rem;
@@ -97,9 +110,9 @@ $success:    #3ecf8e;
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba($success, 0.10);
-    border: 1px solid rgba($success, 0.3);
-    color: $success;
+    background: rgba(62, 207, 142, 0.10);
+    border: 1px solid rgba(62, 207, 142, 0.3);
+    color: var(--m-success);
     border-radius: 8px;
     padding: 0.65rem 1rem;
     font-size: 0.85rem;
@@ -119,7 +132,7 @@ $success:    #3ecf8e;
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid var(--m-border);
 
     &:last-child { border-bottom: none; }
   }
@@ -132,7 +145,7 @@ $success:    #3ecf8e;
   }
 
   &__skeleton {
-    background: linear-gradient(90deg, #222 25%, #2e2e2e 50%, #222 75%);
+    background: var(--m-skeleton-grad);
     background-size: 200% 100%;
     animation: skeletonShimmer 1.4s infinite;
     border-radius: 6px;
@@ -156,26 +169,26 @@ $success:    #3ecf8e;
 
   &__empty-icon {
     width: 72px; height: 72px;
-    background: $bg-inner;
-    border: 1px solid $border;
+    background: var(--m-bg-inner);
+    border: 1px solid var(--m-border);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1rem;
-    color: $text-muted;
+    color: var(--m-muted);
   }
 
   &__empty-title {
     font-size: 1rem;
     font-weight: 600;
-    color: $text-main;
+    color: var(--m-text);
     margin: 0 0 0.4rem;
   }
 
   &__empty-sub {
     font-size: 0.85rem;
-    color: $text-muted;
+    color: var(--m-muted);
     margin: 0;
   }
 
@@ -199,26 +212,26 @@ $success:    #3ecf8e;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: $text-muted;
+    color: var(--m-muted);
     padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid var(--m-border);
     white-space: nowrap;
 
     &--center { text-align: center; }
   }
 
   &__row {
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid var(--m-border);
     transition: background 0.15s, opacity 0.3s;
 
     &:last-child { border-bottom: none; }
-    &:hover { background: rgba(255,255,255,0.025); }
+    &:hover { background: var(--m-row-hover); }
 
     // ── Inactive row ─
     &--inactive {
       opacity: 0.55;
-      background: rgba(0, 0, 0, 0.15);
-      &:hover { background: rgba(0,0,0,0.2); }
+      background: rgba(0, 0, 0, 0.05);
+      &:hover { background: rgba(0,0,0,0.08); }
     }
   }
 
@@ -239,15 +252,15 @@ $success:    #3ecf8e;
 
   &__avatar {
     width: 38px; height: 38px;
-    background: $bg-inner;
-    border: 1px solid $border;
+    background: var(--m-bg-inner);
+    border: 1px solid var(--m-border);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 700;
-    color: $accent;
+    color: var(--m-accent);
     flex-shrink: 0;
     text-transform: uppercase;
   }
@@ -261,7 +274,7 @@ $success:    #3ecf8e;
   &__name {
     font-size: 0.875rem;
     font-weight: 600;
-    color: $text-main;
+    color: var(--m-text);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -269,14 +282,14 @@ $success:    #3ecf8e;
 
   &__email {
     font-size: 0.78rem;
-    color: $text-muted;
+    color: var(--m-muted);
   }
 
   &__you-badge {
     font-size: 0.62rem;
     font-weight: 700;
-    background: rgba($accent, 0.15);
-    color: $accent;
+    background: rgba(247, 185, 28, 0.15);
+    color: var(--m-accent);
     border-radius: 4px;
     padding: 1px 5px;
     letter-spacing: 0.04em;
@@ -292,9 +305,9 @@ $success:    #3ecf8e;
 
   &__role-select {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid $border;
+    border: 1px solid var(--m-border);
     border-radius: 6px;
-    color: $text-main;
+    color: var(--m-text);
     font-size: 0.75rem;
     font-weight: 600;
     padding: 4px 8px;
@@ -304,15 +317,15 @@ $success:    #3ecf8e;
 
     &:focus, &:hover {
       background: rgba(255, 255, 255, 0.1);
-      border-color: lighten($border, 15%);
+      border-color: var(--m-accent);
     }
 
-    option { background: $bg-inner; color: $text-main; }
+    option { background: var(--m-bg-inner); color: var(--m-text); }
   }
 
   &__role-error {
     font-size: 0.7rem;
-    color: $danger;
+    color: var(--m-danger);
     max-width: 140px;
     white-space: normal;
     animation: fadeInUp 0.2s ease;
@@ -332,9 +345,9 @@ $success:    #3ecf8e;
 
   .badge--purple { background: rgba(147, 51, 234, 0.15); color: #c084fc; border: 1px solid rgba(147,51,234,0.3); }
   .badge--blue   { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-  .badge--amber  { background: rgba($accent, 0.12);        color: $accent;   border: 1px solid rgba($accent,0.3); }
-  .badge--green  { background: rgba($success, 0.12);       color: $success;  border: 1px solid rgba($success,0.3); }
-  .badge--coral  { background: rgba($danger, 0.12);        color: #f87171;   border: 1px solid rgba($danger,0.3); }
+  .badge--amber  { background: rgba(247, 185, 28, 0.12);   color: var(--m-accent);   border: 1px solid rgba(247, 185, 28,0.3); }
+  .badge--green  { background: rgba(62, 207, 142, 0.12);  color: var(--m-success);  border: 1px solid rgba(62, 207, 142,0.3); }
+  .badge--coral  { background: rgba(224, 92, 92, 0.12);   color: #f87171;   border: 1px solid rgba(224, 92, 92,0.3); }
 
   // ─── Status badge (pill) ──────────────────────────────────────────────────
   &__status-badge {
@@ -347,15 +360,15 @@ $success:    #3ecf8e;
     white-space: nowrap;
 
     &--active {
-      background: rgba($success, 0.14);
-      color: $success;
-      border: 1px solid rgba($success, 0.35);
+      background: rgba(62, 207, 142, 0.14);
+      color: var(--m-success);
+      border: 1px solid rgba(62, 207, 142, 0.35);
     }
 
     &--inactive {
-      background: rgba($danger, 0.12);
-      color: $danger;
-      border: 1px solid rgba($danger, 0.35);
+      background: rgba(224, 92, 92, 0.12);
+      color: var(--m-danger);
+      border: 1px solid rgba(224, 92, 92, 0.35);
     }
   }
 
@@ -382,32 +395,32 @@ $success:    #3ecf8e;
     &:disabled { opacity: 0.45; cursor: not-allowed; }
 
     &--deactivate {
-      background: rgba($accent, 0.08);
-      border-color: rgba($accent, 0.25);
-      color: $accent;
-      &:hover:not(:disabled) { background: rgba($accent, 0.18); border-color: rgba($accent, 0.5); }
+      background: rgba(247, 185, 28, 0.08);
+      border-color: rgba(247, 185, 28, 0.25);
+      color: var(--m-accent);
+      &:hover:not(:disabled) { background: rgba(247, 185, 28, 0.18); border-color: rgba(247, 185, 28, 0.5); }
     }
 
     &--activate {
-      background: rgba($success, 0.10);
-      border-color: rgba($success, 0.3);
-      color: $success;
-      &:hover:not(:disabled) { background: rgba($success, 0.2); border-color: rgba($success, 0.55); }
+      background: rgba(62, 207, 142, 0.10);
+      border-color: rgba(62, 207, 142, 0.3);
+      color: var(--m-success);
+      &:hover:not(:disabled) { background: rgba(62, 207, 142, 0.2); border-color: rgba(62, 207, 142, 0.55); }
     }
 
     &--remove {
-      background: rgba($danger, 0.08);
-      border-color: rgba($danger, 0.25);
-      color: $danger;
-      &:hover:not(:disabled) { background: rgba($danger, 0.18); border-color: rgba($danger, 0.5); }
+      background: rgba(224, 92, 92, 0.08);
+      border-color: rgba(224, 92, 92, 0.25);
+      color: var(--m-danger);
+      &:hover:not(:disabled) { background: rgba(224, 92, 92, 0.18); border-color: rgba(224, 92, 92, 0.5); }
     }
   }
 
   // spinner variant for amber/light bg buttons
   &__btn-spinner--dark {
     width: 12px; height: 12px;
-    border: 2px solid rgba($accent, 0.3);
-    border-top-color: $accent;
+    border: 2px solid rgba(247, 185, 28, 0.3);
+    border-top-color: var(--m-accent);
     border-radius: 50%;
     animation: spin 0.65s linear infinite;
     flex-shrink: 0;
@@ -415,7 +428,7 @@ $success:    #3ecf8e;
 
   // ─── President card ───────────────────────────────────────────────────────
   &__president-card {
-    background: $bg-card;
+    background: var(--m-bg-card);
     border: 1px solid rgba(147, 51, 234, 0.35);
     border-radius: 16px;
     overflow: hidden;
@@ -462,7 +475,7 @@ $success:    #3ecf8e;
     gap: 8px;
     font-size: 1rem;
     font-weight: 700;
-    color: $text-main;
+    color: var(--m-text);
     margin: 0 0 1.25rem;
   }
 
@@ -484,16 +497,16 @@ $success:    #3ecf8e;
 
   &__label {
     font-size: 0.8rem;
-    color: $text-muted;
+    color: var(--m-muted);
     font-weight: 500;
   }
 
   &__input,
   &__select {
-    background: $bg-inner;
-    border: 1px solid $border;
+    background: var(--m-bg-inner);
+    border: 1px solid var(--m-border);
     border-radius: 8px;
-    color: $text-main;
+    color: var(--m-text);
     font-size: 0.88rem;
     padding: 0.55rem 0.85rem;
     outline: none;
@@ -501,9 +514,9 @@ $success:    #3ecf8e;
     width: 100%;
     box-sizing: border-box;
 
-    &::placeholder { color: $text-muted; opacity: 0.6; }
-    &:focus { border-color: lighten($border, 18%); }
-    option { background: $bg-inner; }
+    &::placeholder { color: var(--m-muted); opacity: 0.6; }
+    &:focus { border-color: var(--m-accent); }
+    option { background: var(--m-bg-inner); color: var(--m-text); }
   }
 
   &__form-actions {
@@ -516,7 +529,7 @@ $success:    #3ecf8e;
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    background: $accent;
+    background: var(--m-accent);
     border: none;
     border-radius: 8px;
     color: #111;
@@ -528,15 +541,6 @@ $success:    #3ecf8e;
 
     &:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
     &:disabled { opacity: 0.35; cursor: not-allowed; }
-  }
-
-  &__btn-spinner {
-    width: 14px; height: 14px;
-    border: 2px solid rgba(#111, 0.3);
-    border-top-color: #111;
-    border-radius: 50%;
-    animation: spin 0.65s linear infinite;
-    flex-shrink: 0;
   }
 
   // ─── Confirm Dialog ──────────────────────────────────────────────────────────
@@ -552,8 +556,8 @@ $success:    #3ecf8e;
   }
 
   &__dialog {
-    background: $bg-card;
-    border: 1px solid $border;
+    background: var(--m-bg-card);
+    border: 1px solid var(--m-border);
     border-radius: 16px;
     padding: 2rem 1.75rem;
     width: min(420px, 90vw);
@@ -562,9 +566,9 @@ $success:    #3ecf8e;
 
   &__dialog-icon {
     width: 56px; height: 56px;
-    background: rgba($danger, 0.12);
-    border: 1px solid rgba($danger, 0.3);
-    color: $danger;
+    background: rgba(224, 92, 92, 0.12);
+    border: 1px solid rgba(224, 92, 92, 0.3);
+    color: var(--m-danger);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -575,24 +579,17 @@ $success:    #3ecf8e;
   &__dialog-title {
     font-size: 1.05rem;
     font-weight: 700;
-    color: $text-main;
+    color: var(--m-text);
     margin: 0 0 0.6rem;
   }
 
   &__dialog-body {
     font-size: 0.875rem;
-    color: $text-muted;
+    color: var(--m-muted);
     margin: 0 0 1rem;
     line-height: 1.55;
 
-    strong { color: $text-main; }
-  }
-
-  &__dialog-error {
-    font-size: 0.8rem;
-    color: $danger;
-    margin-bottom: 0.75rem;
-    animation: fadeInUp 0.2s ease;
+    strong { color: var(--m-text); }
   }
 
   &__dialog-actions {
@@ -614,65 +611,17 @@ $success:    #3ecf8e;
     transition: opacity 0.2s;
 
     &--cancel {
-      background: $bg-inner;
-      color: $text-muted;
-      border: 1px solid $border;
-      &:hover:not(:disabled) { color: $text-main; }
+      background: var(--m-bg-inner);
+      color: var(--m-muted);
+      border: 1px solid var(--m-border);
+      &:hover:not(:disabled) { color: var(--m-text); }
     }
 
     &--confirm {
-      background: $danger;
+      background: var(--m-danger);
       color: #fff;
       &:hover:not(:disabled) { opacity: 0.85; }
       &:disabled { opacity: 0.4; cursor: not-allowed; }
     }
-  }
-}
-
-// ─── Light-mode overrides ─────────────────────────────────────────────────────
-body.light-mode {
-  .members {
-    &__card        { background: #f5f5f5; border-color: #d8d8d8; }
-    &__title       { color: #111; }
-    &__subtitle    { color: #888; }
-    &__th          { color: #888; border-bottom-color: #d8d8d8; }
-    &__row         { border-bottom-color: #d8d8d8; &:hover { background: rgba(0,0,0,0.025); } }
-    &__name        { color: #111; }
-    &__email       { color: #888; }
-    &__invite-title { color: #111; }
-    &__empty-title { color: #333; }
-
-    &__row--inactive { background: rgba(0,0,0,0.04); }
-
-    &__avatar      { background: #e8e8e8; border-color: #d0d0d0; }
-    &__avatar--president { background: rgba(147,51,234,0.06); border-color: rgba(147,51,234,0.3); }
-
-    &__president-card { background: #f0e9ff; border-color: rgba(147,51,234,0.3); }
-
-    &__input, &__select {
-      background: #ebebeb;
-      border-color: #d0d0d0;
-      color: #111;
-      &::placeholder { color: #aaa; }
-    }
-
-    &__label { color: #555; }
-
-    &__skeleton {
-      background: linear-gradient(90deg, #ddd 25%, #eee 50%, #ddd 75%);
-      background-size: 200% 100%;
-    }
-
-    &__empty-icon { background: #e8e8e8; border-color: #d0d0d0; color: #999; }
-
-    &__dialog { background: #fff; border-color: #d8d8d8; }
-    &__dialog-title { color: #111; }
-    &__dialog-body  { color: #555; strong { color: #111; } }
-    &__dialog-btn--cancel { background: #eee; border-color: #d8d8d8; color: #555; }
-
-    .badge--blue  { background: rgba(59,130,246,0.08); }
-    .badge--amber { background: rgba(247,185,28,0.08); }
-    .badge--green { background: rgba(62,207,142,0.08); }
-    .badge--coral { background: rgba(224,92,92,0.08); }
   }
 }
