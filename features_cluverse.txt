@@ -1,0 +1,410 @@
+================================================================================
+                     CLUVERSE - LISTE COMPLÈTE DES FEATURES
+================================================================================
+
+Application Angular de gestion de clubs (associations/organisations).
+Plateforme complète couvrant : authentification, gestion des membres,
+événements, finances, logistique, recrutement, élections, compétences,
+sponsoring et entretiens IA.
+
+
+================================================================================
+  1. AUTHENTIFICATION & SÉCURITÉ
+================================================================================
+
+  • Connexion par identifiants (Login classique email/mot de passe)
+  • Connexion via OAuth2 (Google, réseaux sociaux) avec callback
+  • Mot de passe oublié (envoi d'email de récupération)
+  • Réinitialisation du mot de passe via lien sécurisé
+  • Inscription / Demande de création de club (Club Application)
+  • Page de remerciement post-inscription
+  • Garde d'authentification (AuthGuard) sur les routes protégées
+  • Garde de rôle (RoleRouteGuard) — accès conditionnel selon le rôle
+  • Rôles supportés : PRESIDENT, TREASURER, HR_MANAGER, EVENT_MANAGER, MEMBER
+  • Gestion de token JWT (stockage, refresh, décodage)
+
+
+================================================================================
+  2. LANDING PAGE (PAGE D'ACCUEIL PUBLIQUE)
+================================================================================
+
+  • Section Hero avec animations séquentielles
+  • Barre de navigation (Navbar)
+  • Section Services avec détails interactifs
+  • Section "Trusted By" (partenaires de confiance)
+  • Section Tarification (Pricing)
+  • Section FAQ interactive
+  • Section Équipe de développement
+  • Section Footer
+  • Vitrine des Clubs vérifiés avec cartes 3D interactives
+  • Affichage des campagnes de recrutement actives avec lien direct
+
+
+================================================================================
+  3. DASHBOARD (TABLEAU DE BORD)
+================================================================================
+
+  • Layout avec sidebar de navigation latérale
+  • Page d'accueil du dashboard (réservée aux rôles managériaux)
+  • Redirection intelligente selon le rôle de l'utilisateur
+  • Navigation vers tous les modules (événements, finances, logistique, etc.)
+  • Thème clair/sombre (ThemeService)
+  • Notifications toast globales (ToastService)
+  • WebSocket pour notifications en temps réel
+
+
+================================================================================
+  4. GESTION DES MEMBRES
+================================================================================
+
+  • Liste des membres du club avec rôle et statut
+  • Affichage du président séparé
+  • Invitation de nouveaux membres par email avec attribution de rôle
+  • Suppression d'un membre (avec dialogue de confirmation)
+  • Activation / Désactivation d'un membre
+  • Changement de rôle d'un membre (mise à jour optimiste)
+  • Filtrage et affichage paginé
+
+
+================================================================================
+  5. PROFIL UTILISATEUR
+================================================================================
+
+  • Consultation du profil (nom, prénom, email, téléphone)
+  • Modification des informations personnelles
+  • Upload de photo de profil avec recadrage (Image Cropper)
+  • Upload vers Cloudinary
+  • Changement de mot de passe (avec vérification du mot de passe actuel)
+  • Rafraîchissement automatique du token JWT après mise à jour
+  • Synchronisation du profil avec le dashboard
+
+
+================================================================================
+  6. GESTION DES ÉVÉNEMENTS
+================================================================================
+
+  • Liste des événements (vue manager et vue membre)
+  • Création d'un événement (formulaire complet)
+  • Modification d'un événement existant
+  • Gestion des participants à un événement
+  • Calendrier des événements (vue calendrier)
+  • Carte 3D interactive des événements (Leaflet / OpenTopoMap)
+  • Sélection de localisation sur carte (mode select)
+  • Marqueurs personnalisés avec popups d'information
+  • Réservation de ressources pour un événement
+  • Gestion des campagnes événementielles
+  • Notifications d'événements
+  • Notifications SMS
+  • Statut des rappels (Reminder Status)
+  • Redirection intelligente manager/membre
+  • Suppression de campagne avec dialogue de résultat
+
+
+================================================================================
+  7. FINANCES
+================================================================================
+
+  • Tableau de bord financier (Finance Home)
+  • Gestion des budgets (création, consultation)
+  • Gestion des transactions (INCOME / EXPENSE)
+  • Rapports financiers
+  • Gestion des cotisations des membres (Member Dues)
+  • Alertes financières
+  • Paiement des sponsors (Finance Sponsor Payment)
+  • Prévision de trésorerie par IA (Cashflow Forecast AI)
+    - Projections à 1, 3 et 6 mois
+    - Analyse de tendances et saisonnalité
+    - Score de confiance
+    - Bande d'erreur calculée
+    - Backtest automatique (MAPE, hit rate)
+    - Facteurs d'influence détaillés
+    - Ventilation mensuelle avec part événementielle
+  • Détection de fraude (Fraud Detection)
+    - Alertes de fraude avec niveaux de sévérité (low, medium, high, critical)
+    - Score de risque et score ML d'anomalie
+    - Statistiques des alertes
+    - Simulation de transactions frauduleuses
+    - Scénarios Stripe Radar (risk level, CVC check, etc.)
+    - Dismissal d'alertes
+  • Widget Chat Assistant Trésorier (Treasurer Chat Widget)
+    - Chatbot IA pour questions sur budgets, transactions, prévisions
+    - Approbation / Rejet d'actions en attente
+  • Widget Agent Financier IA (Financial Agent Widget)
+    - Assistant IA contextuel avec données réelles (transactions + budgets)
+    - Actions rapides : transactions, budgets, insights, anomalies
+    - Reconnaissance vocale (français/anglais)
+    - Synthèse vocale des réponses
+    - Support bilingue (FR/EN)
+    - Détection d'intentions d'écriture (ajout/modification/suppression)
+    - Rafraîchissement automatique après opérations d'écriture
+
+
+================================================================================
+  8. LOGISTIQUE
+================================================================================
+
+  8.1 Dashboard Logistique
+  • Tableau de bord avec métriques globales
+  • Véhicules à risque cette semaine
+
+  8.2 Gestion des Ressources
+  • Liste des ressources (avec recherche, filtres)
+  • Création d'une ressource (formulaire détaillé)
+  • Modification d'une ressource
+  • Détail d'une ressource
+  • Statuts : AVAILABLE, IN_USE, MAINTENANCE, RETIRED
+  • Alerte stock bas (low-stock)
+
+  8.3 Inventaire
+  • Gestion de l'inventaire par ressource
+  • Suivi des quantités (total, disponible, seuil bas)
+
+  8.4 Scanner de code-barres
+  • Scan de code-barres via caméra (Quagga)
+  • Recherche de ressource par code-barres
+  • Modale de scan avec retour visuel
+
+  8.5 Gestion des Véhicules
+  • Liste des véhicules
+  • Création / Modification d'un véhicule
+  • Détail d'un véhicule
+  • Gestion de la maintenance des véhicules
+  • Maintenance automatique (Vehicle Maintenance Auto Service)
+
+  8.6 Gestion des Transports
+  • Liste des transports
+  • Création / Modification d'un transport
+  • Détail d'un transport
+  • Carte de transport interactive (Leaflet / OpenStreetMap)
+    - Géocodage des adresses (Nominatim)
+    - Calcul de distance (Haversine)
+    - Estimation de durée
+    - Tracé d'itinéraire
+    - Lien vers itinéraire complet OSM
+  • Prédiction de transport par IA
+    - Analyse de risque (LOW, MEDIUM, HIGH)
+    - Modèle IA (Linear Regression / GTFS Tunisie)
+    - Niveau de confiance
+    - Créneau horaire et jour de la semaine
+
+  8.7 Planificateur IA de Transports
+  • Génération automatique de plan de transport (date début/fin)
+  • Suggestions de transport avec véhicule et date
+  • Indicateurs de risque
+  • Création directe d'un transport depuis une suggestion
+  • Lancement automatique via paramètre URL
+
+  8.8 Assistant Vocal Logistique
+  • Reconnaissance vocale en français (Web Speech API)
+  • Commandes vocales pour :
+    - Lister ressources, véhicules, transports
+    - Créer ressource (avec pré-remplissage intelligent du formulaire)
+    - Créer véhicule ou transport
+    - Modifier ressource, véhicule ou transport par ID
+    - Supprimer ressource par nom, véhicule par nom/plaque, transport par ID
+    - Afficher le stock bas
+    - Ouvrir le planificateur IA
+    - Lancer une analyse de trajet
+    - Afficher les véhicules à risque
+  • Synthèse vocale des confirmations (Text-to-Speech)
+  • Déduplication de commandes
+
+
+================================================================================
+  9. RECRUTEMENT
+================================================================================
+
+  • Liste des campagnes de recrutement
+  • Constructeur de formulaire de candidature (Form Builder)
+  • Tableau Kanban des candidatures (Applications Kanban)
+    - Gestion visuelle du pipeline de recrutement
+    - Drag & Drop des candidatures entre étapes
+  • Résultats des entretiens (Interview Results)
+  • Archive des candidatures
+
+
+================================================================================
+  10. ENTRETIEN IA (INTERVIEW AI)
+================================================================================
+
+  • Page d'accueil de l'entretien (via lien unique)
+  • Salle d'entretien IA immersive (Interview Room)
+    - Avatar vidéo dynamique (idle / talking)
+    - Webcam du candidat en PiP (Picture-in-Picture)
+    - Reconnaissance vocale continue (Web Speech API, français)
+    - Synthèse vocale du recruteur IA (Text-to-Speech, français)
+    - Bulle de dialogue du recruteur
+    - Timer de session
+    - Gestion intelligente du silence (buffer + timeout)
+    - Communication avec le backend IA (start, turn, end)
+    - Configuration dynamique par club et campagne
+  • Page de fin d'entretien (Interview Completed)
+  • Mise à jour automatique du statut (TERMINE)
+
+
+================================================================================
+  11. ÉLECTIONS
+================================================================================
+
+  • Page d'accueil des élections
+  • Dashboard des élections (statistiques, visualisation)
+  • Liste des élections
+  • Création / Modification d'une élection
+  • Liste des candidats
+  • Création / Modification d'un candidat
+  • Liste des votes
+  • Création / Modification d'un vote (formulaire de vote)
+  • Liste des postes (positions)
+  • Création / Modification d'un poste
+  • Postes vacants (Vacant Positions)
+  • Simulateur d'entretien pour postes (Interview Simulator)
+  • Rapport d'entretien (Interview Report)
+
+
+================================================================================
+  12. COMPÉTENCES (COMPETENCIES)
+================================================================================
+
+  12.1 Gestion des compétences
+  • Page d'accueil des compétences (redirection intelligente admin/membre)
+  • Gestion admin des compétences du club (CompetenciesHome)
+  • Vue membre de ses propres compétences (MemberCompetencies)
+  • Catégories : TECHNICAL, HARD, SOFT
+  • Niveaux courant et cible avec calcul de gap
+
+  12.2 Insights & Matching intelligent
+  • Dashboard d'insights des compétences
+    - Métriques globales (total members, skills, assignments)
+    - Taux de readiness, gaps critiques
+    - Top 5 des skills avec le plus grand gap
+    - Top 5 des membres avec le plus grand gap
+    - Top 5 des membres les plus forts
+    - Répartition par catégorie (Technical / Hard / Soft)
+  • Matching intelligent de compétences
+    - Contextes : MISSION, EVENT, POSITION
+    - Sélection de compétences requises (avec recherche et filtres)
+    - Score de matching par candidat
+    - Résultats classés (Top N configurable)
+
+  12.3 Dashboard des Sessions de compétences
+  • Vue admin :
+    - Métriques (total, upcoming, completed, cancelled)
+    - Liste des sessions avec filtres (status, compétence, coach, recherche)
+    - Calendrier interactif avec sessions
+    - Planification d'une session (titre, compétence, coach, date, lien Meet)
+    - Sélection des participants
+    - Clôture d'une session (rapport, présence, auto-génération)
+    - Reprogrammation (formulaire ou drag & drop sur calendrier)
+    - Annulation d'une session (avec raison)
+    - Gestion des participants (invitation/retrait)
+    - Détails complets d'une session
+    - Consultation de rapport
+    - Lien direct vers Google Meet
+  • Vue membre :
+    - Sessions à venir et passées
+    - Métriques personnelles (upcoming, completed, competencies worked)
+    - Calendrier personnel
+  • Confetti Service (animation de célébration)
+
+
+================================================================================
+  13. SPONSORING & SPONSORS
+================================================================================
+
+  13.1 Gestion des sponsors
+  • Liste des sponsors avec pagination
+  • Ajout d'un sponsor (nom, email, téléphone avec indicatif pays)
+  • Modification d'un sponsor
+  • Suppression d'un sponsor (avec raison de suppression)
+  • Upload de logo sponsor
+  • Filtrage (statut : ALL/PENDING/CONFIRMED/DENIED, pays, recherche, tri)
+  • Statistiques : total, pending, confirmed, denied, taux de confirmation
+  • Menu d'actions par sponsor
+
+  13.2 Gestion des sponsorships (pipeline Kanban)
+  • Pipeline Kanban en 5 colonnes :
+    - Prospecting → Outreach Sent → Contract Sent → Signed → Paid
+  • Drag & Drop entre colonnes (avec vérification des prérequis)
+  • Création d'un sponsorship (sponsor, événement, montant, proposition)
+  • Modification d'un sponsorship (documents, contrat, montants)
+  • Détails d'un sponsorship
+  • Recherche de sponsorships
+  • Génération automatique du résumé de sponsorship
+  • Statistiques par étape (graphique circulaire)
+  • Graphique courbe des sponsors (SVG interactif)
+    - Filtrage par sponsor et par mois
+    - Légende interactive
+    - Axes X/Y dynamiques
+
+  13.3 Emails des sponsors
+  • Consultation des emails échangés avec un sponsor
+  • Composition d'email (sujet, corps, pièces jointes)
+  • Réponse à un email
+  • Synchronisation des emails
+  • Visualiseur de pièces jointes (avec zoom)
+  • Historique des emails par sponsor/sponsorship
+
+  13.4 Génération de PDF
+  • Génération de documents PDF de sponsorship (SponsorshipPdfService)
+
+
+================================================================================
+  14. RÉPONSE SPONSOR (PAGE PUBLIQUE)
+================================================================================
+
+  • Page de réponse sponsor via lien public
+  • Confirmation ou refus de partenariat
+
+
+================================================================================
+  15. PAIEMENT SPONSOR (PAGE PUBLIQUE)
+================================================================================
+
+  • Page de paiement sponsor via lien public
+  • Intégration Stripe pour paiements sécurisés
+
+
+================================================================================
+  16. DONATION (PAGE PUBLIQUE)
+================================================================================
+
+  • Page de donation publique
+  • Sélection du club destinataire
+  • Paiement via Stripe (Payment Intent)
+  • Envoi de reçu de donation par email
+  • Enregistrement automatique de la transaction (INCOME)
+  • Conversion EUR/TND
+
+
+================================================================================
+  17. CANDIDATURE PUBLIQUE (APPLY)
+================================================================================
+
+  • Formulaire de candidature public pour les campagnes de recrutement
+  • Accessible sans authentification
+
+
+================================================================================
+  18. VÉRIFICATION (VERIFY)
+================================================================================
+
+  • Page de vérification (email, compte, etc.)
+
+
+================================================================================
+  19. FONCTIONNALITÉS TRANSVERSALES
+================================================================================
+
+  • Page 404 personnalisée (Not Found)
+  • Lazy Loading de tous les modules (performance)
+  • Scroll position restoration et anchor scrolling
+  • Service de thème (clair/sombre)
+  • Service de notifications toast
+  • WebSocket service pour temps réel
+  • Guards d'authentification et de rôle
+  • API Service centralisé (43 Ko, couvrant tous les endpoints)
+
+
+================================================================================
+                           FIN DU DOCUMENT
+================================================================================
