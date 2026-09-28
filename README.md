@@ -159,15 +159,14 @@ docker-compose up --build
 ## Testing
 
 ```bash
-ng test                     # Unit tests (Karma + Jasmine)
-ng e2e                      # End-to-end tests (Cypress)
+Run ng serve for a dev server. Navigate to http://localhost:4200/.
 ```
 
 ---
 
 ## Academic Context
 
-Capstone (PI) project — **ESPRIT School of Engineering**, Tunisia, 2025.
+Capstone (PI) project — **ESPRIT School of Engineering**, Tunisia, 2026.
 
 ---
 
